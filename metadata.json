@@ -1,0 +1,6 @@
+{
+  "name": "เห็นช้างวิ่ง วิ่งตามช้าง - CHANG SUEK RUN 2027",
+  "description": "เว็บไซต์ทางการ CHANG SUEK RUN 2027 (เห็นช้างวิ่ง วิ่งตามช้าง) ค่ายนเรศวร ชะอำ-หัวหิน ข้อมูลเส้นทางวิ่ง 3K, 5K, 10K แผนที่ Interactive ค้นหาที่พักใกล้ค่าย ตารางเวลา และข้อมูลการแข่งขันครบวงจร",
+  "requestFramePermissions": ["geolocation"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

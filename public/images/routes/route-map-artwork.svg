@@ -1,0 +1,205 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#161224" />
+      <stop offset="50%" stop-color="#241B38" />
+      <stop offset="100%" stop-color="#161224" />
+    </linearGradient>
+    <linearGradient id="seaGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#134E5E" />
+      <stop offset="100%" stop-color="#205B6C" />
+    </linearGradient>
+    <linearGradient id="landGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#3B3830" />
+      <stop offset="100%" stop-color="#2D2824" />
+    </linearGradient>
+    <filter id="glow3k">
+      <feDropShadow dx="0" dy="0" stdDeviation="4" flood-color="#2EAA59" flood-opacity="0.8" />
+    </filter>
+    <filter id="glow5k">
+      <feDropShadow dx="0" dy="0" stdDeviation="4" flood-color="#E53935" flood-opacity="0.8" />
+    </filter>
+    <filter id="glow10k">
+      <feDropShadow dx="0" dy="0" stdDeviation="4" flood-color="#8C4DDB" flood-opacity="0.9" />
+    </filter>
+  </defs>
+
+  <!-- BACKGROUND SATELLITE-STYLE TERRAIN -->
+  <rect width="1200" height="675" fill="url(#bgGrad)" />
+
+  <!-- Sea Area (Gulf of Thailand - Top North/East) -->
+  <path d="M 0,160 Q 300,150 600,165 T 1200,160 L 1200,235 Q 900,245 600,230 T 0,240 Z" fill="url(#seaGrad)" opacity="0.85" />
+  <path d="M 0,238 Q 300,228 600,238 T 1200,235 L 1200,246 Q 900,256 600,246 T 0,248 Z" fill="#E8D8A6" opacity="0.6" /> <!-- Sandy Beach Line -->
+
+  <!-- Forest and Terrain zones -->
+  <rect x="50" y="260" width="1100" height="260" rx="16" fill="url(#landGrad)" opacity="0.9" />
+
+  <!-- Lakes / Ponds inside camp -->
+  <ellipse cx="700" cy="400" rx="65" ry="40" fill="#1C3D4D" stroke="#2E5A6B" stroke-width="2" />
+  <ellipse cx="640" cy="470" rx="80" ry="32" fill="#1A4A5E" stroke="#2E5A6B" stroke-width="2" />
+  <ellipse cx="400" cy="460" rx="70" ry="25" fill="#205B6C" stroke="#2E5A6B" stroke-width="2" />
+  <rect x="420" y="440" width="140" height="60" rx="8" fill="#1E4436" opacity="0.7" /> <!-- Sports Field / Green Area -->
+
+  <!-- Top Banner / Header -->
+  <g transform="translate(40, 25)">
+    <!-- Event title -->
+    <rect x="0" y="0" width="310" height="70" rx="14" fill="#6F35B5" />
+    <text x="25" y="38" font-family="'Prompt', sans-serif" font-weight="900" font-size="28" fill="#FFFFFF">เห็นช้างวิ่ง วิ่งตามช้าง</text>
+    <text x="25" y="58" font-family="'Prompt', sans-serif" font-weight="700" font-size="14" fill="#FFC928">CHANG SUEK RUN 2027</text>
+
+    <!-- Route Map badge -->
+    <rect x="330" y="5" width="340" height="60" rx="12" fill="#3D176C" stroke="#FFC928" stroke-width="2" />
+    <text x="500" y="35" font-family="'Prompt', sans-serif" font-weight="800" font-size="24" fill="#FFFFFF" text-anchor="middle">แผนที่เส้นทางวิ่ง</text>
+    <text x="500" y="54" font-family="'Prompt', sans-serif" font-weight="700" font-size="13" fill="#FFC928" text-anchor="middle" letter-spacing="3">RUN ROUTE MAP</text>
+
+    <!-- Subtitle -->
+    <text x="690" y="32" font-family="'Prompt', sans-serif" font-weight="600" font-size="15" fill="#FFFFFF">วิ่งสนุก...ไปด้วยกัน สำหรับทุกคนในครอบครัว</text>
+    <text x="690" y="52" font-family="'Prompt', sans-serif" font-weight="700" font-size="13" fill="#2EAA59" letter-spacing="1">RUN WITH YOUR BEST FRIEND</text>
+
+    <!-- Right Badge: Naresuan Camp -->
+    <rect x="940" y="0" width="180" height="68" rx="10" fill="#282236" stroke="#4A3F63" stroke-width="1.5" />
+    <text x="1030" y="26" font-family="'Prompt', sans-serif" font-weight="700" font-size="14" fill="#FFC928" text-anchor="middle">ค่ายนเรศวร</text>
+    <text x="1030" y="44" font-family="'Prompt', sans-serif" font-weight="500" font-size="10" fill="#ECEAF0" text-anchor="middle">กองบัญชาการ ตชด.</text>
+    <text x="1030" y="58" font-family="'Prompt', sans-serif" font-weight="600" font-size="9" fill="#A49FB0" text-anchor="middle">Naresuan Camp</text>
+  </g>
+
+  <!-- North Arrow Indicator -->
+  <g transform="translate(1120, 200)">
+    <circle cx="0" cy="0" r="22" fill="#FFFFFF" opacity="0.9" />
+    <polygon points="0,-16 6,10 0,6 -6,10" fill="#E53935" />
+    <text x="0" y="2" font-family="'Prompt', sans-serif" font-weight="800" font-size="12" fill="#18151D" text-anchor="middle">N</text>
+  </g>
+
+  <!-- ============================================== -->
+  <!-- ROUTE TRACKS -->
+  <!-- ============================================== -->
+
+  <!-- 10 KM WAR DOG TRAIL (Purple Route - Longest loop) -->
+  <path d="M 550,250 
+           L 700,265 
+           L 870,280 
+           L 980,330 
+           L 990,400 
+           L 940,480 
+           L 750,510 
+           L 650,515 
+           L 640,430 
+           L 370,435 
+           L 200,430 
+           L 150,380 
+           L 180,310 
+           L 240,320 
+           L 210,400 
+           L 370,400 
+           L 550,310 
+           Z" 
+        fill="none" stroke="#8C4DDB" stroke-width="7" stroke-linejoin="round" stroke-linecap="round" filter="url(#glow10k)" />
+
+  <!-- 5 KM CHALLENGE RUN (Red Route - Middle loop) -->
+  <path d="M 550,250 
+           L 700,268 
+           L 865,285 
+           L 965,335 
+           L 970,395 
+           L 925,465 
+           L 760,495 
+           L 660,500 
+           L 650,335 
+           L 550,250" 
+        fill="none" stroke="#E53935" stroke-width="6" stroke-linejoin="round" stroke-linecap="round" filter="url(#glow5k)" />
+
+  <!-- 3 KM FUN RUN (Green Route - Inner loop) -->
+  <path d="M 550,250 
+           L 695,270 
+           L 860,290 
+           L 870,390 
+           L 780,470 
+           L 660,475 
+           L 670,340 
+           L 550,250" 
+        fill="none" stroke="#2EAA59" stroke-width="5" stroke-linejoin="round" stroke-linecap="round" filter="url(#glow3k)" />
+
+  <!-- ============================================== -->
+  <!-- LANDMARKS & PINS -->
+  <!-- ============================================== -->
+
+  <!-- START / FINISH PIN -->
+  <g transform="translate(550, 240)">
+    <circle cx="0" cy="0" r="16" fill="#3D176C" stroke="#FFFFFF" stroke-width="3" />
+    <rect x="-8" y="-8" width="16" height="16" rx="3" fill="#FFC928" />
+    <text x="0" y="4" font-family="'Prompt', sans-serif" font-weight="900" font-size="10" fill="#18151D" text-anchor="middle">🏁</text>
+    <!-- Label -->
+    <rect x="-80" y="-46" width="160" height="34" rx="8" fill="#3D176C" stroke="#FFC928" stroke-width="2" />
+    <text x="0" y="-30" font-family="'Prompt', sans-serif" font-weight="800" font-size="12" fill="#FFC928" text-anchor="middle">START / FINISH</text>
+    <text x="0" y="-17" font-family="'Prompt', sans-serif" font-weight="600" font-size="10" fill="#FFFFFF" text-anchor="middle">โรงแรม Sea Sand Sun</text>
+  </g>
+
+  <!-- Mrigadayavan Palace Landmark Pin -->
+  <g transform="translate(340, 260)">
+    <circle cx="0" cy="0" r="12" fill="#8C4DDB" stroke="#FFFFFF" stroke-width="2.5" />
+    <text x="0" y="4" font-family="'Prompt', sans-serif" font-weight="800" font-size="11" fill="#FFFFFF" text-anchor="middle">📷</text>
+    <rect x="-90" y="-40" width="180" height="30" rx="6" fill="#18151D" opacity="0.85" />
+    <text x="0" y="-26" font-family="'Prompt', sans-serif" font-weight="700" font-size="11" fill="#FFFFFF" text-anchor="middle">พระราชนิเวศน์มฤคทายวัน</text>
+    <text x="0" y="-14" font-family="'Prompt', sans-serif" font-weight="500" font-size="9" fill="#ECEAF0" text-anchor="middle">Mrigadayavan Palace</text>
+  </g>
+
+  <!-- Wat Marikathayawan Pin -->
+  <g transform="translate(650, 530)">
+    <circle cx="0" cy="0" r="12" fill="#2EAA59" stroke="#FFFFFF" stroke-width="2.5" />
+    <text x="0" y="4" font-family="'Prompt', sans-serif" font-weight="800" font-size="10" fill="#FFFFFF" text-anchor="middle">☸</text>
+    <rect x="-80" y="16" width="160" height="28" rx="6" fill="#18151D" opacity="0.85" />
+    <text x="0" y="30" font-family="'Prompt', sans-serif" font-weight="700" font-size="11" fill="#FFFFFF" text-anchor="middle">วัดมฤคทายวัน</text>
+    <text x="0" y="41" font-family="'Prompt', sans-serif" font-weight="500" font-size="8.5" fill="#ECEAF0" text-anchor="middle">Wat Marikathayawan</text>
+  </g>
+
+  <!-- Scenic Photo Spot Pin -->
+  <g transform="translate(160, 270)">
+    <circle cx="0" cy="0" r="11" fill="#8C4DDB" stroke="#FFFFFF" stroke-width="2" />
+    <text x="0" y="4" font-family="'Prompt', sans-serif" font-size="10" fill="#FFFFFF" text-anchor="middle">📷</text>
+  </g>
+
+  <!-- ============================================== -->
+  <!-- BOTTOM DISTANCE SUMMARY CARDS -->
+  <!-- ============================================== -->
+  <g transform="translate(40, 565)">
+    <!-- 3 KM CARD -->
+    <g transform="translate(0, 0)">
+      <rect width="250" height="68" rx="12" fill="#1F2420" stroke="#2EAA59" stroke-width="2" />
+      <circle cx="34" cy="34" r="20" fill="#2EAA59" />
+      <text x="34" y="39" font-family="'Prompt', sans-serif" font-weight="800" font-size="14" fill="#FFFFFF" text-anchor="middle">🏃</text>
+      <text x="65" y="28" font-family="'Prompt', sans-serif" font-weight="800" font-size="18" fill="#2EAA59">3 KM</text>
+      <text x="110" y="27" font-family="'Prompt', sans-serif" font-weight="600" font-size="12" fill="#FFFFFF">FUN RUN</text>
+      <text x="65" y="46" font-family="'Prompt', sans-serif" font-weight="500" font-size="10.5" fill="#ECEAF0">ระยะทาง 3 กิโลเมตร</text>
+      <text x="65" y="58" font-family="'Prompt', sans-serif" font-weight="400" font-size="9.5" fill="#A49FB0">เหมาะสำหรับครอบครัวและผู้เริ่มต้น</text>
+    </g>
+
+    <!-- 5 KM CARD -->
+    <g transform="translate(270, 0)">
+      <rect width="260" height="68" rx="12" fill="#281A1A" stroke="#E53935" stroke-width="2" />
+      <circle cx="34" cy="34" r="20" fill="#E53935" />
+      <text x="34" y="39" font-family="'Prompt', sans-serif" font-weight="800" font-size="14" fill="#FFFFFF" text-anchor="middle">🏃</text>
+      <text x="65" y="28" font-family="'Prompt', sans-serif" font-weight="800" font-size="18" fill="#E53935">5 KM</text>
+      <text x="110" y="27" font-family="'Prompt', sans-serif" font-weight="600" font-size="12" fill="#FFFFFF">CHALLENGE RUN</text>
+      <text x="65" y="46" font-family="'Prompt', sans-serif" font-weight="500" font-size="10.5" fill="#ECEAF0">ระยะทาง 5 กิโลเมตร</text>
+      <text x="65" y="58" font-family="'Prompt', sans-serif" font-weight="400" font-size="9.5" fill="#A49FB0">เพิ่มความท้าทาย ผ่านพื้นที่ค่าย</text>
+    </g>
+
+    <!-- 10 KM CARD -->
+    <g transform="translate(550, 0)">
+      <rect width="280" height="68" rx="12" fill="#241738" stroke="#8C4DDB" stroke-width="2" />
+      <circle cx="34" cy="34" r="20" fill="#8C4DDB" />
+      <text x="34" y="39" font-family="'Prompt', sans-serif" font-weight="800" font-size="14" fill="#FFFFFF" text-anchor="middle">🐾</text>
+      <text x="65" y="28" font-family="'Prompt', sans-serif" font-weight="800" font-size="18" fill="#FFC928">10 KM</text>
+      <text x="120" y="27" font-family="'Prompt', sans-serif" font-weight="600" font-size="12" fill="#FFFFFF">WAR DOG TRAIL</text>
+      <text x="65" y="46" font-family="'Prompt', sans-serif" font-weight="500" font-size="10.5" fill="#ECEAF0">ระยะทาง 10 กิโลเมตร</text>
+      <text x="65" y="58" font-family="'Prompt', sans-serif" font-weight="400" font-size="9.5" fill="#A49FB0">เส้นทางเต็มประสบการณ์ ป่าชายเลน</text>
+    </g>
+
+    <!-- Right values: War Dog motif -->
+    <g transform="translate(850, 8)">
+      <text x="120" y="22" font-family="'Prompt', sans-serif" font-weight="700" font-size="14" fill="#FFC928" text-anchor="middle">Dogs Stronger People</text>
+      <text x="120" y="40" font-family="'Prompt', sans-serif" font-weight="700" font-size="14" fill="#FFFFFF" text-anchor="middle">Safer Thailand</text>
+      <text x="120" y="54" font-family="'Prompt', sans-serif" font-weight="500" font-size="10" fill="#2EAA59" text-anchor="middle">A STRONGER TOMORROW</text>
+    </g>
+  </g>
+</svg>

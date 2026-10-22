@@ -1,0 +1,680 @@
+@import "tailwindcss";
+
+@layer base {
+  html {
+    /* Modern, clean Thai + Latin font stack: Plus Jakarta Sans for numbers & English, Prompt / Kanit for Thai */
+    font-family: 'Plus Jakarta Sans', 'Prompt', 'Kanit', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    scroll-behavior: smooth;
+    letter-spacing: -0.01em;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Fredoka', 'Mali', 'Kanit', sans-serif;
+    letter-spacing: -0.01em;
+  }
+}
+
+.font-display {
+  font-family: 'Fredoka', 'Mali', 'Kanit', sans-serif;
+}
+
+.font-prompt {
+  font-family: 'Prompt', 'Plus Jakarta Sans', sans-serif;
+}
+
+.font-comic {
+  font-family: 'Kodchasan', 'Prompt', cursive, sans-serif;
+}
+
+.font-mono {
+  font-family: 'Plus Jakarta Sans', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+/* Brand Color Utility Variables */
+:root {
+  --color-primary-purple: #7B3FC6;
+  --color-deep-purple: #54239A;
+  --color-light-purple: #EEE4FA;
+  --color-yellow: #FFC928;
+  --color-gold: #F5B800;
+  --color-green: #2EAD62;
+  --color-light-green: #DFF5E8;
+  --color-coral: #EF5350;
+  --color-sky-blue: #45B9EA;
+  --color-sea-blue: #169BD5;
+  --color-dark: #17151C;
+  --color-dark-purple-black: #24172F;
+  --color-off-white: #FAF9FC;
+  --color-soft-gray: #F3F1F7;
+  --color-text-gray: #6F6878;
+}
+
+/* Custom Playful Keyframe Animations */
+@keyframes bounceSubtle {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-6px) rotate(1deg);
+  }
+}
+
+@keyframes bounceGentle {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-8px) rotate(-1.5deg);
+  }
+}
+
+@keyframes wiggle {
+  0%, 100% {
+    transform: rotate(-4deg);
+  }
+  50% {
+    transform: rotate(8deg);
+  }
+}
+
+@keyframes dashScroll {
+  to {
+    stroke-dashoffset: -44;
+  }
+}
+
+@keyframes floatSlow {
+  0%, 100% {
+    transform: translateY(0px) translateX(0px);
+  }
+  50% {
+    transform: translateY(-10px) translateX(4px);
+  }
+}
+
+@keyframes waveMotion {
+  0%, 100% {
+    transform: translateX(0) scaleY(1);
+  }
+  50% {
+    transform: translateX(-15px) scaleY(1.05);
+  }
+}
+
+.animate-bounce-subtle {
+  animation: bounceSubtle 2.4s ease-in-out infinite;
+}
+
+.animate-bounce-gentle {
+  animation: bounceGentle 1.8s ease-in-out infinite;
+}
+
+.animate-wiggle {
+  animation: wiggle 0.8s ease-in-out infinite;
+}
+
+.animate-dash {
+  animation: dashScroll 2s linear infinite;
+}
+
+.animate-float {
+  animation: floatSlow 4s ease-in-out infinite;
+}
+
+.animate-wave {
+  animation: waveMotion 5s ease-in-out infinite;
+}
+
+/* Custom leaflet map controls & popup styling */
+.leaflet-popup-content-wrapper {
+  border-radius: 20px !important;
+  box-shadow: 0 20px 40px -10px rgba(84, 35, 154, 0.22) !important;
+  border: 2px solid #EEE4FA;
+  padding: 0 !important;
+  overflow: hidden;
+}
+
+.leaflet-popup-content {
+  margin: 0 !important;
+  line-height: 1.5;
+}
+
+.leaflet-container {
+  font-family: 'Plus Jakarta Sans', 'Prompt', sans-serif !important;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #FAF9FC;
+}
+.dark ::-webkit-scrollbar-track {
+  background: #150D20;
+}
+::-webkit-scrollbar-thumb {
+  background: #D9D2E5;
+  border-radius: 4px;
+}
+.dark ::-webkit-scrollbar-thumb {
+  background: #3B2158;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #7B3FC6;
+}
+
+/* ============================================================ */
+/* DARK MODE HIGH-CONTRAST AND READABILITY ENHANCEMENTS */
+/* ============================================================ */
+html.dark {
+  background-color: #0E0817;
+  color: #F3F0F9;
+}
+
+html.dark body {
+  background-color: #0E0817;
+  color: #F3F0F9;
+}
+
+/* High contrast dark section styling */
+html.dark section {
+  background-color: transparent;
+}
+
+html.dark #inspiration {
+  background-color: #120A1E !important;
+  border-color: #2D1845 !important;
+}
+
+html.dark #distances {
+  background: linear-gradient(to bottom, #130B21, #0E0817, #130B21) !important;
+  border-color: #2D1845 !important;
+}
+
+html.dark #merch-showcase {
+  background-color: #11091C !important;
+  border-color: #2D1845 !important;
+}
+
+html.dark #sponsors {
+  background-color: #0E0817 !important;
+  border-color: #2D1845 !important;
+}
+
+html.dark #routes {
+  background: linear-gradient(to bottom, #130B21, #0E0817, #130B21) !important;
+  border-color: #2D1845 !important;
+}
+
+html.dark #hotels {
+  background-color: #120A1E !important;
+  border-color: #2D1845 !important;
+}
+
+html.dark #leaderboard {
+  background-color: #0E0817 !important;
+  border-color: #2D1845 !important;
+}
+
+html.dark #weather-forecast {
+  background: linear-gradient(to bottom, #130B21, #0E0817, #130B21) !important;
+  border-color: #2D1845 !important;
+}
+
+html.dark #runner-checklist {
+  background-color: #120A1E !important;
+}
+
+html.dark #faq {
+  background-color: #0E0817 !important;
+  border-color: #2D1845 !important;
+}
+
+/* Dark mode card contrast overrides */
+html.dark .bg-white {
+  background-color: #180E28 !important;
+  color: #F3F0F9 !important;
+}
+
+html.dark .bg-white\/95 {
+  background-color: rgba(24, 14, 40, 0.95) !important;
+}
+
+html.dark .bg-\[\#FFFFFF\] {
+  background-color: #160D24 !important;
+}
+
+html.dark .bg-\[\#FAF8FD\],
+html.dark .bg-\[\#FAF7FD\],
+html.dark .bg-\[\#FAF9FC\],
+html.dark .bg-purple-50,
+html.dark .bg-purple-50\/60,
+html.dark .bg-purple-50\/70,
+html.dark .bg-purple-50\/80 {
+  background-color: #201235 !important;
+}
+
+html.dark .bg-gray-50,
+html.dark .bg-gray-100 {
+  background-color: #24143D !important;
+}
+
+/* Text readability in dark mode */
+html.dark .text-\[\#1F1035\],
+html.dark .text-\[\#24172F\],
+html.dark .text-\[\#261042\],
+html.dark .text-\[\#17151C\],
+html.dark .text-gray-900,
+html.dark .text-gray-800 {
+  color: #F8F5FE !important;
+}
+
+html.dark .text-gray-700,
+html.dark .text-gray-600 {
+  color: #D4CCE0 !important;
+}
+
+html.dark .text-gray-500,
+html.dark .text-gray-400 {
+  color: #A69BB5 !important;
+}
+
+/* Borders in dark mode */
+html.dark .border-gray-100,
+html.dark .border-gray-200,
+html.dark .border-purple-100,
+html.dark .border-purple-100\/60,
+html.dark .border-purple-100\/70,
+html.dark .border-purple-100\/80,
+html.dark .border-purple-200 {
+  border-color: #341A52 !important;
+}
+
+/* Leaflet dark mode contrast */
+html.dark .leaflet-tile-pane {
+  filter: brightness(0.85) contrast(1.15) !important;
+}
+
+/* Printer-Friendly PDF Optimization Styles */
+@media print {
+  @page {
+    margin: 10mm 12mm;
+    size: A4 portrait;
+  }
+
+  body {
+    background: #ffffff !important;
+    color: #111827 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* When the Dedicated Ticket Print Modal is open, print ONLY the selected ticket/BIB format */
+  body:has(.dedicated-print-portal) #root {
+    display: none !important;
+  }
+
+  body:has(.dedicated-print-portal) .dedicated-print-portal {
+    position: static !important;
+    display: block !important;
+    background: #ffffff !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: visible !important;
+  }
+
+  body:has(.dedicated-print-portal) .print-sheet-wrapper {
+    max-width: 100% !important;
+    max-height: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    background: #ffffff !important;
+    overflow: visible !important;
+    display: block !important;
+  }
+
+  body:has(.dedicated-print-portal) .printable-active-document {
+    max-width: 100% !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* Hide distracting web elements when printing schedule modal / printable schedule */
+  nav,
+  footer,
+  #hero,
+  #inspiration,
+  #distances,
+  #sponsors,
+  #hotels,
+  #leaderboard,
+  #runner-checklist,
+  #faq,
+  .print-hide,
+  button:not(.print-keep) {
+    display: none !important;
+  }
+
+  .print-only {
+    display: block !important;
+  }
+
+  /* Ensure schedule card and timeline looks crisp on paper */
+  .printable-schedule-sheet {
+    display: block !important;
+    width: 100% !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+  }
+
+  .page-break-avoid {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Cute dog-run theme                                                  */
+/* ------------------------------------------------------------------ */
+:root {
+  --ink: #2A1450;
+  --sun: #FFC928;
+  --grape: #7B3FC6;
+  --sky: #8ED8F8;
+  --peach: #FF8A3D;
+  --pink: #FF9EBB;
+  --mint: #6FD9A8;
+}
+
+.paw-bg {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='90' height='90' viewBox='0 0 90 90'%3E%3Cg fill='%237B3FC6' fill-opacity='0.07'%3E%3Cellipse cx='22' cy='30' rx='6' ry='7.5'/%3E%3Cellipse cx='36' cy='22' rx='5' ry='6.5'/%3E%3Cellipse cx='48' cy='24' rx='5' ry='6.5'/%3E%3Cellipse cx='58' cy='33' rx='5.5' ry='7'/%3E%3Cpath d='M 40,34 C 30,34 24,46 32,52 C 37,55 43,52 47,53 C 53,55 58,48 52,40 C 49,35 44,34 40,34 Z'/%3E%3C/g%3E%3C/svg%3E");
+  background-size: 90px 90px;
+}
+
+.sticker {
+  border: 3px solid var(--ink);
+  box-shadow: 5px 6px 0 var(--ink);
+  border-radius: 28px;
+  background: #fff;
+}
+
+.sticker-hover {
+  transition: transform .25s cubic-bezier(.3,1.6,.5,1), box-shadow .25s ease;
+}
+.sticker-hover:hover {
+  transform: translate(-3px, -4px) rotate(-1deg);
+  box-shadow: 9px 11px 0 var(--ink);
+}
+.sticker-hover:active {
+  transform: translate(2px, 3px);
+  box-shadow: 2px 3px 0 var(--ink);
+}
+
+.btn-paw {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .5rem;
+  border: 3px solid var(--ink);
+  box-shadow: 0 5px 0 var(--ink);
+  border-radius: 9999px;
+  font-family: 'Fredoka', 'Mali', sans-serif;
+  font-weight: 700;
+  color: var(--ink);
+  transition: transform .15s ease, box-shadow .15s ease;
+  cursor: pointer;
+}
+.btn-paw:hover { transform: translateY(-2px); box-shadow: 0 7px 0 var(--ink); }
+.btn-paw:active { transform: translateY(4px); box-shadow: 0 1px 0 var(--ink); }
+
+.blob { border-radius: 58% 42% 55% 45% / 48% 56% 44% 52%; }
+
+@keyframes trot {
+  0%   { transform: translateX(-20vw) translateY(0); }
+  25%  { transform: translateX(15vw) translateY(-6px); }
+  50%  { transform: translateX(45vw) translateY(0); }
+  75%  { transform: translateX(78vw) translateY(-6px); }
+  100% { transform: translateX(115vw) translateY(0); }
+}
+@keyframes pawFade {
+  0%, 100% { opacity: 0; transform: scale(.6) rotate(var(--r, 0deg)); }
+  25%, 55% { opacity: .85; transform: scale(1) rotate(var(--r, 0deg)); }
+}
+@keyframes cloudDrift {
+  from { transform: translateX(-120%); }
+  to   { transform: translateX(120vw); }
+}
+@keyframes boing {
+  0%, 100% { transform: translateY(0) scale(1, 1); }
+  30% { transform: translateY(-18px) scale(.95, 1.06); }
+  55% { transform: translateY(0) scale(1.08, .92); }
+}
+@keyframes bobble {
+  0%, 100% { transform: translateY(0) rotate(-6deg); }
+  50% { transform: translateY(-12px) rotate(8deg); }
+}
+@keyframes tailWag {
+  0%, 100% { transform: rotate(-18deg); }
+  50% { transform: rotate(24deg); }
+}
+@keyframes popIn {
+  0% { transform: scale(.6); opacity: 0; }
+  70% { transform: scale(1.12); opacity: 1; }
+  100% { transform: scale(1); }
+}
+@keyframes sparkle {
+  0%, 100% { transform: scale(.7) rotate(0); opacity: .5; }
+  50% { transform: scale(1.15) rotate(20deg); opacity: 1; }
+}
+
+.animate-trot { animation: trot 14s linear infinite; }
+.animate-cloud { animation: cloudDrift 60s linear infinite; }
+.animate-boing { animation: boing 1.4s ease-in-out infinite; }
+.animate-bobble { animation: bobble 3.2s ease-in-out infinite; }
+.animate-tail { animation: tailWag .5s ease-in-out infinite; transform-origin: 90% 90%; }
+.animate-pop { animation: popIn .45s cubic-bezier(.3,1.6,.5,1) both; }
+.animate-sparkle { animation: sparkle 2.2s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-trot, .animate-cloud, .animate-boing, .animate-bobble,
+  .animate-tail, .animate-sparkle, .animate-bounce-gentle,
+  .animate-bounce-subtle, .animate-wiggle, .animate-float {
+    animation: none !important;
+  }
+}
+
+/* ================= Unified Cohesive Luminous Theme: Light, Depth & Soft Shadows ================= */
+#experience,
+#distances,
+#sponsors,
+#schedule-section,
+#routes,
+#hotels,
+#leaderboard,
+#weather-forecast,
+#runner-checklist,
+#faq {
+  background-image:
+    radial-gradient(circle at 12% 18%, rgba(255, 209, 102, 0.16) 0%, transparent 42%),
+    radial-gradient(circle at 88% 22%, rgba(167, 139, 250, 0.16) 0%, transparent 45%),
+    radial-gradient(circle at 50% 85%, rgba(56, 189, 248, 0.12) 0%, transparent 50%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 90 90'%3E%3Cg fill='%237B3FC6' fill-opacity='0.035'%3E%3Cellipse cx='22' cy='30' rx='6' ry='7.5'/%3E%3Cellipse cx='36' cy='22' rx='5' ry='6.5'/%3E%3Cellipse cx='48' cy='24' rx='5' ry='6.5'/%3E%3Cellipse cx='58' cy='33' rx='5.5' ry='7'/%3E%3Cpath d='M 40,34 C 30,34 24,46 32,52 C 37,55 43,52 47,53 C 53,55 58,48 52,40 C 49,35 44,34 40,34 Z'/%3E%3C/g%3E%3C/svg%3E") !important;
+  background-color: #FAF8FF !important;
+  border-bottom: 1px solid rgba(123, 63, 198, 0.08) !important;
+  position: relative;
+}
+
+#distances,
+#schedule-section,
+#leaderboard,
+#faq {
+  background-color: #F5F0FF !important;
+}
+
+/* Headings */
+#schedule-section h2, #routes h2, #hotels h2, #leaderboard h2,
+#weather-forecast h2, #runner-checklist h2, #faq h2 {
+  font-family: 'Fredoka','Mali','Kanit',sans-serif !important;
+  color: #261247 !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.01em !important;
+  font-size: clamp(1.85rem, 3.8vw, 3rem) !important;
+  line-height: 1.12 !important;
+}
+
+/* Modern Luminous Card Elevation across sections */
+:is(#schedule-section,#hotels,#leaderboard,#weather-forecast,#runner-checklist,#faq,#routes,#experience)
+  :is([class*="rounded-2xl"],[class*="rounded-3xl"],[class*="rounded-[2"]):not(button):not(input):not(select):not(.leaflet-container):not(.leaflet-container *) {
+  border-radius: 24px !important;
+  box-shadow:
+    0 18px 40px -16px rgba(67, 28, 130, 0.16),
+    0 4px 12px -4px rgba(67, 28, 130, 0.08),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.85) !important;
+  transition: translate .25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow .25s ease;
+}
+
+:is(#schedule-section,#hotels,#leaderboard,#weather-forecast,#runner-checklist,#faq,#routes,#experience)
+  :is([class*="rounded-2xl"],[class*="rounded-3xl"]):not(button):hover {
+  translate: 0 -4px;
+  box-shadow:
+    0 24px 48px -14px rgba(88, 28, 175, 0.24),
+    0 8px 20px -6px rgba(88, 28, 175, 0.12),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.95) !important;
+}
+
+/* Luminous Glass & Modern Shadow Utilities */
+.luminous-card {
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(16px);
+  border: 1.5px solid rgba(139, 92, 246, 0.18);
+  box-shadow:
+    0 22px 48px -14px rgba(68, 28, 125, 0.18),
+    0 6px 16px -6px rgba(68, 28, 125, 0.09),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.95);
+}
+
+.luminous-pill-btn {
+  box-shadow:
+    0 12px 24px -8px rgba(245, 158, 11, 0.45),
+    0 4px 0 0 #261247,
+    inset 0 1.5px 0 0 rgba(255, 255, 255, 0.75);
+}
+
+.ticket-foil-shimmer {
+  background: linear-gradient(
+    115deg,
+    transparent 20%,
+    rgba(255, 255, 255, 0.65) 45%,
+    rgba(255, 232, 145, 0.55) 50%,
+    rgba(255, 255, 255, 0.65) 55%,
+    transparent 80%
+  );
+  background-size: 250% 100%;
+  animation: holoGradient 4s ease-in-out infinite;
+}
+
+/* Scroll reveal (uses independent translate/scale so it never fights other transforms) */
+.rv-init { opacity: 0; translate: 0 34px; scale: .96; }
+.rv-in {
+  opacity: 1; translate: 0 0; scale: 1;
+  transition: opacity .7s ease, translate .7s cubic-bezier(.2,1.3,.4,1), scale .7s cubic-bezier(.2,1.3,.4,1) !important;
+  transition-delay: var(--rv-delay, 0ms) !important;
+}
+@media (prefers-reduced-motion: reduce) { .rv-init { opacity: 1; translate: none; scale: none; } }
+
+/* Scroll progress with a running dog */
+.scroll-dog { position: fixed; top: 0; left: 0; height: 5px; z-index: 70; pointer-events: none;
+  background: linear-gradient(90deg,#FFC928,#FF8A3D,#7B3FC6); border-radius: 0 6px 6px 0; }
+.scroll-dog span { position: absolute; right: -14px; top: 4px; font-size: 22px; line-height: 1; animation: boing .5s ease-in-out infinite; }
+
+/* ================= Collectible Running Ticket & BIB Pass Animations ================= */
+@keyframes ticketShimmer {
+  0% {
+    transform: translateX(-140%) skewX(-22deg);
+  }
+  45%, 100% {
+    transform: translateX(220%) skewX(-22deg);
+  }
+}
+
+@keyframes holoGradient {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+@keyframes scanLaser {
+  0%, 100% {
+    transform: translateY(0%);
+    opacity: 0.35;
+  }
+  50% {
+    transform: translateY(280%);
+    opacity: 0.9;
+  }
+}
+
+.animate-ticket-shimmer {
+  animation: ticketShimmer 4.8s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+}
+
+.animate-holo {
+  background-size: 200% 200%;
+  animation: holoGradient 5s ease infinite;
+}
+
+.animate-scan-laser {
+  animation: scanLaser 2.8s ease-in-out infinite;
+}
+
+.perspective-1200 {
+  perspective: 1200px;
+}
+
+.preserve-3d {
+  transform-style: preserve-3d;
+}
+
+.backface-hidden {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+
+
+/* Sponsor board: logos are designed for a white background, so the board stays white in dark mode */
+.sponsor-board,
+html.dark .sponsor-board {
+  background-color: #FFFFFF !important;
+}
+html.dark .sponsor-board {
+  border-color: #C9A6F5 !important;
+  box-shadow: 0 10px 0 #C9A6F5 !important;
+}
+html.dark #sponsors-heading {
+  color: #F3E8FF !important;
+}
+html.dark #sponsors p {
+  color: #CDB8F2 !important;
+}
+
+/* Hero headline: Mitr has rounded, friendly Thai letterforms with clear upper/lower marks */
+.font-hero {
+  font-family: 'Mitr', 'Prompt', 'Kanit', sans-serif;
+  letter-spacing: 0;
+}
+
+/* Balanced heading lines: avoids a lone word ("GPS") on the last line */
+h1, h2, h3 {
+  text-wrap: balance;
+}
