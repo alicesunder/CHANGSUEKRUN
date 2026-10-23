@@ -528,7 +528,7 @@ export const LeaderboardSection: React.FC = () => {
             <Trophy className="w-7 h-7 text-[#B45309]" />
           </span>
           <p className="text-base sm:text-lg font-extrabold text-[#2A1450]">
-            ประกาศผลหลังจบการแข่งขัน 15 ก.พ. 2570
+            ประกาศผลหลังจบการแข่งขัน 9 ม.ค. 2570
           </p>
           <p className="text-sm font-semibold text-[#6B5A85] max-w-lg text-balance">
             เวลาและอันดับของทุกระยะจะแสดงที่หน้านี้ ค้นหาผลของคุณได้ด้วยเลข BIB

@@ -830,7 +830,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                   <div className="p-4 space-y-3">
                     <div className="flex flex-wrap gap-1.5">
                       <span className="inline-flex items-center gap-1 text-xs font-extrabold px-2.5 py-1 rounded-full bg-[#F3E8FF] text-[#4B2D78]">
-                        <Calendar className="w-3.5 h-3.5" /> 15 ก.พ. 2570
+                        <Calendar className="w-3.5 h-3.5" /> 9 ม.ค. 2570
                       </span>
                       <span className="inline-flex items-center gap-1 text-xs font-extrabold px-2.5 py-1 rounded-full bg-[#FEF3C7] text-[#92400E]">
                         <Clock className="w-3.5 h-3.5" /> ปล่อยตัว {theme.startTime}
@@ -1760,7 +1760,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                         เวลาปล่อยตัว
                       </span>
                       <span className="text-sm font-black text-[#2A1450] block">
-                        {theme.startTime} (15 ก.พ. 70)
+                        {theme.startTime} (9 ม.ค. 70)
                       </span>
                     </div>
                     <div className="p-3 rounded-2xl bg-emerald-50 border-2 border-emerald-500/40">

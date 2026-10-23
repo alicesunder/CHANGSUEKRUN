@@ -57,6 +57,9 @@ export const RouteIllustratedMap: React.FC<{
     <div className={className}>
       <div
         ref={scrollRef}
+        tabIndex={0}
+        role="region"
+        aria-label="แผนที่เส้นทางวิ่ง เลื่อนซ้ายขวาเพื่อดู"
         className="overflow-x-auto rounded-2xl border-[2.5px] border-[#2A1450] bg-[#7FCDEB]"
       >
         <svg

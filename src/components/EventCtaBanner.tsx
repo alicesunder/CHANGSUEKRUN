@@ -32,7 +32,7 @@ export const EventCtaBanner: React.FC<EventCtaBannerProps> = ({ onOpenRegisterMo
                 มาร่วมเป็นส่วนหนึ่งของ <span className="text-[#FFE268]">CHANGSUEK RUN 2027</span>
               </h2>
               <p className="text-xs sm:text-sm text-purple-100 font-medium mt-2">
-                ก้าวไปด้วยกัน เพื่อสุขภาพ ครอบครัว ชุมชน และเพื่อนสี่ขา · วันที่ 15 กุมภาพันธ์ 2570 ณ หาดชะอำ (ค่ายนเรศวร - ค่ายพระราม 6) จ.เพชรบุรี
+                ก้าวไปด้วยกัน เพื่อสุขภาพ ครอบครัว ชุมชน และเพื่อนสี่ขา · วันที่ 9 มกราคม 2570 ณ หาดชะอำ (ค่ายนเรศวร - ค่ายพระราม 6) จ.เพชรบุรี
               </p>
             </div>
           </div>

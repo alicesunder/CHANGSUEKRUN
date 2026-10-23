@@ -177,7 +177,7 @@ export const RunnerCenter: React.FC<RunnerCenterProps> = ({
                         <Calendar className="w-4 h-4 text-[#5B20A8]" />
                         <span>กำหนดการสำคัญวันแข่งขัน</span>
                       </div>
-                      <span className="text-xs font-bold text-[#5B20A8]">15 ก.พ. 2570</span>
+                      <span className="text-xs font-bold text-[#5B20A8]">9 ม.ค. 2570</span>
                     </div>
 
                     <div className="grid grid-cols-3 gap-2 text-center text-xs">

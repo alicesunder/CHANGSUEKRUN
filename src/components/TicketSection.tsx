@@ -217,7 +217,6 @@ const TicketCard: React.FC<{
   const l = look[t.id];
   const isDog = t.group === 'dog';
   const routeInfo = routesData[t.id];
-  const [isFlipped, setIsFlipped] = useState(false);
   const [burstKey, setBurstKey] = useState(0);
   const [isPopping, setIsPopping] = useState(false);
   const [stubTorn, setStubTorn] = useState(false);
@@ -315,8 +314,8 @@ const TicketCard: React.FC<{
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
         style={{
-          rotateX: isFlipped ? 0 : rotateX,
-          rotateY: isFlipped ? 180 : rotateY,
+          rotateX,
+          rotateY,
         }}
         animate={{
           scale: isPopping ? 0.97 : selected ? 1.015 : 1,
@@ -403,18 +402,6 @@ const TicketCard: React.FC<{
                 )}
               </div>
 
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setIsFlipped(true);
-                }}
-                className="inline-flex items-center gap-1 text-[10px] font-extrabold bg-white/20 hover:bg-white text-white hover:text-[#261247] backdrop-blur-md px-2.5 py-1 rounded-full border border-white/35 transition-all hover:scale-105 active:scale-95 cursor-pointer"
-                title="พลิกดูตัวอย่างป้ายหมายเลขวิ่ง (BIB)"
-              >
-                <RotateCw className="w-3 h-3 transition-transform group-hover:rotate-180 duration-500" />
-                <span>พลิกดู BIB</span>
-              </button>
             </div>
 
             {/* Distance Title + Cute Mascot Avatar */}
@@ -635,117 +622,6 @@ const TicketCard: React.FC<{
             </motion.button>
           </motion.div>
         </article>
-
-        {/* ============================================================ */}
-        {/* BACK OF RUNNING PASS (3D FLIP: OFFICIAL BIB & LABRADOR K9)   */}
-        {/* ============================================================ */}
-        <article
-          onClick={(e) => {
-            e.stopPropagation();
-            setIsFlipped(false);
-          }}
-          style={{
-            transform: 'rotateY(180deg)',
-            background: l.grad,
-            border: `2.5px solid ${l.borderActive}`,
-            boxShadow: l.shadowActive,
-          }}
-          className="absolute inset-0 rounded-[28px] overflow-hidden backface-hidden flex flex-col justify-between p-4"
-        >
-          {/* 4 Classic Marathon BIB Pin Holes */}
-          <div className="absolute top-3 left-3 w-3 h-3 rounded-full bg-white border border-slate-300 shadow-inner" />
-          <div className="absolute top-3 right-3 w-3 h-3 rounded-full bg-white border border-slate-300 shadow-inner" />
-          <div className="absolute bottom-3 left-3 w-3 h-3 rounded-full bg-white border border-slate-300 shadow-inner" />
-          <div className="absolute bottom-3 right-3 w-3 h-3 rounded-full bg-white border border-slate-300 shadow-inner" />
-
-          <div className="pt-1">
-            <div className="flex items-center justify-between border-b border-slate-200 pb-2">
-              <div className="flex items-center gap-2">
-                <img loading="lazy" decoding="async"
-                  src={LABRADOR_SVG_PATH}
-                  alt="Labrador Mascot"
-                  className="w-8 h-8 object-contain"
-                />
-                <div>
-                  <span
-                    className="text-[9px] font-black uppercase tracking-widest block"
-                    style={{ color: l.accentDark }}
-                  >
-                    ตัวอย่างป้าย BIB
-                  </span>
-                  <span className="text-xs font-extrabold text-[#261247]">
-                    ป้ายเบอร์วิ่ง {t.distanceLabel}
-                  </span>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setIsFlipped(false);
-                }}
-                className="inline-flex items-center gap-1 min-h-[28px] text-[11px] font-bold px-3 py-1 rounded-full bg-[#261247] text-white hover:bg-[#5B20A8] transition-colors cursor-pointer"
-              >
-                <RotateCw className="w-3 h-3" />
-                <span>พลิกกลับ</span>
-              </button>
-            </div>
-
-            {/* Simulated BIB Number Box */}
-            <div
-              className="mt-3 rounded-2xl p-3.5 text-center shadow-md relative overflow-hidden text-white"
-              style={{ background: l.headerGrad }}
-            >
-              <div className="text-[9px] font-extrabold uppercase tracking-widest px-2.5 py-0.5 rounded-full inline-block bg-black/25 text-white">
-                {l.waveLabel}
-              </div>
-              <div className="font-display text-4xl sm:text-5xl font-black tracking-wider text-white my-1 tabular-nums drop-shadow">
-                {l.bibPrefix}
-              </div>
-              <div className="text-[11px] font-extrabold text-white/95 truncate">
-                YOUR NAME · {t.distanceLabel}
-              </div>
-            </div>
-
-            {/* Route & Telemetry Specs */}
-            <div className="mt-3 space-y-1.5 text-[11px]">
-              <div className="px-3 py-2 rounded-xl bg-white/90 border border-white shadow-2xs flex items-center justify-between">
-                <span className="font-bold text-[#6B5A85]">เส้นทาง:</span>
-                <span className="font-extrabold text-[#261247]">{l.elevationText}</span>
-              </div>
-              <div className="px-3 py-2 rounded-xl bg-white/90 border border-white shadow-2xs flex items-center justify-between">
-                <span className="font-bold text-[#6B5A85]">ความยาก:</span>
-                <span className="font-extrabold text-[#261247]">{routeInfo.difficulty}</span>
-              </div>
-              <div className="px-3 py-2 rounded-xl bg-white/90 border border-white shadow-2xs flex items-center justify-between">
-                <span className="font-bold text-[#6B5A85]">ปล่อยตัว / Cut-off:</span>
-                <span className="font-extrabold tabular-nums" style={{ color: l.accentDark }}>
-                  {l.startTime} ({l.cutoff})
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <div className="pt-2.5 border-t border-dashed border-slate-200">
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                onRegister();
-              }}
-              className="w-full rounded-2xl py-2.5 px-4 flex items-center justify-center gap-2 font-extrabold text-xs sm:text-sm cursor-pointer"
-              style={{
-                background: l.btnGrad,
-                color: l.btnText,
-                boxShadow: l.btnShadow,
-              }}
-            >
-              <PawIcon size={14} color="currentColor" />
-              <span>จองเลข BIB ระยะ {t.distanceLabel}</span>
-              <ArrowRight className="w-4 h-4 ml-auto" />
-            </button>
-          </div>
-        </article>
       </motion.div>
     </motion.div>
   );
@@ -903,7 +779,7 @@ export const TicketSection: React.FC<TicketSectionProps> = ({
               เลือกบัตรวิ่งของคุณ
             </h2>
             <p className="text-xs sm:text-sm font-semibold text-[#6B5A85] mt-0.5">
-              ดีไซน์บัตรใหม่สีสันสดใส กะทัดรัด แตะที่บัตรเพื่อปั๊มตราเลือก หรือกด <strong>“พลิกดู BIB”</strong> ได้ทุกใบ
+              ดีไซน์บัตรใหม่สีสันสดใส กะทัดรัด แตะที่บัตรเพื่อเลือกระยะวิ่งที่ใช่
             </p>
           </div>
         </div>

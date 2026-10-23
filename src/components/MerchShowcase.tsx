@@ -1,328 +1,231 @@
-import React, { useState } from 'react';
-import {
-  Sparkles,
-  Shirt,
-  Award,
-  Check,
-  ZoomIn,
-  CreditCard,
-  Gift,
-  ShieldCheck,
-} from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { ArrowRight, PawPrint, Sparkles, X, ZoomIn } from 'lucide-react';
 
 interface MerchShowcaseProps {
   onOpenRegister?: () => void;
   className?: string;
 }
 
-export const MerchShowcase: React.FC<MerchShowcaseProps> = ({
-  onOpenRegister,
-  className = '',
-}) => {
-  const [activeItem, setActiveItem] = useState<'shirt' | 'medal'>('shirt');
-  const [zoomedImage, setZoomedImage] = useState<string | null>(null);
+interface KitItem {
+  id: string;
+  name: string;
+  desc: string;
+  image: string;
+  /** who receives it — CONFIRM with the organiser before launch */
+  group: 'all' | 'dog';
+  /** extra badge on the photo */
+  star?: boolean;
+}
 
-  const sizes = [
-    { size: '2S', chest: '34"' },
-    { size: 'S', chest: '36"' },
-    { size: 'M', chest: '38"' },
-    { size: 'L', chest: '40"' },
-    { size: 'XL', chest: '42"' },
-    { size: '2XL', chest: '44"' },
-    { size: '3XL', chest: '46"' },
-  ];
+// Photos are the organiser's product mock-ups; real items may differ slightly.
+const KIT: KitItem[] = [
+  {
+    id: 'jersey',
+    name: 'เสื้อวิ่ง Micro-Dry',
+    desc: 'ผ้า Micro-Dry พิมพ์ลายช้างศึกทั้งตัว ใส่สบาย แห้งเร็ว',
+    image: '/images/merch/jersey-full.jpg',
+    group: 'all',
+  },
+  {
+    id: 'medal',
+    name: 'เหรียญ Finisher',
+    desc: 'เหรียญลายช้างศึก ลงสีม่วง-เหลือง ชุบสีทอง พร้อมสายคล้องคอพิมพ์ลาย Chang suek',
+    image: '/images/merch/medal-full.jpg',
+    group: 'all',
+    star: true,
+  },
+  {
+    id: 'bag',
+    name: 'กระเป๋าหูรูด',
+    desc: 'กระเป๋าสีม่วงพิมพ์โลโก้งาน เชือกสะพายถัก มีช่องซิปด้านในสำหรับโทรศัพท์',
+    image: '/images/merch/kit-bag.webp',
+    group: 'all',
+  },
+  {
+    id: 'bandana',
+    name: 'ผ้าพันคอน้องหมา',
+    desc: 'ผ้าพันคอลายช้างศึกสีม่วง-ทอง ผูกง่าย ใส่ถ่ายรูปคู่เจ้าของ',
+    image: '/images/merch/kit-bandana.webp',
+    group: 'dog',
+  },
+  {
+    id: 'waste',
+    name: 'ตลับใส่ถุงเก็บมูล',
+    desc: 'ตลับสีม่วงพร้อมห่วงคล้อง พกติดสายจูงหรือกระเป๋าได้',
+    image: '/images/merch/kit-waste-bag.webp',
+    group: 'dog',
+  },
+  {
+    id: 'bowl',
+    name: 'ชามพับเก็บได้',
+    desc: 'ชามซิลิโคนขอบเหลือง พับแบน พร้อมตะขอคล้อง ให้น้ำน้องหมาระหว่างทาง',
+    image: '/images/merch/kit-bowl.webp',
+    group: 'dog',
+  },
+];
 
-  const racePackPerks = [
-    {
-      icon: Shirt,
-      title: 'เสื้อวิ่ง Micro-Dry',
-      desc: 'พิมพ์ลาย Sublimation ระบายอากาศ 360°',
-      tag: 'ได้รับทุกคน',
-      accent: '#5B20A8',
-      bg: '#F3E8FF',
-    },
-    {
-      icon: Award,
-      title: 'เหรียญรางวัล Finisher 3D',
-      desc: 'โลหะผสม Zinc Alloy พร้อมสายคล้องทอพิเศษ',
-      tag: 'เมื่อเข้าเส้นชัย',
-      accent: '#B45309',
-      bg: '#FEF3C7',
-    },
-    {
-      icon: CreditCard,
-      title: 'ป้ายหมายเลข BIB + RFID',
-      desc: 'พิมพ์ชื่อเฉพาะบุคคล พร้อมชิปจับเวลามาตรฐาน',
-      tag: 'Official Timing',
-      accent: '#0369A1',
-      bg: '#E0F2FE',
-    },
-    {
-      icon: Gift,
-      title: 'กระเป๋าผ้า & ประกันอุบัติเหตุ',
-      desc: 'พร้อมอาหารว่าง เครื่องดื่ม และขนมสำหรับน้องหมา',
-      tag: 'คุ้มครองตลอดงาน',
-      accent: '#15803D',
-      bg: '#DCFCE7',
-    },
-  ];
+const SIZES = [
+  { size: '2S', chest: '34"' },
+  { size: 'S', chest: '36"' },
+  { size: 'M', chest: '38"' },
+  { size: 'L', chest: '40"' },
+  { size: 'XL', chest: '42"' },
+  { size: '2XL', chest: '44"' },
+  { size: '3XL', chest: '46"' },
+];
+
+export const MerchShowcase: React.FC<MerchShowcaseProps> = ({ onOpenRegister, className = '' }) => {
+  const [zoom, setZoom] = useState<KitItem | null>(null);
+
+  useEffect(() => {
+    if (!zoom) return;
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setZoom(null);
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [zoom]);
+
+  const renderCard = (item: KitItem, n: number) => (
+    <li
+      key={item.id}
+      className="group flex flex-col rounded-3xl bg-white/[0.07] border-2 border-[#FFC928]/35 hover:border-[#FFC928] overflow-hidden transition-colors"
+    >
+      <button
+        type="button"
+        onClick={() => setZoom(item)}
+        aria-label={`ดูภาพ${item.name}ขนาดใหญ่`}
+        className="relative block aspect-[4/3] overflow-hidden bg-[#1B0B38] cursor-zoom-in"
+      >
+        <img
+          src={item.image}
+          alt={item.name}
+          loading="lazy"
+          decoding="async"
+          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+        />
+        <span className="absolute top-3 left-3 w-9 h-9 rounded-full bg-[#FFC928] text-[#2A1450] font-black text-sm flex items-center justify-center shadow-md">
+          {String(n).padStart(2, '0')}
+        </span>
+        {item.star && (
+          <span className="absolute top-3 right-3 inline-flex items-center gap-1 rounded-full bg-[#2A1450]/90 text-[#FFC928] text-xs font-bold px-2.5 py-1">
+            <Sparkles className="w-3.5 h-3.5" /> ของที่ระลึกเส้นชัย
+          </span>
+        )}
+        <span className="absolute bottom-3 right-3 w-9 h-9 rounded-full bg-white/90 text-[#2A1450] flex items-center justify-center opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity">
+          <ZoomIn className="w-4 h-4" />
+        </span>
+      </button>
+      <div className="p-4 sm:p-5">
+        <h4 className="font-hero text-lg sm:text-xl font-semibold text-white leading-snug">{item.name}</h4>
+        <p className="mt-1.5 text-sm font-medium leading-relaxed text-white/85">{item.desc}</p>
+      </div>
+    </li>
+  );
+
+  const allItems = KIT.filter((k) => k.group === 'all');
+  const dogItems = KIT.filter((k) => k.group === 'dog');
 
   return (
-    <div className={`w-full ${className}`}>
-      {/* Unified Single Race Pack & Souvenir Showcase Card */}
-      <div className="bg-white rounded-[32px] border-[3px] border-[#2A1450] shadow-[0_20px_44px_-16px_rgba(42,20,80,0.28),0_7px_0_#2A1450] overflow-hidden">
-        {/* Top Gold & Purple Accent Bar */}
-        <div className="h-2 w-full bg-gradient-to-r from-[#5B20A8] via-[#FFC928] to-[#DB2777]" />
+    <section
+      id="race-kit"
+      aria-labelledby="race-kit-heading"
+      className={`relative overflow-hidden rounded-[32px] border-[3px] border-[#2A1450] shadow-[0_10px_0_#2A1450] bg-gradient-to-br from-[#241047] via-[#341866] to-[#4A1F8F] text-white ${className}`}
+    >
+      {/* race-tape edge + soft gold glow */}
+      <div
+        aria-hidden="true"
+        className="h-3 w-full"
+        style={{ background: 'repeating-linear-gradient(135deg, #FFC928 0 14px, #2A1450 14px 28px)' }}
+      />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -top-24 -right-24 w-80 h-80 rounded-full bg-[#FFC928]/15 blur-3xl"
+      />
 
-        <div className="p-6 sm:p-8 lg:p-9">
-          {/* Header */}
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-7">
-            <div>
-              <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#FFC928]/25 border border-[#D97706]/40 text-[#2A1450] text-xs font-extrabold uppercase tracking-wider mb-2">
-                <Sparkles className="w-3.5 h-3.5 text-[#B45309]" />
-                <span>รวมอยู่ในค่าสมัคร</span>
-              </div>
-              <h3 className="text-2xl sm:text-3xl font-extrabold text-[#2A1450] tracking-tight">
-                เสื้อวิ่ง เหรียญรางวัล & สิทธิประโยชน์ที่ได้รับ
-              </h3>
-              <p className="text-xs sm:text-sm text-[#6B5A85] font-semibold mt-1">
-                รวมอยู่ในค่าสมัครทุกระยะการวิ่ง ออกแบบพิเศษสำหรับนักวิ่ง CHANGSUEK RUN 2027
-              </p>
-            </div>
+      <div className="relative px-4 sm:px-8 lg:px-10 py-8 sm:py-11">
+        <div className="text-center max-w-2xl mx-auto">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-[#FFC928] text-[#2A1450] text-xs sm:text-sm font-bold px-3.5 py-1.5">
+            <PawPrint className="w-4 h-4" /> ของที่คุณจะได้รับ
+          </span>
+          <h3 id="race-kit-heading" className="mt-3 font-hero text-3xl sm:text-4xl font-bold text-white">
+            ของที่ระลึกสำหรับนักวิ่งช้างศึก
+          </h3>
+          <p className="mt-2 text-sm sm:text-base font-medium text-white/85">
+            ออกแบบพิเศษเฉพาะงานนี้ ในธีมม่วง-ทองของช้างศึก
+          </p>
+        </div>
 
-            {/* Selector Tab for Quick highlight */}
-            <div className="flex items-center gap-1.5 p-1 bg-[#FAF7FF] rounded-2xl border-2 border-[#2A1450]/15 shrink-0 self-start md:self-auto">
-              <button
-                type="button"
-                onClick={() => setActiveItem('shirt')}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-extrabold transition-all cursor-pointer ${
-                  activeItem === 'shirt'
-                    ? 'bg-[#2A1450] text-[#FFC928] shadow-xs'
-                    : 'text-[#4B2D78] hover:text-[#2A1450]'
-                }`}
-              >
-                <Shirt className="w-4 h-4" />
-                <span>เสื้อวิ่ง Micro-Dry</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveItem('medal')}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-extrabold transition-all cursor-pointer ${
-                  activeItem === 'medal'
-                    ? 'bg-[#2A1450] text-[#FFC928] shadow-xs'
-                    : 'text-[#4B2D78] hover:text-[#2A1450]'
-                }`}
-              >
-                <Award className="w-4 h-4" />
-                <span>เหรียญรางวัล 3D</span>
-              </button>
-            </div>
-          </div>
+        {/* All runners */}
+        <div className="mt-8 flex items-center gap-3">
+          <h4 className="font-hero text-lg sm:text-xl font-semibold text-[#FFC928]">รวมในค่าสมัครทุกระยะ</h4>
+          <span aria-hidden="true" className="h-px flex-1 bg-[#FFC928]/30" />
+        </div>
+        <ul className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+          {allItems.map((k, i) => renderCard(k, i + 1))}
+        </ul>
 
-          {/* 4 Compact Included Race Pack Perks Strip */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-7">
-            {racePackPerks.map((perk) => {
-              const Icon = perk.icon;
-              return (
-                <div
-                  key={perk.title}
-                  className="rounded-2xl p-3.5 bg-[#FAF8FF] border border-purple-100 flex items-start gap-3"
-                >
-                  <span
-                    className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border border-white shadow-xs"
-                    style={{ background: perk.bg, color: perk.accent }}
-                  >
-                    <Icon className="w-5 h-5 stroke-[2.2]" />
-                  </span>
-                  <div className="min-w-0">
-                    <span
-                      className="inline-block text-[10px] font-extrabold px-2 py-0.5 rounded-full mb-1"
-                      style={{ background: perk.bg, color: perk.accent }}
-                    >
-                      {perk.tag}
-                    </span>
-                    <div className="text-xs sm:text-sm font-extrabold text-[#2A1450] leading-snug">
-                      {perk.title}
-                    </div>
-                    <div className="text-[11px] text-[#6B5A85] font-medium mt-0.5 leading-snug">
-                      {perk.desc}
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+        {/* Dog Run */}
+        <div className="mt-9 flex items-center gap-3">
+          <h4 className="font-hero text-lg sm:text-xl font-semibold text-[#FFC928]">
+            สำหรับผู้สมัคร Dog Run (วิ่งกับน้องหมา)
+          </h4>
+          <span aria-hidden="true" className="h-px flex-1 bg-[#FFC928]/30" />
+        </div>
+        <ul className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+          {dogItems.map((k, i) => renderCard(k, allItems.length + i + 1))}
+        </ul>
 
-          {/* Large 2-Column Visual Showcase (Shirt + Medal) */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
-            {/* 1. SHIRT CARD */}
-            <div
-              className={`rounded-3xl border-2 p-5 sm:p-6 transition-all duration-300 flex flex-col justify-between ${
-                activeItem === 'shirt'
-                  ? 'border-[#2A1450] bg-gradient-to-b from-[#FAF6FF] to-white shadow-[0_8px_0_#2A1450]'
-                  : 'border-purple-100 bg-white hover:border-purple-300'
-              }`}
-            >
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-xs font-extrabold px-3 py-1 rounded-full bg-[#2A1450] text-[#FFC928] flex items-center gap-1.5">
-                    <Shirt className="w-3.5 h-3.5" />
-                    <span>เสื้อวิ่งที่ระลึก (Official Jersey)</span>
-                  </span>
-                  <span className="text-[11px] font-bold text-[#5B20A8] bg-purple-50 px-2.5 py-0.5 rounded-full border border-purple-200">
-                    ได้รับทุกคน ทุกระยะ
-                  </span>
-                </div>
+        {/* Size chart */}
+        <div className="mt-9 rounded-3xl bg-white/[0.07] border border-white/20 p-4 sm:p-5">
+          <h4 className="font-hero text-base sm:text-lg font-semibold text-white">ตารางไซซ์เสื้อ (รอบอก)</h4>
+          <ul className="mt-3 grid grid-cols-4 sm:grid-cols-7 gap-2">
+            {SIZES.map((s) => (
+              <li key={s.size} className="rounded-xl bg-white text-[#2A1450] text-center py-2">
+                <div className="font-black text-sm">{s.size}</div>
+                <div className="text-xs font-semibold text-[#5B3A8C]">{s.chest}</div>
+              </li>
+            ))}
+          </ul>
+        </div>
 
-                <div
-                  onClick={() => setZoomedImage('/images/merch/jersey-full.jpg')}
-                  className="relative group rounded-2xl overflow-hidden border-2 border-purple-100 bg-purple-50/50 mb-4 cursor-pointer aspect-4/3 flex items-center justify-center"
-                >
-                  <img loading="lazy" decoding="async"
-                    src="/images/merch/jersey-full.jpg"
-                    alt="เสื้อวิ่ง CHANGSUEK RUN 2027 Micro-Dry Sublimation"
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                    referrerPolicy="no-referrer"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4">
-                    <span className="text-white text-xs font-bold flex items-center gap-1.5">
-                      <ZoomIn className="w-4 h-4 text-[#FFD633]" />
-                      คลิกเพื่อดูภาพขยาย
-                    </span>
-                  </div>
-                  <div className="absolute top-3 right-3 bg-white/95 text-[#2A1450] text-[10px] font-extrabold px-2.5 py-1 rounded-full shadow-xs">
-                    ลายพิมพ์ Full Sublimation
-                  </div>
-                </div>
-
-                <h4 className="text-lg font-extrabold text-[#2A1450]">
-                  เสื้อวิ่งผ้าไมโครโพลีเอสเตอร์ Micro-Dry
-                </h4>
-                <p className="text-xs sm:text-sm text-[#6B5A85] font-medium mt-1 leading-relaxed">
-                  เนื้อผ้านุ่มลื่น สัมผัสเบาสบาย ระบายอากาศดีเยี่ยม แห้งเร็ว ไม่อมเหงื่อ เหมาะกับอากาศริมชายหาดชะอำ
-                </p>
-
-                {/* Size guide badges */}
-                <div className="mt-4 pt-3 border-t border-purple-100">
-                  <div className="text-[11px] font-extrabold text-[#2A1450] mb-1.5">
-                    ตารางขนาดรอบอก (นิ้ว):
-                  </div>
-                  <div className="flex flex-wrap gap-1.5">
-                    {sizes.map((s) => (
-                      <span
-                        key={s.size}
-                        className="px-2.5 py-1 rounded-lg bg-[#FAF7FF] border border-purple-200 text-[11px] font-mono font-extrabold text-[#2A1450]"
-                      >
-                        {s.size}: <span className="text-[#6D28D9]">{s.chest}</span>
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {onOpenRegister && (
-                <button
-                  type="button"
-                  onClick={onOpenRegister}
-                  className="mt-5 w-full py-2.5 rounded-xl bg-[#2A1450] hover:bg-[#3F1D74] text-[#FFC928] text-xs sm:text-sm font-extrabold tracking-wide transition-all cursor-pointer"
-                >
-                  เลือกไซส์เสื้อตอนสมัครวิ่ง →
-                </button>
-              )}
-            </div>
-
-            {/* 2. MEDAL CARD */}
-            <div
-              className={`rounded-3xl border-2 p-5 sm:p-6 transition-all duration-300 flex flex-col justify-between ${
-                activeItem === 'medal'
-                  ? 'border-[#2A1450] bg-gradient-to-b from-[#FFFDF5] to-white shadow-[0_8px_0_#2A1450]'
-                  : 'border-amber-200 bg-white hover:border-amber-300'
-              }`}
-            >
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-xs font-extrabold px-3 py-1 rounded-full bg-gradient-to-r from-[#D97706] to-[#B45309] text-white flex items-center gap-1.5">
-                    <Award className="w-3.5 h-3.5 text-[#FFF9EA]" />
-                    <span>เหรียญรางวัล Finisher (Official Medal)</span>
-                  </span>
-                  <span className="text-[11px] font-bold text-amber-800 bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200">
-                    เมื่อเข้าเส้นชัย
-                  </span>
-                </div>
-
-                <div
-                  onClick={() => setZoomedImage('/images/merch/medal-full.jpg')}
-                  className="relative group rounded-2xl overflow-hidden border-2 border-amber-100 bg-amber-50/40 mb-4 cursor-pointer aspect-4/3 flex items-center justify-center"
-                >
-                  <img loading="lazy" decoding="async"
-                    src="/images/merch/medal-full.jpg"
-                    alt="เหรียญรางวัล Finisher CHANGSUEK RUN 2027 Zinc Alloy 3D"
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                    referrerPolicy="no-referrer"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4">
-                    <span className="text-white text-xs font-bold flex items-center gap-1.5">
-                      <ZoomIn className="w-4 h-4 text-[#FFD633]" />
-                      คลิกเพื่อดูภาพขยาย
-                    </span>
-                  </div>
-                  <div className="absolute top-3 right-3 bg-[#B45309] text-white text-[10px] font-extrabold px-2.5 py-1 rounded-full shadow-xs">
-                    หล่อนูน 3 มิติ Zinc Alloy
-                  </div>
-                </div>
-
-                <h4 className="text-lg font-extrabold text-[#2A1450]">
-                  เหรียญ Finisher สลักลายช้างศึกคู่ธรรมชาติ
-                </h4>
-                <p className="text-xs sm:text-sm text-[#6B5A85] font-medium mt-1 leading-relaxed">
-                  โลหะผสม Zinc Alloy ชุบผิวพรีเมียม ออกแบบลายช้างศึกเดินเคียงคู่สายลมหาดชะอำ พร้อมสายคล้องคอผ้าซาตินทอพิเศษแยกสีตามระยะ
-                </p>
-
-                <div className="grid grid-cols-2 gap-2 mt-4 text-xs font-bold text-[#2A1450]">
-                  <div className="flex items-center gap-1.5 bg-amber-50/90 border border-amber-200 p-2.5 rounded-xl">
-                    <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-                    <span>หล่อนูน 3 มิติ คมชัดสูง</span>
-                  </div>
-                  <div className="flex items-center gap-1.5 bg-amber-50/90 border border-amber-200 p-2.5 rounded-xl">
-                    <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
-                    <span>สลักชื่อและระยะวิ่งเฉพาะรุ่น</span>
-                  </div>
-                </div>
-              </div>
-
-              {onOpenRegister && (
-                <button
-                  type="button"
-                  onClick={onOpenRegister}
-                  className="mt-5 w-full py-2.5 rounded-xl bg-gradient-to-r from-[#FFD633] to-[#FFC928] hover:from-[#FFE066] hover:to-[#FFD633] text-[#2A1450] border-2 border-[#2A1450] text-xs sm:text-sm font-extrabold tracking-wide transition-all cursor-pointer"
-                >
-                  สมัครวิ่งเพื่อพิชิตเหรียญรางวัลนี้ →
-                </button>
-              )}
-            </div>
-          </div>
+        <div className="mt-8 flex flex-col items-center gap-3">
+          <button
+            type="button"
+            onClick={onOpenRegister}
+            className="inline-flex items-center justify-center gap-2 min-h-[52px] px-7 rounded-2xl bg-[#FFC928] hover:bg-[#FFD65A] text-[#2A1450] font-hero text-lg font-bold border-[3px] border-[#140826] shadow-[0_6px_0_#140826] active:translate-y-0.5 active:shadow-[0_4px_0_#140826] transition cursor-pointer"
+          >
+            สมัครวิ่งเพื่อรับของที่ระลึก <ArrowRight className="w-5 h-5" />
+          </button>
+          <p className="text-xs font-medium text-white/70 text-center">
+            ภาพประกอบเป็นแบบร่างผลิตภัณฑ์ ของจริงอาจแตกต่างเล็กน้อย
+          </p>
         </div>
       </div>
 
-      {/* Lightbox / Zoom Modal */}
-      {zoomedImage && (
+      {zoom && (
         <div
-          onClick={() => setZoomedImage(null)}
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md cursor-zoom-out animate-in fade-in"
+          className="fixed inset-0 z-[9500] bg-[#140826]/85 backdrop-blur-sm flex items-center justify-center p-3 sm:p-8"
+          onClick={() => setZoom(null)}
         >
-          <div className="relative max-w-3xl max-h-[85vh] w-full flex flex-col items-center">
-            <img loading="lazy" decoding="async"
-              src={zoomedImage}
-              alt="ภาพขยายของรางวัล CHANGSUEK RUN"
-              className="max-h-[80vh] w-auto max-w-full rounded-2xl shadow-2xl object-contain border-2 border-white/20"
-              referrerPolicy="no-referrer"
-            />
-            <div className="mt-3 text-white/80 text-xs font-bold bg-black/50 px-4 py-1.5 rounded-full">
-              คลิกที่ใดก็ได้เพื่อปิด
-            </div>
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label={zoom.name}
+            onClick={(e) => e.stopPropagation()}
+            className="relative w-full max-w-4xl"
+          >
+            <button
+              type="button"
+              onClick={() => setZoom(null)}
+              aria-label="ปิด"
+              className="absolute -top-3 -right-1 sm:-right-3 w-11 h-11 rounded-full bg-[#FFC928] text-[#2A1450] flex items-center justify-center shadow-lg cursor-pointer z-10"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <img src={zoom.image} alt={zoom.name} className="w-full max-h-[80vh] object-contain rounded-2xl bg-[#1B0B38]" />
+            <p className="mt-2 text-center font-hero text-lg text-white">{zoom.name}</p>
           </div>
         </div>
       )}
-    </div>
+    </section>
   );
 };

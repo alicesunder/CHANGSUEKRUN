@@ -106,7 +106,7 @@ export const TicketPrintEmailModal: React.FC<TicketPrintEmailModalProps> = ({
         `• หมายเลขประจำตัวนักวิ่ง (BIB): #${profile.bibNumber}\n` +
         `• ระยะทาง: ${profile.routeName} (${profile.routeId.toUpperCase()})\n` +
         `• ไซส์เสื้อวิ่ง: Size ${profile.shirtSize}\n` +
-        `• เวลาปล่อยตัว: ${meta.startTime} (วันอาทิตย์ที่ 15 ก.พ. 2570 ณ ค่ายนเรศวร ชะอำ-หัวหิน)\n` +
+        `• เวลาปล่อยตัว: ${meta.startTime} (วันเสาร์ที่ 9 ม.ค. 2570 ณ ค่ายนเรศวร ชะอำ-หัวหิน)\n` +
         `• ยอดชำระสุทธิ: ${formatBaht(totalAmount)} บาท (รหัสอ้างอิง: ${profile.paymentRef || 'PROMPTPAY-VERIFIED'})\n` +
         `----------------------------------------\n` +
         `กรุณาแสดงอีเมลหรือป้าย E-BIB นี้ที่จุดรับเสื้อและเหรียญรางวัลในวันงาน\n`
@@ -436,7 +436,7 @@ export const TicketPrintEmailModal: React.FC<TicketPrintEmailModalProps> = ({
                               วันและสถานที่จัดงาน
                             </span>
                             <span className="font-bold text-[#2A1450]">
-                              อาทิตย์ 15 ก.พ. 2570 · ค่ายนเรศวร
+                              เสาร์ 9 ม.ค. 2570 · ค่ายนเรศวร
                             </span>
                           </div>
                           <div>
@@ -641,7 +641,7 @@ export const TicketPrintEmailModal: React.FC<TicketPrintEmailModalProps> = ({
                       <Calendar className="w-4 h-4 text-[#6D28D9] shrink-0" />
                       <div>
                         <div className="font-bold text-slate-500">วันแข่งขัน</div>
-                        <div className="font-black">อาทิตย์ 15 ก.พ. 2570</div>
+                        <div className="font-black">เสาร์ 9 ม.ค. 2570</div>
                       </div>
                     </div>
                     <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 flex items-center gap-2">

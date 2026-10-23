@@ -193,7 +193,7 @@ export async function downloadOfficialBibAsPng(profile: RunnerProfile): Promise<
 
   ctx.fillStyle = '#E9D5FF';
   ctx.font = '700 22px "Prompt", sans-serif';
-  ctx.fillText(`${meta.wave} · ปล่อยตัว ${meta.startTime} · วันอาทิตย์ที่ 15 ก.พ. 2570`, 110, 182);
+  ctx.fillText(`${meta.wave} · ปล่อยตัว ${meta.startTime} · วันเสาร์ที่ 9 ม.ค. 2570`, 110, 182);
 
   // Distance Badge on Header Right
   ctx.fillStyle = '#FFC928';
