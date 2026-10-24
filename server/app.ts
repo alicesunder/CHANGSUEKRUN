@@ -1,0 +1,500 @@
+/**
+ * CHANG SUEK RUN 2027 — API (Express app, no listener).
+ * Used by server.ts (local / any Node host) and by the Vercel function (api/index.js).
+ *
+ * Money rules (all enforced here, never in the browser):
+ *  1. Prices come from src/data/eventData.ts on the server. The browser cannot set the amount.
+ *  2. Payment is Omise PromptPay only (no slip upload). An order becomes PAID only by:
+ *       a) an Omise charge we re-fetched from api.omise.co with our secret key, or
+ *       b) an authenticated admin approving it manually (e.g. cash paid on site).
+ *  3. BIB numbers are assigned by the database at the moment an order is paid.
+ *  4. Admin endpoints require a signed token from /api/admin/login.
+ */
+import express from 'express';
+import crypto from 'crypto';
+import type { RouteId } from '../src/types';
+import { calcTicketTotal, isDogCategory, ticketById, ticketCategories } from '../src/data/eventData';
+import {
+  deleteOrder,
+  getBibCounters,
+  getOmiseKey,
+  getOrder,
+  getSettings,
+  hashToken,
+  insertOrder,
+  isRefUsed,
+  listOrders,
+  markOrderPaid,
+  nextOrderId,
+  rateLimited,
+  saveSettings,
+  setBibCounters,
+  setOmiseKey,
+  toAdminView,
+  toRunnerView,
+  tokenMatches,
+  updateOrder,
+  formatBib,
+  ROUTES,
+  type StoredOrder,
+} from './store';
+import { checkCredentials, issueToken, requireAdmin } from './auth';
+import { createOmiseCharge, fetchOmiseQrImage, fetchVerifiedOmiseCharge, omiseKeyMode } from './payments';
+
+/** Must match PRIVACY_POLICY_VERSION in src/components/PrivacyNotice.tsx */
+const PRIVACY_POLICY_VERSION = '2026-10-22';
+/** Must match TERMS_VERSION in src/data/terms.ts */
+const TERMS_VERSION = '2026-10-22';
+
+const ROUTE_IDS: RouteId[] = ticketCategories.map((t) => t.id);
+const SHIRT_SIZES = ['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL'];
+const MAX_EXTRA = 9;
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+function clean(input: unknown, max: number): string {
+  return String(input ?? '')
+    .replace(/[\u0000-\u001F\u007F<>]/g, '')
+    .trim()
+    .slice(0, max);
+}
+
+function clientIp(req: express.Request): string {
+  return req.ip || req.socket.remoteAddress || 'unknown';
+}
+
+function orderToken(req: express.Request): string | undefined {
+  const h = req.headers['x-order-token'];
+  return typeof h === 'string' ? h : undefined;
+}
+
+async function loadOwnedOrder(req: express.Request, res: express.Response): Promise<StoredOrder | null> {
+  const order = await getOrder(String(req.params.orderId));
+  if (!order || !tokenMatches(order, orderToken(req))) {
+    res.status(404).json({ error: 'ไม่พบคำสั่งซื้อ' });
+    return null;
+  }
+  return order;
+}
+
+/** Re-checks an Omise charge and marks the order paid if (and only if) Omise confirms it. */
+async function settleFromOmise(order: StoredOrder, chargeId = order.omiseChargeId): Promise<StoredOrder> {
+  if (!chargeId || order.paymentStatus === 'PAID') return order;
+  const known = chargeId === order.omiseChargeId || (order.omisePastChargeIds || []).includes(chargeId);
+  if (!known) return order;
+  const charge = await fetchVerifiedOmiseCharge(chargeId);
+  if (
+    charge?.paid &&
+    charge.orderId === order.orderId &&
+    charge.currency === 'THB' &&
+    charge.amountSatang === Math.round(order.totalPrice * 100)
+  ) {
+    return (
+      (await markOrderPaid(order.orderId, {
+        status: 'AUTO_VERIFIED',
+        verifiedBy: 'Omise PromptPay (ยืนยันจาก Omise API)',
+        paymentRef: charge.chargeId || chargeId,
+        senderBank: 'Omise PromptPay',
+      })) || order
+    );
+  }
+  return order;
+}
+
+/** Checks the current charge and the two most recent replaced ones. */
+async function settleAll(order: StoredOrder): Promise<StoredOrder> {
+  for (const id of [order.omiseChargeId, ...(order.omisePastChargeIds || []).slice(-2)]) {
+    if (order.paymentStatus === 'PAID') break;
+    order = await settleFromOmise(order, id);
+  }
+  return order;
+}
+
+async function nextBibPreview() {
+  const counters = await getBibCounters();
+  return Object.fromEntries(ROUTE_IDS.map((r) => [r, formatBib(r, (counters[r] || 0) + 1)]));
+}
+
+async function publicConfig() {
+  const [s, nextBib, key] = await Promise.all([getSettings(), nextBibPreview(), getOmiseKey()]);
+  return {
+    promptPayId: s.promptPayId,
+    accountName: s.accountName,
+    bankLabel: s.bankLabel,
+    bankAccountNo: s.bankAccountNo,
+    paymentTimeoutMinutes: s.paymentTimeoutMinutes,
+    nextBib,
+    /** false until an Omise secret key is configured — registration is closed until then */
+    paymentReady: Boolean(key),
+  };
+}
+
+async function gatewayStatus() {
+  return {
+    hasOmiseKey: Boolean(await getOmiseKey()),
+    mode: await omiseKeyMode(),
+    webhookPath: '/api/payment-webhook',
+  };
+}
+
+type Handler = (req: express.Request, res: express.Response) => Promise<void>;
+/** Express 4 doesn't catch rejected promises; this turns them into a clean 500. */
+const h =
+  (fn: Handler): express.RequestHandler =>
+  (req, res, next) => {
+    fn(req, res).catch((err) => {
+      console.error(`[error] ${req.method} ${req.path}:`, err?.message || err);
+      if (!res.headersSent) res.status(500).json({ error: 'ระบบขัดข้องชั่วคราว กรุณาลองใหม่อีกครั้ง' });
+      else next(err);
+    });
+  };
+
+// ---------------------------------------------------------------------------
+export function createApp(): express.Express {
+  const app = express();
+
+  app.set('trust proxy', 1);
+  app.disable('x-powered-by');
+  app.use((_req, res, next) => {
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+    next();
+  });
+
+  const smallJson = express.json({ limit: '200kb' });
+
+  // ---------------- Public ----------------
+  app.get('/api/public-config', h(async (_req, res) => {
+    res.json(await publicConfig());
+  }));
+
+  // Create an order. The server computes the price; the browser only sends runner details.
+  app.post('/api/orders', smallJson, h(async (req, res) => {
+    if (await rateLimited(`order:${clientIp(req)}`, 15, 10 * 60 * 1000)) {
+      res.status(429).json({ error: 'สร้างคำสั่งซื้อบ่อยเกินไป กรุณารอสักครู่แล้วลองใหม่' });
+      return;
+    }
+    if (!(await getOmiseKey())) {
+      res.status(503).json({ error: 'ระบบชำระเงินยังไม่เปิดใช้งาน กรุณาติดต่อผู้จัดงาน' });
+      return;
+    }
+    const b = req.body || {};
+    const routeId = b.routeId as RouteId;
+    if (!ROUTE_IDS.includes(routeId)) {
+      res.status(400).json({ error: 'ระยะวิ่งไม่ถูกต้อง' });
+      return;
+    }
+    const isDog = isDogCategory(routeId);
+    const extraPeople = isDog ? Math.min(MAX_EXTRA, Math.max(0, Math.floor(Number(b.extraPeople) || 0))) : 0;
+    const extraDogs = isDog ? Math.min(MAX_EXTRA, Math.max(0, Math.floor(Number(b.extraDogs) || 0))) : 0;
+
+    const fullName = clean(b.fullName, 120);
+    const phone = clean(b.phone, 30);
+    const email = clean(b.email, 120);
+    const emergencyPhone = clean(b.emergencyPhone, 30);
+    const shirtSize = SHIRT_SIZES.includes(b.shirtSize) ? b.shirtSize : '';
+    const errors: string[] = [];
+    if (fullName.length < 2) errors.push('กรุณากรอกชื่อ-นามสกุล');
+    if (phone.replace(/\D/g, '').length < 9) errors.push('เบอร์โทรศัพท์ไม่ถูกต้อง');
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errors.push('อีเมลไม่ถูกต้อง');
+    if (emergencyPhone.replace(/\D/g, '').length < 9) errors.push('เบอร์ติดต่อฉุกเฉินไม่ถูกต้อง');
+    if (!shirtSize) errors.push('กรุณาเลือกไซซ์เสื้อ');
+    if (b.privacyConsent !== true) errors.push('กรุณายอมรับข้อกำหนดและเงื่อนไขและประกาศความเป็นส่วนตัว');
+    if (errors.length) {
+      res.status(400).json({ error: errors.join(' · ') });
+      return;
+    }
+
+    const total = calcTicketTotal(routeId, extraPeople, extraDogs);
+    const token = crypto.randomBytes(24).toString('base64url');
+    const now = new Date();
+    const settings = await getSettings();
+    const timeoutMin = Math.max(1, settings.paymentTimeoutMinutes || 15);
+
+    const order: StoredOrder = {
+      orderId: await nextOrderId(),
+      accessTokenHash: hashToken(token),
+      fullName,
+      phone,
+      email,
+      emergencyPhone,
+      routeId,
+      routeName: ticketById(routeId).name,
+      shirtSize,
+      runningWithDog: isDog,
+      dogName: isDog ? clean(b.dogName, 80) : undefined,
+      dogBreed: isDog ? clean(b.dogBreed, 80) : undefined,
+      extraPeople,
+      extraDogs,
+      extraRunnerNames: extraPeople > 0 ? clean(b.extraRunnerNames, 240) : undefined,
+      peopleCount: isDog ? 1 + extraPeople : 1,
+      dogCount: isDog ? 1 + extraDogs : 0,
+      totalPrice: total,
+      bibNumber: '',
+      paymentMethod: 'PROMPTPAY_QR',
+      paymentStatus: 'PENDING',
+      paymentRef: '',
+      senderBank: '',
+      verificationStatus: 'AWAITING_PAYMENT',
+      kitStatus: 'PENDING_PICKUP',
+      registrationStatus: 'REGISTERED',
+      privacyConsentAt: now.toISOString(),
+      privacyPolicyVersion: PRIVACY_POLICY_VERSION,
+      termsVersion: TERMS_VERSION,
+      createdAt: now.toISOString(),
+      expiresAt: new Date(now.getTime() + timeoutMin * 60 * 1000).toISOString(),
+    };
+    await insertOrder(order);
+
+    const charge = await createOmiseCharge({ amountBaht: total, orderId: order.orderId });
+    if (!charge.chargeId || !charge.qrImageUrl) {
+      console.warn(`[omise] charge create failed for ${order.orderId}: ${charge.error}`);
+      await deleteOrder(order.orderId);
+      res.status(502).json({ error: 'สร้าง QR ชำระเงินไม่สำเร็จ กรุณาลองใหม่อีกครั้ง' });
+      return;
+    }
+    const saved = await updateOrder(order.orderId, (o) => {
+      o.omiseChargeId = charge.chargeId;
+      o.omiseQrImageUrl = charge.qrImageUrl;
+      if (charge.expiresAt) o.expiresAt = charge.expiresAt;
+    });
+
+    res.json({ order: toRunnerView(saved || order), accessToken: token, config: await publicConfig() });
+  }));
+
+  // Order status for the runner who created it (requires the order's access token).
+  app.get('/api/orders/:orderId', h(async (req, res) => {
+    let order = await loadOwnedOrder(req, res);
+    if (!order) return;
+    order = await settleAll(order);
+    res.json({ order: toRunnerView(order) });
+  }));
+
+  // QR image for the runner's own order, served same-origin so it can be saved on a phone.
+  app.get('/api/orders/:orderId/qr', h(async (req, res) => {
+    const order = await loadOwnedOrder(req, res);
+    if (!order) return;
+    const img = order.omiseQrImageUrl ? await fetchOmiseQrImage(order.omiseQrImageUrl) : null;
+    if (!img) {
+      res.status(502).json({ error: 'โหลด QR ไม่สำเร็จ' });
+      return;
+    }
+    res.setHeader('Content-Type', img.type);
+    res.setHeader('Cache-Control', 'private, max-age=300');
+    // The image comes from Omise; never let it run scripts if opened directly.
+    res.setHeader('Content-Security-Policy', "default-src 'none'; style-src 'unsafe-inline'; sandbox");
+    res.send(img.body);
+  }));
+
+  // New QR for an unpaid order whose Omise charge expired (same order, same price).
+  app.post('/api/orders/:orderId/renew-qr', h(async (req, res) => {
+    let order = await loadOwnedOrder(req, res);
+    if (!order) return;
+    if (await rateLimited(`renew:${order.orderId}`, 6, 60 * 60 * 1000)) {
+      res.status(429).json({ error: 'ขอ QR ใหม่บ่อยเกินไป กรุณารอสักครู่' });
+      return;
+    }
+    order = await settleAll(order);
+    if (order.paymentStatus === 'PAID') {
+      res.json({ order: toRunnerView(order) });
+      return;
+    }
+    const charge = await createOmiseCharge({ amountBaht: order.totalPrice, orderId: order.orderId });
+    if (!charge.chargeId || !charge.qrImageUrl) {
+      res.status(502).json({ error: 'สร้าง QR ใหม่ไม่สำเร็จ กรุณาลองใหม่' });
+      return;
+    }
+    const timeoutMin = Math.max(1, (await getSettings()).paymentTimeoutMinutes || 15);
+    const saved = await updateOrder(order.orderId, (o) => {
+      if (o.omiseChargeId) o.omisePastChargeIds = [...(o.omisePastChargeIds || []), o.omiseChargeId].slice(-10);
+      o.omiseChargeId = charge.chargeId;
+      o.omiseQrImageUrl = charge.qrImageUrl;
+      o.expiresAt = charge.expiresAt || new Date(Date.now() + timeoutMin * 60 * 1000).toISOString();
+    });
+    res.json({ order: toRunnerView(saved || order) });
+  }));
+
+  // Omise webhook. The body is only a hint — we always re-fetch the charge from Omise.
+  app.post('/api/payment-webhook', smallJson, h(async (req, res) => {
+    const chargeId = req.body?.data?.object === 'charge' ? String(req.body.data.id || '') : '';
+    if (chargeId) {
+      const charge = await fetchVerifiedOmiseCharge(chargeId);
+      const order = charge?.orderId ? await getOrder(charge.orderId) : undefined;
+      if (order) await settleFromOmise(order, chargeId);
+    }
+    res.json({ received: true });
+  }));
+
+  // ---------------- Admin ----------------
+  app.post('/api/admin/login', smallJson, h(async (req, res) => {
+    const r = await checkCredentials(clientIp(req), req.body?.username, req.body?.password);
+    if (r.ok) {
+      const username = String(req.body.username).trim();
+      console.log(`[admin] login ok: ${username} from ${clientIp(req)}`);
+      res.json({ ...issueToken(username), username });
+      return;
+    }
+    console.warn(`[admin] login failed from ${clientIp(req)}`);
+    res.status(r.lockedSeconds ? 429 : 401).json({
+      error: r.lockedSeconds
+        ? `ใส่รหัสผิดหลายครั้ง ระงับการเข้าสู่ระบบ ${Math.ceil(r.lockedSeconds / 60)} นาที`
+        : `ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง (เหลืออีก ${r.remaining} ครั้ง)`,
+      lockedSeconds: r.lockedSeconds,
+    });
+  }));
+
+  app.get('/api/admin/orders', requireAdmin, h(async (_req, res) => {
+    // Settle any Omise orders still waiting (covers missed webhooks).
+    let orders = await listOrders();
+    const waiting = orders.filter((o) => o.omiseChargeId && o.paymentStatus !== 'PAID').slice(0, 10);
+    if (waiting.length) {
+      await Promise.all(waiting.map(settleAll));
+      orders = await listOrders();
+    }
+    res.json({
+      orders: orders.map(toAdminView),
+      bibCounters: await getBibCounters(),
+      nextBib: await nextBibPreview(),
+    });
+  }));
+
+  app.post('/api/admin/orders/:orderId/verification', requireAdmin, smallJson, h(async (req, res) => {
+    const orderId = String(req.params.orderId);
+    const order = await getOrder(orderId);
+    if (!order) {
+      res.status(404).json({ error: 'ไม่พบคำสั่งซื้อ' });
+      return;
+    }
+    const admin = (req as any).admin.username as string;
+    const status = req.body?.status;
+    if (status === 'ADMIN_APPROVED') {
+      const ref = clean(req.body?.paymentRef, 60) || order.paymentRef || `MANUAL-${order.orderId}`;
+      if (ref !== order.paymentRef && (await isRefUsed(ref))) {
+        res.status(400).json({ error: `เลขที่รายการ ${ref} ถูกใช้กับคำสั่งซื้ออื่นแล้ว` });
+        return;
+      }
+      await markOrderPaid(orderId, {
+        status: 'ADMIN_APPROVED',
+        verifiedBy: admin,
+        paymentRef: ref,
+        senderBank: clean(req.body?.senderBank, 80) || order.senderBank,
+      });
+    } else if (status === 'REJECTED' || status === 'PENDING_REVIEW') {
+      await updateOrder(orderId, (o) => {
+        o.verificationStatus = status;
+        o.paymentStatus = 'PENDING';
+        o.registrationStatus = 'REGISTERED';
+        o.verifiedAt = new Date().toISOString();
+        o.verifiedBy = admin;
+      });
+    } else {
+      res.status(400).json({ error: 'สถานะไม่ถูกต้อง' });
+      return;
+    }
+    console.log(`[admin] ${admin} set ${orderId} -> ${status}`);
+    res.json({ order: toAdminView((await getOrder(orderId))!) });
+  }));
+
+  app.post('/api/admin/orders/:orderId/kit', requireAdmin, h(async (req, res) => {
+    const orderId = String(req.params.orderId);
+    const order = await getOrder(orderId);
+    if (!order) {
+      res.status(404).json({ error: 'ไม่พบคำสั่งซื้อ' });
+      return;
+    }
+    if (order.paymentStatus !== 'PAID') {
+      res.status(400).json({ error: 'คำสั่งซื้อนี้ยังไม่ได้ชำระเงิน' });
+      return;
+    }
+    const updated = await updateOrder(orderId, (o) => {
+      o.kitStatus = o.kitStatus === 'CHECKED_IN' ? 'PENDING_PICKUP' : 'CHECKED_IN';
+      o.registrationStatus = o.kitStatus === 'CHECKED_IN' ? 'CHECKED_IN' : 'CONFIRMED';
+    });
+    res.json({ order: toAdminView(updated!) });
+  }));
+
+  app.delete('/api/admin/orders/:orderId', requireAdmin, h(async (req, res) => {
+    const id = String(req.params.orderId);
+    if (!(await getOrder(id))) {
+      res.status(404).json({ error: 'ไม่พบคำสั่งซื้อ' });
+      return;
+    }
+    await deleteOrder(id);
+    console.log(`[admin] ${(req as any).admin.username} deleted ${id}`);
+    res.json({ ok: true });
+  }));
+
+  app.get('/api/admin/settings', requireAdmin, h(async (_req, res) => {
+    res.json({ settings: await getSettings(), bibCounters: await getBibCounters() });
+  }));
+
+  app.put('/api/admin/settings', requireAdmin, smallJson, h(async (req, res) => {
+    const s = req.body?.settings || {};
+    const counters = req.body?.bibCounters || {};
+    const promptPayId = String(s.promptPayId || '').replace(/[^0-9]/g, '');
+    if (![10, 13, 15].includes(promptPayId.length)) {
+      res.status(400).json({ error: 'รหัสพร้อมเพย์ต้องเป็นเบอร์โทร 10 หลัก, เลขบัตร/เลขผู้เสียภาษี 13 หลัก หรือเลขอ้างอิง K PLUS 15 หลัก' });
+      return;
+    }
+    const bankAccountNo = String(s.bankAccountNo || '').replace(/[^0-9]/g, '');
+    if (bankAccountNo && (bankAccountNo.length < 10 || bankAccountNo.length > 15)) {
+      res.status(400).json({ error: 'เลขบัญชีธนาคารต้องมี 10–15 หลัก' });
+      return;
+    }
+    const wanted: Record<string, number> = {};
+    for (const r of ROUTES) {
+      const v = counters[r];
+      if (v === undefined) continue;
+      if (!Number.isInteger(v) || v < 0 || v > 9999) {
+        res.status(400).json({ error: `ลำดับ BIB ของ ${r} ไม่ถูกต้อง` });
+        return;
+      }
+      wanted[r] = v;
+    }
+    const result = await setBibCounters(wanted);
+    if (!result.ok) {
+      res.status(400).json({ error: `ลำดับ BIB ของ ${result.route} ต้องไม่น้อยกว่าที่ออกไปแล้ว (${result.current})` });
+      return;
+    }
+    const cur = await getSettings();
+    await saveSettings({
+      promptPayId,
+      accountName: clean(s.accountName, 150) || cur.accountName,
+      bankLabel: clean(s.bankLabel, 80) || cur.bankLabel,
+      bankAccountNo,
+      paymentTimeoutMinutes: Math.min(120, Math.max(5, Math.floor(Number(s.paymentTimeoutMinutes) || 15))),
+    });
+    console.log(`[admin] ${(req as any).admin.username} updated settings`);
+    res.json({ settings: await getSettings(), bibCounters: await getBibCounters() });
+  }));
+
+  app.get('/api/admin/payment-gateway', requireAdmin, h(async (_req, res) => {
+    res.json(await gatewayStatus());
+  }));
+
+  app.post('/api/admin/payment-gateway', requireAdmin, smallJson, h(async (req, res) => {
+    const admin = (req as any).admin.username as string;
+    if (req.body?.clear === true) {
+      await setOmiseKey('');
+      console.log(`[admin] ${admin} removed the Omise key`);
+      res.json(await gatewayStatus());
+      return;
+    }
+    const key = String(req.body?.secretKey || '').trim();
+    if (!/^skey_(test_)?[A-Za-z0-9]{10,}$/.test(key)) {
+      res.status(400).json({ error: 'Omise Secret Key ต้องขึ้นต้นด้วย skey_ หรือ skey_test_' });
+      return;
+    }
+    await setOmiseKey(key);
+    console.log(`[admin] ${admin} set the Omise key (${key.startsWith('skey_test_') ? 'test' : 'live'})`);
+    res.json(await gatewayStatus());
+  }));
+
+  // Any other /api path is a 404 (prevents the SPA fallback from answering API calls).
+  app.use('/api', (_req, res) => {
+    res.status(404).json({ error: 'Not found' });
+  });
+
+  return app;
+}

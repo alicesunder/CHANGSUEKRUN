@@ -4,7 +4,7 @@
  * Trust model: a charge counts as paid only after we fetch it from api.omise.co
  * with our own secret key. Webhook bodies are treated as a hint, never as proof.
  */
-import { getEffectiveSlipApiKeys } from './store';
+import { getOmiseKey } from './store';
 
 // ---------------------------------------------------------------------------
 // Omise
@@ -15,16 +15,11 @@ function omiseAuth(secretKey: string) {
   return `Basic ${Buffer.from(`${secretKey}:`).toString('base64')}`;
 }
 
-export function omiseEnabledFor(amountBaht: number): boolean {
-  const key = getEffectiveSlipApiKeys().omiseSecretKey;
-  return Boolean(key) && Math.round(amountBaht * 100) >= OMISE_MIN_SATANG;
-}
-
 export async function createOmiseCharge(params: {
   amountBaht: number;
   orderId: string;
 }): Promise<{ chargeId?: string; qrImageUrl?: string; expiresAt?: string; error?: string }> {
-  const secretKey = getEffectiveSlipApiKeys().omiseSecretKey;
+  const secretKey = await getOmiseKey();
   if (!secretKey) return { error: 'Omise not configured' };
   const body = new URLSearchParams();
   body.append('amount', String(Math.round(params.amountBaht * 100)));
@@ -63,7 +58,7 @@ export async function fetchVerifiedOmiseCharge(chargeId: string): Promise<{
   currency?: string;
   chargeId?: string;
 } | null> {
-  const secretKey = getEffectiveSlipApiKeys().omiseSecretKey;
+  const secretKey = await getOmiseKey();
   if (!secretKey || !/^chrg_[A-Za-z0-9_]+$/.test(chargeId)) return null;
   try {
     const resp = await fetch(`https://api.omise.co/charges/${encodeURIComponent(chargeId)}`, {
@@ -84,8 +79,8 @@ export async function fetchVerifiedOmiseCharge(chargeId: string): Promise<{
   }
 }
 
-export function omiseKeyMode(): 'live' | 'test' | null {
-  const key = getEffectiveSlipApiKeys().omiseSecretKey;
+export async function omiseKeyMode(): Promise<'live' | 'test' | null> {
+  const key = await getOmiseKey();
   if (!key) return null;
   return key.startsWith('skey_test_') ? 'test' : 'live';
 }
@@ -99,7 +94,7 @@ export async function fetchOmiseQrImage(url: string): Promise<{ type: string; bo
     return null;
   }
   if (!(host === 'omise.co' || host.endsWith('.omise.co'))) return null;
-  const secretKey = getEffectiveSlipApiKeys().omiseSecretKey;
+  const secretKey = await getOmiseKey();
   try {
     const resp = await fetch(url, secretKey ? { headers: { Authorization: omiseAuth(secretKey) } } : {});
     if (!resp.ok) return null;

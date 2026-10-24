@@ -1,21 +1,11 @@
 /**
- * Server-side persistent store for CHANG SUEK RUN.
- *
- * Everything that decides money or tickets lives here, never in the browser:
- * orders, BIB counters, used transaction refs (anti-replay), PromptPay settings
- * and slip-verification API keys.
- *
- * Storage is a single JSON file written atomically (temp file + rename) after
- * every change. Slip images are stored as separate files under DATA_DIR/slips.
- *
- * IMPORTANT FOR DEPLOYMENT: DATA_DIR must be on persistent storage and the app
- * must run as a single instance. On Cloud Run the container filesystem is wiped
- * on every restart — mount a volume (e.g. Cloud Storage FUSE) and set DATA_DIR.
+ * Persistent store (Postgres). Every function is async.
+ * Orders are kept as one jsonb document plus a few indexed columns, so the admin can
+ * also query them with plain SQL in Supabase.
  */
-import fs from 'fs';
-import path from 'path';
 import crypto from 'crypto';
 import type { RouteId } from '../src/types';
+import { dbQuery, dbTx, type Q } from './db';
 
 export type VerificationStatus =
   | 'AWAITING_PAYMENT'
@@ -59,7 +49,7 @@ export interface StoredOrder {
   omiseQrImageUrl?: string;
   /** Earlier charges of this order (replaced by "new QR"); a late payment on any of them still counts */
   omisePastChargeIds?: string[];
-  /** when the runner accepted the privacy notice, and which version */
+  /** when the runner accepted the privacy notice / terms, and which versions */
   privacyConsentAt?: string;
   privacyPolicyVersion?: string;
   termsVersion?: string;
@@ -80,28 +70,8 @@ export interface PublicSettings {
   paymentTimeoutMinutes: number;
 }
 
-export interface SlipApiKeys {
-  easySlipKey: string;
-  thunderKey: string;
-  slipOkKey: string;
-  slipOkBranch: string;
-  omiseSecretKey: string;
-}
-
-interface DbShape {
-  version: 1;
-  orderSeq: number;
-  orders: StoredOrder[];
-  bibCounters: Record<RouteId, number>;
-  usedTransRefs: string[];
-  usedSlipHashes: string[];
-  settings: PublicSettings;
-  slipApi: Partial<SlipApiKeys>;
-}
-
-export const DATA_DIR = path.resolve(process.env.DATA_DIR || path.join(process.cwd(), 'data'));
-export const SLIP_DIR = path.join(DATA_DIR, 'slips');
-const DB_FILE = path.join(DATA_DIR, 'db.json');
+export const ROUTES: RouteId[] = ['10km', '5km', '3km', '1km'];
+export type BibCounters = Record<RouteId, number>;
 
 const DEFAULT_SETTINGS: PublicSettings = {
   promptPayId: process.env.PROMPTPAY_ID || '004999254157786',
@@ -113,63 +83,42 @@ const DEFAULT_SETTINGS: PublicSettings = {
   paymentTimeoutMinutes: 15,
 };
 
-function emptyDb(): DbShape {
-  return {
-    version: 1,
-    orderSeq: 0,
-    orders: [],
-    bibCounters: { '10km': 0, '5km': 0, '3km': 0, '1km': 0 },
-    usedTransRefs: [],
-    usedSlipHashes: [],
-    settings: { ...DEFAULT_SETTINGS },
-    slipApi: {},
-  };
+const asObj = <T>(v: unknown): T => (typeof v === 'string' ? JSON.parse(v) : (v as T));
+
+// ---------------------------------------------------------------------------
+// Settings & gateway key
+// ---------------------------------------------------------------------------
+export async function getSettings(): Promise<PublicSettings> {
+  const rows = await dbQuery<{ value: unknown }>("select value from csr.settings where key = 'public'");
+  return { ...DEFAULT_SETTINGS, ...(rows[0] ? asObj<Partial<PublicSettings>>(rows[0].value) : {}) };
 }
 
-function load(): DbShape {
-  fs.mkdirSync(SLIP_DIR, { recursive: true });
-  if (!fs.existsSync(DB_FILE)) return emptyDb();
-  const raw = fs.readFileSync(DB_FILE, 'utf8');
-  const parsed = JSON.parse(raw) as DbShape; // fail loudly on corruption rather than silently wiping data
-  const base = emptyDb();
-  return {
-    ...base,
-    ...parsed,
-    bibCounters: { ...base.bibCounters, ...(parsed.bibCounters || {}) },
-    settings: { ...base.settings, ...(parsed.settings || {}) },
-  };
+export async function saveSettings(s: PublicSettings): Promise<void> {
+  await dbQuery(
+    `insert into csr.settings (key, value) values ('public', $1::jsonb)
+     on conflict (key) do update set value = excluded.value, updated_at = now()`,
+    [JSON.stringify(s)]
+  );
 }
 
-const db: DbShape = load();
-
-// We no longer collect national ID / passport numbers. Remove any left from older versions.
-if (db.orders.some((o) => 'idCardOrPassport' in (o as object))) {
-  for (const o of db.orders) delete (o as { idCardOrPassport?: string }).idCardOrPassport;
-  fs.mkdirSync(DATA_DIR, { recursive: true });
-  fs.writeFileSync(DB_FILE, JSON.stringify(db, null, 1), 'utf8');
+/** Omise secret key: a key saved from the admin page wins; otherwise the OMISE_SECRET_KEY env var. */
+export async function getOmiseKey(): Promise<string> {
+  const rows = await dbQuery<{ value: unknown }>("select value from csr.settings where key = 'gateway'");
+  const saved = rows[0] ? asObj<{ omiseSecretKey?: string }>(rows[0].value).omiseSecretKey : undefined;
+  return (saved ?? (process.env.OMISE_SECRET_KEY || '')).trim();
 }
 
-function persist(): void {
-  const tmp = `${DB_FILE}.${process.pid}.tmp`;
-  fs.writeFileSync(tmp, JSON.stringify(db, null, 1), 'utf8');
-  fs.renameSync(tmp, DB_FILE);
+export async function setOmiseKey(key: string): Promise<void> {
+  await dbQuery(
+    `insert into csr.settings (key, value) values ('gateway', $1::jsonb)
+     on conflict (key) do update set value = excluded.value, updated_at = now()`,
+    [JSON.stringify({ omiseSecretKey: key })]
+  );
 }
 
-/** All mutations go through here so every change is written to disk immediately. */
-export function mutate<T>(fn: (d: DbShape) => T): T {
-  const result = fn(db);
-  persist();
-  return result;
-}
-
-export function read(): Readonly<DbShape> {
-  return db;
-}
-
-export function getOrder(orderId: string): StoredOrder | undefined {
-  return db.orders.find((o) => o.orderId === orderId);
-}
-
+// ---------------------------------------------------------------------------
+// Orders
+// ---------------------------------------------------------------------------
 export function hashToken(token: string): string {
   return crypto.createHash('sha256').update(token).digest('hex');
 }
@@ -181,38 +130,115 @@ export function tokenMatches(order: StoredOrder, token: string | undefined): boo
   return a.length === b.length && crypto.timingSafeEqual(a, b);
 }
 
-const BIB_PREFIX: Record<RouteId, string> = { '10km': '10', '5km': '05', '3km': '03', '1km': '01' };
+export async function nextOrderId(): Promise<string> {
+  const rows = await dbQuery<{ n: string }>("select nextval('csr.order_seq')::text as n");
+  return `CSR27-${String(rows[0].n).padStart(5, '0')}`;
+}
 
+const rowToOrder = (row: { data: unknown }): StoredOrder => asObj<StoredOrder>(row.data);
+
+async function writeOrder(q: Q, o: StoredOrder): Promise<void> {
+  await q(
+    `update csr.orders set token_hash = $2, route_id = $3, payment_status = $4, verification_status = $5,
+       bib_number = $6, omise_charge_id = $7, data = $8::jsonb where order_id = $1`,
+    [o.orderId, o.accessTokenHash, o.routeId, o.paymentStatus, o.verificationStatus, o.bibNumber || '', o.omiseChargeId || null, JSON.stringify(o)]
+  );
+}
+
+export async function insertOrder(o: StoredOrder): Promise<void> {
+  await dbQuery(
+    `insert into csr.orders (order_id, token_hash, route_id, payment_status, verification_status, bib_number, omise_charge_id, created_at, data)
+     values ($1, $2, $3, $4, $5, $6, $7, $8, $9::jsonb)`,
+    [o.orderId, o.accessTokenHash, o.routeId, o.paymentStatus, o.verificationStatus, o.bibNumber || '', o.omiseChargeId || null, o.createdAt, JSON.stringify(o)]
+  );
+}
+
+export async function getOrder(orderId: string): Promise<StoredOrder | undefined> {
+  const rows = await dbQuery<{ data: unknown }>('select data from csr.orders where order_id = $1', [orderId]);
+  return rows[0] ? rowToOrder(rows[0]) : undefined;
+}
+
+export async function listOrders(): Promise<StoredOrder[]> {
+  const rows = await dbQuery<{ data: unknown }>('select data from csr.orders order by created_at desc, order_id desc');
+  return rows.map(rowToOrder);
+}
+
+export async function deleteOrder(orderId: string): Promise<void> {
+  await dbQuery('delete from csr.orders where order_id = $1', [orderId]);
+}
+
+/** Read-modify-write under a row lock, so two requests can't overwrite each other. */
+export async function updateOrder(orderId: string, mutator: (o: StoredOrder) => void): Promise<StoredOrder | undefined> {
+  return dbTx(async (q) => {
+    const rows = await q<{ data: unknown }>('select data from csr.orders where order_id = $1 for update', [orderId]);
+    if (!rows[0]) return undefined;
+    const o = rowToOrder(rows[0]);
+    mutator(o);
+    await writeOrder(q, o);
+    return o;
+  });
+}
+
+const BIB_PREFIX: Record<RouteId, string> = { '10km': '10', '5km': '05', '3km': '03', '1km': '01' };
 export function formatBib(routeId: RouteId, seq: number): string {
   return `${BIB_PREFIX[routeId] || '05'}-${String(seq).padStart(4, '0')}`;
 }
 
-export function nextBibPreview(routeId: RouteId): string {
-  return formatBib(routeId, (db.bibCounters[routeId] || 0) + 1);
+export async function getBibCounters(): Promise<BibCounters> {
+  const rows = await dbQuery<{ route_id: RouteId; last_seq: number }>('select route_id, last_seq from csr.bib_counters');
+  const out = { '10km': 0, '5km': 0, '3km': 0, '1km': 0 } as BibCounters;
+  for (const r of rows) out[r.route_id] = Number(r.last_seq);
+  return out;
+}
+
+/** Raise counters (never lower them). Returns the route that was refused, if any. */
+export async function setBibCounters(next: Partial<BibCounters>): Promise<{ ok: true } | { ok: false; route: RouteId; current: number }> {
+  return dbTx(async (q) => {
+    for (const r of ROUTES) {
+      const v = next[r];
+      if (v === undefined) continue;
+      const cur = await q<{ last_seq: number }>('select last_seq from csr.bib_counters where route_id = $1 for update', [r]);
+      const current = Number(cur[0]?.last_seq ?? 0);
+      if (v < current) return { ok: false as const, route: r, current };
+      await q(
+        `insert into csr.bib_counters (route_id, last_seq) values ($1, $2)
+         on conflict (route_id) do update set last_seq = excluded.last_seq`,
+        [r, v]
+      );
+    }
+    return { ok: true as const };
+  });
+}
+
+export async function isRefUsed(ref: string): Promise<boolean> {
+  if (!ref) return false;
+  const rows = await dbQuery('select 1 from csr.used_refs where ref = $1', [ref.toUpperCase()]);
+  return rows.length > 0;
 }
 
 /**
- * Marks an order as paid and assigns its BIB. Idempotent: calling it twice on the
- * same order never consumes a second BIB number.
+ * Marks an order paid and assigns its BIB, atomically. Idempotent: an order that is already
+ * paid is returned unchanged, so a repeated webhook never consumes a second BIB number.
  */
-export function markOrderPaid(
+export async function markOrderPaid(
   orderId: string,
-  info: {
-    status: 'AUTO_VERIFIED' | 'ADMIN_APPROVED';
-    verifiedBy: string;
-    paymentRef: string;
-    senderBank: string;
-    note?: string;
-  }
-): StoredOrder | undefined {
-  return mutate((d) => {
-    const order = d.orders.find((o) => o.orderId === orderId);
-    if (!order) return undefined;
+  info: { status: 'AUTO_VERIFIED' | 'ADMIN_APPROVED'; verifiedBy: string; paymentRef: string; senderBank: string; note?: string }
+): Promise<StoredOrder | undefined> {
+  return dbTx(async (q) => {
+    const rows = await q<{ data: unknown }>('select data from csr.orders where order_id = $1 for update', [orderId]);
+    if (!rows[0]) return undefined;
+    const order = rowToOrder(rows[0]);
+    if (order.paymentStatus === 'PAID' && order.bibNumber) return order;
+
     const now = new Date().toISOString();
     if (!order.bibNumber) {
-      const seq = (d.bibCounters[order.routeId] || 0) + 1;
-      d.bibCounters[order.routeId] = seq;
-      order.bibNumber = formatBib(order.routeId, seq);
+      const c = await q<{ last_seq: number }>(
+        `insert into csr.bib_counters (route_id, last_seq) values ($1, 1)
+         on conflict (route_id) do update set last_seq = csr.bib_counters.last_seq + 1
+         returning last_seq`,
+        [order.routeId]
+      );
+      order.bibNumber = formatBib(order.routeId, Number(c[0].last_seq));
     }
     order.verificationStatus = info.status;
     order.paymentStatus = 'PAID';
@@ -222,40 +248,37 @@ export function markOrderPaid(
     order.paidAt = order.paidAt || now;
     if (info.paymentRef) {
       order.paymentRef = info.paymentRef;
-      const ref = info.paymentRef.toUpperCase();
-      if (!d.usedTransRefs.includes(ref)) d.usedTransRefs.push(ref);
+      await q('insert into csr.used_refs (ref, order_id) values ($1, $2) on conflict (ref) do nothing', [
+        info.paymentRef.toUpperCase(),
+        orderId,
+      ]);
     }
     if (info.senderBank) order.senderBank = info.senderBank;
     if (info.note) order.verificationNote = info.note;
+    await writeOrder(q, order);
     return order;
   });
 }
 
-export function isTransRefUsed(ref: string): boolean {
-  return Boolean(ref) && db.usedTransRefs.includes(ref.toUpperCase());
+// ---------------------------------------------------------------------------
+// Rate limiting (shared across serverless instances)
+// ---------------------------------------------------------------------------
+/** Records a hit and returns true when `key` has exceeded `limit` hits within `windowMs`. */
+export async function rateLimited(key: string, limit: number, windowMs: number): Promise<boolean> {
+  const rows = await dbTx(async (q) => {
+    await q('insert into csr.rate_hits (key) values ($1)', [key]);
+    if (Math.random() < 0.02) await q("delete from csr.rate_hits where at < now() - interval '1 day'");
+    return q<{ n: string }>(
+      "select count(*)::text as n from csr.rate_hits where key = $1 and at > now() - ($2::int * interval '1 millisecond')",
+      [key, windowMs]
+    );
+  });
+  return Number(rows[0].n) > limit;
 }
 
-export function isSlipHashUsed(hash: string): boolean {
-  return db.usedSlipHashes.includes(hash);
-}
-
-export function getEffectiveSlipApiKeys(): SlipApiKeys {
-  const s = db.slipApi || {};
-  const env = (k: string) => (process.env[k] || '').trim();
-  return {
-    easySlipKey: s.easySlipKey ?? env('EASYSLIP_API_KEY'),
-    thunderKey: s.thunderKey ?? env('THUNDER_API_KEY'),
-    slipOkKey: s.slipOkKey ?? env('SLIPOK_API_KEY'),
-    slipOkBranch: s.slipOkBranch ?? env('SLIPOK_BRANCH_ID'),
-    omiseSecretKey: s.omiseSecretKey ?? env('OMISE_SECRET_KEY'),
-  };
-}
-
-export function hasBankSlipApi(): boolean {
-  const k = getEffectiveSlipApiKeys();
-  return Boolean(k.easySlipKey || k.thunderKey || (k.slipOkKey && k.slipOkBranch));
-}
-
+// ---------------------------------------------------------------------------
+// Views
+// ---------------------------------------------------------------------------
 /** What the runner (owner of the order) is allowed to see. */
 export function toRunnerView(o: StoredOrder) {
   const { accessTokenHash, slipFile, slipHash, aiReview, omisePastChargeIds, omiseQrImageUrl, ...rest } = o;
@@ -263,7 +286,7 @@ export function toRunnerView(o: StoredOrder) {
   return rest;
 }
 
-/** What an authenticated admin sees (no token hash; slip fetched separately). */
+/** What an authenticated admin sees (no token hash). */
 export function toAdminView(o: StoredOrder) {
   const { accessTokenHash, slipFile, ...rest } = o;
   return { ...rest, hasSlip: Boolean(slipFile) };

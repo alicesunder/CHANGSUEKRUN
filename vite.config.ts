@@ -9,11 +9,15 @@ export default defineConfig(() => {
       react(),
       tailwindcss(),
       {
-        // In dev, fill the og:image origin (production does this in server.ts per request)
-        name: 'site-origin-dev',
-        apply: 'serve',
-        transformIndexHtml: (html: string) =>
-          html.split('__SITE_ORIGIN__').join((process.env.SITE_URL || 'http://localhost:3000').replace(/\/+$/, '')),
+        // og:image / og:url need an absolute address. Dev: localhost. Vercel build: SITE_URL, else the
+        // project's production URL. Elsewhere the placeholder is filled per request by server.ts.
+        name: 'site-origin',
+        transformIndexHtml(html: string, ctx: { server?: unknown }) {
+          const site = (process.env.SITE_URL || '').replace(/\/+$/, '');
+          const vercel = process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : '';
+          const origin = ctx.server ? site || 'http://localhost:3000' : site || vercel;
+          return origin ? html.split('__SITE_ORIGIN__').join(origin) : html;
+        },
       },
     ],
     resolve: {
