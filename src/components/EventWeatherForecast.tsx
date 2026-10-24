@@ -272,7 +272,7 @@ export const EventWeatherForecast: React.FC = () => {
           <div className="flex items-center gap-2.5 bg-[#FFFBEB] rounded-xl p-2.5 border border-amber-200">
             <Footprints className="w-4 h-4 text-[#B45309] shrink-0" />
             <span className="font-bold text-[#2A1450]">
-              น้องหมาควรจิบน้ำทุกจุดพัก 1.5 กม.
+              น้องสุนัขควรจิบน้ำทุกจุดพัก 1.5 กม.
             </span>
           </div>
         </div>

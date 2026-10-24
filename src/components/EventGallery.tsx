@@ -30,7 +30,7 @@ export const EventGallery: React.FC = () => {
     {
       id: 'g2',
       category: 'dogs',
-      title: 'สุนัขทหารสงคราม & น้องหมานักวิ่ง',
+      title: 'สุนัขทหารสงคราม & น้องสุนัขนักวิ่ง',
       location: 'จุดปล่อยตัวค่ายนเรศวร',
       description: 'มิตรภาพของเพื่อนสี่ขาที่มาร่วมวิ่งเคียงข้างเจ้าของ พร้อมสายจูงและผ้าพันคอหมายเลขบิบสุดเท่',
       accent: '#2EAD62',
@@ -105,7 +105,7 @@ export const EventGallery: React.FC = () => {
               { id: 'all', label: 'ทั้งหมด (All)' },
               { id: 'beach', label: '🌊 ชายหาด & ทะเล' },
               { id: 'trail', label: '🌲 ป่าสน & เทรล' },
-              { id: 'dogs', label: '🐕 น้องหมา & ช้างศึก' },
+              { id: 'dogs', label: '🐕 น้องสุนัข & ช้างศึก' },
               { id: 'family', label: '👨‍👩‍👧‍👦 ครอบครัว' },
               { id: 'vibe', label: '🎉 ฉลองชัย & อาหาร' },
             ].map((cat) => (

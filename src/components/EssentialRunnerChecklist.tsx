@@ -124,7 +124,7 @@ export const EssentialRunnerChecklist: React.FC = () => {
                   เช็กลิสต์เตรียมตัวก่อนวันวิ่ง
                 </h3>
                 <span className="block text-xs font-bold text-[#6B5A85]">
-                  ติ๊กเช็กความพร้อมส่วนตัวและอุปกรณ์น้องหมา ({completedCount}/{totalCount} รายการ)
+                  ติ๊กเช็กความพร้อมส่วนตัวและอุปกรณ์น้องสุนัข ({completedCount}/{totalCount} รายการ)
                 </span>
               </div>
             </div>

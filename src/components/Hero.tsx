@@ -87,7 +87,7 @@ export const Hero: React.FC<HeroProps> = ({
         {/* Desktop Beach Artwork Anchored Right */}
         <img
           src={BEACH}
-          alt="ช้างศึก นักวิ่ง และน้องหมาโกลเด้น วิ่งริมชายหาด"
+          alt="ช้างศึก นักวิ่ง และน้องสุนัขโกลเด้น วิ่งริมชายหาด"
           className="hidden lg:block absolute bottom-0 right-0 w-[82%] max-w-[1340px] h-auto pointer-events-none select-none"
           style={fadeMask}
           loading="eager"
@@ -129,10 +129,10 @@ export const Hero: React.FC<HeroProps> = ({
           <div className="text-left">
             <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-100/90 text-amber-900 text-[10px] font-extrabold">
               <Heart className="w-3 h-3 text-rose-500 fill-rose-500" />
-              <span>มาสคอตน้องหมา</span>
+              <span>มาสคอตน้องสุนัข</span>
             </div>
             <div className="text-sm font-black text-[#261247] mt-0.5">
-              พาน้องหมามาวิ่งด้วยกันนะ!
+              พาน้องสุนัขมาวิ่งด้วยกันนะ!
             </div>
             <button
               type="button"
@@ -215,7 +215,7 @@ export const Hero: React.FC<HeroProps> = ({
                 >
                   <img
                     src={BEACH}
-                    alt="ช้างศึก นักวิ่ง และน้องหมาโกลเด้น วิ่งริมชายหาด"
+                    alt="ช้างศึก นักวิ่ง และน้องสุนัขโกลเด้น วิ่งริมชายหาด"
                     className="w-full h-56 sm:h-64 object-cover object-[66%_center] block transition-transform duration-700 group-hover:scale-105"
                     referrerPolicy="no-referrer"
                   />

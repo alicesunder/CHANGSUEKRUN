@@ -25,7 +25,7 @@ export const DistanceComparisonModal: React.FC<DistanceComparisonModalProps> = (
     soft: string;
   }[] = [
     { id: '1km', short: '1 KM', sub: 'DOG MINI RUN', chip: 'เริ่มต้นง่าย', color: '#FF8A3D', soft: '#FFE9DA' },
-    { id: '3km', short: '3 KM', sub: 'DOG RUN', chip: 'วิ่งคู่น้องหมา', color: '#2EAD62', soft: '#DFF5E8' },
+    { id: '3km', short: '3 KM', sub: 'DOG RUN', chip: 'วิ่งคู่น้องสุนัข', color: '#2EAD62', soft: '#DFF5E8' },
     { id: '5km', short: '5 KM', sub: 'บุคคลทั่วไป', chip: 'ยอดนิยม', color: '#E5A800', soft: '#FFF6CF' },
     { id: '10km', short: '10 KM', sub: 'บุคคลทั่วไป', chip: 'ท้าทาย', color: '#7B3FC6', soft: '#EEE4FA' },
   ];
@@ -35,14 +35,14 @@ export const DistanceComparisonModal: React.FC<DistanceComparisonModalProps> = (
       label: 'ราคาบัตร',
       icon: Award,
       v: [
-        '790 บาท (1 คน + 1 น้องหมา)',
-        '890 บาท (1 คน + 1 น้องหมา)',
+        '790 บาท (1 คน + 1 น้องสุนัข)',
+        '890 บาท (1 คน + 1 น้องสุนัข)',
         '690 บาท / คน',
         '890 บาท / คน',
       ],
     },
     {
-      label: 'เพิ่มคน / เพิ่มน้องหมา',
+      label: 'เพิ่มคน / เพิ่มน้องสุนัข',
       icon: UserPlus,
       v: ['+450 บาท/คน · +250 บาท/ตัว', '+500 บาท/คน · +300 บาท/ตัว', '-', '-'],
     },
@@ -50,8 +50,8 @@ export const DistanceComparisonModal: React.FC<DistanceComparisonModalProps> = (
       label: 'เหมาะกับ',
       icon: Heart,
       v: [
-        'ลูกหมา น้องหมาสูงวัย เด็กเล็ก',
-        'ครอบครัวและเจ้าของที่พาน้องหมาวิ่งเป็นประจำ',
+        'ลูกสุนัข น้องสุนัขสูงวัย เด็กเล็ก',
+        'ครอบครัวและเจ้าของที่พาน้องสุนัขวิ่งเป็นประจำ',
         'นักวิ่งที่อยากพัฒนาความเร็วและสุขภาพ',
         'นักวิ่งที่อยากท้าทายตัวเอง',
       ],
@@ -75,10 +75,10 @@ export const DistanceComparisonModal: React.FC<DistanceComparisonModalProps> = (
       label: 'การนำสุนัขเข้าร่วม',
       icon: Heart,
       v: [
-        'วิ่งคู่ได้ (มีจุดน้ำสำหรับน้องหมา)',
-        'วิ่งคู่ได้ (มีจุดน้ำสำหรับน้องหมา)',
-        'ประเภทบุคคล: สมัครวิ่งคู่น้องหมาที่ 1 หรือ 3 KM',
-        'ประเภทบุคคล: สมัครวิ่งคู่น้องหมาที่ 1 หรือ 3 KM',
+        'วิ่งคู่ได้ (มีจุดน้ำสำหรับน้องสุนัข)',
+        'วิ่งคู่ได้ (มีจุดน้ำสำหรับน้องสุนัข)',
+        'ประเภทบุคคล: สมัครวิ่งคู่น้องสุนัขที่ 1 หรือ 3 KM',
+        'ประเภทบุคคล: สมัครวิ่งคู่น้องสุนัขที่ 1 หรือ 3 KM',
       ],
     },
   ];

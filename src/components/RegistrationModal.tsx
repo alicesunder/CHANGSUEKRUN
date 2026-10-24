@@ -132,8 +132,8 @@ const ROUTE_THEME: Record<
 const TICKET_ICONS: Record<RouteId, { src: string; alt: string }> = {
   '10km': { src: '/images/distances/icon-10k.webp', alt: 'นักวิ่ง 10 กม. บนถนนเลียบชายฝั่ง' },
   '5km': { src: '/images/distances/icon-5k.webp', alt: 'นักวิ่ง 5 กม. คู่หนึ่งวิ่งริมหาด' },
-  '3km': { src: '/images/distances/icon-3k.webp', alt: 'นักวิ่งกับน้องหมาระยะ 3 กม. ริมหาด' },
-  '1km': { src: '/images/distances/icon-1k.webp', alt: 'น้องหมาวิ่งระยะ 1 กม.' },
+  '3km': { src: '/images/distances/icon-3k.webp', alt: 'นักวิ่งกับน้องสุนัขระยะ 3 กม. ริมหาด' },
+  '1km': { src: '/images/distances/icon-1k.webp', alt: 'น้องสุนัขวิ่งระยะ 1 กม.' },
 };
 
 const SHIRT_SIZES = [
@@ -571,7 +571,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                 }}
                 className="inline-block px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider"
               >
-                {t.category === 'dog' ? '🐾 วิ่งกับน้องหมา' : '🏃 บุคคลทั่วไป'}
+                {t.category === 'dog' ? '🐾 วิ่งกับน้องสุนัข' : '🏃 บุคคลทั่วไป'}
               </span>
               <div className="font-display text-xl font-black text-[#261247] leading-tight mt-0.5">
                 {t.distanceLabel}
@@ -626,7 +626,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
               <div className="w-13 h-13 rounded-2xl bg-white/95 border-2 border-[#FFE268] shadow-[0_8px_20px_-4px_rgba(0,0,0,0.35)] flex items-center justify-center shrink-0 overflow-hidden">
                 <img loading="lazy" decoding="async"
                   src={LABRADOR_SVG_PATH}
-                  alt="น้องหมาลาบราดอร์ต้อนรับ"
+                  alt="น้องสุนัขลาบราดอร์ต้อนรับ"
                   className="w-12 h-12 object-contain translate-y-0.5"
                 />
               </div>
@@ -1092,7 +1092,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                                 ข้อมูลสุนัขคู่ใจ ({dogCount} ตัว)
                               </h4>
                               <span className="text-[10px] font-bold text-emerald-700 block">
-                                พิมพ์ชื่อน้องหมาลงบนป้าย Dog Pass
+                                พิมพ์ชื่อน้องสุนัขลงบนป้าย Dog Pass
                               </span>
                             </div>
                           </div>
@@ -1104,7 +1104,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                         </div>
                         <div>
                           <label className={labelCls}>
-                            ชื่อน้องหมา {dogCount > 1 ? `(ระบุ ${dogCount} ตัว)` : '*'}
+                            ชื่อน้องสุนัข {dogCount > 1 ? `(ระบุ ${dogCount} ตัว)` : '*'}
                           </label>
                           <input
                             type="text"
@@ -1778,7 +1778,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                       <span className="flex items-center gap-2">
                         <PawIcon size={16} color="#16A34A" />
                         <span>
-                          สุนัขร่วมวิ่ง: {createdOrder.dogName || 'น้องหมาคู่ใจ'} (
+                          สุนัขร่วมวิ่ง: {createdOrder.dogName || 'น้องสุนัขคู่ใจ'} (
                           {createdOrder.dogBreed || 'ไม่ระบุสายพันธุ์'}) · รวม {createdOrder.dogCount} ตัว
                         </span>
                       </span>

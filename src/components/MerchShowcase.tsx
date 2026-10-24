@@ -43,7 +43,7 @@ const KIT: KitItem[] = [
   },
   {
     id: 'bandana',
-    name: 'ผ้าพันคอน้องหมา',
+    name: 'ผ้าพันคอน้องสุนัข',
     desc: 'ผ้าพันคอลายช้างศึกสีม่วง-ทอง ผูกง่าย ใส่ถ่ายรูปคู่เจ้าของ',
     image: '/images/merch/kit-bandana.webp',
     group: 'dog',
@@ -58,7 +58,7 @@ const KIT: KitItem[] = [
   {
     id: 'bowl',
     name: 'ชามพับเก็บได้',
-    desc: 'ชามซิลิโคนขอบเหลือง พับแบน พร้อมตะขอคล้อง ให้น้ำน้องหมาระหว่างทาง',
+    desc: 'ชามซิลิโคนขอบเหลือง พับแบน พร้อมตะขอคล้อง ให้น้ำน้องสุนัขระหว่างทาง',
     image: '/images/merch/kit-bowl.webp',
     group: 'dog',
   },
@@ -166,7 +166,7 @@ export const MerchShowcase: React.FC<MerchShowcaseProps> = ({ onOpenRegister, cl
         {/* Dog Run */}
         <div className="mt-9 flex items-center gap-3">
           <h4 className="font-hero text-lg sm:text-xl font-semibold text-[#FFC928]">
-            สำหรับผู้สมัคร Dog Run (วิ่งกับน้องหมา)
+            สำหรับผู้สมัคร Dog Run (วิ่งกับน้องสุนัข)
           </h4>
           <span aria-hidden="true" className="h-px flex-1 bg-[#FFC928]/30" />
         </div>

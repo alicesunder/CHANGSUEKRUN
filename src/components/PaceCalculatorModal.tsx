@@ -39,7 +39,7 @@ export const PaceCalculatorModal: React.FC<PaceCalculatorModalProps> = ({
   const recommendedWater = selectedRoute === '1km' ? '100 - 150 มล.' : selectedRoute === '3km' ? '150 - 250 มล.' : selectedRoute === '5km' ? '300 - 450 มล.' : '600 - 800 มล.';
 
   const presets = [
-    { label: '🚶 เดินชิลล์ / พาน้องหมาเดินเล่น', paceM: 10, paceS: 30 },
+    { label: '🚶 เดินชิลล์ / พาน้องสุนัขเดินเล่น', paceM: 10, paceS: 30 },
     { label: '🏃 วิ่งเหยาะๆ จ๊อกกิ้งครอบครัว', paceM: 8, paceS: 0 },
     { label: '⚡ วิ่งปานกลาง สุขภาพแข็งแรง', paceM: 6, paceS: 30 },
     { label: '🚀 วิ่งพัฒนาสถิติ ขาแรงแนวหน้า', paceM: 5, paceS: 0 },

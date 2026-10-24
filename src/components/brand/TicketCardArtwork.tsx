@@ -37,7 +37,7 @@ export const TICKET_CARD_IMAGES: Record<
   '1km': {
     src: '/images/hero/beach-run.jpg',
     objectPosition: '58% 45%',
-    alt: 'บัตรวิ่ง 1 KM Dog Mini Run - ช้างศึกสีม่วง นักวิ่ง และน้องหมาวิ่งเล่นสนุกสนานริมชายหาด',
+    alt: 'บัตรวิ่ง 1 KM Dog Mini Run - ช้างศึกสีม่วง นักวิ่ง และน้องสุนัขวิ่งเล่นสนุกสนานริมชายหาด',
     sceneTag: 'BEACH PUPPY FUN RUN',
     terrainBadge: 'ทางเรียบชายหาด 100% (ไป-กลับ)',
     skyGrad: 'linear-gradient(135deg, #FFE0C2 0%, #FFB076 55%, #FF8442 100%)',
@@ -45,7 +45,7 @@ export const TICKET_CARD_IMAGES: Record<
   '3km': {
     src: '/images/distances/card-3k-editorial.jpg',
     objectPosition: '85% 38%',
-    alt: 'บัตรวิ่ง 3 KM Dog Run - นักวิ่งและน้องหมาโกลเด้นวิ่งเคียงข้างกันบนเส้นทางเลียบหาดและทิวสน',
+    alt: 'บัตรวิ่ง 3 KM Dog Run - นักวิ่งและน้องสุนัขโกลเด้นวิ่งเคียงข้างกันบนเส้นทางเลียบหาดและทิวสน',
     sceneTag: 'SHADED PINE & BEACH LOOP',
     terrainBadge: 'เลียบหาด + ร่มสนแกนกลางค่าย',
     skyGrad: 'linear-gradient(135deg, #CCF5E1 0%, #6DD5A5 55%, #28A766 100%)',
@@ -169,7 +169,7 @@ export const TicketCardImageBanner: React.FC<{
           style={{ background: isDog ? '#2EAD62' : '#5B20A8' }}
         >
           {isDog ? <PawIcon size={13} color="#FFF" /> : <span className="w-2 h-2 rounded-full bg-[#FFC928]" />}
-          <span>{isDog ? 'Dog Run · วิ่งคู่น้องหมา' : 'Individual · บุคคลทั่วไป'}</span>
+          <span>{isDog ? 'Dog Run · วิ่งคู่น้องสุนัข' : 'Individual · บุคคลทั่วไป'}</span>
         </span>
 
         {badge && (

@@ -229,7 +229,7 @@ export const HeroArtworkScene: React.FC<HeroArtworkSceneProps> = ({
           id="heroDog"
           filter="url(#heroDropShadow)"
           className={`cursor-pointer transition-transform duration-300 ${wiggleTarget === 'dog' ? 'animate-wiggle scale-110' : 'hover:scale-105'}`}
-          onClick={() => triggerReaction('dog', 'โฮ่งๆ! น้องหมาก็มีสิทธิ์วิ่งเทรลนะ! 🐕')}
+          onClick={() => triggerReaction('dog', 'โฮ่งๆ! น้องสุนัขก็มีสิทธิ์วิ่งเทรลนะ! 🐕')}
         >
           {/* Body */}
           <ellipse cx="550" cy="265" rx="46" ry="26" fill="#FFC928" stroke="#18151D" strokeWidth="4.5" />

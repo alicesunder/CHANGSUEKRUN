@@ -809,7 +809,7 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
                 {isPiiMasked ? 'PDPA MASKED' : 'UNMASKED VIEW'}
               </div>
               <div className="text-[11px] font-bold text-slate-500 mt-1">
-                เข้ารหัสฐานข้อมูล · ล็อกเมื่อว่าง {configForm.sessionIdleTimeoutMinutes || 15} นาที
+                ตรวจสิทธิ์ที่เซิร์ฟเวอร์ · ล็อกเมื่อว่าง {configForm.sessionIdleTimeoutMinutes || 15} นาที
               </div>
             </div>
           </div>

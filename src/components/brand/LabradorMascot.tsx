@@ -87,7 +87,7 @@ export const LabradorMascot: React.FC<LabradorMascotProps> = ({
       >
         <img loading="lazy" decoding="async"
           src={LABRADOR_SVG_PATH}
-          alt="น้องหมาลาบราดอร์สีทองกระดิกหาง"
+          alt="น้องสุนัขลาบราดอร์สีทองกระดิกหาง"
           style={{
             width: '100%',
             height: '100%',

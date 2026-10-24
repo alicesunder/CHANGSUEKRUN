@@ -20,9 +20,9 @@ export const SocialShare: React.FC<SocialShareProps> = ({
   // Normalize distance display
   const distanceLabel =
     selectedDistance === '1km'
-      ? 'Dog Run 1K (วิ่งคู่น้องหมา)'
+      ? 'Dog Run 1K (วิ่งคู่น้องสุนัข)'
       : selectedDistance === '3km'
-      ? 'Dog Run 3K (วิ่งคู่น้องหมา)'
+      ? 'Dog Run 3K (วิ่งคู่น้องสุนัข)'
       : selectedDistance === '5km'
       ? '5K'
       : selectedDistance === '10km'

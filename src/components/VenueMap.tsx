@@ -93,7 +93,7 @@ export const VenueMap: React.FC = () => {
       id: 'photo_booths',
       name: 'ซุ้มถ่ายรูป & สปอนเซอร์ (Photo Ops)',
       category: 'Experience',
-      description: 'จุดถ่ายรูปกับมาสคอตพี่ช้างศึกและน้องหมาสงคราม พร้อมป้ายเวลาและฉากทะเลจำลอง',
+      description: 'จุดถ่ายรูปกับมาสคอตพี่ช้างศึกและน้องสุนัขสงคราม พร้อมป้ายเวลาและฉากทะเลจำลอง',
       icon: Camera,
       color: '#7B3FC6',
       badgeBg: 'bg-[#EEE4FA] text-[#54239A]',

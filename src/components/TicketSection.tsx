@@ -95,7 +95,7 @@ const look: Record<RouteId, CardTheme> = {
     cutoff: '45 นาที',
     elevationText: 'เลียบหาดทราย 100%',
     waterCount: 2,
-    sub: 'เดิน-วิ่งชิลล์ริมหาดกับน้องหมาตัวโปรด',
+    sub: 'เดิน-วิ่งชิลล์ริมหาดกับน้องสุนัขตัวโปรด',
     burstEmojis: ['🐶', '🐾', '💖', '🦴', '✨', '🎉'],
   },
   '3km': {
@@ -191,7 +191,7 @@ const BURST_VECTORS = [
 const compactPerks = (isDog: boolean) => [
   {
     Icon: Shirt,
-    title: isDog ? 'เสื้อคน + ผ้าพันคอหมา' : 'เสื้อวิ่ง Micro-Dry',
+    title: isDog ? 'เสื้อคน + ผ้าพันคอสุนัข' : 'เสื้อวิ่ง Micro-Dry',
   },
   {
     Icon: Medal,
@@ -203,7 +203,7 @@ const compactPerks = (isDog: boolean) => [
   },
   {
     Icon: Droplets,
-    title: isDog ? 'น้ำดื่ม & ขนมน้องหมา' : 'อาหาร & เกลือแร่',
+    title: isDog ? 'น้ำดื่ม & ขนมน้องสุนัข' : 'อาหาร & เกลือแร่',
   },
 ];
 
@@ -520,7 +520,7 @@ const TicketCard: React.FC<{
               >
                 <span className="text-[#4B2D78] flex items-center gap-1">
                   <Heart className="w-3 h-3 fill-rose-500 text-rose-500" />
-                  <span>เพิ่มคน/น้องหมาได้:</span>
+                  <span>เพิ่มคน/น้องสุนัขได้:</span>
                 </span>
                 <span className="tabular-nums font-black" style={{ color: l.accentDark }}>
                   +{t.addPersonPrice}฿/คน · +{t.addDogPrice}฿/ตัว
@@ -731,7 +731,7 @@ export const TicketSection: React.FC<TicketSectionProps> = ({
       {
         d,
         field: 'base',
-        label: `Dog ${km} กม. (1 คน + 1 น้องหมา)`,
+        label: `Dog ${km} กม. (1 คน + 1 น้องสุนัข)`,
         price: t.basePrice,
         max: 1,
         Icon: PawIcon,
@@ -793,7 +793,7 @@ export const TicketSection: React.FC<TicketSectionProps> = ({
           >
             {[
               { id: 'all', label: 'ทั้งหมด (4 ระยะ)' },
-              { id: 'dog', label: '🐾 วิ่งกับน้องหมา (1K/3K)' },
+              { id: 'dog', label: '🐾 วิ่งกับน้องสุนัข (1K/3K)' },
               { id: 'individual', label: '🏃 วิ่งบุคคล (5K/10K)' },
             ].map((tab) => {
               const active = filterTab === tab.id;
@@ -898,7 +898,7 @@ export const TicketSection: React.FC<TicketSectionProps> = ({
                   จำลองแพ็กเกจบัตรวิ่ง Dog Run & คำนวณราคา
                 </h3>
                 <p className="text-xs font-semibold text-[#6B5A85]">
-                  ปรับจำนวนคนและน้องหมา แล้วดูราคารวมของกลุ่มคุณ
+                  ปรับจำนวนคนและน้องสุนัข แล้วดูราคารวมของกลุ่มคุณ
                 </p>
               </div>
             </div>
@@ -979,7 +979,7 @@ export const TicketSection: React.FC<TicketSectionProps> = ({
                 {/* Animated Participant Icons */}
                 <div className="my-2.5">
                   <div className="text-[11px] font-bold text-[#4B2D78] mb-1.5">
-                    ผู้เข้าร่วม ({calc.totalPeople} คน + {calc.totalDogs} น้องหมา):
+                    ผู้เข้าร่วม ({calc.totalPeople} คน + {calc.totalDogs} น้องสุนัข):
                   </div>
                   <div className="flex flex-wrap items-center gap-1.5 min-h-[34px] p-2 rounded-2xl bg-white/85 border border-white shadow-2xs">
                     {Array.from({ length: Math.min(calc.totalPeople, 6) }).map((_, idx) => (
@@ -1005,7 +1005,7 @@ export const TicketSection: React.FC<TicketSectionProps> = ({
                         initial={{ scale: 0, rotate: 15 }}
                         animate={{ scale: 1, rotate: 0 }}
                         className="w-6 h-6 rounded-full bg-[#FF7A59] text-white flex items-center justify-center text-[11px] font-bold shadow-2xs"
-                        title="น้องหมา"
+                        title="น้องสุนัข"
                       >
                         🐶
                       </motion.span>
