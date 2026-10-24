@@ -44,7 +44,7 @@ export const DistanceComparisonModal: React.FC<DistanceComparisonModalProps> = (
     {
       label: 'เพิ่มคน / เพิ่มน้องสุนัข',
       icon: UserPlus,
-      v: ['+450 บาท/คน · +250 บาท/ตัว', '+500 บาท/คน · +300 บาท/ตัว', '-', '-'],
+      v: ['+450 บาท/คน\n+250 บาท/ตัว', '+500 บาท/คน\n+300 บาท/ตัว', '-', '-'],
     },
     {
       label: 'เหมาะกับ',
@@ -185,7 +185,7 @@ export const DistanceComparisonModal: React.FC<DistanceComparisonModalProps> = (
                       </span>
                     </td>
                     {row.v.map((cell, i) => (
-                      <td key={i} className="py-3 px-3 text-gray-700 font-medium">
+                      <td key={i} className="py-3 px-3 text-gray-700 font-medium whitespace-pre-line">
                         {cell}
                       </td>
                     ))}
