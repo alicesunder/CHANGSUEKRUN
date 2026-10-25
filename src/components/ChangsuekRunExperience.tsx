@@ -47,7 +47,7 @@ export const ChangsuekRunExperience: React.FC<ChangsuekRunExperienceProps> = ({
       step: '01',
       tag: 'DISCOVER',
       headline: 'เลือกระยะที่ใช่',
-      summary: 'เลือกวิ่ง 5K / 10K หรือวิ่งคู่กับน้องสุนัข 1K / 3K ริมหาดชะอำ',
+      summary: 'เลือกวิ่ง 5K / 10K หรือวิ่งคู่กับน้องสุนัข 1K / 3.8K ริมหาดชะอำ',
       badge: '4 ระยะแข่งขัน',
       icon: Compass,
       actionLabel: 'เลือกบัตรวิ่ง',

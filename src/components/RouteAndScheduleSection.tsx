@@ -40,8 +40,8 @@ export const RouteAndScheduleSection: React.FC<RouteAndScheduleProps> = ({
     {
       id: 'dog-contest',
       time: '09.00–14.00 น.',
-      title: 'การแข่งขันประกวดสุนัข',
-      desc: 'สุนัขแฟนซีธีม War Dog • สุนัขสุขภาพดี • สุนัขเชื่อฟังคำสั่ง',
+      title: 'การแข่งขันประกวดน้องสุนัข',
+      desc: 'สุนัขแฟนซีธีม War Dog • น้องสุนัขสุขภาพดี • น้องสุนัขเชื่อฟังคำสั่ง',
       badge: 'DOG CONTEST',
       iconBg: '#FCE7F3',
       iconColor: '#BE185D',
@@ -88,7 +88,7 @@ export const RouteAndScheduleSection: React.FC<RouteAndScheduleProps> = ({
     {
       id: 'dog-awards',
       time: '15.00–17.00 น.',
-      title: 'พิธีมอบรางวัลการประกวดสุนัข',
+      title: 'พิธีมอบรางวัลการประกวดน้องสุนัข',
       desc: 'ประกาศผลและมอบรางวัลแก่ผู้ชนะการแข่งขัน',
       badge: 'AWARDS',
       iconBg: '#FEF3C7',
@@ -124,9 +124,9 @@ export const RouteAndScheduleSection: React.FC<RouteAndScheduleProps> = ({
     {
       id: 'start-3k',
       time: '17.15 น.',
-      title: 'ปล่อยตัวนักวิ่ง 3 กิโลเมตร',
-      desc: 'ประเภทวิ่งร่วมกับสุนัข',
-      badge: '3 KM DOG RUN',
+      title: 'ปล่อยตัวนักวิ่ง 3.8 กิโลเมตร',
+      desc: 'ประเภทวิ่งร่วมกับน้องสุนัข',
+      badge: '3.8 KM DOG RUN',
       iconBg: '#DCFCE7',
       iconColor: '#166534',
       Icon: Flag,
@@ -137,7 +137,7 @@ export const RouteAndScheduleSection: React.FC<RouteAndScheduleProps> = ({
       id: 'start-1k',
       time: '17.30 น.',
       title: 'ปล่อยตัวนักวิ่ง 1 กิโลเมตร',
-      desc: 'ประเภทวิ่งร่วมกับสุนัข',
+      desc: 'ประเภทวิ่งร่วมกับน้องสุนัข',
       badge: '1 KM DOG RUN',
       iconBg: '#FFEDD5',
       iconColor: '#C2410C',
@@ -185,19 +185,19 @@ export const RouteAndScheduleSection: React.FC<RouteAndScheduleProps> = ({
     },
     {
       id: '3km',
-      label: '3K วิ่งกับสุนัข (17.15 น.)',
-      activeBg: '#15803D',
-      activeText: '#FFFFFF',
-      idleBg: '#DCFCE7',
-      idleText: '#166534',
-    },
-    {
-      id: '1km',
-      label: '1K วิ่งกับสุนัข (17.30 น.)',
-      activeBg: '#EA580C',
+      label: '3.8K วิ่งกับน้องสุนัข (17.15 น.)',
+      activeBg: '#C2410C',
       activeText: '#FFFFFF',
       idleBg: '#FFEDD5',
       idleText: '#9A3412',
+    },
+    {
+      id: '1km',
+      label: '1K วิ่งกับน้องสุนัข (17.30 น.)',
+      activeBg: '#BE185D',
+      activeText: '#FFFFFF',
+      idleBg: '#FCE7F3',
+      idleText: '#9D174D',
     },
   ];
 
@@ -231,11 +231,11 @@ export const RouteAndScheduleSection: React.FC<RouteAndScheduleProps> = ({
         {/* Section Eyebrow Header */}
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 mb-7">
           <div>
-            <span className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white border-2 border-[#2A1450] text-[#5B20A8] text-xs font-extrabold uppercase tracking-wider shadow-[0_3px_0_#2A1450] mb-2">
+            <span className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white border-2 border-[#2A1450] text-[#5B20A8] text-xs font-extrabold uppercase shadow-[0_3px_0_#2A1450] mb-2">
               <Sparkles className="w-3.5 h-3.5 text-[#B45309]" />
               <span>วันงาน 9 ม.ค. 2570</span>
             </span>
-            <h2 className="text-2xl sm:text-4xl font-extrabold text-[#2A1450] tracking-tight">
+            <h2 className="text-2xl sm:text-4xl font-extrabold text-[#2A1450]">
               กำหนดการ & เส้นทางวิ่งมาตรฐาน GPS
             </h2>
           </div>
@@ -270,7 +270,7 @@ export const RouteAndScheduleSection: React.FC<RouteAndScheduleProps> = ({
                       <h3 className="text-xl sm:text-2xl font-extrabold text-[#2A1450] leading-tight">
                         กำหนดการ
                       </h3>
-                      <span className="block text-[11px] font-mono font-extrabold tracking-[0.18em] text-[#7B3FC6] uppercase mt-0.5">
+                      <span className="block text-[11px] font-mono font-extrabold text-[#7B3FC6] uppercase mt-0.5">
                         09.00 – 17.30 น. เป็นต้นไป
                       </span>
                     </div>

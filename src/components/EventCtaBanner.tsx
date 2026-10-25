@@ -28,7 +28,7 @@ export const EventCtaBanner: React.FC<EventCtaBannerProps> = ({ onOpenRegisterMo
                 <PawIcon size={16} color="#FFE268" />
                 <span>พร้อมออกวิ่งไปกับเพื่อนสี่ขาหรือยัง?</span>
               </span>
-              <h2 className="text-2xl sm:text-4xl font-extrabold text-white tracking-tight">
+              <h2 className="text-2xl sm:text-4xl font-extrabold text-white">
                 มาร่วมเป็นส่วนหนึ่งของ <span className="text-[#FFE268]">CHANGSUEK RUN 2027</span>
               </h2>
               <p className="text-xs sm:text-sm text-purple-100 font-medium mt-2">

@@ -196,7 +196,7 @@ export const EventWeatherForecast: React.FC = () => {
 
           {/* Hourly Time Slot Selector (05:00 - 10:00) */}
           <div className="mt-4">
-            <div className="text-[11px] font-extrabold text-[#6B5A85] uppercase tracking-wider mb-2">
+            <div className="text-[11px] font-extrabold text-[#6B5A85] uppercase mb-2">
               เลือกดูสภาพอากาศตามช่วงเวลาปล่อยตัว:
             </div>
             <div className="grid grid-cols-6 gap-1.5">
@@ -231,7 +231,7 @@ export const EventWeatherForecast: React.FC = () => {
           <div className="mt-4 rounded-2xl bg-gradient-to-br from-[#F0F9FF] via-[#FAF6FF] to-[#FFFBEB] p-4 border-2 border-[#2A1450]/15">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
-                <span className="inline-block text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-[#2A1450] text-[#FFC928] mb-1">
+                <span className="inline-block text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded-full bg-[#2A1450] text-[#FFC928] mb-1">
                   เวลา {activeTime} น. • พระอาทิตย์ตกประมาณ {data.sunrise} น.
                 </span>
                 <div className="flex items-baseline gap-2">

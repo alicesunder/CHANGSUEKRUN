@@ -78,7 +78,7 @@ const LeaderboardResults: React.FC = () => {
     },
     {
       rank: 5,
-      name: 'ภานุเดช ฤทธิ์เดช & สุนัขบัดดี้ (Buddy Pacer)',
+      name: 'ภานุเดช ฤทธิ์เดช & น้องสุนัขบัดดี้ (Buddy Pacer)',
       bib: 'C03-0004',
       category: '3km',
       time: '00:14:02',
@@ -207,7 +207,7 @@ const LeaderboardResults: React.FC = () => {
                 { id: 'all', label: 'ทุกระยะ' },
                 { id: '10km', label: '10K' },
                 { id: '5km', label: '5K' },
-                { id: '3km', label: 'Dog 3K 🐾' },
+                { id: '3km', label: 'Dog 3.8K 🐾' },
                 { id: '1km', label: 'Dog 1K 🐾' },
               ].map((filter) => (
                 <button
@@ -520,7 +520,7 @@ export const LeaderboardSection: React.FC = () => {
       className="py-12 sm:py-16 bg-gradient-to-b from-[#E0F2FE]/60 via-[#FAF7FF] to-[#FFF4D2]/50 relative overflow-hidden scroll-mt-20"
     >
       <div className="max-w-2xl mx-auto px-4 sm:px-6 text-center">
-        <h2 id="leaderboard-heading" className="text-3xl sm:text-4xl font-extrabold text-[#2A1450] tracking-tight">
+        <h2 id="leaderboard-heading" className="text-3xl sm:text-4xl font-extrabold text-[#2A1450]">
           ผลการแข่งขัน
         </h2>
         <div className="mt-6 rounded-[28px] bg-white border-[3px] border-[#2A1450] shadow-[0_8px_0_#2A1450] px-6 py-8 sm:py-10 flex flex-col items-center gap-3">

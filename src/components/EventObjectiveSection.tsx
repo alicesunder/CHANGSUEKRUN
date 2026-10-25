@@ -70,7 +70,7 @@ export const EventObjectiveSection: React.FC = () => {
 
                 <div className="flex flex-col sm:flex-row sm:items-center gap-4">
                   <div className="flex-1">
-                    <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white leading-tight tracking-tight">
+                    <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white leading-tight">
                       วิ่งด้วยใจ เพื่อพัฒนาสุนัขตำรวจ{' '}
                       <span className="text-[#FFE268]">สร้างความปลอดภัยให้สังคม</span>
                     </h2>

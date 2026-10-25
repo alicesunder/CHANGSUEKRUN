@@ -116,12 +116,12 @@ const look: Record<RouteId, CardTheme> = {
     iconColor: '#0F766E',
     serialCode: 'CSR27-DOG-03K',
     bibPrefix: '03-XXXX',
-    waveLabel: 'DOG BUDDY RUN · 3K',
+    waveLabel: 'DOG BUDDY RUN · 3.8K',
     startTime: '17.15 น.',
     cutoff: '60 นาที',
     elevationText: 'เลียบหาด + ทิวสนร่มรื่น',
     waterCount: 3,
-    sub: 'วิ่งสนุกกำลังดี ไปด้วยกันทั้งคนและสุนัข',
+    sub: 'วิ่งสนุกกำลังดี ไปด้วยกันทั้งคนและน้องสุนัข',
     burstEmojis: ['🐕', '🐾', '💚', '🏅', '✨', '🌊'],
   },
   '5km': {
@@ -191,7 +191,7 @@ const BURST_VECTORS = [
 const compactPerks = (isDog: boolean) => [
   {
     Icon: Shirt,
-    title: isDog ? 'เสื้อคน + ผ้าพันคอสุนัข' : 'เสื้อวิ่ง Micro-Dry',
+    title: isDog ? 'เสื้อคน + ผ้าพันคอน้องสุนัข' : 'เสื้อวิ่ง Micro-Dry',
   },
   {
     Icon: Medal,
@@ -199,7 +199,7 @@ const compactPerks = (isDog: boolean) => [
   },
   {
     Icon: Ticket,
-    title: isDog ? 'BIB คู่ คน+สุนัข' : 'ป้าย BIB + ชิปเวลา',
+    title: isDog ? 'BIB คู่ คน+น้องสุนัข' : 'ป้าย BIB + ชิปเวลา',
   },
   {
     Icon: Droplets,
@@ -627,7 +627,7 @@ const TicketCard: React.FC<{
   );
 };
 
-/** Calculator state: one registration at a time (1 KM or 3 KM). */
+/** Calculator state: one registration at a time (1 KM or 3.8 KM). */
 type Dist = '1km' | '3km';
 type Counts = Record<Dist, { base: number; people: number; dogs: number }>;
 const emptyCounts: Counts = {
@@ -749,7 +749,7 @@ export const TicketSection: React.FC<TicketSectionProps> = ({
       {
         d,
         field: 'dogs',
-        label: `Dog ${km} กม. เพิ่มสุนัข`,
+        label: `Dog ${km} กม. เพิ่มน้องสุนัข`,
         price: t.addDogPrice ?? 0,
         max: 9,
         Icon: PawIcon,
@@ -772,7 +772,7 @@ export const TicketSection: React.FC<TicketSectionProps> = ({
             <LabradorMascot size={66} interactive={true} />
           </div>
           <div>
-            <span className="block text-[11px] font-mono font-extrabold uppercase tracking-[0.2em] text-[#7B3FC6]">
+            <span className="block text-[11px] font-mono font-extrabold uppercase text-[#7B3FC6]">
               บัตรวิ่งโฉมใหม่
             </span>
             <h2 className="text-3xl sm:text-5xl font-bold text-[#261247] leading-tight">
@@ -793,7 +793,7 @@ export const TicketSection: React.FC<TicketSectionProps> = ({
           >
             {[
               { id: 'all', label: 'ทั้งหมด (4 ระยะ)' },
-              { id: 'dog', label: '🐾 วิ่งกับน้องสุนัข (1K/3K)' },
+              { id: 'dog', label: '🐾 วิ่งกับน้องสุนัข (1K/3.8K)' },
               { id: 'individual', label: '🏃 วิ่งบุคคล (5K/10K)' },
             ].map((tab) => {
               const active = filterTab === tab.id;
@@ -964,7 +964,7 @@ export const TicketSection: React.FC<TicketSectionProps> = ({
                       alt="Labrador"
                       className="w-7 h-7 object-contain"
                     />
-                    <span className="text-[10px] font-black uppercase tracking-wider text-[#261247]">
+                    <span className="text-[10px] font-black uppercase text-[#261247]">
                       แพ็กเกจ Dog Run ของคุณ
                     </span>
                   </div>

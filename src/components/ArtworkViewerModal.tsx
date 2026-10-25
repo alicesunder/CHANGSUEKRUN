@@ -91,7 +91,7 @@ export const ArtworkViewerModal: React.FC<ArtworkViewerModalProps> = ({
                   activeTab === '3km' ? 'bg-[#2EAA59] text-white' : 'text-white/70 hover:text-white'
                 }`}
               >
-                ดาวเทียม Dog 3 KM (4.08k)
+                ดาวเทียม Dog 3.8 KM (4.08k)
               </button>
               <button
                 onClick={() => {
@@ -302,7 +302,7 @@ export const ArtworkViewerModal: React.FC<ArtworkViewerModalProps> = ({
             © 2027 CHANG SUEK RUN • ค่ายนเรศวร กองบัญชาการตำรวจตระเวนชายแดน • ข้อมูลรังวัด Google Earth
           </span>
           <span className="text-[#FFC928]">
-            {currentRouteData ? `${currentRouteData.name} (รอบเส้นขอบ: ${currentRouteData.measuredPerimeterKm} กม.)` : '3 KM / 5 KM / 10 KM WAR DOG TRAIL'}
+            {currentRouteData ? `${currentRouteData.name} (รอบเส้นขอบ: ${currentRouteData.measuredPerimeterKm} กม.)` : '3.8 KM / 5 KM / 10 KM WAR DOG TRAIL'}
           </span>
         </div>
 

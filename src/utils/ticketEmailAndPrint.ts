@@ -41,7 +41,7 @@ const ROUTE_PRINT_COLOR: Record<
     primary: '#14532D',
     secondary: '#16A34A',
     badge: '#DCFCE7',
-    wave: 'WAVE C · DOG BUDDY RUN 3 KM',
+    wave: 'WAVE C · DOG BUDDY RUN 3.8 KM',
     startTime: '17.15 น.',
   },
   '1km': {
@@ -290,7 +290,7 @@ export async function downloadOfficialBibAsPng(profile: RunnerProfile): Promise<
   ctx.fillStyle = '#4B2D78';
   ctx.font = '700 19px "Prompt", sans-serif';
   const dogNote = profile.runningWithDog
-    ? `🐾 วิ่งคู่สุนัข: น้อง${profile.dogName || 'คู่ใจ'} (${profile.dogBreed || 'K9 Pass'})`
+    ? `🐾 วิ่งคู่น้องสุนัข: น้อง${profile.dogName || 'คู่ใจ'} (${profile.dogBreed || 'K9 Pass'})`
     : '🏃 ประเภทวิ่งบุคคลทั่วไป · ชิปจับเวลา RFID มาตรฐาน';
   ctx.fillText(
     `${dogNote}   |   อีเมลรับบัตร: ${profile.email || '-'}`,

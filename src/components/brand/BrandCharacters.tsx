@@ -267,7 +267,7 @@ export const DogCharacter: React.FC<CharacterProps> = ({
       className={`overflow-visible ${className} ${isAnimated ? 'animate-bounce-gentle' : ''}`}
       xmlns="http://www.w3.org/2000/svg"
       role="img"
-      aria-label="สุนัขคู่ใจ - เพื่อนซี้สี่ขา WAR DOG"
+      aria-label="น้องสุนัขคู่ใจ - เพื่อนซี้สี่ขา WAR DOG"
     >
       <defs>
         <linearGradient id="dogGrad" x1="0%" y1="0%" x2="100%" y2="100%">

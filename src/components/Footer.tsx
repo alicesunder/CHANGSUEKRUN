@@ -40,7 +40,7 @@ export const Footer: React.FC<FooterProps> = ({
             </p>
 
             {/* Handwritten cursive script matching mockup */}
-            <div className="text-sm font-serif italic text-[#FFCC00] tracking-wider mt-1">
+            <div className="text-sm font-serif italic text-[#FFCC00] mt-1">
               “Run Together a Brighter Tomorrow”
             </div>
           </div>
@@ -58,7 +58,7 @@ export const Footer: React.FC<FooterProps> = ({
                 <a href="#experience" className="inline-block py-1.5 hover:text-[#FFCC00] transition-colors">รายละเอียดงาน</a>
               </li>
               <li>
-                <a href="#distances" className="inline-block py-1.5 hover:text-[#FFCC00] transition-colors">ระยะวิ่ง (10K / 5K / Dog 3K / Dog 1K)</a>
+                <a href="#distances" className="inline-block py-1.5 hover:text-[#FFCC00] transition-colors">ระยะวิ่ง (10K / 5K / Dog 3.8K / Dog 1K)</a>
               </li>
               <li>
                 <a href="#schedule-and-map" className="inline-block py-1.5 hover:text-[#FFCC00] transition-colors">เส้นทางวิ่ง & กำหนดการแข่งขัน</a>
@@ -74,7 +74,7 @@ export const Footer: React.FC<FooterProps> = ({
 
           {/* Column 3: ติดต่อเรา (2.5 cols) */}
           <div className="lg:col-span-2">
-            <h4 className="text-sm font-black text-white uppercase tracking-wider mb-4">
+            <h4 className="text-sm font-black text-white uppercase mb-4">
               ติดต่อเรา
             </h4>
             <div className="space-y-3 text-xs text-white/70">
@@ -96,7 +96,7 @@ export const Footer: React.FC<FooterProps> = ({
 
           {/* Column 4: follow + privacy */}
           <div className="lg:col-span-3">
-            <h4 className="text-sm font-black text-white uppercase tracking-wider mb-2">
+            <h4 className="text-sm font-black text-white uppercase mb-2">
               ติดตามข่าวสาร
             </h4>
             <a
@@ -120,7 +120,7 @@ export const Footer: React.FC<FooterProps> = ({
             >
               ข้อกำหนดและเงื่อนไข
             </a>
-            <div className="mt-2 text-xs font-black text-[#FFCC00] tracking-wider">
+            <div className="mt-2 text-xs font-black text-[#FFCC00]">
               #CHANGSUEKRUN #เห็นช้างวิ่งวิ่งตามช้าง
             </div>
           </div>

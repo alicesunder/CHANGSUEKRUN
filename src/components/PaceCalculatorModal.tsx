@@ -19,7 +19,7 @@ export const PaceCalculatorModal: React.FC<PaceCalculatorModalProps> = ({
 
   if (!isOpen) return null;
 
-  const distanceKm = selectedRoute === '1km' ? 1.0 : selectedRoute === '3km' ? 3.0 : selectedRoute === '5km' ? 5.0 : 10.0;
+  const distanceKm = selectedRoute === '1km' ? 1.0 : selectedRoute === '3km' ? 3.8 : selectedRoute === '5km' ? 5.0 : 10.0;
   const cutOffMinutes = selectedRoute === '1km' ? 45 : selectedRoute === '3km' ? 75 : selectedRoute === '5km' ? 90 : 135;
 
   const totalPaceSeconds = paceMinutes * 60 + paceSeconds;
@@ -100,7 +100,7 @@ export const PaceCalculatorModal: React.FC<PaceCalculatorModalProps> = ({
                     : 'border-gray-200 bg-gray-50 text-gray-600 hover:bg-gray-100'
                 }`}
               >
-                🐾 Dog 3 KM
+                🐾 Dog 3.8 KM
               </button>
               <button
                 type="button"

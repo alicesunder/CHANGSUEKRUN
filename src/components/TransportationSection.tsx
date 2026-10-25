@@ -104,7 +104,7 @@ export const TransportationSection: React.FC = () => {
             <Navigation className="w-3.5 h-3.5 text-[#FFC928]" />
             <span>TRAVEL & PARKING GUIDE</span>
           </div>
-          <h2 className="text-3xl sm:text-4xl font-black text-[#17151C] tracking-tight mb-3">
+          <h2 className="text-3xl sm:text-4xl font-black text-[#17151C] mb-3">
             การเดินทางและที่จอดรถสะดวกสบาย
           </h2>
           <p className="text-sm sm:text-base text-[#6F6878] font-semibold">

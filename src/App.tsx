@@ -19,6 +19,7 @@ import { SponsorsSection } from './components/SponsorsSection';
 import { PrivacyNotice } from './components/PrivacyNotice';
 import { TermsSection, TermsModal } from './components/TermsSection';
 import { LazySection } from './components/LazySection';
+import { ConcertSection } from './components/ConcertSection';
 import { HotelExplorer } from './components/HotelExplorer';
 import { LeaderboardSection } from './components/LeaderboardSection';
 import { EventWeatherForecast } from './components/EventWeatherForecast';
@@ -144,6 +145,8 @@ export default function App() {
             onOpenSimulation={handleOpenSimulation}
           />
         </LazySection>
+
+        <ConcertSection />
 
         {/* 7. Dark Purple Featured Hotels Strip: ที่พักใกล้สนาม วิ่งสบาย พักสบาย */}
         <HotelExplorer />

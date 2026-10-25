@@ -60,7 +60,7 @@ export const EventIntro: React.FC<EventIntroProps> = ({ onOpenVideoModal }) => {
               {/* Elephant + Runner + Dog coastal sunset photograph with parallax scrolling */}
               <motion.img
                 src="/images/hero/changsuek-run-coastal.jpg"
-                alt="ช้าง คนวิ่ง และสุนัข วิ่งไปด้วยกันริมชายหาดยามพระอาทิตย์ตก"
+                alt="ช้าง คนวิ่ง และน้องสุนัข วิ่งไปด้วยกันริมชายหาดยามพระอาทิตย์ตก"
                 style={{
                   y: bannerY,
                   scale: bannerScale,
@@ -71,11 +71,11 @@ export const EventIntro: React.FC<EventIntroProps> = ({ onOpenVideoModal }) => {
               {/* Gradient lighting overlay */}
               <div className="absolute inset-0 bg-gradient-to-r from-[#200E37]/80 via-[#200E37]/20 to-transparent pointer-events-none" />
 
-              {/* Right side banner text: "คน ช้าง สุนัข ก้าวไปด้วยกัน" + 3 badges */}
+              {/* Right side banner text: "คน ช้าง น้องสุนัข ก้าวไปด้วยกัน" + 3 badges */}
               <div className="absolute inset-0 flex items-center justify-end p-4 sm:p-8">
                 <div className="w-[55%] sm:w-[45%] flex flex-col items-end text-right select-none pl-2">
                   <div className="text-white text-base sm:text-2xl font-black tracking-tight drop-shadow-md mb-2 sm:mb-4">
-                    คน ช้าง สุนัข<br />
+                    คน ช้าง น้องสุนัข<br />
                     <span className="text-[#FFC928]">ก้าวไปด้วยกัน</span>
                   </div>
 

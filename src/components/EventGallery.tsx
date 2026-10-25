@@ -30,7 +30,7 @@ export const EventGallery: React.FC = () => {
     {
       id: 'g2',
       category: 'dogs',
-      title: 'สุนัขทหารสงคราม & น้องสุนัขนักวิ่ง',
+      title: 'น้องสุนัขทหารสงคราม & น้องสุนัขนักวิ่ง',
       location: 'จุดปล่อยตัวค่ายนเรศวร',
       description: 'มิตรภาพของเพื่อนสี่ขาที่มาร่วมวิ่งเคียงข้างเจ้าของ พร้อมสายจูงและผ้าพันคอหมายเลขบิบสุดเท่',
       accent: '#2EAD62',
@@ -51,7 +51,7 @@ export const EventGallery: React.FC = () => {
       id: 'g4',
       category: 'family',
       title: 'รอยยิ้มครอบครัวและเด็กๆ',
-      location: 'เส้นทาง 3 KM Dog Run',
+      location: 'เส้นทาง 3.8 KM Dog Run',
       description: 'คุณพ่อคุณแม่จูงมือลูกๆ วิ่งและเดินเก็บสะสมความทรงจำอันแสนอบอุ่นในเช้าวันหยุด',
       accent: '#EF5350',
       tag: 'Family Fun',

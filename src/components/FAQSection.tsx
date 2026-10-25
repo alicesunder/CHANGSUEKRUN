@@ -13,7 +13,7 @@ export const FAQSection: React.FC = () => {
   const categories = [
     { id: 'all', label: 'คำถามทั้งหมด' },
     { id: 'general', label: 'ทั่วไป & กิจกรรม' },
-    { id: 'pet', label: 'การพาสุนัขวิ่ง' },
+    { id: 'pet', label: 'การพาน้องสุนัขวิ่ง' },
     { id: 'routes', label: 'เส้นทาง & Cut-off' },
     { id: 'transport', label: 'ที่จอดรถ & การเดินทาง' },
     { id: 'race_pack', label: 'ของที่ระลึก & รับบิบ' },
@@ -54,7 +54,7 @@ export const FAQSection: React.FC = () => {
             คำถามที่พบบ่อย (FAQ)
           </h2>
           <p className="text-xs sm:text-sm text-[#6B5A85] font-semibold mt-1.5">
-            รวบรวมข้อสงสัยเกี่ยวกับการแข่งขัน การพาสุนัขร่วมวิ่ง ที่จอดรถ และของที่ระลึก
+            รวบรวมข้อสงสัยเกี่ยวกับการแข่งขัน การพาน้องสุนัขร่วมวิ่ง ที่จอดรถ และของที่ระลึก
           </p>
         </div>
 
@@ -66,7 +66,7 @@ export const FAQSection: React.FC = () => {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="ค้นหาคำถาม เช่น สุนัข, ที่จอดรถ, เหรียญรางวัล, เสื้อ..."
+              placeholder="ค้นหาคำถาม เช่น น้องสุนัข, ที่จอดรถ, เหรียญรางวัล, เสื้อ..."
               className="w-full pl-11 pr-4 py-2.5 rounded-2xl border-2 border-purple-100 bg-[#FAF8FF] text-xs sm:text-sm font-semibold text-[#2A1450] focus:outline-none focus:border-[#5B20A8]"
             />
           </div>

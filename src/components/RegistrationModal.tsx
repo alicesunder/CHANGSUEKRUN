@@ -132,7 +132,7 @@ const ROUTE_THEME: Record<
 const TICKET_ICONS: Record<RouteId, { src: string; alt: string }> = {
   '10km': { src: '/images/distances/icon-10k.webp', alt: 'นักวิ่ง 10 กม. บนถนนเลียบชายฝั่ง' },
   '5km': { src: '/images/distances/icon-5k.webp', alt: 'นักวิ่ง 5 กม. คู่หนึ่งวิ่งริมหาด' },
-  '3km': { src: '/images/distances/icon-3k.webp', alt: 'นักวิ่งกับน้องสุนัขระยะ 3 กม. ริมหาด' },
+  '3km': { src: '/images/distances/icon-3k.webp', alt: 'นักวิ่งกับน้องสุนัขระยะ 3.8 กม. ริมหาด' },
   '1km': { src: '/images/distances/icon-1k.webp', alt: 'น้องสุนัขวิ่งระยะ 1 กม.' },
 };
 
@@ -726,7 +726,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                   <div className="flex items-center justify-between mb-2.5">
                     <span className="text-xs font-extrabold uppercase tracking-wider text-[#0F766E] flex items-center gap-1.5">
                       <PawIcon size={14} color="#0D9488" />
-                      <span>2. เลือกระยะวิ่งร่วมกับสุนัข (Dog Run)</span>
+                      <span>2. เลือกระยะวิ่งร่วมกับน้องสุนัข (Dog Run)</span>
                     </span>
                     <span className="text-[11px] font-bold text-[#0F766E]">
                       รันเลข BIB `03-XXXX` และ `01-XXXX`
@@ -744,7 +744,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                     <div className="flex items-center justify-between">
                       <div className="text-xs font-extrabold uppercase tracking-wider text-[#261247] flex items-center gap-1.5">
                         <UserPlus className="w-4 h-4 text-[#6D28D9]" />
-                        <span>เพิ่มผู้ร่วมวิ่ง / สุนัขเพิ่มในแพ็กเกจเดียวกัน</span>
+                        <span>เพิ่มผู้ร่วมวิ่ง / น้องสุนัขเพิ่มในแพ็กเกจเดียวกัน</span>
                       </div>
                       <span className="text-[11px] font-bold text-[#6D28D9] bg-[#F3E8FF] px-2.5 py-0.5 rounded-full">
                         ตัวเลือกเสริม
@@ -759,7 +759,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                       icon={<UserPlus className="w-5 h-5" />}
                     />
                     <Stepper
-                      label="เพิ่มสุนัขร่วมวิ่ง"
+                      label="เพิ่มน้องสุนัขร่วมวิ่ง"
                       hint={`+${formatBaht(ticket.extraDogPrice ?? ticket.addDogPrice ?? 1)} บาท / ตัว (รับผ้าพันคอ K9 เพิ่ม)`}
                       value={extraDogs}
                       onChange={setExtraDogs}
@@ -836,7 +836,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                         <Clock className="w-3.5 h-3.5" /> ปล่อยตัว {theme.startTime}
                       </span>
                       <span className="inline-flex items-center gap-1 text-xs font-extrabold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-900">
-                        ผู้วิ่ง {peopleCount} คน {isDog ? `· สุนัข ${dogCount} ตัว` : ''}
+                        ผู้วิ่ง {peopleCount} คน {isDog ? `· น้องสุนัข ${dogCount} ตัว` : ''}
                       </span>
                     </div>
 
@@ -857,7 +857,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                       )}
                       {isDog && extraDogs > 0 && (
                         <div className="flex justify-between">
-                          <span>สุนัขเพิ่ม × {extraDogs} ตัว</span>
+                          <span>น้องสุนัขเพิ่ม × {extraDogs} ตัว</span>
                           <span className="font-extrabold text-[#261247] tabular-nums">
                             +{formatBaht(extraDogs * (ticket.extraDogPrice ?? ticket.addDogPrice ?? 1))} บาท
                           </span>
@@ -920,7 +920,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                         </span>
                       </div>
                       <div className="text-xs font-bold text-[#6B5A85] mt-0.5">
-                        ผู้วิ่ง {peopleCount} คน {isDog ? `· สุนัข ${dogCount} ตัว` : ''} · เลข BIB ถัดไป (ออกจริงหลังชำระเงิน){' '}
+                        ผู้วิ่ง {peopleCount} คน {isDog ? `· น้องสุนัข ${dogCount} ตัว` : ''} · เลข BIB ถัดไป (ออกจริงหลังชำระเงิน){' '}
                         <strong className="font-mono text-[#6D28D9]">#{nextBibPreview}</strong>
                       </div>
                     </div>
@@ -1079,7 +1079,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                       </div>
                     </div>
 
-                    {/* Dog Buddy Details (if 1K / 3K) */}
+                    {/* Dog Buddy Details (if 1K / 3.8K) */}
                     {isDog && (
                       <div className="bg-gradient-to-br from-emerald-50/90 via-teal-50/70 to-white rounded-3xl border border-emerald-200 p-4 sm:p-5 space-y-3 shadow-[0_8px_24px_-6px_rgba(16,185,129,0.14)] relative overflow-hidden">
                         <div className="flex items-center justify-between gap-2 text-[#14532D]">
@@ -1089,7 +1089,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                             </span>
                             <div>
                               <h4 className="text-xs font-black uppercase tracking-wider text-emerald-950">
-                                ข้อมูลสุนัขคู่ใจ ({dogCount} ตัว)
+                                ข้อมูลน้องสุนัขคู่ใจ ({dogCount} ตัว)
                               </h4>
                               <span className="text-[10px] font-bold text-emerald-700 block">
                                 พิมพ์ชื่อน้องสุนัขลงบนป้าย Dog Pass
@@ -1778,7 +1778,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                       <span className="flex items-center gap-2">
                         <PawIcon size={16} color="#16A34A" />
                         <span>
-                          สุนัขร่วมวิ่ง: {createdOrder.dogName || 'น้องสุนัขคู่ใจ'} (
+                          น้องสุนัขร่วมวิ่ง: {createdOrder.dogName || 'น้องสุนัขคู่ใจ'} (
                           {createdOrder.dogBreed || 'ไม่ระบุสายพันธุ์'}) · รวม {createdOrder.dogCount} ตัว
                         </span>
                       </span>

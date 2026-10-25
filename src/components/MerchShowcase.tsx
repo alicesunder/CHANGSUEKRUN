@@ -65,7 +65,7 @@ const KIT: KitItem[] = [
 ];
 
 const SIZES = [
-  { size: '2S', chest: '34"' },
+  { size: 'XS', chest: '34"' },
   { size: 'S', chest: '36"' },
   { size: 'M', chest: '38"' },
   { size: 'L', chest: '40"' },

@@ -17,27 +17,42 @@ interface Sponsor {
   tile?: boolean;
 }
 
-/** Main supporters — shown larger, in this order. */
-const MAIN_SPONSORS: Sponsor[] = [
-  { name: 'กองบัญชาการตำรวจตระเวนชายแดน', file: 'bpp', ratio: 1.36 },
-  { name: 'Chang เครื่องดื่มตราช้าง', file: 'chang', ratio: 1.17, tile: true },
-  { name: 'การท่องเที่ยวแห่งประเทศไทย (ททท.)', file: 'tat', ratio: 1.01 },
-];
-
-const SPONSORS: Sponsor[] = [
-  { name: 'YuMOVE', file: 'yumove', ratio: 3.15 },
-  { name: 'Dogster', file: 'dogster', ratio: 1.92, tile: true },
-  { name: 'Amor', file: 'amor', ratio: 2.29, tile: true },
-  { name: 'Konvy', file: 'konvy', ratio: 3.42 },
-  { name: 'Bestie', file: 'bestie', ratio: 2.31 },
-  { name: 'VetSynova', file: 'vetsynova', ratio: 0.75 },
-  { name: 'Dr.Choice', file: 'dr-choice', ratio: 1.56 },
-  { name: 'We are family for PET', file: 'we-are-family-for-pet', ratio: 1.2 },
-  { name: 'VIF', file: 'vif', ratio: 1.47 },
-  { name: 'Kitchen Flavor', file: 'kitchen-flavor', ratio: 1.44 },
-  { name: 'Solid Gold', file: 'solid-gold', ratio: 3.6 },
-  { name: 'MSD Animal Health', file: 'msd-animal-health', ratio: 2.57 },
-  { name: 'Thonglor Pet Hospital', file: 'thonglor-pet-hospital', ratio: 1.47 },
+/** Rows follow the organiser's layout: 5 / 5 / 5 / 3, all logos the same visual size. */
+const ROWS: { items: Sponsor[] }[] = [
+  {
+    items: [
+      { name: 'กองบัญชาการตำรวจตระเวนชายแดน', file: 'bpp', ratio: 1.36 },
+      { name: 'การท่องเที่ยวแห่งประเทศไทย (ททท.)', file: 'tat', ratio: 1.01 },
+      { name: 'Chang เครื่องดื่มตราช้าง', file: 'chang', ratio: 1.17, tile: true },
+      { name: 'Thonglor Pet Hospital', file: 'thonglor-pet-hospital', ratio: 1.47 },
+      { name: 'ตชด. Border Patrol Police', file: 'bpp-police', ratio: 2.33 },
+    ],
+  },
+  {
+    items: [
+      { name: 'MSD Animal Health', file: 'msd-animal-health', ratio: 2.57 },
+      { name: 'Kitchen Flavor', file: 'kitchen-flavor', ratio: 1.44 },
+      { name: 'VIF', file: 'vif', ratio: 1.47 },
+      { name: 'Dr.Choice', file: 'dr-choice', ratio: 1.56 },
+      { name: 'Konvy', file: 'konvy', ratio: 3.42 },
+    ],
+  },
+  {
+    items: [
+      { name: 'We are family for PET', file: 'we-are-family-for-pet', ratio: 1.2 },
+      { name: 'Solid Gold', file: 'solid-gold', ratio: 3.6 },
+      { name: 'CREDO PLUS', file: 'credo-plus', ratio: 2.47 },
+      { name: 'VetSynova', file: 'vetsynova', ratio: 0.75 },
+      { name: 'Bestie', file: 'bestie', ratio: 2.31 },
+    ],
+  },
+  {
+    items: [
+      { name: 'Dogster', file: 'dogster', ratio: 1.92, tile: true },
+      { name: 'Amor', file: 'amor', ratio: 2.29, tile: true },
+      { name: 'YuMOVE', file: 'yumove', ratio: 3.31 },
+    ],
+  },
 ];
 
 /** Sizes by visual area (px² at desktop), capped so very wide or tall marks stay in proportion. */
@@ -107,31 +122,34 @@ export const SponsorsSection: React.FC = () => {
             }}
           />
 
-          {/* Main supporters */}
-          <ul className="flex flex-wrap justify-center items-center px-3 sm:px-6 pt-6 sm:pt-10 pb-4 sm:pb-8 [--logo-scale:0.6] sm:[--logo-scale:0.8] lg:[--logo-scale:1]">
-            {MAIN_SPONSORS.map((s) => (
-              <li
-                key={s.file}
-                className="basis-1/3 flex items-center justify-center px-1 sm:px-4 min-h-[120px] sm:min-h-[170px] lg:min-h-[200px]"
-              >
-                <SponsorLogo s={s} size={logoSize(s.ratio, 30000, 220, 175)} />
-              </li>
-            ))}
-          </ul>
+          {/* Event logo on top of the board */}
+          <div className="flex justify-center px-4 pt-6 sm:pt-9 pb-2 sm:pb-4">
+            <img
+              src="/images/sponsors/event-logo.webp"
+              alt="CHANG SUEK RUN เห็นช้างวิ่ง วิ่งตามช้าง"
+              loading="lazy"
+              decoding="async"
+              width={300}
+              height={137}
+              className="w-[190px] sm:w-[260px] lg:w-[300px] h-auto"
+            />
+          </div>
 
-          <div aria-hidden="true" className="mx-6 sm:mx-10 border-t-2 border-dashed border-[#2A1450]/15" />
-
-          {/* Other supporters */}
-          <ul className="flex flex-wrap justify-center items-center px-2 sm:px-6 py-5 sm:py-8 [--logo-scale:0.48] sm:[--logo-scale:0.85] lg:[--logo-scale:1]">
-            {SPONSORS.map((s) => (
-              <li
-                key={s.file}
-                className="basis-1/3 sm:basis-1/4 lg:basis-1/5 flex items-center justify-center px-2 py-2 sm:py-4 min-h-[64px] sm:min-h-[104px] lg:min-h-[118px]"
-              >
-                <SponsorLogo s={s} size={logoSize(s.ratio, 8500, 180, 92)} />
-              </li>
-            ))}
-          </ul>
+          {ROWS.map((row, ri) => (
+            <ul
+              key={ri}
+              className="flex flex-wrap justify-center items-center px-2 sm:px-8 py-1 sm:py-3 [--logo-scale:0.55] sm:[--logo-scale:0.85] lg:[--logo-scale:1] last:pb-6 sm:last:pb-9"
+            >
+              {row.items.map((sp) => (
+                <li
+                  key={sp.file}
+                  className="basis-1/3 sm:basis-1/5 flex items-center justify-center px-2 py-2 sm:py-3 min-h-[64px] sm:min-h-[96px] lg:min-h-[108px]"
+                >
+                  <SponsorLogo s={sp} size={logoSize(sp.ratio, 9000, 170, 92)} />
+                </li>
+              ))}
+            </ul>
+          ))}
         </motion.div>
 
         <p className="mt-6 text-center text-xs sm:text-sm font-medium text-[#6B5A85]">

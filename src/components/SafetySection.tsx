@@ -73,7 +73,7 @@ export const SafetySection: React.FC = () => {
                 </div>
                 <div>
                   <h3 className="text-base font-black text-[#18151D]">
-                    กฎความปลอดภัยสำหรับสุนัขคู่ใจ (Dog Running Protocol)
+                    กฎความปลอดภัยสำหรับน้องสุนัขคู่ใจ (Dog Running Protocol)
                   </h3>
                   <p className="text-xs text-[#2EAA59] font-bold">
                     เพื่อให้การวิ่งปลอดภัย มีความสุข และไม่กระทบผู้อื่น
@@ -96,7 +96,7 @@ export const SafetySection: React.FC = () => {
                 </div>
                 <div className="p-3 rounded-2xl bg-[#FAF9FC] border border-[#ECEAF0]">
                   <span className="font-bold text-[#18151D] block mb-1">สมุดวัคซีน</span>
-                  สุนัขต้องได้รับวัคซีนพิษสุนัขบ้าและวัคซีนรวมครบถ้วน
+                  น้องสุนัขต้องได้รับวัคซีนพิษน้องสุนัขบ้าและวัคซีนรวมครบถ้วน
                 </div>
               </div>
             </div>

@@ -94,14 +94,14 @@ const ROUTE_BADGE_STYLE: Record<
     bg: 'bg-emerald-100',
     text: 'text-emerald-900',
     border: 'border-emerald-300',
-    label: '3 KM วิ่งกับสุนัข',
+    label: '3.8 KM วิ่งกับน้องสุนัข',
     prefix: '03-',
   },
   '1km': {
     bg: 'bg-orange-100',
     text: 'text-orange-900',
     border: 'border-orange-300',
-    label: '1 KM วิ่งกับสุนัข',
+    label: '1 KM วิ่งกับน้องสุนัข',
     prefix: '01-',
   },
 };
@@ -928,7 +928,7 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
                         { id: 'ALL', label: `ทั้งหมด (${orders.length})` },
                         { id: '10km', label: '10 KM (10-XXXX)' },
                         { id: '5km', label: '5 KM (05-XXXX)' },
-                        { id: '3km', label: '3 KM Dog (03-XXXX)' },
+                        { id: '3km', label: '3.8 KM Dog (03-XXXX)' },
                         { id: '1km', label: '1 KM Dog (01-XXXX)' },
                       ] as const
                     ).map((tab) => (
@@ -1089,7 +1089,7 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
                                 <div className="text-[11px] font-bold text-slate-600 mt-1">
                                   คนวิ่ง {order.peopleCount} ท่าน
                                   {order.runningWithDog
-                                    ? ` · สุนัข ${order.dogCount} ตัว (${order.dogName || '-'})`
+                                    ? ` · น้องสุนัข ${order.dogCount} ตัว (${order.dogName || '-'})`
                                     : ''}
                                 </div>
                               </td>
@@ -1262,7 +1262,7 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
                         <th className="py-3 px-4">ระยะทางวิ่ง</th>
                         <th className="py-3 px-4 text-center">ตั๋วที่ขายได้ (ใบ)</th>
                         <th className="py-3 px-4 text-center">นักวิ่งรวม (คน)</th>
-                        <th className="py-3 px-4 text-center">สุนัขรวม (ตัว)</th>
+                        <th className="py-3 px-4 text-center">น้องสุนัขรวม (ตัว)</th>
                         <th className="py-3 px-4 text-center">เลข BIB ล่าสุด</th>
                         <th className="py-3 px-4 text-center">เลข BIB ถัดไป</th>
                         <th className="py-3 px-4 text-right">รายได้รวม (บาท)</th>

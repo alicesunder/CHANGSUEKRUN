@@ -13,7 +13,7 @@ import {
   TicketCheck,
   Heart,
 } from 'lucide-react';
-import { motion } from 'motion/react';
+import { motion, useReducedMotion } from 'motion/react';
 import { RouteId } from '../types';
 import { HeroCountdownTimer } from './HeroCountdownTimer';
 import { PawIcon } from './brand/DogDecor';
@@ -42,6 +42,7 @@ export const Hero: React.FC<HeroProps> = ({
   onOpenRegisterModal,
   onSelectDistance,
 }) => {
+  const reduceMotion = useReducedMotion();
   const scrollToSection = (id: string) => {
     const el = document.getElementById(id);
     if (el) {
@@ -51,7 +52,7 @@ export const Hero: React.FC<HeroProps> = ({
 
   const mobileDistancePills: { id: RouteId; label: string; tag: string; color: string; bg: string }[] = [
     { id: '1km', label: '1 KM', tag: 'Dog Mini', color: '#C2410C', bg: '#FFF7ED' },
-    { id: '3km', label: '3 KM', tag: 'Dog Run', color: '#0F766E', bg: '#F0FDFA' },
+    { id: '3km', label: '3.8 KM', tag: 'Dog Run', color: '#0F766E', bg: '#F0FDFA' },
     { id: '5km', label: '5 KM', tag: 'Fun Run', color: '#B45309', bg: '#FFFBEB' },
     { id: '10km', label: '10 KM', tag: 'Mini Marathon', color: '#7C3AED', bg: '#FAF5FF' },
   ];
@@ -139,13 +140,124 @@ export const Hero: React.FC<HeroProps> = ({
               onClick={() => onSelectDistance('1km')}
               className="mt-1 inline-flex items-center gap-1 min-h-[28px] text-xs font-extrabold text-[#6D28D9] hover:text-[#4C1D95] cursor-pointer"
             >
-              <span>ดูบัตร Dog Run 1K & 3K</span>
+              <span>ดูบัตร Dog Run 1K & 3.8K</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>
         </motion.div>
 
-        <div className="relative z-10 max-w-[1360px] mx-auto px-4 sm:px-8 pt-20 sm:pt-24 lg:pt-28 pb-12 sm:pb-16 lg:pb-28 lg:min-h-[700px]">
+        {/* ============================================================= */}
+        {/* PHONE HERO (< 640px): full-bleed portrait artwork              */}
+        {/* ============================================================= */}
+        <div
+          className="sm:hidden relative w-full overflow-hidden"
+          style={{ height: 'clamp(600px, calc(100svh - 56px), 780px)' }}
+        >
+          <motion.img
+            src="/images/hero/hero-mobile.webp"
+            alt="ช้างศึกสีม่วง นักวิ่ง และน้องสุนัขโกลเด้น วิ่งริมชายหาดใต้แสงแดด"
+            className="absolute inset-0 w-full h-full object-cover object-[50%_46%]"
+            fetchPriority="high"
+            loading="eager"
+            decoding="async"
+            initial={reduceMotion ? false : { scale: 1.08 }}
+            animate={{ scale: 1 }}
+            transition={{ duration: 1.8, ease: 'easeOut' }}
+          />
+          {/* scrims: keep the sky text readable, and give the buttons a calm dark base */}
+          <div className="absolute inset-x-0 top-0 h-[48%] bg-gradient-to-b from-[#2A1060]/60 via-[#2A1060]/22 to-transparent pointer-events-none" />
+          <div className="absolute inset-x-0 bottom-0 h-[46%] bg-gradient-to-t from-[#1B0838] via-[#1B0838]/82 to-transparent pointer-events-none" />
+
+          <div className="absolute inset-0 flex flex-col px-4 pt-[66px] pb-10">
+            {/* TOP: badge + logo + headline (over the sky) */}
+            <motion.div
+              initial={reduceMotion ? false : { opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
+              className="flex flex-col items-center text-center"
+            >
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-[#FFC928] text-[#2A1450] text-[11px] font-extrabold px-3 py-1 shadow-[0_3px_0_#2A1450]">
+                <Sparkles className="w-3 h-3" /> เปิดรับสมัครออนไลน์แล้ว
+              </span>
+              <img
+                src="/images/brand/changsuek-run-logo.webp"
+                alt="CHANGSUEK RUN - เห็นช้างวิ่ง วิ่งตามช้าง"
+                className="mt-2 h-[58px] w-auto object-contain"
+                style={{ filter: 'drop-shadow(0 0 2px #fff) drop-shadow(0 0 8px rgba(255,255,255,.85)) drop-shadow(0 4px 10px rgba(30,10,70,.35))' }}
+              />
+              <h1
+                className="mt-1 font-hero text-[34px] font-bold leading-[1.38] text-white"
+                style={{ textShadow: '0 2px 0 #2A1450, 0 5px 16px rgba(25,10,60,.55)' }}
+              >
+                <span className="block">วิ่งสนุกไปกับ</span>
+                <span className="block text-[#FFD84D]">เพื่อนสี่ขาคู่ใจ</span>
+              </h1>
+            </motion.div>
+
+            <div className="flex-1" />
+
+            {/* BOTTOM: info, buttons, quick distance picks */}
+            <motion.div
+              initial={reduceMotion ? false : { opacity: 0, y: 22 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
+              className="text-center"
+            >
+              <p className="text-[12px] font-semibold leading-relaxed text-white/92 max-w-[340px] mx-auto [@media(max-height:700px)]:hidden">
+                งานวิ่งการกุศลรักษ์ช้างและพัฒนาศูนย์ฝึกสุนัขตำรวจ{' '}
+                <span className="whitespace-nowrap">ค่ายพระรามหก</span> ริมชายหาด
+                <span className="whitespace-nowrap">ชะอำ-หัวหิน</span>
+              </p>
+
+              <div className="mt-2.5 flex items-center justify-center gap-2 text-[11px] font-bold text-white">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 backdrop-blur-md border border-white/35 px-3 py-1.5">
+                  <Calendar className="w-3.5 h-3.5 text-[#FFD84D]" /> 9 ม.ค. 2570
+                </span>
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 backdrop-blur-md border border-white/35 px-3 py-1.5">
+                  <MapPin className="w-3.5 h-3.5 text-[#FFD84D]" /> หาดชะอำ (ค่ายนเรศวร)
+                </span>
+              </div>
+
+              <div className="mt-3 grid grid-cols-[1.25fr_1fr] gap-2.5">
+                <button
+                  type="button"
+                  onClick={onOpenRegisterModal}
+                  className="relative overflow-hidden inline-flex items-center justify-center gap-2 min-h-[50px] rounded-full bg-gradient-to-b from-[#FFD84D] to-[#FFB300] text-[#261247] text-[15px] font-black border-[3px] border-[#2A1450] shadow-[0_5px_0_#2A1450] active:translate-y-0.5 active:shadow-[0_3px_0_#2A1450] cursor-pointer"
+                >
+                  <span className="absolute inset-0 ticket-foil-shimmer opacity-55 pointer-events-none" />
+                  <PawIcon size={17} color="#261247" className="relative z-10" />
+                  <span className="relative z-10">สมัครวิ่งตอนนี้</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => scrollToSection('distances')}
+                  className="inline-flex items-center justify-center gap-1.5 min-h-[50px] rounded-full bg-white/95 text-[#2A1450] text-[13px] font-extrabold border-[3px] border-[#2A1450] shadow-[0_5px_0_#2A1450] active:translate-y-0.5 active:shadow-[0_3px_0_#2A1450] cursor-pointer"
+                >
+                  ดูบัตรวิ่ง <ArrowRight className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="mt-3.5 grid grid-cols-4 gap-1.5">
+                {mobileDistancePills.map((d) => (
+                  <button
+                    key={d.id}
+                    type="button"
+                    onClick={() => onSelectDistance(d.id)}
+                    style={{ backgroundColor: d.bg }}
+                    className="rounded-2xl py-1.5 px-1 border border-white/70 shadow-md flex flex-col items-center justify-center min-h-[44px] active:scale-95 transition-transform cursor-pointer"
+                  >
+                    <span className="font-display text-[13px] font-black leading-none" style={{ color: d.color }}>
+                      {d.label}
+                    </span>
+                    <span className="text-[9px] font-bold text-[#4B2D78] mt-0.5 truncate max-w-full">{d.tag}</span>
+                  </button>
+                ))}
+              </div>
+            </motion.div>
+          </div>
+        </div>
+
+        <div className="hidden sm:block relative z-10 max-w-[1360px] mx-auto px-4 sm:px-8 pt-20 sm:pt-24 lg:pt-28 pb-12 sm:pb-16 lg:pb-28 lg:min-h-[700px]">
           <motion.div
             initial={{ opacity: 0, y: 18 }}
             animate={{ opacity: 1, y: 0 }}

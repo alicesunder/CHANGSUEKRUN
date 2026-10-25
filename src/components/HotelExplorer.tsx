@@ -141,7 +141,7 @@ export const HotelExplorer: React.FC<HotelExplorerProps> = () => {
         availableRooms: 'มีห้องว่าง',
         availableRoomsCount: 8,
         petFriendly: true,
-        petPolicy: 'ต้อนรับสุนัขและสัตว์เลี้ยงในโซน Pet-Friendly พร้อมพื้นที่เดินเล่นริมหาด',
+        petPolicy: 'ต้อนรับน้องสุนัขและสัตว์เลี้ยงในโซน Pet-Friendly พร้อมพื้นที่เดินเล่นริมหาด',
         phone: '032-512-021',
         address: 'ถ.เพชรเกษม ชะอำ-หัวหิน จ.เพชรบุรี (ใกล้ค่ายนเรศวร)',
         latitude: 12.685,
@@ -244,7 +244,7 @@ export const HotelExplorer: React.FC<HotelExplorerProps> = () => {
                 <PawIcon className="w-6 h-6" />
               </span>
               <div>
-                <h2 className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-[#2A1450] tracking-tight leading-tight">
+                <h2 className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-[#2A1450] leading-tight">
                   ที่พักใกล้สนาม วิ่งสบาย พักสบาย
                 </h2>
                 <p className="text-xs sm:text-sm text-[#6B5A85] font-bold mt-0.5">

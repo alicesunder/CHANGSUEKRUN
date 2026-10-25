@@ -10,7 +10,7 @@
 
   h1, h2, h3, h4, h5, h6 {
     font-family: 'Fredoka', 'Mali', 'Kanit', sans-serif;
-    letter-spacing: -0.01em;
+    letter-spacing: 0;
   }
 }
 
@@ -524,9 +524,9 @@ html.dark .leaflet-tile-pane {
   font-family: 'Fredoka','Mali','Kanit',sans-serif !important;
   color: #261247 !important;
   font-weight: 700 !important;
-  letter-spacing: -0.01em !important;
+  letter-spacing: 0 !important;
   font-size: clamp(1.85rem, 3.8vw, 3rem) !important;
-  line-height: 1.12 !important;
+  line-height: 1.4 !important;
 }
 
 /* Modern Luminous Card Elevation across sections */
@@ -692,4 +692,9 @@ h1, h2, h3, h4 {
 [class*="line-clamp-"] {
   padding-top: 0.32em;
   line-height: 1.6;
+}
+
+/* Thai letter-spacing: negative tracking made vowels and tone marks collide ("วิ่ง" -> "วิง") */
+h1, h2, h3, h4, h5, h6 {
+  letter-spacing: 0;
 }

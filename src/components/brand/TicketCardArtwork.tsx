@@ -45,7 +45,7 @@ export const TICKET_CARD_IMAGES: Record<
   '3km': {
     src: '/images/distances/card-3k-editorial.jpg',
     objectPosition: '85% 38%',
-    alt: 'บัตรวิ่ง 3 KM Dog Run - นักวิ่งและน้องสุนัขโกลเด้นวิ่งเคียงข้างกันบนเส้นทางเลียบหาดและทิวสน',
+    alt: 'บัตรวิ่ง 3.8 KM Dog Run - นักวิ่งและน้องสุนัขโกลเด้นวิ่งเคียงข้างกันบนเส้นทางเลียบหาดและทิวสน',
     sceneTag: 'SHADED PINE & BEACH LOOP',
     terrainBadge: 'เลียบหาด + ร่มสนแกนกลางค่าย',
     skyGrad: 'linear-gradient(135deg, #CCF5E1 0%, #6DD5A5 55%, #28A766 100%)',
