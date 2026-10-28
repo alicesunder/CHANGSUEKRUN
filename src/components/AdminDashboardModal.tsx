@@ -33,8 +33,10 @@ import {
   ShieldAlert,
   FileSpreadsheet,
   Activity,
+  Gift,
 } from 'lucide-react';
 import { RouteId } from '../types';
+import { SponsorCodesAdmin } from './SponsorCodesAdmin';
 import {
   TicketOrder,
   PromptPayConfig,
@@ -130,7 +132,7 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
   });
   const [loadError, setLoadError] = useState<string | null>(null);
 
-  const [activeTab, setActiveTab] = useState<'overview' | 'orders' | 'security' | 'settings'>(
+  const [activeTab, setActiveTab] = useState<'overview' | 'orders' | 'security' | 'settings' | 'sponsors'>(
     'orders'
   );
   const [orders, setOrders] = useState<TicketOrder[]>([]);
@@ -699,6 +701,18 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
               >
                 <Settings className="w-4 h-4" />
                 <span>ตั้งค่าระบบ</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab('sponsors')}
+                className={`px-3 py-2 rounded-xl text-xs font-extrabold transition-all cursor-pointer flex items-center gap-1.5 ${
+                  activeTab === 'sponsors'
+                    ? 'bg-[#FFC928] text-[#180B30] shadow-xs'
+                    : 'text-white/80 hover:text-white'
+                }`}
+              >
+                <Gift className="w-4 h-4" />
+                <span>รหัสสปอนเซอร์</span>
               </button>
             </div>
 
@@ -1523,6 +1537,8 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
           {/* ========================================================== */}
           {/* TAB 4: PROMPTPAY, TIMER, ADMIN CREDENTIALS & BIB COUNTERS  */}
           {/* ========================================================== */}
+          {activeTab === 'sponsors' && <SponsorCodesAdmin />}
+
           {activeTab === 'settings' && (
             <form onSubmit={handleSaveSettings} className="grid grid-cols-1 lg:grid-cols-12 gap-6">
               {/* Left 7 cols */}

@@ -72,6 +72,8 @@ export interface CreateOrderInput {
   dogBreed?: string;
   extraRunnerNames?: string;
   privacyConsent: boolean;
+  /** Sponsor code: makes the registration free (run + concert). The server re-checks it. */
+  sponsorCode?: string;
 }
 
 const PENDING_KEY = 'changsuek_pending_order_v2';
@@ -110,6 +112,15 @@ export async function createOrder(
   );
   cachedConfig = res.config;
   return res;
+}
+
+/** Asks the server whether a sponsor code can still be used (does not use it up). */
+export async function checkSponsorCode(code: string): Promise<{ valid: true; sponsorName: string }> {
+  return request<{ valid: true; sponsorName: string }>('/api/sponsor-code/check', {
+    method: 'POST',
+    headers: jsonHeaders,
+    body: JSON.stringify({ code }),
+  });
 }
 
 export async function fetchOrder(ref: PendingOrderRef): Promise<ServerOrder> {
@@ -197,7 +208,32 @@ export interface AdminSettings {
   paymentTimeoutMinutes: number;
 }
 
+export interface SponsorCodeRow {
+  code: string;
+  sponsorName: string;
+  maxUses: number | null;
+  usedCount: number;
+  active: boolean;
+  note: string;
+  createdAt: string;
+}
+
 export const adminApi = {
+  listSponsorCodes: () => adminFetch<{ codes: SponsorCodeRow[] }>('/api/admin/sponsor-codes'),
+  createSponsorCode: (input: { sponsorName: string; maxUses: number | null; code?: string; note?: string }) =>
+    adminFetch<{ code: SponsorCodeRow }>('/api/admin/sponsor-codes', {
+      method: 'POST',
+      headers: jsonHeaders,
+      body: JSON.stringify(input),
+    }),
+  updateSponsorCode: (code: string, patch: { active?: boolean; maxUses?: number | null }) =>
+    adminFetch<{ code: SponsorCodeRow }>(`/api/admin/sponsor-codes/${encodeURIComponent(code)}`, {
+      method: 'PATCH',
+      headers: jsonHeaders,
+      body: JSON.stringify(patch),
+    }),
+  deleteSponsorCode: (code: string) =>
+    adminFetch<{ ok: true }>(`/api/admin/sponsor-codes/${encodeURIComponent(code)}`, { method: 'DELETE' }),
   listOrders: () =>
     adminFetch<{ orders: ServerOrder[]; bibCounters: Record<RouteId, number>; nextBib: Record<RouteId, string> }>(
       '/api/admin/orders'

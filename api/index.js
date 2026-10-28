@@ -28329,12 +28329,23 @@ create table if not exists csr.login_failures (
   locked_until timestamptz
 );
 
+create table if not exists csr.sponsor_codes (
+  code         text primary key,
+  sponsor_name text not null,
+  max_uses     integer,                       -- null = unlimited
+  used_count   integer not null default 0,
+  active       boolean not null default true,
+  note         text not null default '',
+  created_at   timestamptz not null default now()
+);
+
 alter table csr.orders          enable row level security;
 alter table csr.bib_counters    enable row level security;
 alter table csr.used_refs       enable row level security;
 alter table csr.settings        enable row level security;
 alter table csr.rate_hits       enable row level security;
 alter table csr.login_failures  enable row level security;
+alter table csr.sponsor_codes   enable row level security;
 
 do $$
 begin
@@ -28564,6 +28575,81 @@ async function markOrderPaid(orderId, info) {
     return order;
   });
 }
+var SPONSOR_CODE_RE = /^[A-Z0-9-]{4,32}$/;
+var CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+function normalizeSponsorCode(input) {
+  const c = String(input ?? "").toUpperCase().replace(/\s+/g, "");
+  return SPONSOR_CODE_RE.test(c) ? c : "";
+}
+function generateSponsorCode() {
+  const bytes = crypto.randomBytes(8);
+  let out = "";
+  for (const b of bytes) out += CODE_ALPHABET[b % CODE_ALPHABET.length];
+  return `CSR-${out}`;
+}
+var toSponsorRow = (r) => ({
+  code: r.code,
+  sponsorName: r.sponsor_name,
+  maxUses: r.max_uses === null || r.max_uses === void 0 ? null : Number(r.max_uses),
+  usedCount: Number(r.used_count),
+  active: Boolean(r.active),
+  note: r.note || "",
+  createdAt: new Date(r.created_at).toISOString()
+});
+async function peekSponsorCode(code) {
+  const rows = await dbQuery(
+    "select * from csr.sponsor_codes where code = $1 and active and (max_uses is null or used_count < max_uses)",
+    [code]
+  );
+  return rows[0] ? { sponsorName: rows[0].sponsor_name } : void 0;
+}
+async function redeemSponsorCode(code) {
+  const rows = await dbQuery(
+    `update csr.sponsor_codes set used_count = used_count + 1
+     where code = $1 and active and (max_uses is null or used_count < max_uses)
+     returning sponsor_name`,
+    [code]
+  );
+  return rows[0] ? { sponsorName: rows[0].sponsor_name } : void 0;
+}
+async function releaseSponsorCode(code) {
+  await dbQuery("update csr.sponsor_codes set used_count = greatest(used_count - 1, 0) where code = $1", [code]);
+}
+async function listSponsorCodes() {
+  const rows = await dbQuery("select * from csr.sponsor_codes order by created_at desc, code");
+  return rows.map(toSponsorRow);
+}
+async function createSponsorCode(input) {
+  const rows = await dbQuery(
+    `insert into csr.sponsor_codes (code, sponsor_name, max_uses, note) values ($1, $2, $3, $4)
+     on conflict (code) do nothing returning *`,
+    [input.code, input.sponsorName, input.maxUses, input.note]
+  );
+  return rows[0] ? toSponsorRow(rows[0]) : void 0;
+}
+async function updateSponsorCode(code, patch) {
+  const rows = await dbQuery(
+    `update csr.sponsor_codes set
+       active = coalesce($2, active),
+       max_uses = case when $3::boolean then $4 else max_uses end,
+       sponsor_name = coalesce($5, sponsor_name),
+       note = coalesce($6, note)
+     where code = $1 returning *`,
+    [
+      code,
+      patch.active ?? null,
+      patch.maxUses !== void 0,
+      patch.maxUses === void 0 ? null : patch.maxUses,
+      patch.sponsorName ?? null,
+      patch.note ?? null
+    ]
+  );
+  return rows[0] ? toSponsorRow(rows[0]) : void 0;
+}
+async function deleteUnusedSponsorCode(code) {
+  const rows = await dbQuery("delete from csr.sponsor_codes where code = $1 and used_count = 0 returning code", [code]);
+  return rows.length > 0;
+}
 async function rateLimited(key, limit, windowMs) {
   const rows = await dbTx(async (q) => {
     await q("insert into csr.rate_hits (key) values ($1)", [key]);
@@ -28777,6 +28863,7 @@ var TERMS_VERSION = "2026-10-22";
 var ROUTE_IDS = ticketCategories.map((t) => t.id);
 var SHIRT_SIZES = ["XS", "S", "M", "L", "XL", "2XL", "3XL"];
 var MAX_EXTRA = 9;
+var SPONSOR_INVALID_MSG = "\u0E23\u0E2B\u0E31\u0E2A\u0E2A\u0E1B\u0E2D\u0E19\u0E40\u0E0B\u0E2D\u0E23\u0E4C\u0E44\u0E21\u0E48\u0E16\u0E39\u0E01\u0E15\u0E49\u0E2D\u0E07 \u0E2B\u0E23\u0E37\u0E2D\u0E16\u0E39\u0E01\u0E43\u0E0A\u0E49\u0E04\u0E23\u0E1A\u0E2A\u0E34\u0E17\u0E18\u0E34\u0E4C\u0E41\u0E25\u0E49\u0E27";
 function clean(input, max) {
   return String(input ?? "").replace(/[\u0000-\u001F\u007F<>]/g, "").trim().slice(0, max);
 }
@@ -28861,24 +28948,42 @@ function createApp() {
   app2.get("/api/public-config", h(async (_req, res) => {
     res.json(await publicConfig());
   }));
+  app2.post("/api/sponsor-code/check", smallJson, h(async (req, res) => {
+    if (await rateLimited(`sponsor-check:${clientIp(req)}`, 12, 10 * 60 * 1e3)) {
+      res.status(429).json({ error: "\u0E15\u0E23\u0E27\u0E08\u0E23\u0E2B\u0E31\u0E2A\u0E1A\u0E48\u0E2D\u0E22\u0E40\u0E01\u0E34\u0E19\u0E44\u0E1B \u0E01\u0E23\u0E38\u0E13\u0E32\u0E23\u0E2D\u0E2A\u0E31\u0E01\u0E04\u0E23\u0E39\u0E48\u0E41\u0E25\u0E49\u0E27\u0E25\u0E2D\u0E07\u0E43\u0E2B\u0E21\u0E48" });
+      return;
+    }
+    const code = normalizeSponsorCode(req.body?.code);
+    const found = code ? await peekSponsorCode(code) : void 0;
+    if (!found) {
+      res.status(404).json({ error: SPONSOR_INVALID_MSG });
+      return;
+    }
+    res.json({ valid: true, sponsorName: found.sponsorName });
+  }));
   app2.post("/api/orders", smallJson, h(async (req, res) => {
     if (await rateLimited(`order:${clientIp(req)}`, 15, 10 * 60 * 1e3)) {
       res.status(429).json({ error: "\u0E2A\u0E23\u0E49\u0E32\u0E07\u0E04\u0E33\u0E2A\u0E31\u0E48\u0E07\u0E0B\u0E37\u0E49\u0E2D\u0E1A\u0E48\u0E2D\u0E22\u0E40\u0E01\u0E34\u0E19\u0E44\u0E1B \u0E01\u0E23\u0E38\u0E13\u0E32\u0E23\u0E2D\u0E2A\u0E31\u0E01\u0E04\u0E23\u0E39\u0E48\u0E41\u0E25\u0E49\u0E27\u0E25\u0E2D\u0E07\u0E43\u0E2B\u0E21\u0E48" });
       return;
     }
-    if (!await getOmiseKey()) {
+    const b = req.body || {};
+    const sponsorCode = b.sponsorCode ? normalizeSponsorCode(b.sponsorCode) : "";
+    if (b.sponsorCode && !sponsorCode) {
+      res.status(400).json({ error: SPONSOR_INVALID_MSG });
+      return;
+    }
+    if (!sponsorCode && !await getOmiseKey()) {
       res.status(503).json({ error: "\u0E23\u0E30\u0E1A\u0E1A\u0E0A\u0E33\u0E23\u0E30\u0E40\u0E07\u0E34\u0E19\u0E22\u0E31\u0E07\u0E44\u0E21\u0E48\u0E40\u0E1B\u0E34\u0E14\u0E43\u0E0A\u0E49\u0E07\u0E32\u0E19 \u0E01\u0E23\u0E38\u0E13\u0E32\u0E15\u0E34\u0E14\u0E15\u0E48\u0E2D\u0E1C\u0E39\u0E49\u0E08\u0E31\u0E14\u0E07\u0E32\u0E19" });
       return;
     }
-    const b = req.body || {};
     const routeId = b.routeId;
     if (!ROUTE_IDS.includes(routeId)) {
       res.status(400).json({ error: "\u0E23\u0E30\u0E22\u0E30\u0E27\u0E34\u0E48\u0E07\u0E44\u0E21\u0E48\u0E16\u0E39\u0E01\u0E15\u0E49\u0E2D\u0E07" });
       return;
     }
     const isDog = isDogCategory(routeId);
-    const extraPeople = isDog ? Math.min(MAX_EXTRA, Math.max(0, Math.floor(Number(b.extraPeople) || 0))) : 0;
-    const extraDogs = isDog ? Math.min(MAX_EXTRA, Math.max(0, Math.floor(Number(b.extraDogs) || 0))) : 0;
+    const extraPeople = isDog && !sponsorCode ? Math.min(MAX_EXTRA, Math.max(0, Math.floor(Number(b.extraPeople) || 0))) : 0;
+    const extraDogs = isDog && !sponsorCode ? Math.min(MAX_EXTRA, Math.max(0, Math.floor(Number(b.extraDogs) || 0))) : 0;
     const fullName = clean(b.fullName, 120);
     const phone = clean(b.phone, 30);
     const email = clean(b.email, 120);
@@ -28895,7 +29000,16 @@ function createApp() {
       res.status(400).json({ error: errors.join(" \xB7 ") });
       return;
     }
-    const total = calcTicketTotal(routeId, extraPeople, extraDogs);
+    let sponsorName = "";
+    if (sponsorCode) {
+      const used = await redeemSponsorCode(sponsorCode);
+      if (!used) {
+        res.status(400).json({ error: SPONSOR_INVALID_MSG });
+        return;
+      }
+      sponsorName = used.sponsorName;
+    }
+    const total = sponsorCode ? 0 : calcTicketTotal(routeId, extraPeople, extraDogs);
     const token = crypto3.randomBytes(24).toString("base64url");
     const now = /* @__PURE__ */ new Date();
     const settings = await getSettings();
@@ -28920,7 +29034,9 @@ function createApp() {
       dogCount: isDog ? 1 + extraDogs : 0,
       totalPrice: total,
       bibNumber: "",
-      paymentMethod: "PROMPTPAY_QR",
+      paymentMethod: sponsorCode ? "SPONSOR_CODE" : "PROMPTPAY_QR",
+      sponsorCode: sponsorCode || void 0,
+      sponsorName: sponsorName || void 0,
       paymentStatus: "PENDING",
       paymentRef: "",
       senderBank: "",
@@ -28933,7 +29049,33 @@ function createApp() {
       createdAt: now.toISOString(),
       expiresAt: new Date(now.getTime() + timeoutMin * 60 * 1e3).toISOString()
     };
-    await insertOrder(order);
+    try {
+      await insertOrder(order);
+    } catch (err) {
+      if (sponsorCode) await releaseSponsorCode(sponsorCode).catch(() => {
+      });
+      throw err;
+    }
+    if (sponsorCode) {
+      let paid;
+      try {
+        paid = await markOrderPaid(order.orderId, {
+          status: "AUTO_VERIFIED",
+          verifiedBy: `\u0E23\u0E2B\u0E31\u0E2A\u0E2A\u0E1B\u0E2D\u0E19\u0E40\u0E0B\u0E2D\u0E23\u0E4C: ${sponsorName}`,
+          paymentRef: "",
+          senderBank: "SPONSOR",
+          note: `\u0E43\u0E0A\u0E49\u0E23\u0E2B\u0E31\u0E2A\u0E2A\u0E1B\u0E2D\u0E19\u0E40\u0E0B\u0E2D\u0E23\u0E4C ${sponsorCode} (${sponsorName}) \u2014 \u0E27\u0E34\u0E48\u0E07 + \u0E04\u0E2D\u0E19\u0E40\u0E2A\u0E34\u0E23\u0E4C\u0E15 \u0E44\u0E21\u0E48\u0E04\u0E34\u0E14\u0E04\u0E48\u0E32\u0E2A\u0E21\u0E31\u0E04\u0E23`
+        });
+      } catch (err) {
+        await deleteOrder(order.orderId).catch(() => {
+        });
+        await releaseSponsorCode(sponsorCode).catch(() => {
+        });
+        throw err;
+      }
+      res.json({ order: toRunnerView(paid || order), accessToken: token, config: await publicConfig() });
+      return;
+    }
     const charge = await createOmiseCharge({ amountBaht: total, orderId: order.orderId });
     if (!charge.chargeId || !charge.qrImageUrl) {
       console.warn(`[omise] charge create failed for ${order.orderId}: ${charge.error}`);
@@ -29090,6 +29232,74 @@ function createApp() {
     }
     await deleteOrder(id);
     console.log(`[admin] ${req.admin.username} deleted ${id}`);
+    res.json({ ok: true });
+  }));
+  app2.get("/api/admin/sponsor-codes", requireAdmin, h(async (_req, res) => {
+    res.json({ codes: await listSponsorCodes() });
+  }));
+  app2.post("/api/admin/sponsor-codes", requireAdmin, smallJson, h(async (req, res) => {
+    const b = req.body || {};
+    const sponsorName = clean(b.sponsorName, 120);
+    if (sponsorName.length < 2) {
+      res.status(400).json({ error: "\u0E01\u0E23\u0E38\u0E13\u0E32\u0E23\u0E30\u0E1A\u0E38\u0E0A\u0E37\u0E48\u0E2D\u0E2A\u0E1B\u0E2D\u0E19\u0E40\u0E0B\u0E2D\u0E23\u0E4C" });
+      return;
+    }
+    const maxRaw = b.maxUses === null || b.maxUses === "" || b.maxUses === void 0 ? null : Math.floor(Number(b.maxUses));
+    if (maxRaw !== null && (!Number.isFinite(maxRaw) || maxRaw < 1 || maxRaw > 1e5)) {
+      res.status(400).json({ error: "\u0E08\u0E33\u0E19\u0E27\u0E19\u0E2A\u0E34\u0E17\u0E18\u0E34\u0E4C\u0E15\u0E49\u0E2D\u0E07\u0E40\u0E1B\u0E47\u0E19\u0E08\u0E33\u0E19\u0E27\u0E19\u0E40\u0E15\u0E47\u0E21 1 \u0E02\u0E36\u0E49\u0E19\u0E44\u0E1B (\u0E2B\u0E23\u0E37\u0E2D\u0E40\u0E27\u0E49\u0E19\u0E27\u0E48\u0E32\u0E07\u0E40\u0E1E\u0E37\u0E48\u0E2D\u0E44\u0E21\u0E48\u0E08\u0E33\u0E01\u0E31\u0E14)" });
+      return;
+    }
+    const custom = b.code ? normalizeSponsorCode(b.code) : "";
+    if (b.code && !custom) {
+      res.status(400).json({ error: "\u0E23\u0E2B\u0E31\u0E2A\u0E15\u0E49\u0E2D\u0E07\u0E40\u0E1B\u0E47\u0E19 A-Z \u0E15\u0E31\u0E27\u0E40\u0E25\u0E02 \u0E2B\u0E23\u0E37\u0E2D - \u0E22\u0E32\u0E27 4-32 \u0E15\u0E31\u0E27\u0E2D\u0E31\u0E01\u0E29\u0E23" });
+      return;
+    }
+    for (let attempt = 0; attempt < 5; attempt++) {
+      const created = await createSponsorCode({
+        code: custom || generateSponsorCode(),
+        sponsorName,
+        maxUses: maxRaw,
+        note: clean(b.note, 240)
+      });
+      if (created) {
+        res.json({ code: created });
+        return;
+      }
+      if (custom) {
+        res.status(409).json({ error: "\u0E21\u0E35\u0E23\u0E2B\u0E31\u0E2A\u0E19\u0E35\u0E49\u0E2D\u0E22\u0E39\u0E48\u0E41\u0E25\u0E49\u0E27" });
+        return;
+      }
+    }
+    res.status(500).json({ error: "\u0E2A\u0E23\u0E49\u0E32\u0E07\u0E23\u0E2B\u0E31\u0E2A\u0E44\u0E21\u0E48\u0E2A\u0E33\u0E40\u0E23\u0E47\u0E08 \u0E01\u0E23\u0E38\u0E13\u0E32\u0E25\u0E2D\u0E07\u0E43\u0E2B\u0E21\u0E48" });
+  }));
+  app2.patch("/api/admin/sponsor-codes/:code", requireAdmin, smallJson, h(async (req, res) => {
+    const code = normalizeSponsorCode(req.params.code);
+    const b = req.body || {};
+    const patch = {};
+    if (typeof b.active === "boolean") patch.active = b.active;
+    if ("maxUses" in b) {
+      const m = b.maxUses === null || b.maxUses === "" ? null : Math.floor(Number(b.maxUses));
+      if (m !== null && (!Number.isFinite(m) || m < 1 || m > 1e5)) {
+        res.status(400).json({ error: "\u0E08\u0E33\u0E19\u0E27\u0E19\u0E2A\u0E34\u0E17\u0E18\u0E34\u0E4C\u0E44\u0E21\u0E48\u0E16\u0E39\u0E01\u0E15\u0E49\u0E2D\u0E07" });
+        return;
+      }
+      patch.maxUses = m;
+    }
+    if (typeof b.sponsorName === "string" && clean(b.sponsorName, 120).length >= 2) patch.sponsorName = clean(b.sponsorName, 120);
+    if (typeof b.note === "string") patch.note = clean(b.note, 240);
+    const updated = code ? await updateSponsorCode(code, patch) : void 0;
+    if (!updated) {
+      res.status(404).json({ error: "\u0E44\u0E21\u0E48\u0E1E\u0E1A\u0E23\u0E2B\u0E31\u0E2A\u0E19\u0E35\u0E49" });
+      return;
+    }
+    res.json({ code: updated });
+  }));
+  app2.delete("/api/admin/sponsor-codes/:code", requireAdmin, h(async (req, res) => {
+    const code = normalizeSponsorCode(req.params.code);
+    if (!code || !await deleteUnusedSponsorCode(code)) {
+      res.status(409).json({ error: "\u0E25\u0E1A\u0E44\u0E21\u0E48\u0E44\u0E14\u0E49 (\u0E44\u0E21\u0E48\u0E1E\u0E1A\u0E23\u0E2B\u0E31\u0E2A \u0E2B\u0E23\u0E37\u0E2D\u0E21\u0E35\u0E04\u0E19\u0E43\u0E0A\u0E49\u0E41\u0E25\u0E49\u0E27 \u0E43\u0E2B\u0E49\u0E1B\u0E34\u0E14\u0E01\u0E32\u0E23\u0E43\u0E0A\u0E49\u0E07\u0E32\u0E19\u0E41\u0E17\u0E19)" });
+      return;
+    }
     res.json({ ok: true });
   }));
   app2.get("/api/admin/settings", requireAdmin, h(async (_req, res) => {

@@ -37,6 +37,7 @@ import {
   Eye,
   Trophy,
   PartyPopper,
+  Gift,
 } from 'lucide-react';
 import { RouteId } from '../types';
 import { DogCharacter, ElephantCharacter } from './brand/BrandCharacters';
@@ -50,6 +51,7 @@ import {
   PendingOrderRef,
   PublicConfig,
   ServerOrder,
+  checkSponsorCode,
   createOrder,
   fetchOrder,
   fetchQrObjectUrl,
@@ -233,6 +235,12 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
   const [isCreatingOrder, setIsCreatingOrder] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [privacyConsent, setPrivacyConsent] = useState(false);
+
+  // Sponsor code: free registration (run + concert). The server checks it again on submit.
+  const [sponsorInput, setSponsorInput] = useState('');
+  const [sponsor, setSponsor] = useState<{ code: string; name: string } | null>(null);
+  const [sponsorChecking, setSponsorChecking] = useState(false);
+  const [sponsorError, setSponsorError] = useState<string | null>(null);
   const [qrDataUrl, setQrDataUrl] = useState<string>('');
   const [copiedPromptPay, setCopiedPromptPay] = useState(false);
   const [createdOrder, setCreatedOrder] = useState<TicketOrder | null>(null);
@@ -257,6 +265,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
   const theme = ROUTE_THEME[selectedRoute];
   const isDog = isDogCategory(selectedRoute);
   const total = calcTicketTotal(selectedRoute, extraPeople, extraDogs);
+  const chargeTotal = sponsor ? 0 : total;
   const dogCount = isDog ? 1 + extraDogs : 0;
   const peopleCount = isDog ? 1 + extraPeople : 1;
   // Amount to pay always comes from the server order once it exists.
@@ -313,6 +322,9 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
     setServerOrder(null);
     setPendingRef(null);
     setFormError(null);
+    setSponsor(null);
+    setSponsorInput('');
+    setSponsorError(null);
     setCreatedOrder(null);
     setEmailLog(null);
     setTicketCheckInQrUrl('');
@@ -433,6 +445,32 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
     }
   };
 
+  const handleApplySponsorCode = async () => {
+    const code = sponsorInput.trim();
+    if (!code || sponsorChecking) return;
+    setSponsorChecking(true);
+    setSponsorError(null);
+    try {
+      const res = await checkSponsorCode(code);
+      setSponsor({ code: code.toUpperCase().replace(/\s+/g, ''), name: res.sponsorName });
+      // A sponsor code covers one runner (and the dog); extra people / dogs are not included.
+      setExtraPeople(0);
+      setExtraDogs(0);
+      setExtraRunnerNames('');
+    } catch (err) {
+      setSponsor(null);
+      setSponsorError(err instanceof Error ? err.message : 'ตรวจรหัสไม่สำเร็จ กรุณาลองใหม่');
+    } finally {
+      setSponsorChecking(false);
+    }
+  };
+
+  const handleClearSponsorCode = () => {
+    setSponsor(null);
+    setSponsorInput('');
+    setSponsorError(null);
+  };
+
   const handleProceedToPayment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isCreatingOrder) return;
@@ -452,7 +490,13 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
         dogBreed: isDog ? dogBreed.trim() : undefined,
         extraRunnerNames: extraPeople > 0 ? extraRunnerNames.trim() : undefined,
         privacyConsent,
+        sponsorCode: sponsor?.code,
       });
+      // Sponsor registrations are confirmed on the spot: skip the payment step.
+      if (res.order.paymentStatus === 'PAID') {
+        await finalizePaidOrder(res.order);
+        return;
+      }
       const ref = { orderId: res.order.orderId, accessToken: res.accessToken };
       savePendingOrderRef(ref);
       setPendingRef(ref);
@@ -1131,6 +1175,79 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                   </div>
                 </div>
 
+                {/* Sponsor code */}
+                <div className="relative z-10 rounded-2xl bg-[#FFF8DC] border-2 border-[#F5B800] p-3.5 sm:p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="w-8 h-8 rounded-xl bg-[#FFC928] text-[#2A1450] flex items-center justify-center shrink-0">
+                      <Gift className="w-4 h-4" />
+                    </span>
+                    <div>
+                      <div className="text-sm font-black text-[#2A1450]">มีรหัสสปอนเซอร์?</div>
+                      <div className="text-[11px] font-semibold text-[#6F6878]">
+                        ใส่รหัสเพื่อลงทะเบียนฟรี ได้สิทธิ์วิ่ง (ทุกระยะ) + คอนเสิร์ต
+                      </div>
+                    </div>
+                  </div>
+
+                  {sponsor ? (
+                    <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-emerald-50 border-2 border-emerald-500/60 px-3 py-2.5">
+                      <div className="flex items-center gap-2 text-emerald-900 min-w-0">
+                        <CheckCircle2 className="w-5 h-5 shrink-0 text-emerald-600" />
+                        <div className="min-w-0">
+                          <div className="text-sm font-black truncate">ใช้รหัสสำเร็จ · {sponsor.name}</div>
+                          <div className="text-[11px] font-bold text-emerald-800">
+                            ค่าสมัคร 0 บาท (วิ่ง + คอนเสิร์ต) · 1 รหัสต่อผู้วิ่ง 1 คน ไม่รวมผู้ร่วมวิ่ง/น้องหมาเพิ่ม
+                          </div>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleClearSponsorCode}
+                        className="px-3 py-1.5 rounded-lg bg-white border-2 border-emerald-500/50 text-xs font-extrabold text-emerald-800 cursor-pointer"
+                      >
+                        เปลี่ยนรหัส
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col sm:flex-row gap-2">
+                      <input
+                        type="text"
+                        value={sponsorInput}
+                        onChange={(e) => {
+                          setSponsorInput(e.target.value.toUpperCase());
+                          setSponsorError(null);
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            handleApplySponsorCode();
+                          }
+                        }}
+                        placeholder="เช่น CSR-XXXXXXXX"
+                        aria-label="รหัสสปอนเซอร์"
+                        autoComplete="off"
+                        autoCapitalize="characters"
+                        spellCheck={false}
+                        maxLength={40}
+                        className="flex-1 min-h-[48px] px-3.5 rounded-xl border-2 border-[#2A1450]/25 bg-white text-sm font-mono font-bold tracking-wider text-[#2A1450] placeholder:font-sans placeholder:font-semibold placeholder:tracking-normal"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleApplySponsorCode}
+                        disabled={sponsorChecking || !sponsorInput.trim()}
+                        className="min-h-[48px] px-5 rounded-xl bg-[#2A1450] hover:bg-[#3A1C6E] disabled:opacity-50 text-white text-sm font-extrabold cursor-pointer"
+                      >
+                        {sponsorChecking ? 'กำลังตรวจ...' : 'ใช้รหัส'}
+                      </button>
+                    </div>
+                  )}
+                  {sponsorError && (
+                    <p role="alert" className="mt-2 text-xs sm:text-sm font-bold text-rose-700">
+                      {sponsorError}
+                    </p>
+                  )}
+                </div>
+
                 {/* PDPA & Data Encryption Protection Banner */}
                 <div className="rounded-2xl bg-emerald-50/90 border-2 border-emerald-400/70 p-3.5 flex flex-wrap items-center justify-between gap-3 text-xs relative z-10">
                   <div className="flex items-start sm:items-center gap-2.5 text-emerald-950">
@@ -1210,11 +1327,19 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
 
                   <button
                     type="submit"
-                    disabled={isCreatingOrder || !privacyConsent || (publicCfg !== null && !publicCfg.paymentReady)}
+                    disabled={isCreatingOrder || !privacyConsent || (!sponsor && publicCfg !== null && !publicCfg.paymentReady)}
                     className="w-full sm:w-auto disabled:opacity-60 disabled:cursor-wait px-8 py-3.5 rounded-2xl bg-gradient-to-r from-[#FFDF5A] via-[#FFC928] to-[#FFAE19] hover:brightness-105 text-[#1E0F38] font-black text-base border border-amber-300 shadow-[0_10px_25px_-6px_rgba(245,158,11,0.5)] active:translate-y-0.5 transition-all flex items-center justify-center gap-2 cursor-pointer"
                   >
-                    <QrCode className="w-5 h-5" />
-                    <span>{isCreatingOrder ? 'กำลังสร้างคำสั่งซื้อ...' : `ไปหน้าสแกนจ่าย PromptPay (${formatBaht(total)} บาท)`}</span>
+                    {sponsor ? <Gift className="w-5 h-5" /> : <QrCode className="w-5 h-5" />}
+                    <span>
+                      {isCreatingOrder
+                        ? sponsor
+                          ? 'กำลังลงทะเบียน...'
+                          : 'กำลังสร้างคำสั่งซื้อ...'
+                        : sponsor
+                          ? 'ยืนยันลงทะเบียนฟรี (รหัสสปอนเซอร์)'
+                          : `ไปหน้าสแกนจ่าย PromptPay (${formatBaht(chargeTotal)} บาท)`}
+                    </span>
                   </button>
                 </div>
               </div>
@@ -1765,10 +1890,12 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                     </div>
                     <div className="p-3 rounded-2xl bg-emerald-50 border-2 border-emerald-500/40">
                       <span className="text-[10px] font-bold text-emerald-700 uppercase block">
-                        ตรวจสอบเงินเข้าอัตโนมัติ
+                        {createdOrder.paymentMethod === 'SPONSOR_CODE' ? 'สิทธิ์สปอนเซอร์' : 'ตรวจสอบเงินเข้าอัตโนมัติ'}
                       </span>
                       <span className="text-sm font-black text-emerald-800 tabular-nums block">
-                        ✓ {formatBaht(createdOrder.totalPrice)} บาท
+                        {createdOrder.paymentMethod === 'SPONSOR_CODE'
+                          ? `✓ ฟรี · วิ่ง + คอนเสิร์ต${createdOrder.sponsorName ? ` (${createdOrder.sponsorName})` : ''}`
+                          : `✓ ${formatBaht(createdOrder.totalPrice)} บาท`}
                       </span>
                     </div>
                   </div>

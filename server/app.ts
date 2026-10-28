@@ -20,13 +20,21 @@ import {
   getOmiseKey,
   getOrder,
   getSettings,
+  createSponsorCode,
+  deleteUnusedSponsorCode,
+  generateSponsorCode,
   hashToken,
   insertOrder,
   isRefUsed,
   listOrders,
+  listSponsorCodes,
   markOrderPaid,
   nextOrderId,
+  normalizeSponsorCode,
+  peekSponsorCode,
   rateLimited,
+  redeemSponsorCode,
+  releaseSponsorCode,
   saveSettings,
   setBibCounters,
   setOmiseKey,
@@ -34,6 +42,7 @@ import {
   toRunnerView,
   tokenMatches,
   updateOrder,
+  updateSponsorCode,
   formatBib,
   ROUTES,
   type StoredOrder,
@@ -49,6 +58,7 @@ const TERMS_VERSION = '2026-10-22';
 const ROUTE_IDS: RouteId[] = ticketCategories.map((t) => t.id);
 const SHIRT_SIZES = ['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL'];
 const MAX_EXTRA = 9;
+const SPONSOR_INVALID_MSG = 'รหัสสปอนเซอร์ไม่ถูกต้อง หรือถูกใช้ครบสิทธิ์แล้ว';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -169,25 +179,47 @@ export function createApp(): express.Express {
     res.json(await publicConfig());
   }));
 
+  // Is this sponsor code usable? (Does not use it up.) Heavily rate limited against guessing.
+  app.post('/api/sponsor-code/check', smallJson, h(async (req, res) => {
+    if (await rateLimited(`sponsor-check:${clientIp(req)}`, 12, 10 * 60 * 1000)) {
+      res.status(429).json({ error: 'ตรวจรหัสบ่อยเกินไป กรุณารอสักครู่แล้วลองใหม่' });
+      return;
+    }
+    const code = normalizeSponsorCode(req.body?.code);
+    const found = code ? await peekSponsorCode(code) : undefined;
+    if (!found) {
+      res.status(404).json({ error: SPONSOR_INVALID_MSG });
+      return;
+    }
+    res.json({ valid: true, sponsorName: found.sponsorName });
+  }));
+
   // Create an order. The server computes the price; the browser only sends runner details.
   app.post('/api/orders', smallJson, h(async (req, res) => {
     if (await rateLimited(`order:${clientIp(req)}`, 15, 10 * 60 * 1000)) {
       res.status(429).json({ error: 'สร้างคำสั่งซื้อบ่อยเกินไป กรุณารอสักครู่แล้วลองใหม่' });
       return;
     }
-    if (!(await getOmiseKey())) {
+    const b = req.body || {};
+    const sponsorCode = b.sponsorCode ? normalizeSponsorCode(b.sponsorCode) : '';
+    if (b.sponsorCode && !sponsorCode) {
+      res.status(400).json({ error: SPONSOR_INVALID_MSG });
+      return;
+    }
+    // A sponsor registration is free, so it doesn't need the payment gateway.
+    if (!sponsorCode && !(await getOmiseKey())) {
       res.status(503).json({ error: 'ระบบชำระเงินยังไม่เปิดใช้งาน กรุณาติดต่อผู้จัดงาน' });
       return;
     }
-    const b = req.body || {};
     const routeId = b.routeId as RouteId;
     if (!ROUTE_IDS.includes(routeId)) {
       res.status(400).json({ error: 'ระยะวิ่งไม่ถูกต้อง' });
       return;
     }
     const isDog = isDogCategory(routeId);
-    const extraPeople = isDog ? Math.min(MAX_EXTRA, Math.max(0, Math.floor(Number(b.extraPeople) || 0))) : 0;
-    const extraDogs = isDog ? Math.min(MAX_EXTRA, Math.max(0, Math.floor(Number(b.extraDogs) || 0))) : 0;
+    // A sponsor code covers one runner (plus the dog); extra people / dogs are not part of it.
+    const extraPeople = isDog && !sponsorCode ? Math.min(MAX_EXTRA, Math.max(0, Math.floor(Number(b.extraPeople) || 0))) : 0;
+    const extraDogs = isDog && !sponsorCode ? Math.min(MAX_EXTRA, Math.max(0, Math.floor(Number(b.extraDogs) || 0))) : 0;
 
     const fullName = clean(b.fullName, 120);
     const phone = clean(b.phone, 30);
@@ -206,7 +238,18 @@ export function createApp(): express.Express {
       return;
     }
 
-    const total = calcTicketTotal(routeId, extraPeople, extraDogs);
+    // Use the sponsor code only after the form passed validation, so a typo doesn't burn a use.
+    let sponsorName = '';
+    if (sponsorCode) {
+      const used = await redeemSponsorCode(sponsorCode);
+      if (!used) {
+        res.status(400).json({ error: SPONSOR_INVALID_MSG });
+        return;
+      }
+      sponsorName = used.sponsorName;
+    }
+
+    const total = sponsorCode ? 0 : calcTicketTotal(routeId, extraPeople, extraDogs);
     const token = crypto.randomBytes(24).toString('base64url');
     const now = new Date();
     const settings = await getSettings();
@@ -232,7 +275,9 @@ export function createApp(): express.Express {
       dogCount: isDog ? 1 + extraDogs : 0,
       totalPrice: total,
       bibNumber: '',
-      paymentMethod: 'PROMPTPAY_QR',
+      paymentMethod: sponsorCode ? 'SPONSOR_CODE' : 'PROMPTPAY_QR',
+      sponsorCode: sponsorCode || undefined,
+      sponsorName: sponsorName || undefined,
       paymentStatus: 'PENDING',
       paymentRef: '',
       senderBank: '',
@@ -245,7 +290,32 @@ export function createApp(): express.Express {
       createdAt: now.toISOString(),
       expiresAt: new Date(now.getTime() + timeoutMin * 60 * 1000).toISOString(),
     };
-    await insertOrder(order);
+    try {
+      await insertOrder(order);
+    } catch (err) {
+      if (sponsorCode) await releaseSponsorCode(sponsorCode).catch(() => {});
+      throw err;
+    }
+
+    if (sponsorCode) {
+      // Free registration: confirm immediately (the BIB is assigned here, like a paid order).
+      let paid: StoredOrder | undefined;
+      try {
+        paid = await markOrderPaid(order.orderId, {
+          status: 'AUTO_VERIFIED',
+          verifiedBy: `รหัสสปอนเซอร์: ${sponsorName}`,
+          paymentRef: '',
+          senderBank: 'SPONSOR',
+          note: `ใช้รหัสสปอนเซอร์ ${sponsorCode} (${sponsorName}) — วิ่ง + คอนเสิร์ต ไม่คิดค่าสมัคร`,
+        });
+      } catch (err) {
+        await deleteOrder(order.orderId).catch(() => {});
+        await releaseSponsorCode(sponsorCode).catch(() => {});
+        throw err;
+      }
+      res.json({ order: toRunnerView(paid || order), accessToken: token, config: await publicConfig() });
+      return;
+    }
 
     const charge = await createOmiseCharge({ amountBaht: total, orderId: order.orderId });
     if (!charge.chargeId || !charge.qrImageUrl) {
@@ -422,6 +492,79 @@ export function createApp(): express.Express {
     }
     await deleteOrder(id);
     console.log(`[admin] ${(req as any).admin.username} deleted ${id}`);
+    res.json({ ok: true });
+  }));
+
+  // ---- Sponsor codes (admin) ----
+  app.get('/api/admin/sponsor-codes', requireAdmin, h(async (_req, res) => {
+    res.json({ codes: await listSponsorCodes() });
+  }));
+
+  app.post('/api/admin/sponsor-codes', requireAdmin, smallJson, h(async (req, res) => {
+    const b = req.body || {};
+    const sponsorName = clean(b.sponsorName, 120);
+    if (sponsorName.length < 2) {
+      res.status(400).json({ error: 'กรุณาระบุชื่อสปอนเซอร์' });
+      return;
+    }
+    const maxRaw = b.maxUses === null || b.maxUses === '' || b.maxUses === undefined ? null : Math.floor(Number(b.maxUses));
+    if (maxRaw !== null && (!Number.isFinite(maxRaw) || maxRaw < 1 || maxRaw > 100000)) {
+      res.status(400).json({ error: 'จำนวนสิทธิ์ต้องเป็นจำนวนเต็ม 1 ขึ้นไป (หรือเว้นว่างเพื่อไม่จำกัด)' });
+      return;
+    }
+    const custom = b.code ? normalizeSponsorCode(b.code) : '';
+    if (b.code && !custom) {
+      res.status(400).json({ error: 'รหัสต้องเป็น A-Z ตัวเลข หรือ - ยาว 4-32 ตัวอักษร' });
+      return;
+    }
+    for (let attempt = 0; attempt < 5; attempt++) {
+      const created = await createSponsorCode({
+        code: custom || generateSponsorCode(),
+        sponsorName,
+        maxUses: maxRaw,
+        note: clean(b.note, 240),
+      });
+      if (created) {
+        res.json({ code: created });
+        return;
+      }
+      if (custom) {
+        res.status(409).json({ error: 'มีรหัสนี้อยู่แล้ว' });
+        return;
+      }
+    }
+    res.status(500).json({ error: 'สร้างรหัสไม่สำเร็จ กรุณาลองใหม่' });
+  }));
+
+  app.patch('/api/admin/sponsor-codes/:code', requireAdmin, smallJson, h(async (req, res) => {
+    const code = normalizeSponsorCode(req.params.code);
+    const b = req.body || {};
+    const patch: { active?: boolean; maxUses?: number | null; sponsorName?: string; note?: string } = {};
+    if (typeof b.active === 'boolean') patch.active = b.active;
+    if ('maxUses' in b) {
+      const m = b.maxUses === null || b.maxUses === '' ? null : Math.floor(Number(b.maxUses));
+      if (m !== null && (!Number.isFinite(m) || m < 1 || m > 100000)) {
+        res.status(400).json({ error: 'จำนวนสิทธิ์ไม่ถูกต้อง' });
+        return;
+      }
+      patch.maxUses = m;
+    }
+    if (typeof b.sponsorName === 'string' && clean(b.sponsorName, 120).length >= 2) patch.sponsorName = clean(b.sponsorName, 120);
+    if (typeof b.note === 'string') patch.note = clean(b.note, 240);
+    const updated = code ? await updateSponsorCode(code, patch) : undefined;
+    if (!updated) {
+      res.status(404).json({ error: 'ไม่พบรหัสนี้' });
+      return;
+    }
+    res.json({ code: updated });
+  }));
+
+  app.delete('/api/admin/sponsor-codes/:code', requireAdmin, h(async (req, res) => {
+    const code = normalizeSponsorCode(req.params.code);
+    if (!code || !(await deleteUnusedSponsorCode(code))) {
+      res.status(409).json({ error: 'ลบไม่ได้ (ไม่พบรหัส หรือมีคนใช้แล้ว ให้ปิดการใช้งานแทน)' });
+      return;
+    }
     res.json({ ok: true });
   }));
 

@@ -57,12 +57,23 @@ create table if not exists csr.login_failures (
   locked_until timestamptz
 );
 
+create table if not exists csr.sponsor_codes (
+  code         text primary key,
+  sponsor_name text not null,
+  max_uses     integer,                       -- null = unlimited
+  used_count   integer not null default 0,
+  active       boolean not null default true,
+  note         text not null default '',
+  created_at   timestamptz not null default now()
+);
+
 alter table csr.orders          enable row level security;
 alter table csr.bib_counters    enable row level security;
 alter table csr.used_refs       enable row level security;
 alter table csr.settings        enable row level security;
 alter table csr.rate_hits       enable row level security;
 alter table csr.login_failures  enable row level security;
+alter table csr.sponsor_codes   enable row level security;
 
 do $$
 begin

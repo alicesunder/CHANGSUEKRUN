@@ -33,7 +33,8 @@ export interface RunnerProfile {
   extraDogs?: number;
   extraRunnerNames?: string;
   totalPrice?: number;
-  paymentMethod?: 'PROMPTPAY_QR';
+  paymentMethod?: 'PROMPTPAY_QR' | 'SPONSOR_CODE';
+  sponsorName?: string;
   paymentStatus?: 'PAID' | 'PENDING';
   paymentRef?: string;
   senderBank?: string;
@@ -53,7 +54,8 @@ export interface TicketOrder extends RunnerProfile {
   totalPrice: number;
   peopleCount: number;
   dogCount: number;
-  paymentMethod: 'PROMPTPAY_QR';
+  paymentMethod: 'PROMPTPAY_QR' | 'SPONSOR_CODE';
+  sponsorName?: string;
   paymentStatus: 'PAID' | 'PENDING';
   paymentRef: string;
   senderBank: string;

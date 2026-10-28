@@ -34,7 +34,10 @@ export interface StoredOrder {
   dogCount: number;
   totalPrice: number;
   bibNumber: string;
-  paymentMethod: 'PROMPTPAY_QR';
+  paymentMethod: 'PROMPTPAY_QR' | 'SPONSOR_CODE';
+  /** Set when the registration was made free with a sponsor code */
+  sponsorCode?: string;
+  sponsorName?: string;
   paymentStatus: 'PAID' | 'PENDING';
   paymentRef: string;
   senderBank: string;
@@ -258,6 +261,127 @@ export async function markOrderPaid(
     await writeOrder(q, order);
     return order;
   });
+}
+
+// ---------------------------------------------------------------------------
+// Sponsor codes (free registration for run + concert)
+// ---------------------------------------------------------------------------
+export interface SponsorCodeRow {
+  code: string;
+  sponsorName: string;
+  maxUses: number | null;
+  usedCount: number;
+  active: boolean;
+  note: string;
+  createdAt: string;
+}
+
+const SPONSOR_CODE_RE = /^[A-Z0-9-]{4,32}$/;
+const CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no 0/O/1/I
+
+/** Upper-cases and strips spaces; returns '' when the text can't be a code. */
+export function normalizeSponsorCode(input: unknown): string {
+  const c = String(input ?? '').toUpperCase().replace(/\s+/g, '');
+  return SPONSOR_CODE_RE.test(c) ? c : '';
+}
+
+export function generateSponsorCode(): string {
+  const bytes = crypto.randomBytes(8);
+  let out = '';
+  for (const b of bytes) out += CODE_ALPHABET[b % CODE_ALPHABET.length];
+  return `CSR-${out}`;
+}
+
+type RawSponsorRow = {
+  code: string;
+  sponsor_name: string;
+  max_uses: number | null;
+  used_count: number;
+  active: boolean;
+  note: string;
+  created_at: string | Date;
+};
+const toSponsorRow = (r: RawSponsorRow): SponsorCodeRow => ({
+  code: r.code,
+  sponsorName: r.sponsor_name,
+  maxUses: r.max_uses === null || r.max_uses === undefined ? null : Number(r.max_uses),
+  usedCount: Number(r.used_count),
+  active: Boolean(r.active),
+  note: r.note || '',
+  createdAt: new Date(r.created_at).toISOString(),
+});
+
+/** Looks a code up without using it. Only returns a code that can still be redeemed. */
+export async function peekSponsorCode(code: string): Promise<{ sponsorName: string } | undefined> {
+  const rows = await dbQuery<RawSponsorRow>(
+    'select * from csr.sponsor_codes where code = $1 and active and (max_uses is null or used_count < max_uses)',
+    [code]
+  );
+  return rows[0] ? { sponsorName: rows[0].sponsor_name } : undefined;
+}
+
+/** Uses one redemption atomically (a single UPDATE, so two runners can't both take the last use). */
+export async function redeemSponsorCode(code: string): Promise<{ sponsorName: string } | undefined> {
+  const rows = await dbQuery<{ sponsor_name: string }>(
+    `update csr.sponsor_codes set used_count = used_count + 1
+     where code = $1 and active and (max_uses is null or used_count < max_uses)
+     returning sponsor_name`,
+    [code]
+  );
+  return rows[0] ? { sponsorName: rows[0].sponsor_name } : undefined;
+}
+
+/** Gives a redemption back (the order could not be created). */
+export async function releaseSponsorCode(code: string): Promise<void> {
+  await dbQuery('update csr.sponsor_codes set used_count = greatest(used_count - 1, 0) where code = $1', [code]);
+}
+
+export async function listSponsorCodes(): Promise<SponsorCodeRow[]> {
+  const rows = await dbQuery<RawSponsorRow>('select * from csr.sponsor_codes order by created_at desc, code');
+  return rows.map(toSponsorRow);
+}
+
+export async function createSponsorCode(input: {
+  code: string;
+  sponsorName: string;
+  maxUses: number | null;
+  note: string;
+}): Promise<SponsorCodeRow | undefined> {
+  const rows = await dbQuery<RawSponsorRow>(
+    `insert into csr.sponsor_codes (code, sponsor_name, max_uses, note) values ($1, $2, $3, $4)
+     on conflict (code) do nothing returning *`,
+    [input.code, input.sponsorName, input.maxUses, input.note]
+  );
+  return rows[0] ? toSponsorRow(rows[0]) : undefined;
+}
+
+export async function updateSponsorCode(
+  code: string,
+  patch: { active?: boolean; maxUses?: number | null; sponsorName?: string; note?: string }
+): Promise<SponsorCodeRow | undefined> {
+  const rows = await dbQuery<RawSponsorRow>(
+    `update csr.sponsor_codes set
+       active = coalesce($2, active),
+       max_uses = case when $3::boolean then $4 else max_uses end,
+       sponsor_name = coalesce($5, sponsor_name),
+       note = coalesce($6, note)
+     where code = $1 returning *`,
+    [
+      code,
+      patch.active ?? null,
+      patch.maxUses !== undefined,
+      patch.maxUses === undefined ? null : patch.maxUses,
+      patch.sponsorName ?? null,
+      patch.note ?? null,
+    ]
+  );
+  return rows[0] ? toSponsorRow(rows[0]) : undefined;
+}
+
+/** Only a code nobody has used can be deleted (so the record of who used it is never lost). */
+export async function deleteUnusedSponsorCode(code: string): Promise<boolean> {
+  const rows = await dbQuery('delete from csr.sponsor_codes where code = $1 and used_count = 0 returning code', [code]);
+  return rows.length > 0;
 }
 
 // ---------------------------------------------------------------------------
