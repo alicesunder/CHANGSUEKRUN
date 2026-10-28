@@ -226,7 +226,7 @@ export const Hero: React.FC<HeroProps> = ({
                 >
                   <span className="absolute inset-0 ticket-foil-shimmer opacity-55 pointer-events-none" />
                   <PawIcon size={17} color="#261247" className="relative z-10" />
-                  <span className="relative z-10">สมัครวิ่งตอนนี้</span>
+                  <span className="relative z-10">ซื้อบัตรตอนนี้</span>
                 </button>
                 <button
                   type="button"
@@ -412,7 +412,7 @@ export const Hero: React.FC<HeroProps> = ({
               >
                 <span className="absolute inset-0 ticket-foil-shimmer opacity-55 pointer-events-none" />
                 <PawIcon size={16} color="#261247" className="relative z-10" />
-                <span className="relative z-10">สมัครวิ่งตอนนี้</span>
+                <span className="relative z-10">ซื้อบัตรตอนนี้</span>
               </button>
 
               <button

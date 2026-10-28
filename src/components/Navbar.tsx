@@ -130,7 +130,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               onClick={onOpenRegisterModal}
               className="bg-[#FFC928] hover:bg-[#FFD645] text-[#1F1035] text-xs sm:text-[13px] font-extrabold px-5 py-1.5 rounded-full shadow-md hover:shadow-lg transition-all transform hover:-translate-y-0.5 active:translate-y-0 cursor-pointer whitespace-nowrap"
             >
-              สมัครวิ่ง
+              ซื้อบัตร
             </button>
 
             {/* Mobile Hamburger Toggle */}
@@ -207,7 +207,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               }}
               className="mt-3 w-full bg-[#FFC928] hover:bg-[#FFD645] text-[#1F1035] font-extrabold text-sm py-2.5 rounded-full shadow-md text-center cursor-pointer"
             >
-              สมัครวิ่งตอนนี้
+              ซื้อบัตรตอนนี้
             </button>
           </nav>
         </div>

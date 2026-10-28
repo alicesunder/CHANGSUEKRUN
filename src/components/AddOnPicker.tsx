@@ -21,6 +21,8 @@ interface AddOnPickerProps {
   windTunnelRemaining?: number | null;
   /** Hide the built-in result bar (the page shows its own bar that includes the ticket price) */
   showResult?: boolean;
+  /** 'rows' stacks the three activities full width (for narrow columns) */
+  layout?: 'grid' | 'rows';
 }
 
 const baht = (n: number) => `${formatBaht(n)} บาท`;
@@ -172,7 +174,7 @@ export const PeopleStepper: React.FC<{ value: number; onChange: (n: number) => v
   </div>
 );
 
-export const AddOnPicker: React.FC<AddOnPickerProps> = ({ value, onChange, windTunnelRemaining = null, showResult = true }) => {
+export const AddOnPicker: React.FC<AddOnPickerProps> = ({ value, onChange, windTunnelRemaining = null, showResult = true, layout = 'grid' }) => {
   const set = (patch: Partial<AddOnSelection>) => onChange({ ...value, ...patch });
   const picked = hasAddOns(value);
   const perPerson = addOnPricePerPerson(value);
@@ -188,7 +190,7 @@ export const AddOnPicker: React.FC<AddOnPickerProps> = ({ value, onChange, windT
 
   return (
     <div className="space-y-3">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
+      <div className={layout === 'rows' ? 'grid grid-cols-1 gap-2.5' : 'grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4'}>
         <Chip
           theme="tower"
           title="หอสูง"

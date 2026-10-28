@@ -52,7 +52,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
           type="button"
           onClick={profile ? onOpenRunnerCenter : onOpenRegisterModal}
           className="flex flex-col items-center justify-center -mt-5 p-2 rounded-2xl border-2 border-[#2A1450] shadow-[0_4px_0_#2A1450] transition-all transform active:scale-95 cursor-pointer bg-gradient-to-b from-[#FFD84D] to-[#F5B800] text-[#2A1450] min-w-[56px] min-h-[56px]"
-          aria-label={profile ? 'ดู BIB และศูนย์นักวิ่ง' : 'สมัครวิ่ง'}
+          aria-label={profile ? 'ดู BIB และศูนย์นักวิ่ง' : 'ซื้อบัตร'}
         >
           {profile ? (
             <>
@@ -65,7 +65,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
             <>
               <UserPlus className="w-5 h-5 text-[#2A1450]" />
               <span className="text-xs font-black tracking-tight mt-0.5">
-                สมัครวิ่ง
+                ซื้อบัตร
               </span>
             </>
           )}

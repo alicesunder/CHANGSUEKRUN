@@ -87,7 +87,7 @@ export const MerchShowcase: React.FC<MerchShowcaseProps> = ({ onOpenRegister, cl
   const renderCard = (item: KitItem, n: number) => (
     <li
       key={item.id}
-      className="group flex flex-col rounded-3xl bg-white/[0.07] border-2 border-[#FFC928]/35 hover:border-[#FFC928] overflow-hidden transition-colors"
+      className="group shrink-0 w-[80%] snap-start sm:w-auto flex flex-col rounded-3xl bg-white/[0.07] border-2 border-[#FFC928]/35 hover:border-[#FFC928] overflow-hidden transition-colors"
     >
       <button
         type="button"
@@ -158,8 +158,9 @@ export const MerchShowcase: React.FC<MerchShowcaseProps> = ({ onOpenRegister, cl
         <div className="mt-8 flex items-center gap-3">
           <h4 className="font-hero text-lg sm:text-xl font-semibold text-[#FFC928]">รวมในค่าสมัครทุกระยะ</h4>
           <span aria-hidden="true" className="h-px flex-1 bg-[#FFC928]/30" />
+          <span className="sm:hidden text-xs font-bold text-white/70 shrink-0">ปัดดูเพิ่ม →</span>
         </div>
-        <ul className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+        <ul className="mt-4 flex gap-4 overflow-x-auto snap-x snap-mandatory -mx-4 px-4 pb-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:px-0 sm:pb-0 sm:grid sm:grid-cols-2 lg:grid-cols-3 sm:gap-5 sm:overflow-visible">
           {allItems.map((k, i) => renderCard(k, i + 1))}
         </ul>
 
@@ -169,8 +170,9 @@ export const MerchShowcase: React.FC<MerchShowcaseProps> = ({ onOpenRegister, cl
             สำหรับผู้สมัคร Dog Run (วิ่งกับน้องสุนัข)
           </h4>
           <span aria-hidden="true" className="h-px flex-1 bg-[#FFC928]/30" />
+          <span className="sm:hidden text-xs font-bold text-white/70 shrink-0">ปัดดูเพิ่ม →</span>
         </div>
-        <ul className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+        <ul className="mt-4 flex gap-4 overflow-x-auto snap-x snap-mandatory -mx-4 px-4 pb-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:px-0 sm:pb-0 sm:grid sm:grid-cols-2 lg:grid-cols-3 sm:gap-5 sm:overflow-visible">
           {dogItems.map((k, i) => renderCard(k, allItems.length + i + 1))}
         </ul>
 
@@ -193,7 +195,7 @@ export const MerchShowcase: React.FC<MerchShowcaseProps> = ({ onOpenRegister, cl
             onClick={onOpenRegister}
             className="inline-flex items-center justify-center gap-2 min-h-[52px] px-7 rounded-2xl bg-[#FFC928] hover:bg-[#FFD65A] text-[#2A1450] font-hero text-lg font-bold border-[3px] border-[#140826] shadow-[0_6px_0_#140826] active:translate-y-0.5 active:shadow-[0_4px_0_#140826] transition cursor-pointer"
           >
-            สมัครวิ่งเพื่อรับของที่ระลึก <ArrowRight className="w-5 h-5" />
+            ซื้อบัตรวิ่งเพื่อรับของที่ระลึก <ArrowRight className="w-5 h-5" />
           </button>
           <p className="text-xs font-medium text-white/70 text-center">
             ภาพประกอบเป็นแบบร่างผลิตภัณฑ์ ของจริงอาจแตกต่างเล็กน้อย

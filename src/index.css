@@ -717,3 +717,8 @@ h1, h2, h3, h4, h5, h6 {
 }
 .addon-celebrate-inner { background-image: radial-gradient(circle at 20% 0%, rgba(255, 226, 104, 0.45), transparent 55%), radial-gradient(circle at 90% 100%, rgba(236, 72, 153, 0.22), transparent 55%); }
 @media (prefers-reduced-motion: reduce) { .perk-shine, .addon-celebrate { animation: none; } }
+
+/* Ticket shop: dancing equaliser */
+@keyframes eqBounce { 0%, 100% { height: 6px; } 50% { height: 26px; } }
+.eq-bar { animation: eqBounce 0.9s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) { .eq-bar { animation: none; height: 14px; } }

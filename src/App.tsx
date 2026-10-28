@@ -13,8 +13,7 @@ import { MobileBottomNav } from './components/MobileBottomNav';
 import { Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
 import { EventObjectiveSection } from './components/EventObjectiveSection';
-import { AddOnActivities } from './components/AddOnActivities';
-import { ConcertPassCard } from './components/ConcertPassCard';
+import { TicketShop } from './components/TicketShop';
 import { CostumeContestSection } from './components/CostumeContestSection';
 import { WinnersSection } from './components/WinnersSection';
 import { EMPTY_ADD_ONS, hasAddOns, type AddOnSelection } from './data/addOns';
@@ -68,6 +67,10 @@ export default function App() {
   const [registerAddOns, setRegisterAddOns] = useState<AddOnSelection | undefined>(undefined);
   // Activities chosen in the block under the ticket cards; every "register" button carries them into the form
   const [pageAddOns, setPageAddOns] = useState<AddOnSelection>({ ...EMPTY_ADD_ONS });
+  // Ticket shop basket: run distance (or none) and concert tickets
+  const [shopRun, setShopRun] = useState<RouteId | null>(null);
+  const [shopConcertQty, setShopConcertQty] = useState(0);
+  const [registerConcertQty, setRegisterConcertQty] = useState(1);
   const [comparisonModalOpen, setComparisonModalOpen] = useState(false);
   const [videoModalOpen, setVideoModalOpen] = useState(false);
   const [paceModalOpen, setPaceModalOpen] = useState(false);
@@ -90,6 +93,7 @@ export default function App() {
 
   const handleSelectDistance = (distance: RouteId) => {
     setSelectedRoute(distance);
+    setShopRun(distance);
     const elem = document.getElementById('distances');
     if (elem) {
       elem.scrollIntoView({ behavior: 'smooth' });
@@ -102,9 +106,15 @@ export default function App() {
 
   const handleScrollToMap = scrollToRouteMap;
 
+  // Every "buy" button leads to the ticket shop, so tickets are always chosen in one place
+  const goToShop = () => {
+    document.getElementById('distances')?.scrollIntoView({ behavior: 'smooth' });
+  };
+
   const handleOpenRegister = (distance?: RouteId, extras?: { people: number; dogs: number }, addOns?: AddOnSelection) => {
     setRegisterMode('RUN');
     setRegisterConcert(false);
+    setRegisterConcertQty(1);
     setRegisterExtras(extras ?? { people: 0, dogs: 0 });
     setRegisterAddOns(addOns ?? (hasAddOns(pageAddOns) ? pageAddOns : undefined));
     if (distance) {
@@ -115,27 +125,17 @@ export default function App() {
     setRegisterModalOpen(true);
   };
 
-  // Concert-only pass (no run), optionally with the activities chosen on the page
-  const handleOpenConcert = () => {
-    setRegisterMode('CONCERT');
-    setRegisterConcert(false);
+  // Checkout from the ticket shop: open the form with exactly what is in the basket
+  const handleShopCheckout = () => {
+    const addOnsPicked = hasAddOns(pageAddOns);
+    if (!shopRun && shopConcertQty === 0 && !addOnsPicked) return;
+    setRegisterMode(shopRun ? 'RUN' : shopConcertQty > 0 ? 'CONCERT' : 'ADDON');
+    setRegisterConcert(shopConcertQty > 0);
+    setRegisterConcertQty(Math.max(1, shopConcertQty));
+    setRegisterTargetRoute(shopRun ?? selectedRoute);
+    if (shopRun) setSelectedRoute(shopRun);
     setRegisterExtras({ people: 0, dogs: 0 });
-    setRegisterAddOns(hasAddOns(pageAddOns) ? pageAddOns : undefined);
-    setRegisterModalOpen(true);
-  };
-
-  // Run ticket + concert ticket in one order
-  const handleOpenRunWithConcert = () => {
-    handleOpenRegister(selectedRoute);
-    setRegisterConcert(true);
-  };
-
-  // Activities only: no run ticket, no concert ticket
-  const handleOpenAddonOnly = () => {
-    setRegisterMode('ADDON');
-    setRegisterConcert(false);
-    setRegisterExtras({ people: 0, dogs: 0 });
-    setRegisterAddOns(hasAddOns(pageAddOns) ? pageAddOns : undefined);
+    setRegisterAddOns(addOnsPicked ? pageAddOns : undefined);
     setRegisterModalOpen(true);
   };
 
@@ -146,7 +146,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FAF7FF] text-[#17151C] font-sans antialiased selection:bg-[#FFCC00] selection:text-[#17151C] relative overflow-x-hidden pb-16 lg:pb-0">
+    <div className="min-h-screen bg-[#FAF7FF] text-[#17151C] font-sans antialiased selection:bg-[#FFCC00] selection:text-[#17151C] relative overflow-x-clip pb-16 lg:pb-0">
       {/* 1. Desktop Custom Cursor & Scroll Progress */}
       <CustomCursor />
       <ScrollFX />
@@ -160,7 +160,7 @@ export default function App() {
       {/* 3. Top Dark-Purple Navbar matching mockup */}
       <Navbar
         onOpenArtworkModal={() => setArtworkModalOpen(true)}
-        onOpenRegisterModal={() => handleOpenRegister()}
+        onOpenRegisterModal={goToShop}
         onOpenRunnerCenter={() => setRunnerCenterOpen(true)}
         onEasterEggTrigger={() => setEasterEggActive(true)}
       />
@@ -170,7 +170,7 @@ export default function App() {
         {/* 4. Hero + Curved Countdown & Quote Banner + 9 Quick-Navigation Icon Cards */}
         <Hero
           onOpenArtworkModal={() => setArtworkModalOpen(true)}
-          onOpenRegisterModal={() => handleOpenRegister()}
+          onOpenRegisterModal={goToShop}
           onSelectDistance={handleSelectDistance}
         />
 
@@ -183,17 +183,21 @@ export default function App() {
           onOpenComparisonModal={() => setComparisonModalOpen(true)}
           onOpenPaceModal={() => setPaceModalOpen(true)}
           afterTickets={
-            <>
-              <ConcertPassCard onBuy={handleOpenConcert} onBuyWithRun={handleOpenRunWithConcert} />
-              <AddOnActivities
-                selectedRoute={selectedRoute}
-                value={pageAddOns}
-                onChange={setPageAddOns}
-                onOpenRegister={() => handleOpenRegister(selectedRoute)}
-                onOpenConcert={handleOpenConcert}
-                onOpenAddonOnly={handleOpenAddonOnly}
-              />
-            </>
+            <TicketShop
+              run={shopRun}
+              onRunChange={(r) => {
+                setShopRun(r);
+                if (r) setSelectedRoute(r);
+              }}
+              concertQty={shopConcertQty}
+              onConcertQtyChange={setShopConcertQty}
+              addOns={pageAddOns}
+              onAddOnsChange={setPageAddOns}
+              onCheckout={handleShopCheckout}
+              onOpenComparison={() => setComparisonModalOpen(true)}
+              onOpenPace={() => setPaceModalOpen(true)}
+              onShowMap={handleScrollToMap}
+            />
           }
           beforeMerch={<CostumeContestSection />}
         />
@@ -270,7 +274,7 @@ export default function App() {
         {RESULTS_OPEN && <LeaderboardSection />}
 
         {/* 13. CTA Banner */}
-        <EventCtaBanner onOpenRegisterModal={() => handleOpenRegister()} />
+        <EventCtaBanner onOpenRegisterModal={goToShop} />
 
         {/* ข้อกำหนดและเงื่อนไข — compact, collapsed by default */}
         <TermsSection />
@@ -279,12 +283,12 @@ export default function App() {
       {/* Footer */}
       <Footer
         onOpenArtworkModal={() => setArtworkModalOpen(true)}
-        onOpenRegisterModal={() => handleOpenRegister()}
+        onOpenRegisterModal={goToShop}
       />
 
       {/* Mobile Bottom Navigation */}
       <MobileBottomNav
-        onOpenRegisterModal={() => handleOpenRegister()}
+        onOpenRegisterModal={goToShop}
         onOpenRunnerCenter={() => setRunnerCenterOpen(true)}
         onOpenSimulation={() => handleOpenSimulation()}
       />
@@ -326,6 +330,7 @@ export default function App() {
           initialAddOns={registerAddOns}
           initialMode={registerMode}
           initialConcert={registerConcert}
+          initialConcertQty={registerConcertQty}
           onClose={() => setRegisterModalOpen(false)}
           onRegistrationSuccess={() => {
             setRegisterModalOpen(false);

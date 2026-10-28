@@ -90,6 +90,8 @@ interface RegistrationModalProps {
   initialMode?: 'RUN' | 'CONCERT' | 'ADDON';
   /** with a run ticket: also tick the concert ticket */
   initialConcert?: boolean;
+  /** how many concert tickets to start with */
+  initialConcertQty?: number;
   onRegistrationSuccess?: () => void;
   onOpenAdminModal?: () => void;
 }
@@ -217,6 +219,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
   initialAddOns,
   initialMode = 'RUN',
   initialConcert = false,
+  initialConcertQty = 1,
   onRegistrationSuccess,
   onOpenAdminModal,
 }) => {
@@ -227,7 +230,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
   const [wantConcert, setWantConcert] = useState(initialMode === 'CONCERT' || initialConcert);
   const [wantAddons, setWantAddons] = useState(initialMode === 'ADDON' || Boolean(initialAddOns));
   const mode: 'RUN' | 'CONCERT' | 'ADDON' = wantRun ? 'RUN' : wantConcert ? 'CONCERT' : 'ADDON';
-  const [concertQty, setConcertQty] = useState(1);
+  const [concertQty, setConcertQty] = useState(Math.max(1, initialConcertQty));
   const isConcert = mode === 'CONCERT';
   const isAddonOnly = mode === 'ADDON';
   const noRun = mode !== 'RUN';
@@ -353,7 +356,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
     setWantRun(initialMode === 'RUN');
     setWantConcert(initialMode === 'CONCERT' || initialConcert);
     setWantAddons(initialMode === 'ADDON' || Boolean(initialAddOns));
-    setConcertQty(1);
+    setConcertQty(Math.max(1, initialConcertQty));
     setServerOrder(null);
     setPendingRef(null);
     setFormError(null);
@@ -389,7 +392,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
     return () => {
       cancelled = true;
     };
-  }, [isOpen, initialRoute, initialExtraPeople, initialExtraDogs, initialAddOns, initialMode, initialConcert]);
+  }, [isOpen, initialRoute, initialExtraPeople, initialExtraDogs, initialAddOns, initialMode, initialConcert, initialConcertQty]);
 
   // Close with Escape
   useEffect(() => {

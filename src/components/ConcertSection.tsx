@@ -29,9 +29,9 @@ export const ConcertSection: React.FC = () => (
             </p>
           </div>
 
-          <ul className="mt-7 grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
+          <ul className="mt-7 flex gap-4 overflow-x-auto snap-x snap-mandatory -mx-4 px-4 pb-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:mx-0 md:px-0 md:pb-0 md:grid md:grid-cols-2 sm:gap-5 md:overflow-visible">
             {PHOTOS.map((p) => (
-              <li key={p.src} className="rounded-3xl overflow-hidden bg-white/[0.07] border-2 border-[#FFC928]/35">
+              <li key={p.src} className="shrink-0 w-[85%] snap-start md:w-auto rounded-3xl overflow-hidden bg-white/[0.07] border-2 border-[#FFC928]/35">
                 <img
                   src={p.src}
                   alt={p.alt}
@@ -43,6 +43,14 @@ export const ConcertSection: React.FC = () => (
               </li>
             ))}
           </ul>
+          <div className="mt-6 flex justify-center">
+            <a
+              href="#shop-concert"
+              className="inline-flex items-center gap-2 min-h-[52px] px-7 rounded-2xl bg-[#FFC928] text-[#2A1450] text-base font-extrabold border-[3px] border-[#140826] shadow-[0_6px_0_#140826] active:translate-y-0.5"
+            >
+              🎶 ซื้อตั๋วคอนเสิร์ต 700 บาท
+            </a>
+          </div>
           <p className="mt-4 text-center text-xs font-medium text-white/70">
             ภาพบรรยากาศประกอบ รายชื่อศิลปินและการแสดงจะประกาศอีกครั้งผ่านช่องทางทางการ
           </p>

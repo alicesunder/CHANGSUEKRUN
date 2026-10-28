@@ -45,7 +45,7 @@ export const EventCtaBanner: React.FC<EventCtaBannerProps> = ({ onOpenRegisterMo
           >
             <span className="absolute inset-0 ticket-foil-shimmer opacity-50 pointer-events-none" />
             <PawIcon size={18} color="#261247" className="relative z-10" />
-            <span className="relative z-10">สมัครวิ่งตอนนี้</span>
+            <span className="relative z-10">ซื้อบัตรตอนนี้</span>
             <ArrowRight className="w-5 h-5 relative z-10" />
           </button>
         </div>
