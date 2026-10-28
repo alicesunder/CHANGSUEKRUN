@@ -1,17 +1,16 @@
 import React from 'react';
-import { UserCheck, MapPin, UserPlus, Play, Calendar } from 'lucide-react';
+import { UserCheck, Ticket, UserPlus, Calendar, HelpCircle } from 'lucide-react';
 import { getStoredRunnerProfile } from '../utils/runnerStorage';
 
 interface MobileBottomNavProps {
   onOpenRegisterModal: () => void;
   onOpenRunnerCenter: () => void;
-  onOpenSimulation: () => void;
+  onOpenSimulation?: () => void;
 }
 
 export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
   onOpenRegisterModal,
   onOpenRunnerCenter,
-  onOpenSimulation,
 }) => {
   const profile = getStoredRunnerProfile();
 
@@ -34,18 +33,18 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
               <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
             )}
           </div>
-          <span className="text-[10px] font-extrabold mt-0.5 leading-none">
+          <span className="text-xs font-extrabold mt-0.5 leading-none">
             {profile ? 'BIB ของฉัน' : 'ศูนย์นักวิ่ง'}
           </span>
         </button>
 
         {/* 2. Map & Landmarks (Fixed link to #schedule-and-map) */}
         <a
-          href="#schedule-and-map"
+          href="#distances"
           className="flex flex-col items-center justify-center p-1.5 text-[#2A1450] hover:text-[#5B20A8] transition-colors min-h-[48px]"
         >
-          <MapPin className="w-5 h-5 text-[#C2410C]" />
-          <span className="text-[10px] font-extrabold mt-0.5 leading-none">เส้นทาง</span>
+          <Ticket className="w-5 h-5 text-[#C2410C]" />
+          <span className="text-xs font-extrabold mt-0.5 leading-none">ตั๋ว&ราคา</span>
         </a>
 
         {/* 3. Center CTA: Register or BIB */}
@@ -58,14 +57,14 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
           {profile ? (
             <>
               <span className="text-xl leading-none">🐘</span>
-              <span className="text-[9px] font-black uppercase tracking-tight mt-0.5">
+              <span className="text-xs font-black tracking-tight mt-0.5">
                 BIB #{profile.bibNumber.slice(-4)}
               </span>
             </>
           ) : (
             <>
               <UserPlus className="w-5 h-5 text-[#2A1450]" />
-              <span className="text-[9px] font-black uppercase tracking-tight mt-0.5">
+              <span className="text-xs font-black tracking-tight mt-0.5">
                 สมัครวิ่ง
               </span>
             </>
@@ -73,16 +72,13 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
         </button>
 
         {/* 4. Start Simulation */}
-        <button
-          type="button"
-          onClick={onOpenSimulation}
-          className="flex flex-col items-center justify-center p-1.5 text-[#2A1450] hover:text-[#5B20A8] transition-colors min-h-[48px] cursor-pointer"
+        <a
+          href="#faq"
+          className="flex flex-col items-center justify-center p-1.5 text-[#2A1450] hover:text-[#5B20A8] transition-colors min-h-[48px]"
         >
-          <div className="relative">
-            <Play className="w-5 h-5 text-[#B45309] fill-[#FFC928]" />
-          </div>
-          <span className="text-[10px] font-extrabold mt-0.5 leading-none">จำลองวิ่ง</span>
-        </button>
+          <HelpCircle className="w-5 h-5 text-[#B45309]" />
+          <span className="text-xs font-extrabold mt-0.5 leading-none">คำถาม</span>
+        </a>
 
         {/* 5. Schedule (Fixed link to #schedule-and-map) */}
         <a
@@ -90,7 +86,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
           className="flex flex-col items-center justify-center p-1.5 text-[#2A1450] hover:text-[#5B20A8] transition-colors min-h-[48px]"
         >
           <Calendar className="w-5 h-5 text-[#15803D]" />
-          <span className="text-[10px] font-extrabold mt-0.5 leading-none">กำหนดการ</span>
+          <span className="text-xs font-extrabold mt-0.5 leading-none">กำหนดการ</span>
         </a>
       </div>
     </nav>

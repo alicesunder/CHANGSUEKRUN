@@ -9,7 +9,6 @@ import { RouteId } from './types';
 import { ScrollFX } from './components/ScrollFX';
 import { CustomCursor } from './components/CustomCursor';
 import { EasterEggElephant } from './components/EasterEggElephant';
-import { ChangsuekRunExperience } from './components/ChangsuekRunExperience';
 import { MobileBottomNav } from './components/MobileBottomNav';
 import { Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
@@ -42,6 +41,9 @@ const RouteAndScheduleSection = lazy(() =>
   import('./components/RouteAndScheduleSection').then((m) => ({ default: m.RouteAndScheduleSection }))
 );
 
+// Results block stays hidden until race day has passed (9 Jan 2027)
+const RESULTS_OPEN = Date.now() >= new Date('2027-01-09T00:00:00+07:00').getTime();
+
 /** Mounts its (lazy) child once `open` first becomes true, then keeps it mounted so close animations still run. */
 function Deferred({ open, children }: { open: boolean; children: React.ReactNode }) {
   const [seen, setSeen] = useState(open);
@@ -67,6 +69,19 @@ export default function App() {
   const [runnerCenterOpen, setRunnerCenterOpen] = useState(false);
   const [adminModalOpen, setAdminModalOpen] = useState(false);
   const [easterEggActive, setEasterEggActive] = useState(false);
+
+  // Admin is not linked anywhere public: open it with /#admin
+  useEffect(() => {
+    const check = () => {
+      if (window.location.hash === '#admin') {
+        setAdminModalOpen(true);
+        history.replaceState(null, '', window.location.pathname + window.location.search);
+      }
+    };
+    check();
+    window.addEventListener('hashchange', check);
+    return () => window.removeEventListener('hashchange', check);
+  }, []);
 
   const handleSelectDistance = (distance: RouteId) => {
     setSelectedRoute(distance);
@@ -116,7 +131,6 @@ export default function App() {
         onOpenArtworkModal={() => setArtworkModalOpen(true)}
         onOpenRegisterModal={() => handleOpenRegister()}
         onOpenRunnerCenter={() => setRunnerCenterOpen(true)}
-        onOpenAdminModal={() => setAdminModalOpen(true)}
         onEasterEggTrigger={() => setEasterEggActive(true)}
       />
 
@@ -128,9 +142,6 @@ export default function App() {
           onOpenRegisterModal={() => handleOpenRegister()}
           onSelectDistance={handleSelectDistance}
         />
-
-        {/* 4.5 วัตถุประสงค์ของการจัดงาน (Official Event Objective & Mission) */}
-        <EventObjectiveSection />
 
         {/* 5. เลือกบัตรวิ่งของคุณ (Preserved 3D Collectible Tickets + Price Calculator + Unified Race Pack & Merch) */}
         <RaceDistances
@@ -165,22 +176,18 @@ export default function App() {
         {/* 7. Dark Purple Featured Hotels Strip: ที่พักใกล้สนาม วิ่งสบาย พักสบาย */}
         <HotelExplorer />
 
-        {/* 8. Compact 6-Step Runner Roadmap: CHANGSUEK RUN ROADMAP */}
-        <ChangsuekRunExperience
-          onOpenRegister={handleOpenRegister}
-          onOpenRunnerCenter={() => setRunnerCenterOpen(true)}
-          onOpenSimulation={handleOpenSimulation}
-          onSelectRoute={setSelectedRoute}
-        />
-
-        {/* 9. ผู้สนับสนุนงาน (Sponsor board) */}
-        <SponsorsSection />
-
         {/* 10. 2-Column Side-by-Side: พยากรณ์อากาศวันแข่ง & เช็กลิสต์เตรียมตัวนักวิ่ง */}
         <section
           id="runner-prep"
-          className="py-12 sm:py-16 bg-gradient-to-b from-[#EFE6FC] via-[#FAF7FF] to-[#E0F2FE]/60 relative overflow-hidden"
+          className="bg-gradient-to-b from-[#EFE6FC] via-[#FAF7FF] to-[#E0F2FE]/60 relative overflow-hidden"
         >
+          <details className="group">
+            <summary className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8 py-5 min-h-[56px] flex items-center justify-between gap-3 cursor-pointer list-none text-base font-extrabold text-[#2A1450]">
+              <span>🌤️ สภาพอากาศ & เช็กลิสต์เตรียมตัวก่อนวิ่ง</span>
+              <span className="text-sm text-[#5B20A8] group-open:hidden">ดูเพิ่ม ▾</span>
+              <span className="text-sm text-[#5B20A8] hidden group-open:inline">ซ่อน ▴</span>
+            </summary>
+            <div className="pb-10">
           <div className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
             <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 mb-7">
               <div>
@@ -206,13 +213,22 @@ export default function App() {
               </div>
             </div>
           </div>
+            </div>
+          </details>
         </section>
 
-        {/* 11. ตารางเกียรติยศ & ชุมชนนักวิ่งช้างศึก (Leaderboard & Community) */}
-        <LeaderboardSection />
+        {/* 4.5 วัตถุประสงค์ของการจัดงาน (Official Event Objective & Mission) */}
+        <EventObjectiveSection />
+
 
         {/* 12. คำถามที่พบบ่อย (FAQ) */}
         <FAQSection />
+
+        {/* 9. ผู้สนับสนุนงาน (Sponsor board) */}
+        <SponsorsSection />
+
+
+        {RESULTS_OPEN && <LeaderboardSection />}
 
         {/* 13. CTA Banner */}
         <EventCtaBanner onOpenRegisterModal={() => handleOpenRegister()} />
@@ -225,7 +241,6 @@ export default function App() {
       <Footer
         onOpenArtworkModal={() => setArtworkModalOpen(true)}
         onOpenRegisterModal={() => handleOpenRegister()}
-        onOpenAdminModal={() => setAdminModalOpen(true)}
       />
 
       {/* Mobile Bottom Navigation */}

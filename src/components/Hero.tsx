@@ -185,13 +185,13 @@ export const Hero: React.FC<HeroProps> = ({
                 className="mt-2 h-[58px] w-auto object-contain"
                 style={{ filter: 'drop-shadow(0 0 2px #fff) drop-shadow(0 0 8px rgba(255,255,255,.85)) drop-shadow(0 4px 10px rgba(30,10,70,.35))' }}
               />
-              <h1
+              <p role="presentation"
                 className="mt-1 font-hero text-[34px] font-bold leading-[1.38] text-white"
                 style={{ textShadow: '0 2px 0 #2A1450, 0 5px 16px rgba(25,10,60,.55)' }}
               >
                 <span className="block">วิ่งสนุกไปกับ</span>
                 <span className="block text-[#FFD84D]">เพื่อนสี่ขาคู่ใจ</span>
-              </h1>
+              </p>
             </motion.div>
 
             <div className="flex-1" />
