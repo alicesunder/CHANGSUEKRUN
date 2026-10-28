@@ -42,9 +42,9 @@ export const DistanceComparisonModal: React.FC<DistanceComparisonModalProps> = (
       ],
     },
     {
-      label: 'เพิ่มคน / เพิ่มน้องสุนัข',
+      label: 'เพิ่มผู้ร่วมวิ่ง (น้องสุนัข 1 ตัวรวมในตั๋ว)',
       icon: UserPlus,
-      v: ['+450 บาท/คน\n+250 บาท/ตัว', '+500 บาท/คน\n+300 บาท/ตัว', '-', '-'],
+      v: ['+450 บาท/คน', '+500 บาท/คน', '-', '-'],
     },
     {
       label: 'เหมาะกับ',

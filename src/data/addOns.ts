@@ -15,7 +15,7 @@ export interface AddOnActivity {
 }
 
 export const ADD_ON_TEASER =
-  'เพิ่มความมันส์หลังวิ่ง! สมัครกิจกรรมเสริมพร้อมงานวิ่งสุนัข ซื้อเป็นแพ็กเกจคุ้มกว่า เริ่มต้น 1,190 บาท หรือครบทุกกิจกรรมเพียง 1,990 บาท อุโมงค์ลมจำกัด 60 ท่านเท่านั้น';
+  'เพิ่มความมันส์หลังวิ่ง! สมัครกิจกรรมเสริมพร้อมงานวิ่งสุนัข ซื้อเป็นแพ็กเกจคุ้มกว่า เริ่มต้น 1,190 บาท และถ้าเลือกครบ 3 กิจกรรมลดทันทีอีก 10% อุโมงค์ลมจำกัด 60 ท่านเท่านั้น';
 
 export const ADD_ON_ACTIVITIES: AddOnActivity[] = [
   {
@@ -184,8 +184,21 @@ export function addOnSavingPerPerson(s: AddOnSelection): number {
   return Math.max(0, addOnSeparatePerPerson(s) - addOnPricePerPerson(s));
 }
 
+/** Choosing all three activities (tower + shooting + wind tunnel) takes 10% off the activities. */
+export const ALL_THREE_DISCOUNT_RATE = 0.1;
+
+export function hasAllThree(s: AddOnSelection): boolean {
+  return s.tower && s.gun !== 'none' && s.windTunnel;
+}
+
+/** Baht taken off by the all-three bonus (whole baht). */
+export function addOnBonusDiscount(s: AddOnSelection): number {
+  if (!hasAddOns(s) || !hasAllThree(s)) return 0;
+  return Math.round(addOnPricePerPerson(s) * s.people * ALL_THREE_DISCOUNT_RATE);
+}
+
 export function addOnTotal(s: AddOnSelection): number {
-  return hasAddOns(s) ? addOnPricePerPerson(s) * s.people : 0;
+  return hasAddOns(s) ? addOnPricePerPerson(s) * s.people - addOnBonusDiscount(s) : 0;
 }
 
 export function addOnLabel(s: AddOnSelection): string {

@@ -21,7 +21,12 @@ export interface StoredOrder {
   phone: string;
   email: string;
   emergencyPhone: string;
+  /** 'concert' for concert-only passes (no run, no BIB) */
   routeId: RouteId;
+  /** RUN = running ticket (includes the concert), CONCERT = concert/entry pass only */
+  ticketType?: 'RUN' | 'CONCERT';
+  /** number of concert passes (CONCERT orders only) */
+  concertQty?: number;
   routeName: string;
   shirtSize: string;
   runningWithDog: boolean;
@@ -39,7 +44,7 @@ export interface StoredOrder {
   sponsorCode?: string;
   sponsorName?: string;
   /** Optional after-run activities bought with the ticket */
-  addOns?: { tower: boolean; gun: 'none' | 'standard' | 'premium'; windTunnel: boolean; people: number; pricePerPerson: number; total: number; label: string };
+  addOns?: { tower: boolean; gun: 'none' | 'standard' | 'premium'; windTunnel: boolean; people: number; pricePerPerson: number; total: number; discount?: number; label: string };
   paymentStatus: 'PAID' | 'PENDING';
   paymentRef: string;
   senderBank: string;
@@ -211,7 +216,7 @@ export async function updateOrder(orderId: string, mutator: (o: StoredOrder) => 
   });
 }
 
-const BIB_PREFIX: Record<RouteId, string> = { '10km': '10', '5km': '05', '3km': '03', '1km': '01' };
+const BIB_PREFIX: Record<string, string> = { '10km': '10', '5km': '05', '3km': '03', '1km': '01', concert: 'CN' };
 export function formatBib(routeId: RouteId, seq: number): string {
   return `${BIB_PREFIX[routeId] || '05'}-${String(seq).padStart(4, '0')}`;
 }
@@ -443,4 +448,41 @@ export function toRunnerView(o: StoredOrder) {
 export function toAdminView(o: StoredOrder) {
   const { accessTokenHash, slipFile, ...rest } = o;
   return { ...rest, hasSlip: Boolean(slipFile) };
+}
+
+// ---------------------------------------------------------------------------
+// Winners board (shown on the site; filled in by the admin after the race)
+// ---------------------------------------------------------------------------
+export interface Winner {
+  id: string;
+  /** e.g. "5 KM ชาย อันดับ 1", "ประกวดแต่งตัว ชนะเลิศ" */
+  title: string;
+  name: string;
+  /** small data: URL (resized in the browser) */
+  photo?: string;
+  note?: string;
+}
+
+export async function getWinners(): Promise<Winner[]> {
+  const rows = await dbQuery<{ value: unknown }>("select value from csr.settings where key = 'winners'");
+  const v = rows[0] ? asObj<{ list?: Winner[] }>(rows[0].value) : {};
+  return Array.isArray(v.list) ? v.list : [];
+}
+
+export async function saveWinners(list: Winner[]): Promise<void> {
+  await dbQuery(
+    "insert into csr.settings (key, value) values ('winners', $1::jsonb) on conflict (key) do update set value = excluded.value",
+    [JSON.stringify({ list })]
+  );
+}
+
+/** Finds an order by order id (CSR27-...) or by BIB / concert-pass number (e.g. 05-0012). */
+export async function findOrderByCode(code: string): Promise<StoredOrder | undefined> {
+  const c = code.trim();
+  if (!c) return undefined;
+  const rows = await dbQuery<{ data: unknown }>(
+    'select data from csr.orders where upper(order_id) = upper($1) or upper(bib_number) = upper($1) limit 1',
+    [c]
+  );
+  return rows[0] ? rowToOrder(rows[0]) : undefined;
 }

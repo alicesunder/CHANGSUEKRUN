@@ -37,6 +37,8 @@ import {
 } from 'lucide-react';
 import { RouteId } from '../types';
 import { SponsorCodesAdmin } from './SponsorCodesAdmin';
+import { TicketScannerAdmin } from './TicketScannerAdmin';
+import { WinnersAdmin } from './WinnersAdmin';
 import {
   TicketOrder,
   PromptPayConfig,
@@ -132,7 +134,7 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
   });
   const [loadError, setLoadError] = useState<string | null>(null);
 
-  const [activeTab, setActiveTab] = useState<'overview' | 'orders' | 'security' | 'settings' | 'sponsors'>(
+  const [activeTab, setActiveTab] = useState<'overview' | 'orders' | 'security' | 'settings' | 'sponsors' | 'scan' | 'winners'>(
     'orders'
   );
   const [orders, setOrders] = useState<TicketOrder[]>([]);
@@ -713,6 +715,30 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
               >
                 <Gift className="w-4 h-4" />
                 <span>รหัสสปอนเซอร์</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab('scan')}
+                className={`px-3 py-2 rounded-xl text-xs font-extrabold transition-all cursor-pointer flex items-center gap-1.5 ${
+                  activeTab === 'scan'
+                    ? 'bg-[#FFC928] text-[#180B30] shadow-xs'
+                    : 'text-white/80 hover:text-white'
+                }`}
+              >
+                <span aria-hidden="true">📷</span>
+                <span>สแกนตั๋ว</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab('winners')}
+                className={`px-3 py-2 rounded-xl text-xs font-extrabold transition-all cursor-pointer flex items-center gap-1.5 ${
+                  activeTab === 'winners'
+                    ? 'bg-[#FFC928] text-[#180B30] shadow-xs'
+                    : 'text-white/80 hover:text-white'
+                }`}
+              >
+                <span aria-hidden="true">🏆</span>
+                <span>ประกาศผู้ชนะ</span>
               </button>
             </div>
 
@@ -1543,6 +1569,8 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
           {/* TAB 4: PROMPTPAY, TIMER, ADMIN CREDENTIALS & BIB COUNTERS  */}
           {/* ========================================================== */}
           {activeTab === 'sponsors' && <SponsorCodesAdmin />}
+          {activeTab === 'scan' && <TicketScannerAdmin />}
+          {activeTab === 'winners' && <WinnersAdmin />}
 
           {activeTab === 'settings' && (
             <form onSubmit={handleSaveSettings} className="grid grid-cols-1 lg:grid-cols-12 gap-6">

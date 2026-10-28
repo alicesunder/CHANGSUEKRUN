@@ -12,6 +12,8 @@ interface RaceDistancesProps {
   onOpenPaceModal?: () => void;
   /** Shown directly under the ticket cards (add-on activities) */
   afterTickets?: React.ReactNode;
+  /** Rendered just above the souvenirs (merch) block */
+  beforeMerch?: React.ReactNode;
 }
 
 export const RaceDistances: React.FC<RaceDistancesProps> = ({
@@ -22,6 +24,7 @@ export const RaceDistances: React.FC<RaceDistancesProps> = ({
   onOpenComparisonModal,
   onOpenPaceModal,
   afterTickets,
+  beforeMerch,
 }) => {
   return (
     <section
@@ -69,6 +72,8 @@ export const RaceDistances: React.FC<RaceDistancesProps> = ({
             ดูแผนที่เส้นทาง & จำลองการวิ่ง
           </button>
         </div>
+
+        {beforeMerch}
 
         {/* Unified Showcase: เสื้อวิ่ง, เหรียญรางวัล Finisher & สิทธิประโยชน์ Race Pack */}
         <div id="merch-showcase" className="mt-10 sm:mt-14 scroll-mt-24">

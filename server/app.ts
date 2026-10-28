@@ -13,7 +13,7 @@
 import express from 'express';
 import crypto from 'crypto';
 import type { RouteId } from '../src/types';
-import { calcTicketTotal, isDogCategory, ticketById, ticketCategories } from '../src/data/eventData';
+import { CONCERT_PASS_PRICE, calcTicketTotal, isDogCategory, ticketById, ticketCategories } from '../src/data/eventData';
 import {
   deleteOrder,
   getBibCounters,
@@ -45,10 +45,14 @@ import {
   updateSponsorCode,
   windTunnelSeatsUsed,
   formatBib,
+  findOrderByCode,
+  getWinners,
+  saveWinners,
+  type Winner,
   ROUTES,
   type StoredOrder,
 } from './store';
-import { WIND_TUNNEL_LIMIT, addOnLabel, addOnPricePerPerson, addOnTotal, hasAddOns, normalizeAddOns } from '../src/data/addOns';
+import { WIND_TUNNEL_LIMIT, addOnBonusDiscount, addOnLabel, addOnPricePerPerson, addOnTotal, hasAddOns, normalizeAddOns } from '../src/data/addOns';
 import { checkCredentials, issueToken, requireAdmin } from './auth';
 import { createOmiseCharge, fetchOmiseQrImage, fetchVerifiedOmiseCharge, omiseKeyMode } from './payments';
 
@@ -183,6 +187,12 @@ export function createApp(): express.Express {
     res.json(await publicConfig());
   }));
 
+  // Winners board (public read)
+  app.get('/api/winners', h(async (_req, res) => {
+    res.setHeader('Cache-Control', 'public, max-age=60');
+    res.json({ winners: await getWinners() });
+  }));
+
   // Is this sponsor code usable? (Does not use it up.) Heavily rate limited against guessing.
   app.post('/api/sponsor-code/check', smallJson, h(async (req, res) => {
     if (await rateLimited(`sponsor-check:${clientIp(req)}`, 12, 10 * 60 * 1000)) {
@@ -205,7 +215,8 @@ export function createApp(): express.Express {
       return;
     }
     const b = req.body || {};
-    const sponsorCode = b.sponsorCode ? normalizeSponsorCode(b.sponsorCode) : '';
+    const isConcert = b.ticketType === 'CONCERT';
+    const sponsorCode = !isConcert && b.sponsorCode ? normalizeSponsorCode(b.sponsorCode) : '';
     if (b.sponsorCode && !sponsorCode) {
       res.status(400).json({ error: SPONSOR_INVALID_MSG });
       return;
@@ -218,27 +229,30 @@ export function createApp(): express.Express {
       res.status(503).json({ error: 'ระบบชำระเงินยังไม่เปิดใช้งาน กรุณาติดต่อผู้จัดงาน' });
       return;
     }
-    const routeId = b.routeId as RouteId;
-    if (!ROUTE_IDS.includes(routeId)) {
+    // Concert-only pass: no run, no BIB, no shirt (the run ticket already includes the concert)
+    const routeId = (isConcert ? 'concert' : b.routeId) as RouteId;
+    const concertQty = isConcert ? Math.min(9, Math.max(1, Math.floor(Number(b.concertQty) || 1))) : 0;
+    if (!isConcert && !ROUTE_IDS.includes(routeId)) {
       res.status(400).json({ error: 'ระยะวิ่งไม่ถูกต้อง' });
       return;
     }
-    const isDog = isDogCategory(routeId);
+    const isDog = !isConcert && isDogCategory(routeId);
     // A sponsor code covers one runner (plus the dog); extra people / dogs are not part of it.
     const extraPeople = isDog && !sponsorCode ? Math.min(MAX_EXTRA, Math.max(0, Math.floor(Number(b.extraPeople) || 0))) : 0;
-    const extraDogs = isDog && !sponsorCode ? Math.min(MAX_EXTRA, Math.max(0, Math.floor(Number(b.extraDogs) || 0))) : 0;
+    // Extra dogs are no longer sold: a Dog Run ticket is 1 runner + 1 dog.
+    const extraDogs = 0;
 
     const fullName = clean(b.fullName, 120);
     const phone = clean(b.phone, 30);
     const email = clean(b.email, 120);
     const emergencyPhone = clean(b.emergencyPhone, 30);
-    const shirtSize = SHIRT_SIZES.includes(b.shirtSize) ? b.shirtSize : '';
+    const shirtSize = isConcert ? '' : SHIRT_SIZES.includes(b.shirtSize) ? b.shirtSize : '';
     const errors: string[] = [];
     if (fullName.length < 2) errors.push('กรุณากรอกชื่อ-นามสกุล');
     if (phone.replace(/\D/g, '').length < 9) errors.push('เบอร์โทรศัพท์ไม่ถูกต้อง');
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errors.push('อีเมลไม่ถูกต้อง');
     if (emergencyPhone.replace(/\D/g, '').length < 9) errors.push('เบอร์ติดต่อฉุกเฉินไม่ถูกต้อง');
-    if (!shirtSize) errors.push('กรุณาเลือกไซซ์เสื้อ');
+    if (!isConcert && !shirtSize) errors.push('กรุณาเลือกไซซ์เสื้อ');
     if (b.privacyConsent !== true) errors.push('กรุณายอมรับข้อกำหนดและเงื่อนไขและประกาศความเป็นส่วนตัว');
     if (errors.length) {
       res.status(400).json({ error: errors.join(' · ') });
@@ -256,7 +270,7 @@ export function createApp(): express.Express {
       sponsorName = used.sponsorName;
     }
 
-    const ticketTotal = sponsorCode ? 0 : calcTicketTotal(routeId, extraPeople, extraDogs);
+    const ticketTotal = isConcert ? CONCERT_PASS_PRICE * concertQty : sponsorCode ? 0 : calcTicketTotal(routeId, extraPeople, extraDogs);
     const total = ticketTotal + addOnSum;
     const token = crypto.randomBytes(24).toString('base64url');
     const now = new Date();
@@ -271,7 +285,9 @@ export function createApp(): express.Express {
       email,
       emergencyPhone,
       routeId,
-      routeName: ticketById(routeId).name,
+      routeName: isConcert ? 'ตั๋วคอนเสิร์ต / เข้างาน (ไม่วิ่ง)' : ticketById(routeId).name,
+      ticketType: isConcert ? 'CONCERT' : 'RUN',
+      concertQty: isConcert ? concertQty : undefined,
       shirtSize,
       runningWithDog: isDog,
       dogName: isDog ? clean(b.dogName, 80) : undefined,
@@ -279,7 +295,7 @@ export function createApp(): express.Express {
       extraPeople,
       extraDogs,
       extraRunnerNames: extraPeople > 0 ? clean(b.extraRunnerNames, 240) : undefined,
-      peopleCount: isDog ? 1 + extraPeople : 1,
+      peopleCount: isConcert ? concertQty : isDog ? 1 + extraPeople : 1,
       dogCount: isDog ? 1 + extraDogs : 0,
       totalPrice: total,
       bibNumber: '',
@@ -287,7 +303,7 @@ export function createApp(): express.Express {
       sponsorCode: sponsorCode || undefined,
       sponsorName: sponsorName || undefined,
       addOns: hasAddOns(addOns)
-        ? { ...addOns, pricePerPerson: addOnPricePerPerson(addOns), total: addOnSum, label: addOnLabel(addOns) }
+        ? { ...addOns, pricePerPerson: addOnPricePerPerson(addOns), total: addOnSum, discount: addOnBonusDiscount(addOns), label: addOnLabel(addOns) }
         : undefined,
       paymentStatus: 'PENDING',
       paymentRef: '',
@@ -435,6 +451,39 @@ export function createApp(): express.Express {
         : `ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง (เหลืออีก ${r.remaining} ครั้ง)`,
       lockedSeconds: r.lockedSeconds,
     });
+  }));
+
+  // Ticket scanner / BIB search: order id, BIB or concert-pass number
+  app.get('/api/admin/lookup', requireAdmin, h(async (req, res) => {
+    const order = await findOrderByCode(String(req.query.q || '').slice(0, 80));
+    if (!order) {
+      res.status(404).json({ error: 'ไม่พบตั๋ว/เลข BIB นี้ในระบบ' });
+      return;
+    }
+    res.json({ order: toAdminView(order) });
+  }));
+
+  app.get('/api/admin/winners', requireAdmin, h(async (_req, res) => {
+    res.json({ winners: await getWinners() });
+  }));
+
+  app.put('/api/admin/winners', requireAdmin, express.json({ limit: '4mb' }), h(async (req, res) => {
+    const raw = Array.isArray(req.body?.winners) ? req.body.winners.slice(0, 24) : [];
+    const list: Winner[] = [];
+    for (const w of raw) {
+      const photo = typeof w?.photo === 'string' && ['data:image/jpeg;base64,', 'data:image/png;base64,', 'data:image/webp;base64,'].some((p) => w.photo.startsWith(p)) && w.photo.length <= 260_000 ? w.photo : undefined;
+      const name = clean(w?.name, 120);
+      if (!name) continue;
+      list.push({
+        id: clean(w?.id, 40) || crypto.randomBytes(6).toString('hex'),
+        title: clean(w?.title, 120),
+        name,
+        photo,
+        note: clean(w?.note, 200) || undefined,
+      });
+    }
+    await saveWinners(list);
+    res.json({ winners: list });
   }));
 
   app.get('/api/admin/orders', requireAdmin, h(async (_req, res) => {

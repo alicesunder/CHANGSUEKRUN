@@ -14,6 +14,9 @@ import { Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
 import { EventObjectiveSection } from './components/EventObjectiveSection';
 import { AddOnActivities } from './components/AddOnActivities';
+import { ConcertPassCard } from './components/ConcertPassCard';
+import { CostumeContestSection } from './components/CostumeContestSection';
+import { WinnersSection } from './components/WinnersSection';
 import { EMPTY_ADD_ONS, hasAddOns, type AddOnSelection } from './data/addOns';
 import { RaceDistances } from './components/RaceDistances';
 import { SponsorsSection } from './components/SponsorsSection';
@@ -60,6 +63,7 @@ export default function App() {
   const [registerModalOpen, setRegisterModalOpen] = useState(false);
   const [registerTargetRoute, setRegisterTargetRoute] = useState<RouteId>('5km');
   const [registerExtras, setRegisterExtras] = useState({ people: 0, dogs: 0 });
+  const [registerMode, setRegisterMode] = useState<'RUN' | 'CONCERT'>('RUN');
   const [registerAddOns, setRegisterAddOns] = useState<AddOnSelection | undefined>(undefined);
   // Activities chosen in the block under the ticket cards; every "register" button carries them into the form
   const [pageAddOns, setPageAddOns] = useState<AddOnSelection>({ ...EMPTY_ADD_ONS });
@@ -98,6 +102,7 @@ export default function App() {
   const handleScrollToMap = scrollToRouteMap;
 
   const handleOpenRegister = (distance?: RouteId, extras?: { people: number; dogs: number }, addOns?: AddOnSelection) => {
+    setRegisterMode('RUN');
     setRegisterExtras(extras ?? { people: 0, dogs: 0 });
     setRegisterAddOns(addOns ?? (hasAddOns(pageAddOns) ? pageAddOns : undefined));
     if (distance) {
@@ -105,6 +110,14 @@ export default function App() {
     } else {
       setRegisterTargetRoute(selectedRoute);
     }
+    setRegisterModalOpen(true);
+  };
+
+  // Concert-only pass (no run), optionally with the activities chosen on the page
+  const handleOpenConcert = () => {
+    setRegisterMode('CONCERT');
+    setRegisterExtras({ people: 0, dogs: 0 });
+    setRegisterAddOns(hasAddOns(pageAddOns) ? pageAddOns : undefined);
     setRegisterModalOpen(true);
   };
 
@@ -152,13 +165,18 @@ export default function App() {
           onOpenComparisonModal={() => setComparisonModalOpen(true)}
           onOpenPaceModal={() => setPaceModalOpen(true)}
           afterTickets={
-            <AddOnActivities
-              selectedRoute={selectedRoute}
-              value={pageAddOns}
-              onChange={setPageAddOns}
-              onOpenRegister={() => handleOpenRegister(selectedRoute)}
-            />
+            <>
+              <ConcertPassCard onBuy={handleOpenConcert} />
+              <AddOnActivities
+                selectedRoute={selectedRoute}
+                value={pageAddOns}
+                onChange={setPageAddOns}
+                onOpenRegister={() => handleOpenRegister(selectedRoute)}
+                onOpenConcert={handleOpenConcert}
+              />
+            </>
           }
+          beforeMerch={<CostumeContestSection />}
         />
 
         {/* 6. 2-Column Side-by-Side: กำหนดการวันแข่งขัน (Left) & เส้นทางวิ่ง GPS Survey (Right) */}
@@ -222,6 +240,8 @@ export default function App() {
 
 
         {/* 12. คำถามที่พบบ่อย (FAQ) */}
+        <WinnersSection />
+
         <FAQSection />
 
         {/* 9. ผู้สนับสนุนงาน (Sponsor board) */}
@@ -285,6 +305,7 @@ export default function App() {
           initialExtraPeople={registerExtras.people}
           initialExtraDogs={registerExtras.dogs}
           initialAddOns={registerAddOns}
+          initialMode={registerMode}
           onClose={() => setRegisterModalOpen(false)}
           onRegistrationSuccess={() => {
             setRegisterModalOpen(false);

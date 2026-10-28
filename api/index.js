@@ -28224,9 +28224,7 @@ var ticketCategories = [
     basePrice: 790,
     baseLabel: "1 \u0E04\u0E19 + 1 \u0E19\u0E49\u0E2D\u0E07\u0E2A\u0E38\u0E19\u0E31\u0E02",
     addPersonPrice: 450,
-    addDogPrice: 250,
     extraPersonPrice: 450,
-    extraDogPrice: 250,
     badge: "\u0E40\u0E23\u0E34\u0E48\u0E21\u0E15\u0E49\u0E19\u0E07\u0E48\u0E32\u0E22",
     emoji: "\u{1F436}"
   },
@@ -28240,17 +28238,16 @@ var ticketCategories = [
     basePrice: 890,
     baseLabel: "1 \u0E04\u0E19 + 1 \u0E19\u0E49\u0E2D\u0E07\u0E2A\u0E38\u0E19\u0E31\u0E02",
     addPersonPrice: 500,
-    addDogPrice: 300,
     extraPersonPrice: 500,
-    extraDogPrice: 300,
     emoji: "\u{1F415}"
   }
 ];
 var ticketById = (id) => ticketCategories.find((t) => t.id === id) ?? ticketCategories[0];
 var isDogCategory = (id) => ticketById(id).group === "dog";
-var calcTicketTotal = (id, extraPeople = 0, extraDogs = 0) => {
+var CONCERT_PASS_PRICE = 700;
+var calcTicketTotal = (id, extraPeople = 0, _extraDogs = 0) => {
   const t = ticketById(id);
-  return t.basePrice + extraPeople * (t.addPersonPrice ?? 0) + extraDogs * (t.addDogPrice ?? 0);
+  return t.basePrice + extraPeople * (t.addPersonPrice ?? 0);
 };
 
 // server/store.ts
@@ -28523,7 +28520,7 @@ async function updateOrder(orderId, mutator) {
     return o;
   });
 }
-var BIB_PREFIX = { "10km": "10", "5km": "05", "3km": "03", "1km": "01" };
+var BIB_PREFIX = { "10km": "10", "5km": "05", "3km": "03", "1km": "01", concert: "CN" };
 function formatBib(routeId, seq) {
   return `${BIB_PREFIX[routeId] || "05"}-${String(seq).padStart(4, "0")}`;
 }
@@ -28685,6 +28682,26 @@ function toAdminView(o) {
   const { accessTokenHash, slipFile, ...rest } = o;
   return { ...rest, hasSlip: Boolean(slipFile) };
 }
+async function getWinners() {
+  const rows = await dbQuery("select value from csr.settings where key = 'winners'");
+  const v = rows[0] ? asObj(rows[0].value) : {};
+  return Array.isArray(v.list) ? v.list : [];
+}
+async function saveWinners(list) {
+  await dbQuery(
+    "insert into csr.settings (key, value) values ('winners', $1::jsonb) on conflict (key) do update set value = excluded.value",
+    [JSON.stringify({ list })]
+  );
+}
+async function findOrderByCode(code) {
+  const c = code.trim();
+  if (!c) return void 0;
+  const rows = await dbQuery(
+    "select data from csr.orders where upper(order_id) = upper($1) or upper(bib_number) = upper($1) limit 1",
+    [c]
+  );
+  return rows[0] ? rowToOrder(rows[0]) : void 0;
+}
 
 // src/data/addOns.ts
 var EMPTY_ADD_ONS = { tower: false, gun: "none", windTunnel: false, people: 1 };
@@ -28710,8 +28727,16 @@ function comboKey(s) {
 function addOnPricePerPerson(s) {
   return COMBO_PRICES[comboKey(s)] ?? 0;
 }
+var ALL_THREE_DISCOUNT_RATE = 0.1;
+function hasAllThree(s) {
+  return s.tower && s.gun !== "none" && s.windTunnel;
+}
+function addOnBonusDiscount(s) {
+  if (!hasAddOns(s) || !hasAllThree(s)) return 0;
+  return Math.round(addOnPricePerPerson(s) * s.people * ALL_THREE_DISCOUNT_RATE);
+}
 function addOnTotal(s) {
-  return hasAddOns(s) ? addOnPricePerPerson(s) * s.people : 0;
+  return hasAddOns(s) ? addOnPricePerPerson(s) * s.people - addOnBonusDiscount(s) : 0;
 }
 function addOnLabel(s) {
   const parts = [];
@@ -29012,6 +29037,10 @@ function createApp() {
   app2.get("/api/public-config", h(async (_req, res) => {
     res.json(await publicConfig());
   }));
+  app2.get("/api/winners", h(async (_req, res) => {
+    res.setHeader("Cache-Control", "public, max-age=60");
+    res.json({ winners: await getWinners() });
+  }));
   app2.post("/api/sponsor-code/check", smallJson, h(async (req, res) => {
     if (await rateLimited(`sponsor-check:${clientIp(req)}`, 12, 10 * 60 * 1e3)) {
       res.status(429).json({ error: "\u0E15\u0E23\u0E27\u0E08\u0E23\u0E2B\u0E31\u0E2A\u0E1A\u0E48\u0E2D\u0E22\u0E40\u0E01\u0E34\u0E19\u0E44\u0E1B \u0E01\u0E23\u0E38\u0E13\u0E32\u0E23\u0E2D\u0E2A\u0E31\u0E01\u0E04\u0E23\u0E39\u0E48\u0E41\u0E25\u0E49\u0E27\u0E25\u0E2D\u0E07\u0E43\u0E2B\u0E21\u0E48" });
@@ -29031,7 +29060,8 @@ function createApp() {
       return;
     }
     const b = req.body || {};
-    const sponsorCode = b.sponsorCode ? normalizeSponsorCode(b.sponsorCode) : "";
+    const isConcert = b.ticketType === "CONCERT";
+    const sponsorCode = !isConcert && b.sponsorCode ? normalizeSponsorCode(b.sponsorCode) : "";
     if (b.sponsorCode && !sponsorCode) {
       res.status(400).json({ error: SPONSOR_INVALID_MSG });
       return;
@@ -29042,25 +29072,26 @@ function createApp() {
       res.status(503).json({ error: "\u0E23\u0E30\u0E1A\u0E1A\u0E0A\u0E33\u0E23\u0E30\u0E40\u0E07\u0E34\u0E19\u0E22\u0E31\u0E07\u0E44\u0E21\u0E48\u0E40\u0E1B\u0E34\u0E14\u0E43\u0E0A\u0E49\u0E07\u0E32\u0E19 \u0E01\u0E23\u0E38\u0E13\u0E32\u0E15\u0E34\u0E14\u0E15\u0E48\u0E2D\u0E1C\u0E39\u0E49\u0E08\u0E31\u0E14\u0E07\u0E32\u0E19" });
       return;
     }
-    const routeId = b.routeId;
-    if (!ROUTE_IDS.includes(routeId)) {
+    const routeId = isConcert ? "concert" : b.routeId;
+    const concertQty = isConcert ? Math.min(9, Math.max(1, Math.floor(Number(b.concertQty) || 1))) : 0;
+    if (!isConcert && !ROUTE_IDS.includes(routeId)) {
       res.status(400).json({ error: "\u0E23\u0E30\u0E22\u0E30\u0E27\u0E34\u0E48\u0E07\u0E44\u0E21\u0E48\u0E16\u0E39\u0E01\u0E15\u0E49\u0E2D\u0E07" });
       return;
     }
-    const isDog = isDogCategory(routeId);
+    const isDog = !isConcert && isDogCategory(routeId);
     const extraPeople = isDog && !sponsorCode ? Math.min(MAX_EXTRA, Math.max(0, Math.floor(Number(b.extraPeople) || 0))) : 0;
-    const extraDogs = isDog && !sponsorCode ? Math.min(MAX_EXTRA, Math.max(0, Math.floor(Number(b.extraDogs) || 0))) : 0;
+    const extraDogs = 0;
     const fullName = clean(b.fullName, 120);
     const phone = clean(b.phone, 30);
     const email = clean(b.email, 120);
     const emergencyPhone = clean(b.emergencyPhone, 30);
-    const shirtSize = SHIRT_SIZES.includes(b.shirtSize) ? b.shirtSize : "";
+    const shirtSize = isConcert ? "" : SHIRT_SIZES.includes(b.shirtSize) ? b.shirtSize : "";
     const errors = [];
     if (fullName.length < 2) errors.push("\u0E01\u0E23\u0E38\u0E13\u0E32\u0E01\u0E23\u0E2D\u0E01\u0E0A\u0E37\u0E48\u0E2D-\u0E19\u0E32\u0E21\u0E2A\u0E01\u0E38\u0E25");
     if (phone.replace(/\D/g, "").length < 9) errors.push("\u0E40\u0E1A\u0E2D\u0E23\u0E4C\u0E42\u0E17\u0E23\u0E28\u0E31\u0E1E\u0E17\u0E4C\u0E44\u0E21\u0E48\u0E16\u0E39\u0E01\u0E15\u0E49\u0E2D\u0E07");
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errors.push("\u0E2D\u0E35\u0E40\u0E21\u0E25\u0E44\u0E21\u0E48\u0E16\u0E39\u0E01\u0E15\u0E49\u0E2D\u0E07");
     if (emergencyPhone.replace(/\D/g, "").length < 9) errors.push("\u0E40\u0E1A\u0E2D\u0E23\u0E4C\u0E15\u0E34\u0E14\u0E15\u0E48\u0E2D\u0E09\u0E38\u0E01\u0E40\u0E09\u0E34\u0E19\u0E44\u0E21\u0E48\u0E16\u0E39\u0E01\u0E15\u0E49\u0E2D\u0E07");
-    if (!shirtSize) errors.push("\u0E01\u0E23\u0E38\u0E13\u0E32\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E44\u0E0B\u0E0B\u0E4C\u0E40\u0E2A\u0E37\u0E49\u0E2D");
+    if (!isConcert && !shirtSize) errors.push("\u0E01\u0E23\u0E38\u0E13\u0E32\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E44\u0E0B\u0E0B\u0E4C\u0E40\u0E2A\u0E37\u0E49\u0E2D");
     if (b.privacyConsent !== true) errors.push("\u0E01\u0E23\u0E38\u0E13\u0E32\u0E22\u0E2D\u0E21\u0E23\u0E31\u0E1A\u0E02\u0E49\u0E2D\u0E01\u0E33\u0E2B\u0E19\u0E14\u0E41\u0E25\u0E30\u0E40\u0E07\u0E37\u0E48\u0E2D\u0E19\u0E44\u0E02\u0E41\u0E25\u0E30\u0E1B\u0E23\u0E30\u0E01\u0E32\u0E28\u0E04\u0E27\u0E32\u0E21\u0E40\u0E1B\u0E47\u0E19\u0E2A\u0E48\u0E27\u0E19\u0E15\u0E31\u0E27");
     if (errors.length) {
       res.status(400).json({ error: errors.join(" \xB7 ") });
@@ -29075,7 +29106,7 @@ function createApp() {
       }
       sponsorName = used.sponsorName;
     }
-    const ticketTotal = sponsorCode ? 0 : calcTicketTotal(routeId, extraPeople, extraDogs);
+    const ticketTotal = isConcert ? CONCERT_PASS_PRICE * concertQty : sponsorCode ? 0 : calcTicketTotal(routeId, extraPeople, extraDogs);
     const total = ticketTotal + addOnSum;
     const token = crypto3.randomBytes(24).toString("base64url");
     const now = /* @__PURE__ */ new Date();
@@ -29089,7 +29120,9 @@ function createApp() {
       email,
       emergencyPhone,
       routeId,
-      routeName: ticketById(routeId).name,
+      routeName: isConcert ? "\u0E15\u0E31\u0E4B\u0E27\u0E04\u0E2D\u0E19\u0E40\u0E2A\u0E34\u0E23\u0E4C\u0E15 / \u0E40\u0E02\u0E49\u0E32\u0E07\u0E32\u0E19 (\u0E44\u0E21\u0E48\u0E27\u0E34\u0E48\u0E07)" : ticketById(routeId).name,
+      ticketType: isConcert ? "CONCERT" : "RUN",
+      concertQty: isConcert ? concertQty : void 0,
       shirtSize,
       runningWithDog: isDog,
       dogName: isDog ? clean(b.dogName, 80) : void 0,
@@ -29097,14 +29130,14 @@ function createApp() {
       extraPeople,
       extraDogs,
       extraRunnerNames: extraPeople > 0 ? clean(b.extraRunnerNames, 240) : void 0,
-      peopleCount: isDog ? 1 + extraPeople : 1,
+      peopleCount: isConcert ? concertQty : isDog ? 1 + extraPeople : 1,
       dogCount: isDog ? 1 + extraDogs : 0,
       totalPrice: total,
       bibNumber: "",
       paymentMethod: sponsorCode ? "SPONSOR_CODE" : "PROMPTPAY_QR",
       sponsorCode: sponsorCode || void 0,
       sponsorName: sponsorName || void 0,
-      addOns: hasAddOns(addOns) ? { ...addOns, pricePerPerson: addOnPricePerPerson(addOns), total: addOnSum, label: addOnLabel(addOns) } : void 0,
+      addOns: hasAddOns(addOns) ? { ...addOns, pricePerPerson: addOnPricePerPerson(addOns), total: addOnSum, discount: addOnBonusDiscount(addOns), label: addOnLabel(addOns) } : void 0,
       paymentStatus: "PENDING",
       paymentRef: "",
       senderBank: "",
@@ -29235,6 +29268,35 @@ function createApp() {
       error: r.lockedSeconds ? `\u0E43\u0E2A\u0E48\u0E23\u0E2B\u0E31\u0E2A\u0E1C\u0E34\u0E14\u0E2B\u0E25\u0E32\u0E22\u0E04\u0E23\u0E31\u0E49\u0E07 \u0E23\u0E30\u0E07\u0E31\u0E1A\u0E01\u0E32\u0E23\u0E40\u0E02\u0E49\u0E32\u0E2A\u0E39\u0E48\u0E23\u0E30\u0E1A\u0E1A ${Math.ceil(r.lockedSeconds / 60)} \u0E19\u0E32\u0E17\u0E35` : `\u0E0A\u0E37\u0E48\u0E2D\u0E1C\u0E39\u0E49\u0E43\u0E0A\u0E49\u0E2B\u0E23\u0E37\u0E2D\u0E23\u0E2B\u0E31\u0E2A\u0E1C\u0E48\u0E32\u0E19\u0E44\u0E21\u0E48\u0E16\u0E39\u0E01\u0E15\u0E49\u0E2D\u0E07 (\u0E40\u0E2B\u0E25\u0E37\u0E2D\u0E2D\u0E35\u0E01 ${r.remaining} \u0E04\u0E23\u0E31\u0E49\u0E07)`,
       lockedSeconds: r.lockedSeconds
     });
+  }));
+  app2.get("/api/admin/lookup", requireAdmin, h(async (req, res) => {
+    const order = await findOrderByCode(String(req.query.q || "").slice(0, 80));
+    if (!order) {
+      res.status(404).json({ error: "\u0E44\u0E21\u0E48\u0E1E\u0E1A\u0E15\u0E31\u0E4B\u0E27/\u0E40\u0E25\u0E02 BIB \u0E19\u0E35\u0E49\u0E43\u0E19\u0E23\u0E30\u0E1A\u0E1A" });
+      return;
+    }
+    res.json({ order: toAdminView(order) });
+  }));
+  app2.get("/api/admin/winners", requireAdmin, h(async (_req, res) => {
+    res.json({ winners: await getWinners() });
+  }));
+  app2.put("/api/admin/winners", requireAdmin, import_express.default.json({ limit: "4mb" }), h(async (req, res) => {
+    const raw = Array.isArray(req.body?.winners) ? req.body.winners.slice(0, 24) : [];
+    const list = [];
+    for (const w of raw) {
+      const photo = typeof w?.photo === "string" && ["data:image/jpeg;base64,", "data:image/png;base64,", "data:image/webp;base64,"].some((p) => w.photo.startsWith(p)) && w.photo.length <= 26e4 ? w.photo : void 0;
+      const name = clean(w?.name, 120);
+      if (!name) continue;
+      list.push({
+        id: clean(w?.id, 40) || crypto3.randomBytes(6).toString("hex"),
+        title: clean(w?.title, 120),
+        name,
+        photo,
+        note: clean(w?.note, 200) || void 0
+      });
+    }
+    await saveWinners(list);
+    res.json({ winners: list });
   }));
   app2.get("/api/admin/orders", requireAdmin, h(async (_req, res) => {
     let orders = await listOrders();

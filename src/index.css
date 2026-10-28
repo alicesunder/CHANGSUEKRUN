@@ -704,3 +704,16 @@ h1, h2, h3, h4, h5, h6 {
   [class*="text-[10px]"], [class*="text-[11px]"], [class*="text-[9px]"], [class*="text-[11.5px]"] { font-size: 12px !important; line-height: 1.35; }
   main button, main summary, main [role="button"] { min-height: 44px; }
 }
+
+/* All-three add-on celebration */
+@keyframes perkShine { 0% { left: -40%; } 60%, 100% { left: 130%; } }
+.perk-shine { animation: perkShine 2.4s ease-in-out infinite; }
+@keyframes perkGlow { 0% { background-position: 0% 50%; } 100% { background-position: 200% 50%; } }
+.addon-celebrate {
+  background: linear-gradient(90deg, #FF7A59, #FFC928, #10B981, #0EA5E9, #9333EA, #EC4899, #FF7A59) !important;
+  background-size: 200% 100% !important;
+  animation: perkGlow 3s linear infinite;
+  box-shadow: 0 0 0 4px rgba(255, 201, 40, 0.35), 0 30px 70px -18px rgba(236, 72, 153, 0.65) !important;
+}
+.addon-celebrate-inner { background-image: radial-gradient(circle at 20% 0%, rgba(255, 226, 104, 0.45), transparent 55%), radial-gradient(circle at 90% 100%, rgba(236, 72, 153, 0.22), transparent 55%); }
+@media (prefers-reduced-motion: reduce) { .perk-shine, .addon-celebrate { animation: none; } }

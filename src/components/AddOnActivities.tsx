@@ -13,13 +13,17 @@ import {
   RED_DOT_UPGRADE,
   STANDARD_GUNS,
   STANDARD_PACKAGES,
+  addOnBonusDiscount,
   addOnLabel,
   addOnPricePerPerson,
   addOnSavingPerPerson,
   addOnTotal,
   formatBaht,
   hasAddOns,
+  hasAllThree,
 } from '../data/addOns';
+import { DiscountCelebration } from './PerkCelebration';
+import { CONCERT_PASS_PRICE } from '../data/eventData';
 import { getPublicConfig } from '../utils/api';
 import { AddOnPicker, PeopleStepper } from './AddOnPicker';
 import { LABRADOR_SVG_PATH } from './brand/LabradorMascot';
@@ -32,6 +36,8 @@ interface AddOnActivitiesProps {
   onChange: (next: AddOnSelection) => void;
   /** Opens the registration form with the chosen ticket + activities */
   onOpenRegister: () => void;
+  /** Opens the form for a concert-only pass (no run) + the chosen activities */
+  onOpenConcert?: () => void;
 }
 
 const sameKind = (a: AddOnSelection, b: Omit<AddOnSelection, 'people'>) =>
@@ -41,7 +47,7 @@ const sameKind = (a: AddOnSelection, b: Omit<AddOnSelection, 'people'>) =>
  * Step 2 of buying a ticket: optional add-on activities, right under the ticket cards.
  * One compact block: tap activities, see the combined total, register.
  */
-export const AddOnActivities: React.FC<AddOnActivitiesProps> = ({ selectedRoute, value, onChange, onOpenRegister }) => {
+export const AddOnActivities: React.FC<AddOnActivitiesProps> = ({ selectedRoute, value, onChange, onOpenRegister, onOpenConcert }) => {
   const [windRemaining, setWindRemaining] = useState<number | null>(null);
 
   useEffect(() => {
@@ -60,16 +66,18 @@ export const AddOnActivities: React.FC<AddOnActivitiesProps> = ({ selectedRoute,
   const picked = hasAddOns(value);
   const addOnSum = addOnTotal(value);
   const grand = ticketPrice + addOnSum;
-  const isFull = value.tower && value.gun === 'standard' && value.windTunnel;
+  const isFull = hasAllThree(value);
+  const bonus = addOnBonusDiscount(value);
   const saving = addOnSavingPerPerson(value);
 
   return (
     <div id="addons" role="region" aria-labelledby="addons-heading" className="relative scroll-mt-24 mt-8 sm:mt-10">
+      <DiscountCelebration active={isFull} discount={bonus} />
       <div
-        className="rounded-[32px] p-[3px]"
-        style={{ background: 'linear-gradient(135deg, #FF7A59 0%, #EC4899 30%, #9333EA 62%, #0EA5E9 100%)', boxShadow: '0 28px 56px -22px rgba(147, 51, 234, 0.5)' }}
+        className={`rounded-[32px] p-[3px] transition-all duration-500 ${isFull ? 'addon-celebrate' : ''}`}
+        style={isFull ? undefined : { background: 'linear-gradient(135deg, #FF7A59 0%, #EC4899 30%, #9333EA 62%, #0EA5E9 100%)', boxShadow: '0 28px 56px -22px rgba(147, 51, 234, 0.5)' }}
       >
-        <div className="rounded-[29px] bg-gradient-to-b from-white via-[#FBF8FF] to-[#F3EBFF] p-4 sm:p-6 space-y-4">
+        <div className={`rounded-[29px] bg-gradient-to-b from-white via-[#FBF8FF] to-[#F3EBFF] p-4 sm:p-6 space-y-4 ${isFull ? 'addon-celebrate-inner' : ''}`}>
           {/* Header */}
           <div className="flex items-start justify-between gap-3">
             <div className="flex items-start gap-3 min-w-0">
@@ -78,7 +86,7 @@ export const AddOnActivities: React.FC<AddOnActivitiesProps> = ({ selectedRoute,
                 style={{ background: 'linear-gradient(135deg, #6366F1 0%, #9333EA 52%, #EC4899 100%)' }}
                 aria-hidden="true"
               >
-                2
+                3
               </span>
               <div className="min-w-0">
                 <h3 id="addons-heading" className="text-xl sm:text-2xl font-extrabold text-[#2A1450] leading-tight flex flex-wrap items-center gap-x-2.5 gap-y-1">
@@ -86,7 +94,7 @@ export const AddOnActivities: React.FC<AddOnActivitiesProps> = ({ selectedRoute,
                   <span className="px-2.5 py-0.5 rounded-full bg-[#EEE4FA] text-[#6D28D9] text-xs font-extrabold">ไม่บังคับ</span>
                 </h3>
                 <p className="text-xs sm:text-sm font-semibold text-[#4B2D78] leading-snug mt-0.5">
-                  ซื้อเป็นแพ็กเกจคุ้มกว่า เริ่มต้น 1,190 บาท · ครบทุกกิจกรรมเพียง {formatBaht(FULL_EXPERIENCE.price)} บาท
+                  เลือกครบ 3 กิจกรรมลดทันที 10% · เลือกได้อย่างเดียวก็ได้ ไม่ต้องวิ่ง
                 </p>
               </div>
             </div>
@@ -160,9 +168,9 @@ export const AddOnActivities: React.FC<AddOnActivitiesProps> = ({ selectedRoute,
             <div className="relative grid grid-cols-1 lg:grid-cols-12 gap-3 items-center">
               <div className="lg:col-span-7 space-y-1">
                 <p className="flex flex-wrap items-baseline gap-x-2 text-sm font-extrabold">
-                  <span>บัตร {ticket.name}</span>
+                  <span>บัตรวิ่ง {ticket.name} (รวมคอนเสิร์ต)</span>
                   <span className="tabular-nums">{formatBaht(ticketPrice)} บาท</span>
-                  {isDog && <span className="text-[11px] font-bold opacity-75">(ผู้วิ่ง 1 คน + น้องสุนัข 1 ตัว · เพิ่มคน/ตัวได้ในหน้าสมัคร)</span>}
+                  {isDog && <span className="text-[11px] font-bold opacity-75">(ผู้วิ่ง 1 คน + น้องสุนัข 1 ตัว · เพิ่มผู้ร่วมวิ่งได้ในหน้าสมัคร)</span>}
                 </p>
                 {picked ? (
                   <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
@@ -176,6 +184,9 @@ export const AddOnActivities: React.FC<AddOnActivitiesProps> = ({ selectedRoute,
                     </p>
                     <PeopleStepper value={value.people} onChange={(n) => onChange({ ...value, people: n })} dark={isFull} />
                     <span className="text-sm font-extrabold tabular-nums">= {formatBaht(addOnSum)} บาท</span>
+                    {bonus > 0 && (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#FFE268] text-[#2A1450] text-[11px] font-black border-2 border-[#2A1450]">🎉 ลด 10% −{formatBaht(bonus)}</span>
+                    )}
                   </div>
                 ) : (
                   <p className="flex items-center gap-2 text-xs font-bold opacity-80">
@@ -192,13 +203,24 @@ export const AddOnActivities: React.FC<AddOnActivitiesProps> = ({ selectedRoute,
                     <span className="text-sm font-bold ml-1">บาท</span>
                   </span>
                 </span>
-                <button
-                  type="button"
-                  onClick={onOpenRegister}
-                  className="btn-paw bg-[#FFC928] px-5 sm:px-7 py-3 text-sm sm:text-base min-h-[52px] text-[#2A1450] whitespace-nowrap"
-                >
-                  {picked ? 'สมัครต่อเลย' : `สมัคร ${ticket.distanceLabel}`}
-                </button>
+                <div className="flex flex-col gap-2 items-stretch">
+                  <button
+                    type="button"
+                    onClick={onOpenRegister}
+                    className="btn-paw bg-[#FFC928] px-5 sm:px-7 py-3 text-sm sm:text-base min-h-[52px] text-[#2A1450] whitespace-nowrap"
+                  >
+                    {picked ? 'สมัครวิ่ง + กิจกรรม' : `สมัคร ${ticket.distanceLabel}`}
+                  </button>
+                  {onOpenConcert && (
+                    <button
+                      type="button"
+                      onClick={onOpenConcert}
+                      className="min-h-[44px] px-4 py-2 rounded-2xl border-2 border-[#2A1450] bg-white/90 text-[#2A1450] text-xs sm:text-sm font-extrabold whitespace-nowrap cursor-pointer hover:bg-white"
+                    >
+                      🎶 ไม่วิ่ง · ตั๋วคอนเสิร์ต {formatBaht(CONCERT_PASS_PRICE)}฿{picked ? ' + กิจกรรม' : ''}
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -227,7 +249,7 @@ export const AddOnActivities: React.FC<AddOnActivitiesProps> = ({ selectedRoute,
                       <span className="font-bold text-[#2A1450]">FULL EXPERIENCE (ครบ 3 กิจกรรม)</span>
                       <span className="text-right shrink-0">
                         <span className="block font-extrabold text-[#7C3AED] tabular-nums">{formatBaht(FULL_EXPERIENCE.price)} บาท</span>
-                        <span className="block text-[11px] font-bold text-[#047857]">ประหยัด {FULL_EXPERIENCE.saving} บาท</span>
+                        <span className="block text-[11px] font-bold text-[#047857]">ประหยัด {FULL_EXPERIENCE.saving} บาท + ลดอีก 10% = {formatBaht(Math.round(FULL_EXPERIENCE.price * 0.9))} บาท</span>
                       </span>
                     </li>
                   </ul>

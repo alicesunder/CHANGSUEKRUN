@@ -21,6 +21,8 @@ export interface PublicConfig {
 }
 
 export type ServerOrder = TicketOrder & {
+  ticketType?: 'RUN' | 'CONCERT';
+  concertQty?: number;
   expiresAt: string;
   omiseChargeId?: string;
   omiseQrImageUrl?: string;
@@ -76,6 +78,9 @@ export interface CreateOrderInput {
   dogBreed?: string;
   extraRunnerNames?: string;
   privacyConsent: boolean;
+  /** RUN (default) = running ticket incl. concert; CONCERT = concert/entry pass only (no run, no BIB) */
+  ticketType?: 'RUN' | 'CONCERT';
+  concertQty?: number;
   /** Sponsor code: makes the registration free (run + concert). The server re-checks it. */
   sponsorCode?: string;
   /** Optional after-run activities; the server works out the price and seat limits itself. */
@@ -224,7 +229,28 @@ export interface SponsorCodeRow {
   createdAt: string;
 }
 
+export interface Winner {
+  id: string;
+  title: string;
+  name: string;
+  photo?: string;
+  note?: string;
+}
+
+export async function getWinners(): Promise<Winner[]> {
+  const res = await request<{ winners: Winner[] }>('/api/winners');
+  return res.winners;
+}
+
 export const adminApi = {
+  lookup: (q: string) => adminFetch<{ order: ServerOrder }>(`/api/admin/lookup?q=${encodeURIComponent(q)}`),
+  getWinners: () => adminFetch<{ winners: Winner[] }>('/api/admin/winners'),
+  saveWinners: (winners: Winner[]) =>
+    adminFetch<{ winners: Winner[] }>('/api/admin/winners', {
+      method: 'PUT',
+      headers: jsonHeaders,
+      body: JSON.stringify({ winners }),
+    }),
   listSponsorCodes: () => adminFetch<{ codes: SponsorCodeRow[] }>('/api/admin/sponsor-codes'),
   createSponsorCode: (input: { sponsorName: string; maxUses: number | null; code?: string; note?: string }) =>
     adminFetch<{ code: SponsorCodeRow }>('/api/admin/sponsor-codes', {

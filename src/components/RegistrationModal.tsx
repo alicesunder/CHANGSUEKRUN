@@ -38,6 +38,7 @@ import {
   Trophy,
   PartyPopper,
   Gift,
+  Music,
 } from 'lucide-react';
 import { RouteId } from '../types';
 import { DogCharacter, ElephantCharacter } from './brand/BrandCharacters';
@@ -64,6 +65,7 @@ import {
   ticketById,
   isDogCategory,
   calcTicketTotal,
+  CONCERT_PASS_PRICE,
   formatBaht,
 } from '../data/eventData';
 import {
@@ -75,7 +77,7 @@ import {
 } from '../utils/ticketEmailAndPrint';
 import { TicketPrintEmailModal } from './TicketPrintEmailModal';
 import { AddOnPicker } from './AddOnPicker';
-import { EMPTY_ADD_ONS, addOnLabel, addOnTotal, hasAddOns, type AddOnSelection } from '../data/addOns';
+import { EMPTY_ADD_ONS, addOnBonusDiscount, addOnLabel, addOnTotal, hasAddOns, type AddOnSelection } from '../data/addOns';
 
 interface RegistrationModalProps {
   isOpen: boolean;
@@ -84,6 +86,8 @@ interface RegistrationModalProps {
   initialExtraPeople?: number;
   initialExtraDogs?: number;
   initialAddOns?: AddOnSelection;
+  /** 'CONCERT' opens the concert-only pass (no run) */
+  initialMode?: 'RUN' | 'CONCERT';
   onRegistrationSuccess?: () => void;
   onOpenAdminModal?: () => void;
 }
@@ -209,11 +213,15 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
   initialExtraPeople = 0,
   initialExtraDogs = 0,
   initialAddOns,
+  initialMode = 'RUN',
   onRegistrationSuccess,
   onOpenAdminModal,
 }) => {
   const [selectedRoute, setSelectedRoute] = useState<RouteId>(initialRoute);
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
+  const [mode, setMode] = useState<'RUN' | 'CONCERT'>(initialMode);
+  const [concertQty, setConcertQty] = useState(1);
+  const isConcert = mode === 'CONCERT';
   const [extraPeople, setExtraPeople] = useState(0);
   const [extraDogs, setExtraDogs] = useState(0);
   const [addOns, setAddOns] = useState<AddOnSelection>(initialAddOns ? { ...initialAddOns } : { ...EMPTY_ADD_ONS });
@@ -268,15 +276,15 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
 
   const ticket = ticketById(selectedRoute);
   const theme = ROUTE_THEME[selectedRoute];
-  const isDog = isDogCategory(selectedRoute);
-  const ticketTotal = calcTicketTotal(selectedRoute, extraPeople, extraDogs);
+  const isDog = !isConcert && isDogCategory(selectedRoute);
+  const ticketTotal = isConcert ? CONCERT_PASS_PRICE * concertQty : calcTicketTotal(selectedRoute, extraPeople, extraDogs);
   const addOnSum = addOnTotal(addOns);
   const total = ticketTotal + addOnSum;
   // With a sponsor code the run is free; add-on activities are always paid.
   const chargeTotal = (sponsor ? 0 : ticketTotal) + addOnSum;
   const isFreeOrder = Boolean(sponsor) && addOnSum === 0;
   const dogCount = isDog ? 1 + extraDogs : 0;
-  const peopleCount = isDog ? 1 + extraPeople : 1;
+  const peopleCount = isConcert ? concertQty : isDog ? 1 + extraPeople : 1;
   // Amount to pay always comes from the server order once it exists.
   const payAmount = serverOrder?.totalPrice ?? total;
   const nextBibPreview = publicCfg?.nextBib?.[selectedRoute] ?? '—';
@@ -329,6 +337,8 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
     setExtraPeople(initialExtraPeople);
     setExtraDogs(initialExtraDogs);
     setAddOns(initialAddOns ? { ...initialAddOns } : { ...EMPTY_ADD_ONS });
+    setMode(initialMode);
+    setConcertQty(1);
     setServerOrder(null);
     setPendingRef(null);
     setFormError(null);
@@ -364,7 +374,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
     return () => {
       cancelled = true;
     };
-  }, [isOpen, initialRoute, initialExtraPeople, initialExtraDogs, initialAddOns]);
+  }, [isOpen, initialRoute, initialExtraPeople, initialExtraDogs, initialAddOns, initialMode]);
 
   // Close with Escape
   useEffect(() => {
@@ -489,13 +499,15 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
     try {
       const res = await createOrder({
         routeId: selectedRoute,
+        ticketType: mode,
+        concertQty: isConcert ? concertQty : undefined,
         extraPeople,
         extraDogs,
         fullName: fullName.trim(),
         phone: phone.trim(),
         email: email.trim(),
         emergencyPhone: emergencyPhone.trim(),
-        shirtSize,
+        shirtSize: isConcert ? '' : shirtSize,
         dogName: isDog ? dogName.trim() : undefined,
         dogBreed: isDog ? dogBreed.trim() : undefined,
         extraRunnerNames: extraPeople > 0 ? extraRunnerNames.trim() : undefined,
@@ -691,7 +703,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                   <span>CHANGSUEK RUN 2027 · SMART E-TICKET & AUTO-BIB</span>
                 </div>
                 <h2 className="text-lg sm:text-2xl font-black tracking-tight text-white leading-tight">
-                  สมัครวิ่ง & รับบัตรวิ่ง E-BIB
+                  {isConcert ? 'ซื้อตั๋วคอนเสิร์ต / เข้างาน' : 'สมัครวิ่ง & รับบัตรวิ่ง E-BIB'}
                 </h2>
               </div>
             </div>
@@ -762,6 +774,51 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
               {/* Left 7 cols: 4 Distance Selectors + Add-on Steppers */}
               <div className="lg:col-span-7 space-y-5">
+                <div role="tablist" aria-label="เลือกประเภทตั๋ว" className="grid grid-cols-2 gap-2 p-1.5 rounded-3xl bg-[#2A1450]/10 border-2 border-[#2A1450]/15">
+                  {([
+                    { id: 'RUN', emoji: '🏃', title: 'สมัครวิ่ง', sub: 'รวมคอนเสิร์ต' },
+                    { id: 'CONCERT', emoji: '🎶', title: 'ไม่วิ่ง · ตั๋วคอนเสิร์ต', sub: formatBaht(CONCERT_PASS_PRICE) + ' บาท / คน' },
+                  ] as const).map((m) => (
+                    <button
+                      key={m.id}
+                      type="button"
+                      role="tab"
+                      aria-selected={mode === m.id}
+                      onClick={() => setMode(m.id)}
+                      className={`min-h-[56px] rounded-2xl px-3 py-2 text-left border-2 transition-all cursor-pointer ${
+                        mode === m.id
+                          ? 'bg-[#2A1450] text-white border-[#2A1450] shadow-[0_4px_0_#FFC928] -translate-y-0.5'
+                          : 'bg-white text-[#2A1450] border-transparent hover:border-[#2A1450]/30'
+                      }`}
+                    >
+                      <span className="flex items-center gap-2 text-sm font-black"><span aria-hidden="true" className="text-lg">{m.emoji}</span>{m.title}</span>
+                      <span className={`block text-xs font-bold ${mode === m.id ? 'text-[#FFD84D]' : 'text-[#6B5A85]'}`}>{m.sub}</span>
+                    </button>
+                  ))}
+                </div>
+
+                {isConcert && (
+                  <div className="rounded-3xl bg-gradient-to-br from-[#241047] via-[#341866] to-[#4A1F8F] text-white border-[3px] border-[#2A1450] p-4 sm:p-5 space-y-3 shadow-[0_8px_0_#2A1450]">
+                    <div className="flex items-center gap-3">
+                      <span className="w-12 h-12 rounded-2xl bg-[#FFC928] text-2xl flex items-center justify-center" aria-hidden="true">🎶</span>
+                      <div>
+                        <h3 className="text-lg font-black leading-tight">ตั๋วคอนเสิร์ต / เข้างาน (ไม่วิ่ง)</h3>
+                        <p className="text-xs font-semibold text-white/80">สำหรับคนที่มาดูคอนเสิร์ตหรือเล่นกิจกรรมเสริมอย่างเดียว · ไม่มีเลข BIB และไม่มีเสื้อวิ่ง</p>
+                      </div>
+                    </div>
+                    <div className="rounded-2xl bg-white p-3 text-[#2A1450]">
+                      <Stepper
+                        label="จำนวนตั๋วคอนเสิร์ต"
+                        hint={`${formatBaht(CONCERT_PASS_PRICE)} บาท / คน`}
+                        value={concertQty}
+                        onChange={(n: number) => setConcertQty(Math.min(9, Math.max(1, n)))}
+                        icon={<Music className="w-5 h-5" />}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {!isConcert && (<>
                 <div>
                   <div className="flex items-center justify-between mb-2.5">
                     <span className="text-xs font-extrabold uppercase tracking-wider text-[#6D28D9]">
@@ -799,7 +856,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                     <div className="flex items-center justify-between">
                       <div className="text-xs font-extrabold uppercase tracking-wider text-[#261247] flex items-center gap-1.5">
                         <UserPlus className="w-4 h-4 text-[#6D28D9]" />
-                        <span>เพิ่มผู้ร่วมวิ่ง / น้องสุนัขเพิ่มในแพ็กเกจเดียวกัน</span>
+                        <span>เพิ่มผู้ร่วมวิ่งในแพ็กเกจเดียวกัน (น้องสุนัข 1 ตัวรวมในตั๋วแล้ว)</span>
                       </div>
                       <span className="text-[11px] font-bold text-[#6D28D9] bg-[#F3E8FF] px-2.5 py-0.5 rounded-full">
                         ตัวเลือกเสริม
@@ -813,19 +870,6 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                       onChange={setExtraPeople}
                       icon={<UserPlus className="w-5 h-5" />}
                     />
-                    <Stepper
-                      label="เพิ่มน้องสุนัขร่วมวิ่ง"
-                      hint={`+${formatBaht(ticket.extraDogPrice ?? ticket.addDogPrice ?? 1)} บาท / ตัว (รับผ้าพันคอ K9 เพิ่ม)`}
-                      value={extraDogs}
-                      onChange={setExtraDogs}
-                      icon={
-                        <img loading="lazy" decoding="async"
-                          src={LABRADOR_SVG_PATH}
-                          alt="Dog"
-                          className="w-7 h-7 object-contain"
-                        />
-                      }
-                    />
                   </div>
                 ) : (
                   <div className="rounded-2xl bg-white/90 border border-[#7B3FC6]/15 shadow-xs p-3.5 flex items-center gap-3 text-xs font-bold text-[#4B2D78]">
@@ -837,6 +881,8 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                     </span>
                   </div>
                 )}
+
+                </>)}
 
                 {/* Add-on activities (optional) */}
                 <div
@@ -871,16 +917,17 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                       <span className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-white/90 block">
                         SELECTED PASS SUMMARY
                       </span>
-                      <h3 className="text-xl font-black leading-tight mt-0.5">{ticket.name}</h3>
+                      <h3 className="text-xl font-black leading-tight mt-0.5">{isConcert ? 'ตั๋วคอนเสิร์ต / เข้างาน' : ticket.name}</h3>
                     </div>
                     <div className="relative z-10 flex items-center gap-2">
                       <span className="px-3 py-1 rounded-full bg-black/25 backdrop-blur-xs text-xs font-black border border-white/30">
-                        {ticket.distanceLabel}
+                        {isConcert ? 'CONCERT' : ticket.distanceLabel}
                       </span>
                     </div>
                   </div>
 
                   {/* Next Auto-BIB Preview Banner + Labrador Mascot */}
+                  {!isConcert && (
                   <div className="mx-4 mt-4 p-3 rounded-2xl bg-gradient-to-r from-[#FAF5FF] to-[#FFFBEB] border border-dashed border-[#8B5CF6]/50 flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2.5">
                       <img loading="lazy" decoding="async"
@@ -901,6 +948,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                       #{nextBibPreview}
                     </span>
                   </div>
+                  )}
 
                   {/* Breakdown */}
                   <div className="p-4 space-y-3">
@@ -912,15 +960,15 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                         <Clock className="w-3.5 h-3.5" /> ปล่อยตัว {theme.startTime}
                       </span>
                       <span className="inline-flex items-center gap-1 text-xs font-extrabold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-900">
-                        ผู้วิ่ง {peopleCount} คน {isDog ? `· น้องสุนัข ${dogCount} ตัว` : ''}
+                        {isConcert ? `ตั๋ว ${peopleCount} ใบ` : `ผู้วิ่ง ${peopleCount} คน ${isDog ? `· น้องสุนัข ${dogCount} ตัว` : ''}`}
                       </span>
                     </div>
 
                     <div className="space-y-1.5 pt-2 border-t border-[#261247]/10 text-xs font-bold text-[#4B2D78]">
                       <div className="flex justify-between">
-                        <span>ค่าสมัครหลัก ({ticket.distanceLabel})</span>
+                        <span>{isConcert ? `ตั๋วคอนเสิร์ต × ${concertQty}` : `ค่าสมัครหลัก (${ticket.distanceLabel})`}</span>
                         <span className="font-extrabold text-[#261247] tabular-nums">
-                          {formatBaht(ticket.basePrice)} บาท
+                          {formatBaht(isConcert ? CONCERT_PASS_PRICE * concertQty : ticket.basePrice)} บาท
                         </span>
                       </div>
                       {isDog && extraPeople > 0 && (
@@ -944,7 +992,13 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                           <span>
                             กิจกรรมเสริม: {addOnLabel(addOns)} × {addOns.people} คน
                           </span>
-                          <span className="font-extrabold text-[#261247] tabular-nums shrink-0">+{formatBaht(addOnSum)} บาท</span>
+                          <span className="font-extrabold text-[#261247] tabular-nums shrink-0">+{formatBaht(addOnSum + addOnBonusDiscount(addOns))} บาท</span>
+                        </div>
+                      )}
+                      {addOnBonusDiscount(addOns) > 0 && (
+                        <div className="flex justify-between gap-3 text-emerald-700">
+                          <span>🎉 ส่วนลดครบ 3 กิจกรรม (10%)</span>
+                          <span className="font-extrabold tabular-nums shrink-0">-{formatBaht(addOnBonusDiscount(addOns))} บาท</span>
                         </div>
                       )}
                     </div>
@@ -956,7 +1010,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                           ยอดชำระสุทธิ (PromptPay QR)
                         </span>
                         <span className="text-xs text-white/80 font-bold">
-                          รวมเสื้อวิ่ง + เหรียญ + E-BIB
+                          {isConcert ? 'ตั๋วเข้างาน + คอนเสิร์ต' : 'รวมเสื้อวิ่ง + เหรียญ + E-BIB'}
                         </span>
                       </div>
                       <div className="text-right">
@@ -995,17 +1049,17 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                       style={{ background: theme.headerGrad }}
                       className="px-3 py-1.5 rounded-xl text-white font-display font-black text-sm border border-[#2A1450]"
                     >
-                      {ticket.distanceLabel}
+                      {isConcert ? 'CONCERT' : ticket.distanceLabel}
                     </span>
                     <div>
                       <div className="flex flex-wrap items-center gap-2">
                         <span className="text-sm font-black text-[#2A1450]">
-                          ข้อมูลผู้สมัครวิ่ง ({ticket.name})
+                          {isConcert ? 'ข้อมูลผู้ซื้อตั๋วคอนเสิร์ต' : `ข้อมูลผู้สมัครวิ่ง (${ticket.name})`}
                         </span>
                       </div>
                       <div className="text-xs font-bold text-[#6B5A85] mt-0.5">
-                        ผู้วิ่ง {peopleCount} คน {isDog ? `· น้องสุนัข ${dogCount} ตัว` : ''} · เลข BIB ถัดไป (ออกจริงหลังชำระเงิน){' '}
-                        <strong className="font-mono text-[#6D28D9]">#{nextBibPreview}</strong>
+                        {isConcert ? <>ตั๋วคอนเสิร์ต {peopleCount} ใบ · เลขบัตรออกหลังชำระเงิน</> : <>ผู้วิ่ง {peopleCount} คน {isDog ? `· น้องสุนัข ${dogCount} ตัว` : ''} · เลข BIB ถัดไป (ออกจริงหลังชำระเงิน){' '}
+                        <strong className="font-mono text-[#6D28D9]">#{nextBibPreview}</strong></>}
                       </div>
                     </div>
                   </div>
@@ -1124,6 +1178,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                   {/* Right 5 cols: Shirt Size Visual Selector + Dog Info */}
                   <div className="lg:col-span-5 space-y-4">
                     {/* Interactive Shirt Size Grid */}
+                    {!isConcert && (
                     <div className="bg-white/95 rounded-3xl border-2 border-[#2A1450]/25 p-4 sm:p-5 shadow-xs">
                       <div className="flex items-center justify-between mb-3">
                         <span className="text-xs font-black uppercase tracking-wider text-[#2A1450] flex items-center gap-1.5">
@@ -1162,6 +1217,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                         })}
                       </div>
                     </div>
+                    )}
 
                     {/* Dog Buddy Details (if 1K / 3.8K) */}
                     {isDog && (
@@ -1765,7 +1821,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                     </motion.h3>
 
                     <p className="text-xs sm:text-sm font-bold text-white/85">
-                      คุณได้รับหมายเลข BIB ประจำตัวนักวิ่ง{' '}
+                      {isConcert ? 'คุณได้รับบัตรคอนเสิร์ตแล้ว' : 'คุณได้รับหมายเลข BIB ประจำตัวนักวิ่ง'}{' '}
                       <span className="font-mono font-black text-[#FFC928]">
                         #{createdOrder.bibNumber}
                       </span>{' '}
@@ -1807,7 +1863,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                   </div>
                   <div>
                     <div className="text-xs sm:text-sm font-black text-emerald-950">
-                      ชำระเงินสำเร็จ! เลข BIB ของคุณคือ #{createdOrder.bibNumber}
+                      ชำระเงินสำเร็จ! {isConcert ? 'เลขบัตรคอนเสิร์ตของคุณคือ' : 'เลข BIB ของคุณคือ'} #{createdOrder.bibNumber}
                     </div>
                     <p className="text-xs font-bold text-emerald-800 mt-0.5">
                       กรุณาดาวน์โหลดหรือพิมพ์บัตรเก็บไว้ และจดเลขคำสั่งซื้อ{' '}
@@ -1849,7 +1905,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                     <span className="text-lg font-black">{createdOrder.routeName}</span>
                   </div>
                   <span className="px-3.5 py-1 rounded-full bg-[#FFC928] text-[#2A1450] font-display font-black text-sm border-2 border-[#2A1450]">
-                    {ticket.distanceLabel}
+                    {isConcert ? 'CONCERT' : ticket.distanceLabel}
                   </span>
                 </div>
 
@@ -1858,7 +1914,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                     {/* Left 8 cols: BIB Number & Runner Details */}
                     <div className="md:col-span-8 text-center md:text-left">
                       <span className="text-[11px] font-extrabold uppercase tracking-[0.22em] text-[#6B5A85] block">
-                        ASSIGNED SEQUENTIAL BIB NUMBER / หมายเลขประจำตัวนักวิ่งของคุณ
+                        {isConcert ? 'CONCERT PASS NUMBER / เลขบัตรคอนเสิร์ตของคุณ' : 'ASSIGNED SEQUENTIAL BIB NUMBER / หมายเลขประจำตัวนักวิ่งของคุณ'}
                       </span>
 
                       <motion.div

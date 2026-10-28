@@ -1173,9 +1173,7 @@ export const ticketCategories: TicketCategory[] = [
     basePrice: 790,
     baseLabel: '1 คน + 1 น้องสุนัข',
     addPersonPrice: 450,
-    addDogPrice: 250,
     extraPersonPrice: 450,
-    extraDogPrice: 250,
     badge: 'เริ่มต้นง่าย',
     emoji: '🐶',
   },
@@ -1189,9 +1187,7 @@ export const ticketCategories: TicketCategory[] = [
     basePrice: 890,
     baseLabel: '1 คน + 1 น้องสุนัข',
     addPersonPrice: 500,
-    addDogPrice: 300,
     extraPersonPrice: 500,
-    extraDogPrice: 300,
     emoji: '🐕',
   },
 ];
@@ -1203,11 +1199,11 @@ export const isDogCategory = (id: RouteId) => ticketById(id).group === 'dog';
 
 export const formatBaht = (n: number) => `${n.toLocaleString('th-TH')}`;
 
-export const calcTicketTotal = (id: RouteId, extraPeople = 0, extraDogs = 0) => {
+/** Concert-only pass (no run): entry to the evening concert; add-on activities can be bought on top. */
+export const CONCERT_PASS_PRICE = 700;
+
+// Dog Run tickets cover 1 runner + 1 dog; extra dogs are no longer sold (extraDogs is ignored).
+export const calcTicketTotal = (id: RouteId, extraPeople = 0, _extraDogs = 0) => {
   const t = ticketById(id);
-  return (
-    t.basePrice +
-    extraPeople * (t.addPersonPrice ?? 0) +
-    extraDogs * (t.addDogPrice ?? 0)
-  );
+  return t.basePrice + extraPeople * (t.addPersonPrice ?? 0);
 };

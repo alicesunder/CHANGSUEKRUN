@@ -520,16 +520,22 @@ const TicketCard: React.FC<{
               >
                 <span className="text-[#4B2D78] flex items-center gap-1">
                   <Heart className="w-3 h-3 fill-rose-500 text-rose-500" />
-                  <span>เพิ่มคน/น้องสุนัขได้:</span>
+                  <span>เพิ่มคนวิ่งได้ (น้องสุนัข 1 ตัวรวมในตั๋ว):</span>
                 </span>
                 <span className="tabular-nums font-black" style={{ color: l.accentDark }}>
-                  +{t.addPersonPrice}฿/คน · +{t.addDogPrice}฿/ตัว
+                  +{t.addPersonPrice}฿/คน
                 </span>
               </div>
             ) : (
               <div className="mt-2.5 px-3 py-1.5 rounded-xl bg-white/75 border border-slate-200/70 flex items-center justify-between text-[11px] font-bold text-[#6B5A85]">
                 <span>เส้นทางมาตรฐาน:</span>
                 <span className="font-extrabold text-[#261247]">{l.elevationText}</span>
+              </div>
+            )}
+            {t.id === '10km' && (
+              <div className="mt-2 px-3 py-2 rounded-xl bg-[#FFF4D2] border-2 border-[#2A1450] text-xs font-extrabold text-[#2A1450] flex items-center gap-2">
+                <span aria-hidden="true" className="text-base">⏱️</span>
+                <span>ระยะ 10 กม. ติดชิปจับเวลา (Timing Chip) ทุกคน</span>
               </div>
             )}
           </div>
@@ -703,14 +709,13 @@ export const TicketSection: React.FC<TicketSectionProps> = ({
     const t = ticketById(active);
     const total =
       c.base * t.basePrice +
-      c.people * (t.addPersonPrice ?? 0) +
-      c.dogs * (t.addDogPrice ?? 0);
+      c.people * (t.addPersonPrice ?? 0);
     return {
       active,
       total,
       c,
       totalPeople: c.base > 0 ? 1 + c.people : 0,
-      totalDogs: c.base > 0 ? 1 + c.dogs : 0,
+      totalDogs: c.base > 0 ? 1 : 0,
     };
   }, [counts]);
 
@@ -745,15 +750,6 @@ export const TicketSection: React.FC<TicketSectionProps> = ({
         max: 9,
         Icon: UserPlus,
         color: '#7C3AED',
-      },
-      {
-        d,
-        field: 'dogs',
-        label: `Dog ${km} กม. เพิ่มน้องสุนัข`,
-        price: t.addDogPrice ?? 0,
-        max: 9,
-        Icon: PawIcon,
-        color: '#0F766E',
       }
     );
   });
@@ -776,11 +772,24 @@ export const TicketSection: React.FC<TicketSectionProps> = ({
               บัตรวิ่งโฉมใหม่
             </span>
             <h2 className="text-3xl sm:text-5xl font-bold text-[#261247] leading-tight">
-              เลือกบัตรวิ่งของคุณ
+              ซื้อบัตรของคุณ
             </h2>
             <p className="text-xs sm:text-sm font-semibold text-[#6B5A85] mt-0.5">
-              ดีไซน์บัตรใหม่สีสันสดใส กะทัดรัด แตะที่บัตรเพื่อเลือกระยะวิ่งที่ใช่
+              มี 3 ส่วน เลือกอย่างเดียวหรือครบทั้งหมดก็ได้ ไม่จำเป็นต้องวิ่ง
             </p>
+            <ol className="mt-2 flex flex-wrap gap-1.5 text-xs font-extrabold" aria-label="3 ส่วนของการซื้อบัตร">
+              {[
+                { n: 1, label: '🏃 วิ่ง', href: '#ticket-cards', bg: '#7B3FC6', fg: '#fff' },
+                { n: 2, label: '🎶 คอนเสิร์ต', href: '#concert-pass', bg: '#FFC928', fg: '#2A1450' },
+                { n: 3, label: '🎢 กิจกรรมเสริม', href: '#addons', bg: '#EC4899', fg: '#fff' },
+              ].map((c) => (
+                <li key={c.n}>
+                  <a href={c.href} className="inline-flex items-center gap-1.5 min-h-[44px] px-3.5 rounded-full border-2 border-[#2A1450] shadow-[0_3px_0_#2A1450]" style={{ background: c.bg, color: c.fg }}>
+                    <span className="tabular-nums">{c.n}.</span> {c.label}
+                  </a>
+                </li>
+              ))}
+            </ol>
           </div>
         </div>
 
@@ -836,6 +845,7 @@ export const TicketSection: React.FC<TicketSectionProps> = ({
 
       {/* ---------- 2. COMPACT LUMINOUS TICKET PASSES GRID (4-CARD ROW) ---------- */}
       <AnimatePresence mode="wait">
+        <span id="ticket-cards" className="block scroll-mt-24" aria-hidden="true" />
         {filterTab === 'all' ? (
           <motion.div
             key="all-4-cards"
