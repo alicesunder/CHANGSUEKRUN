@@ -40,6 +40,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   const navLinks = [
     { label: 'เกี่ยวกับงาน', href: '#objective' },
     { label: 'ระยะ & ราคา', href: '#distances' },
+    { label: 'กิจกรรมเสริม', href: '#addons' },
     { label: 'กำหนดการ & เส้นทาง', href: '#schedule-and-map' },
     { label: 'ที่พัก', href: '#hotels' },
     { label: 'ผู้สนับสนุน', href: '#sponsors' },
