@@ -138,10 +138,8 @@ export default function App() {
           onOpenRegister={handleOpenRegister}
           onOpenComparisonModal={() => setComparisonModalOpen(true)}
           onOpenPaceModal={() => setPaceModalOpen(true)}
+          afterTickets={<AddOnActivities onOpenRegister={(sel) => handleOpenRegister(undefined, undefined, sel)} />}
         />
-
-        {/* 5.5 กิจกรรมเสริมพร้อมงานวิ่งสุนัข (หอสูง / ยิงปืน / อุโมงค์ลม + แพ็กเกจ) */}
-        <AddOnActivities onOpenRegister={(sel) => handleOpenRegister(undefined, undefined, sel)} />
 
         {/* 6. 2-Column Side-by-Side: กำหนดการวันแข่งขัน (Left) & เส้นทางวิ่ง GPS Survey (Right) */}
         <LazySection id="schedule-and-map" minHeight={1100}>

@@ -10,6 +10,8 @@ interface RaceDistancesProps {
   onOpenRegister: (id?: RouteId, extras?: { people: number; dogs: number }) => void;
   onOpenComparisonModal?: () => void;
   onOpenPaceModal?: () => void;
+  /** Shown directly under the ticket cards (add-on activities) */
+  afterTickets?: React.ReactNode;
 }
 
 export const RaceDistances: React.FC<RaceDistancesProps> = ({
@@ -19,6 +21,7 @@ export const RaceDistances: React.FC<RaceDistancesProps> = ({
   onOpenRegister,
   onOpenComparisonModal,
   onOpenPaceModal,
+  afterTickets,
 }) => {
   return (
     <section
@@ -64,6 +67,8 @@ export const RaceDistances: React.FC<RaceDistancesProps> = ({
             ดูแผนที่เส้นทาง & จำลองการวิ่ง
           </button>
         </div>
+
+        {afterTickets}
 
         {/* Unified Showcase: เสื้อวิ่ง, เหรียญรางวัล Finisher & สิทธิประโยชน์ Race Pack */}
         <div id="merch-showcase" className="mt-10 sm:mt-14 scroll-mt-24">

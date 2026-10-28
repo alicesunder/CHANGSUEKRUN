@@ -839,9 +839,13 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                 )}
 
                 {/* Add-on activities (optional) */}
-                <div className="rounded-3xl bg-gradient-to-b from-[#FFF8DC] to-white border-[3px] border-[#2A1450] p-4 sm:p-5 shadow-[0_5px_0_#2A1450]">
+                <div
+                  className="rounded-[28px] p-[2px]"
+                  style={{ background: 'linear-gradient(135deg, #FF7A59 0%, #EC4899 30%, #9333EA 62%, #0EA5E9 100%)', boxShadow: '0 24px 48px -20px rgba(147, 51, 234, 0.45)' }}
+                >
+                <div className="rounded-[26px] bg-gradient-to-b from-white via-[#FBF8FF] to-[#F3EBFF] p-4 sm:p-5">
                   <div className="flex items-center gap-2.5 mb-3">
-                    <span className="w-10 h-10 rounded-2xl bg-[#FFC928] border-[3px] border-[#2A1450] flex items-center justify-center text-lg" aria-hidden="true">🎉</span>
+                    <span className="w-10 h-10 rounded-2xl flex items-center justify-center text-lg shadow-[0_8px_14px_-6px_rgba(245,158,11,0.6)]" style={{ background: 'linear-gradient(135deg, #FDE68A 0%, #FBBF24 55%, #FB923C 100%)' }} aria-hidden="true">🎉</span>
                     <div>
                       <h3 className="text-base font-black text-[#2A1450] leading-tight">เพิ่มความสนุกหลังวิ่ง · กิจกรรมเสริม</h3>
                       <p className="text-[11px] font-bold text-[#6F6878]">ไม่บังคับ · เลือกหลายอย่างได้ ยิ่งเลือกยิ่งคุ้ม</p>
@@ -853,6 +857,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                     onChange={setAddOns}
                     windTunnelRemaining={typeof publicCfg?.windTunnelRemaining === 'number' ? publicCfg.windTunnelRemaining : null}
                   />
+                </div>
                 </div>
               </div>
 
