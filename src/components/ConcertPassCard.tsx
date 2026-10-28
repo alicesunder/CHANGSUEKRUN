@@ -5,10 +5,12 @@ import { formatBaht } from '../data/addOns';
 
 interface ConcertPassCardProps {
   onBuy: () => void;
+  /** run ticket + concert ticket in one order */
+  onBuyWithRun?: () => void;
 }
 
-/** Step 2 of the buying block: the concert. Included in every run ticket; sold alone for those who don't run. */
-export const ConcertPassCard: React.FC<ConcertPassCardProps> = ({ onBuy }) => (
+/** Step 2 of the buying block: the concert. Sold on its own, or together with a run ticket and/or activities. */
+export const ConcertPassCard: React.FC<ConcertPassCardProps> = ({ onBuy, onBuyWithRun }) => (
   <div id="concert-pass" className="relative scroll-mt-24 mt-8 sm:mt-10">
     <div
       className="rounded-[32px] p-[3px]"
@@ -34,26 +36,37 @@ export const ConcertPassCard: React.FC<ConcertPassCardProps> = ({ onBuy }) => (
                 <span className="px-2.5 py-0.5 rounded-full bg-[#FFC928] text-[#2A1450] text-xs font-extrabold">หลัง 17.30 น.</span>
               </h3>
               <ul className="mt-2 space-y-1 text-sm font-semibold text-white/90">
-                <li className="flex gap-2"><Check className="w-4 h-4 mt-0.5 text-[#10B981] shrink-0" aria-hidden="true" /><span><strong>ตั๋ววิ่งทุกระยะ</strong> ได้เข้าคอนเสิร์ตฟรีอยู่แล้ว</span></li>
-                <li className="flex gap-2"><Check className="w-4 h-4 mt-0.5 text-[#10B981] shrink-0" aria-hidden="true" /><span>ไม่วิ่งก็ซื้อได้ · ซื้อตั๋วคอนเสิร์ตอย่างเดียว ไม่ต้องวิ่ง ไม่ต้องซื้อกิจกรรมเสริม</span></li>
+                <li className="flex gap-2"><Check className="w-4 h-4 mt-0.5 text-[#10B981] shrink-0" aria-hidden="true" /><span>ซื้อแยกเป็นอีกใบ จะวิ่งด้วยหรือไม่ก็ได้ · ซื้อกี่ใบก็ได้</span></li>
+                <li className="flex gap-2"><Check className="w-4 h-4 mt-0.5 text-[#10B981] shrink-0" aria-hidden="true" /><span>เลือกซื้อเฉพาะคอนเสิร์ต หรือผสมกับตั๋ววิ่งและกิจกรรมเสริมก็ได้</span></li>
               </ul>
             </div>
           </div>
           <div className="flex items-center justify-between sm:flex-col sm:items-end gap-3 shrink-0">
             <span className="text-right">
-              <span className="block text-[11px] font-bold text-white/75">ไม่วิ่ง · ตั๋วเข้างาน</span>
+              <span className="block text-[11px] font-bold text-white/75">ตั๋วเข้างาน</span>
               <span className="block text-4xl font-extrabold tabular-nums leading-none text-[#FFD84D] whitespace-nowrap">
                 {formatBaht(CONCERT_PASS_PRICE)}
                 <span className="text-sm font-bold ml-1 whitespace-nowrap">บาท/คน</span>
               </span>
             </span>
-            <button
-              type="button"
-              onClick={onBuy}
-              className="btn-paw bg-[#FFC928] px-5 sm:px-7 py-3 text-sm sm:text-base min-h-[52px] text-[#2A1450] whitespace-nowrap"
-            >
-              🎶 ซื้อตั๋วคอนเสิร์ต
-            </button>
+            <div className="flex flex-col gap-2 items-stretch">
+              <button
+                type="button"
+                onClick={onBuy}
+                className="btn-paw bg-[#FFC928] px-5 sm:px-7 py-3 text-sm sm:text-base min-h-[52px] text-[#2A1450] whitespace-nowrap"
+              >
+                🎶 ซื้อตั๋วคอนเสิร์ตอย่างเดียว
+              </button>
+              {onBuyWithRun && (
+                <button
+                  type="button"
+                  onClick={onBuyWithRun}
+                  className="min-h-[44px] px-4 py-2 rounded-2xl border-2 border-white/70 bg-white/10 text-white text-xs sm:text-sm font-extrabold whitespace-nowrap cursor-pointer hover:bg-white/20"
+                >
+                  🏃 + 🎶 ซื้อตั๋ววิ่ง + คอนเสิร์ต
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </div>

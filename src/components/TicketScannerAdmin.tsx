@@ -217,6 +217,7 @@ export const TicketScannerAdmin: React.FC = () => {
               <span className="block text-[11px] font-extrabold text-[#6F6878]">ประเภทตั๋ว</span>
               <span className="block font-extrabold text-[#2A1450] break-words">
                 {isConcertPass ? `ตั๋วคอนเสิร์ต × ${order.concertQty || 1}` : order.routeName}
+                {!isConcertPass && order.concertQty ? ` + ตั๋วคอนเสิร์ต × ${order.concertQty}` : ''}
               </span>
             </div>
             {!isConcertPass && order.shirtSize && (

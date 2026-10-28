@@ -234,7 +234,10 @@ export function createApp(): express.Express {
     }
     // Concert-only pass: no run, no BIB, no shirt (the run ticket already includes the concert)
     const routeId = (isConcert ? 'concert' : isAddonOnly ? 'addon' : b.routeId) as RouteId;
-    const concertQty = isConcert ? Math.min(9, Math.max(1, Math.floor(Number(b.concertQty) || 1))) : 0;
+    // Concert tickets are sold separately: alone, or together with a run ticket and/or activities.
+    // (A sponsor code already covers the run + one concert entry, so no extra concert tickets are charged with it.)
+    const wantedConcert = Math.min(9, Math.max(0, Math.floor(Number(b.concertQty) || 0)));
+    const concertQty = isConcert ? Math.max(1, wantedConcert) : !isAddonOnly && !sponsorCode ? wantedConcert : 0;
     if (isAddonOnly && !hasAddOns(addOns)) {
       res.status(400).json({ error: 'กรุณาเลือกกิจกรรมเสริมอย่างน้อย 1 อย่าง' });
       return;
@@ -277,7 +280,13 @@ export function createApp(): express.Express {
       sponsorName = used.sponsorName;
     }
 
-    const ticketTotal = isAddonOnly ? 0 : isConcert ? CONCERT_PASS_PRICE * concertQty : sponsorCode ? 0 : calcTicketTotal(routeId, extraPeople, extraDogs);
+    const ticketTotal = isAddonOnly
+      ? 0
+      : isConcert
+        ? CONCERT_PASS_PRICE * concertQty
+        : sponsorCode
+          ? 0
+          : calcTicketTotal(routeId, extraPeople, extraDogs) + CONCERT_PASS_PRICE * concertQty;
     const total = ticketTotal + addOnSum;
     const token = crypto.randomBytes(24).toString('base64url');
     const now = new Date();
@@ -294,7 +303,7 @@ export function createApp(): express.Express {
       routeId,
       routeName: isAddonOnly ? 'กิจกรรมเสริมอย่างเดียว (ไม่วิ่ง)' : isConcert ? 'ตั๋วคอนเสิร์ต / เข้างาน (ไม่วิ่ง)' : ticketById(routeId).name,
       ticketType: isAddonOnly ? 'ADDON' : isConcert ? 'CONCERT' : 'RUN',
-      concertQty: isConcert ? concertQty : undefined,
+      concertQty: concertQty > 0 ? concertQty : undefined,
       shirtSize,
       runningWithDog: isDog,
       dogName: isDog ? clean(b.dogName, 80) : undefined,

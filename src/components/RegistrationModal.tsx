@@ -88,6 +88,8 @@ interface RegistrationModalProps {
   initialAddOns?: AddOnSelection;
   /** 'CONCERT' opens the concert-only pass (no run) */
   initialMode?: 'RUN' | 'CONCERT' | 'ADDON';
+  /** with a run ticket: also tick the concert ticket */
+  initialConcert?: boolean;
   onRegistrationSuccess?: () => void;
   onOpenAdminModal?: () => void;
 }
@@ -214,20 +216,27 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
   initialExtraDogs = 0,
   initialAddOns,
   initialMode = 'RUN',
+  initialConcert = false,
   onRegistrationSuccess,
   onOpenAdminModal,
 }) => {
   const [selectedRoute, setSelectedRoute] = useState<RouteId>(initialRoute);
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
-  const [mode, setMode] = useState<'RUN' | 'CONCERT' | 'ADDON'>(initialMode);
+  // Three independent choices: any one, or any mix
+  const [wantRun, setWantRun] = useState(initialMode === 'RUN');
+  const [wantConcert, setWantConcert] = useState(initialMode === 'CONCERT' || initialConcert);
+  const [wantAddons, setWantAddons] = useState(initialMode === 'ADDON' || Boolean(initialAddOns));
+  const mode: 'RUN' | 'CONCERT' | 'ADDON' = wantRun ? 'RUN' : wantConcert ? 'CONCERT' : 'ADDON';
   const [concertQty, setConcertQty] = useState(1);
   const isConcert = mode === 'CONCERT';
   const isAddonOnly = mode === 'ADDON';
   const noRun = mode !== 'RUN';
   const [extraPeople, setExtraPeople] = useState(0);
   const [extraDogs, setExtraDogs] = useState(0);
-  const [addOns, setAddOns] = useState<AddOnSelection>(initialAddOns ? { ...initialAddOns } : { ...EMPTY_ADD_ONS });
-  const addonMissing = isAddonOnly && !hasAddOns(addOns);
+  const [addOnsState, setAddOns] = useState<AddOnSelection>(initialAddOns ? { ...initialAddOns } : { ...EMPTY_ADD_ONS });
+  const addOns: AddOnSelection = wantAddons ? addOnsState : { ...EMPTY_ADD_ONS };
+  // something must be chosen: a run, a concert ticket, or at least one activity
+  const addonMissing = !wantRun && !wantConcert && !hasAddOns(addOns);
 
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
@@ -280,12 +289,13 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
   const ticket = ticketById(selectedRoute);
   const theme = ROUTE_THEME[selectedRoute];
   const isDog = !noRun && isDogCategory(selectedRoute);
-  const ticketTotal = isAddonOnly ? 0 : isConcert ? CONCERT_PASS_PRICE * concertQty : calcTicketTotal(selectedRoute, extraPeople, extraDogs);
+  const ticketTotal = (wantRun ? calcTicketTotal(selectedRoute, extraPeople, extraDogs) : 0) + (wantConcert ? CONCERT_PASS_PRICE * concertQty : 0);
   const addOnSum = addOnTotal(addOns);
   const total = ticketTotal + addOnSum;
   // With a sponsor code the run is free; add-on activities are always paid.
-  const chargeTotal = (sponsor ? 0 : ticketTotal) + addOnSum;
-  const isFreeOrder = Boolean(sponsor) && addOnSum === 0;
+  const sponsorOn = Boolean(sponsor) && wantRun;
+  const chargeTotal = (sponsorOn ? 0 : ticketTotal) + addOnSum;
+  const isFreeOrder = sponsorOn && addOnSum === 0;
   const dogCount = isDog ? 1 + extraDogs : 0;
   const peopleCount = isAddonOnly ? addOns.people : isConcert ? concertQty : isDog ? 1 + extraPeople : 1;
   // Amount to pay always comes from the server order once it exists.
@@ -340,7 +350,9 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
     setExtraPeople(initialExtraPeople);
     setExtraDogs(initialExtraDogs);
     setAddOns(initialAddOns ? { ...initialAddOns } : { ...EMPTY_ADD_ONS });
-    setMode(initialMode);
+    setWantRun(initialMode === 'RUN');
+    setWantConcert(initialMode === 'CONCERT' || initialConcert);
+    setWantAddons(initialMode === 'ADDON' || Boolean(initialAddOns));
     setConcertQty(1);
     setServerOrder(null);
     setPendingRef(null);
@@ -377,7 +389,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
     return () => {
       cancelled = true;
     };
-  }, [isOpen, initialRoute, initialExtraPeople, initialExtraDogs, initialAddOns, initialMode]);
+  }, [isOpen, initialRoute, initialExtraPeople, initialExtraDogs, initialAddOns, initialMode, initialConcert]);
 
   // Close with Escape
   useEffect(() => {
@@ -503,7 +515,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
       const res = await createOrder({
         routeId: selectedRoute,
         ticketType: mode,
-        concertQty: isConcert ? concertQty : undefined,
+        concertQty: wantConcert ? concertQty : undefined,
         extraPeople,
         extraDogs,
         fullName: fullName.trim(),
@@ -515,7 +527,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
         dogBreed: isDog ? dogBreed.trim() : undefined,
         extraRunnerNames: extraPeople > 0 ? extraRunnerNames.trim() : undefined,
         privacyConsent,
-        sponsorCode: sponsor?.code,
+        sponsorCode: wantRun ? sponsor?.code : undefined,
         addOns: hasAddOns(addOns) ? addOns : undefined,
       });
       // Sponsor registrations are confirmed on the spot: skip the payment step.
@@ -777,37 +789,45 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
               {/* Left 7 cols: 4 Distance Selectors + Add-on Steppers */}
               <div className="lg:col-span-7 space-y-5">
-                <div role="tablist" aria-label="เลือกประเภทตั๋ว" className="grid grid-cols-1 sm:grid-cols-3 gap-2 p-1.5 rounded-3xl bg-[#2A1450]/10 border-2 border-[#2A1450]/15">
-                  {([
-                    { id: 'RUN', emoji: '🏃', title: 'ตั๋ววิ่ง', sub: 'รวมคอนเสิร์ต' },
-                    { id: 'CONCERT', emoji: '🎶', title: 'ตั๋วคอนเสิร์ต', sub: formatBaht(CONCERT_PASS_PRICE) + ' บาท / คน' },
-                    { id: 'ADDON', emoji: '🎢', title: 'กิจกรรมเสริม', sub: 'ซื้อเดี่ยวๆ ได้' },
-                  ] as const).map((m) => (
-                    <button
-                      key={m.id}
-                      type="button"
-                      role="tab"
-                      aria-selected={mode === m.id}
-                      onClick={() => setMode(m.id)}
-                      className={`min-h-[56px] rounded-2xl px-3 py-2 text-left border-2 transition-all cursor-pointer ${
-                        mode === m.id
-                          ? 'bg-[#2A1450] text-white border-[#2A1450] shadow-[0_4px_0_#FFC928] -translate-y-0.5'
-                          : 'bg-white text-[#2A1450] border-transparent hover:border-[#2A1450]/30'
-                      }`}
-                    >
-                      <span className="flex items-center gap-2 text-sm font-black"><span aria-hidden="true" className="text-lg">{m.emoji}</span>{m.title}</span>
-                      <span className={`block text-xs font-bold ${mode === m.id ? 'text-[#FFD84D]' : 'text-[#6B5A85]'}`}>{m.sub}</span>
-                    </button>
-                  ))}
+                <div role="group" aria-label="เลือกสิ่งที่ต้องการซื้อ (เลือกได้หลายอย่าง)" className="space-y-2">
+                  <p className="text-xs font-extrabold uppercase tracking-wider text-[#6D28D9]">เลือกสิ่งที่ต้องการซื้อ · ติ๊กได้ทั้งหมด หรืออย่างเดียวก็ได้</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    {([
+                      { key: 'run', emoji: '🏃', title: 'ตั๋ววิ่ง', sub: 'เลือกระยะด้านล่าง', on: wantRun, set: setWantRun },
+                      { key: 'concert', emoji: '🎶', title: 'ตั๋วคอนเสิร์ต', sub: formatBaht(CONCERT_PASS_PRICE) + ' บาท / คน', on: wantConcert, set: setWantConcert },
+                      { key: 'addon', emoji: '🎢', title: 'กิจกรรมเสริม', sub: 'หอสูง · ยิงปืน · อุโมงค์ลม', on: wantAddons, set: setWantAddons },
+                    ] as const).map((m) => (
+                      <button
+                        key={m.key}
+                        type="button"
+                        role="checkbox"
+                        aria-checked={m.on}
+                        onClick={() => m.set(!m.on)}
+                        className={`min-h-[64px] rounded-2xl px-3 py-2 text-left border-[3px] transition-all cursor-pointer flex items-center gap-2.5 ${
+                          m.on
+                            ? 'bg-[#2A1450] text-white border-[#2A1450] shadow-[0_4px_0_#FFC928] -translate-y-0.5'
+                            : 'bg-white text-[#2A1450] border-[#2A1450]/25 hover:border-[#2A1450]'
+                        }`}
+                      >
+                        <span className={`w-7 h-7 shrink-0 rounded-lg border-2 flex items-center justify-center ${m.on ? 'bg-[#FFC928] border-[#FFC928] text-[#2A1450]' : 'bg-white border-[#2A1450]/40 text-transparent'}`} aria-hidden="true">
+                          <Check className="w-4 h-4 stroke-[3.5]" />
+                        </span>
+                        <span className="min-w-0">
+                          <span className="flex items-center gap-1.5 text-sm font-black"><span aria-hidden="true" className="text-lg">{m.emoji}</span>{m.title}</span>
+                          <span className={`block text-xs font-bold ${m.on ? 'text-[#FFD84D]' : 'text-[#6B5A85]'}`}>{m.sub}</span>
+                        </span>
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
-                {isConcert && (
+                {wantConcert && (
                   <div className="rounded-3xl bg-gradient-to-br from-[#241047] via-[#341866] to-[#4A1F8F] text-white border-[3px] border-[#2A1450] p-4 sm:p-5 space-y-3 shadow-[0_8px_0_#2A1450]">
                     <div className="flex items-center gap-3">
                       <span className="w-12 h-12 rounded-2xl bg-[#FFC928] text-2xl flex items-center justify-center" aria-hidden="true">🎶</span>
                       <div>
-                        <h3 className="text-lg font-black leading-tight">ตั๋วคอนเสิร์ต / เข้างาน (ไม่วิ่ง)</h3>
-                        <p className="text-xs font-semibold text-white/80">สำหรับคนที่มาดูคอนเสิร์ตหรือเล่นกิจกรรมเสริมอย่างเดียว · ไม่มีเลข BIB และไม่มีเสื้อวิ่ง</p>
+                        <h3 className="text-lg font-black leading-tight">ตั๋วคอนเสิร์ต / เข้างาน</h3>
+                        <p className="text-xs font-semibold text-white/80">ซื้อกี่ใบก็ได้ (ผู้ชมไม่ต้องเป็นผู้วิ่ง) · ตั๋ววิ่งไม่รวมคอนเสิร์ต</p>
                       </div>
                     </div>
                     <div className="rounded-2xl bg-white p-3 text-[#2A1450]">
@@ -899,6 +919,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                 </>)}
 
                 {/* Add-on activities (optional) */}
+                {wantAddons && (
                 <div
                   className="rounded-[28px] p-[2px]"
                   style={{ background: 'linear-gradient(135deg, #FF7A59 0%, #EC4899 30%, #9333EA 62%, #0EA5E9 100%)', boxShadow: '0 24px 48px -20px rgba(147, 51, 234, 0.45)' }}
@@ -918,6 +939,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                   />
                 </div>
                 </div>
+                )}
               </div>
 
               {/* Right 5 cols: Live Pass Summary Card with Animated Labrador */}
@@ -979,12 +1001,18 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                     </div>
 
                     <div className="space-y-1.5 pt-2 border-t border-[#261247]/10 text-xs font-bold text-[#4B2D78]">
-                      <div className="flex justify-between">
-                        <span>{isAddonOnly ? 'ไม่ซื้อตั๋ววิ่ง/คอนเสิร์ต' : isConcert ? `ตั๋วคอนเสิร์ต × ${concertQty}` : `ค่าสมัครหลัก (${ticket.distanceLabel})`}</span>
-                        <span className="font-extrabold text-[#261247] tabular-nums">
-                          {formatBaht(isAddonOnly ? 0 : isConcert ? CONCERT_PASS_PRICE * concertQty : ticket.basePrice)} บาท
-                        </span>
-                      </div>
+                      {wantRun && (
+                        <div className="flex justify-between">
+                          <span>{`ค่าสมัครหลัก (${ticket.distanceLabel})`}</span>
+                          <span className="font-extrabold text-[#261247] tabular-nums">{formatBaht(ticket.basePrice)} บาท</span>
+                        </div>
+                      )}
+                      {wantConcert && (
+                        <div className="flex justify-between">
+                          <span>{`ตั๋วคอนเสิร์ต × ${concertQty}`}</span>
+                          <span className="font-extrabold text-[#261247] tabular-nums">{formatBaht(CONCERT_PASS_PRICE * concertQty)} บาท</span>
+                        </div>
+                      )}
                       {isDog && extraPeople > 0 && (
                         <div className="flex justify-between">
                           <span>ผู้ร่วมวิ่งเพิ่ม × {extraPeople} คน</span>
@@ -1041,7 +1069,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                       disabled={addonMissing}
                       className="disabled:opacity-50 disabled:cursor-not-allowed w-full py-3.5 px-5 rounded-2xl bg-gradient-to-r from-[#FFE268] via-[#FFC928] to-[#F59E0B] hover:brightness-105 text-[#261247] font-black text-base border-2 border-[#261247] luminous-pill-btn active:translate-y-0.5 transition-all flex items-center justify-center gap-2 cursor-pointer"
                     >
-                      <span>{addonMissing ? 'เลือกกิจกรรมเสริมอย่างน้อย 1 อย่างก่อน' : 'ดำเนินการต่อ · กรอกข้อมูลผู้สมัคร'}</span>
+                      <span>{addonMissing ? 'เลือกอย่างน้อย 1 อย่างก่อน (วิ่ง / คอนเสิร์ต / กิจกรรม)' : 'ดำเนินการต่อ · กรอกข้อมูลผู้สมัคร'}</span>
                       <ArrowRight className="w-5 h-5 stroke-[2.5]" />
                     </button>
                   </div>
@@ -1287,6 +1315,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                 </div>
 
                 {/* Sponsor code */}
+                {wantRun && (
                 <div className="relative z-10 rounded-2xl bg-[#FFF8DC] border-2 border-[#F5B800] p-3.5 sm:p-4">
                   <div className="flex items-center gap-2 mb-2">
                     <span className="w-8 h-8 rounded-xl bg-[#FFC928] text-[#2A1450] flex items-center justify-center shrink-0">
@@ -1358,6 +1387,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                     </p>
                   )}
                 </div>
+                )}
 
                 {/* PDPA & Data Encryption Protection Banner */}
                 <div className="rounded-2xl bg-emerald-50/90 border-2 border-emerald-400/70 p-3.5 flex flex-wrap items-center justify-between gap-3 text-xs relative z-10">

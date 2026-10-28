@@ -96,7 +96,7 @@ export const AddOnActivities: React.FC<AddOnActivitiesProps> = ({ selectedRoute,
                   <span className="px-2.5 py-0.5 rounded-full bg-[#EEE4FA] text-[#6D28D9] text-xs font-extrabold">ไม่บังคับ</span>
                 </h3>
                 <p className="text-xs sm:text-sm font-semibold text-[#4B2D78] leading-snug mt-0.5">
-                  เลือกครบ 3 กิจกรรมลดทันที 10% · ซื้อกิจกรรมอย่างเดียวก็ได้ ไม่ต้องซื้อตั๋วอื่น
+                  เลือกครบ 3 กิจกรรมลดทันที 10% · ซื้อกิจกรรมอย่างเดียว หรือผสมกับตั๋ววิ่ง/คอนเสิร์ตก็ได้
                 </p>
               </div>
             </div>
@@ -170,7 +170,7 @@ export const AddOnActivities: React.FC<AddOnActivitiesProps> = ({ selectedRoute,
             <div className="relative grid grid-cols-1 lg:grid-cols-12 gap-3 items-center">
               <div className="lg:col-span-7 space-y-1">
                 <p className="flex flex-wrap items-baseline gap-x-2 text-sm font-extrabold">
-                  <span>บัตรวิ่ง {ticket.name} (รวมคอนเสิร์ต)</span>
+                  <span>บัตรวิ่ง {ticket.name}</span>
                   <span className="tabular-nums">{formatBaht(ticketPrice)} บาท</span>
                   {isDog && <span className="text-[11px] font-bold opacity-75">(ผู้วิ่ง 1 คน + น้องสุนัข 1 ตัว · เพิ่มผู้ร่วมวิ่งได้ในหน้าสมัคร)</span>}
                 </p>

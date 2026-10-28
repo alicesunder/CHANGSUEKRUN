@@ -64,6 +64,7 @@ export default function App() {
   const [registerTargetRoute, setRegisterTargetRoute] = useState<RouteId>('5km');
   const [registerExtras, setRegisterExtras] = useState({ people: 0, dogs: 0 });
   const [registerMode, setRegisterMode] = useState<'RUN' | 'CONCERT' | 'ADDON'>('RUN');
+  const [registerConcert, setRegisterConcert] = useState(false);
   const [registerAddOns, setRegisterAddOns] = useState<AddOnSelection | undefined>(undefined);
   // Activities chosen in the block under the ticket cards; every "register" button carries them into the form
   const [pageAddOns, setPageAddOns] = useState<AddOnSelection>({ ...EMPTY_ADD_ONS });
@@ -103,6 +104,7 @@ export default function App() {
 
   const handleOpenRegister = (distance?: RouteId, extras?: { people: number; dogs: number }, addOns?: AddOnSelection) => {
     setRegisterMode('RUN');
+    setRegisterConcert(false);
     setRegisterExtras(extras ?? { people: 0, dogs: 0 });
     setRegisterAddOns(addOns ?? (hasAddOns(pageAddOns) ? pageAddOns : undefined));
     if (distance) {
@@ -116,14 +118,22 @@ export default function App() {
   // Concert-only pass (no run), optionally with the activities chosen on the page
   const handleOpenConcert = () => {
     setRegisterMode('CONCERT');
+    setRegisterConcert(false);
     setRegisterExtras({ people: 0, dogs: 0 });
     setRegisterAddOns(hasAddOns(pageAddOns) ? pageAddOns : undefined);
     setRegisterModalOpen(true);
   };
 
+  // Run ticket + concert ticket in one order
+  const handleOpenRunWithConcert = () => {
+    handleOpenRegister(selectedRoute);
+    setRegisterConcert(true);
+  };
+
   // Activities only: no run ticket, no concert ticket
   const handleOpenAddonOnly = () => {
     setRegisterMode('ADDON');
+    setRegisterConcert(false);
     setRegisterExtras({ people: 0, dogs: 0 });
     setRegisterAddOns(hasAddOns(pageAddOns) ? pageAddOns : undefined);
     setRegisterModalOpen(true);
@@ -174,7 +184,7 @@ export default function App() {
           onOpenPaceModal={() => setPaceModalOpen(true)}
           afterTickets={
             <>
-              <ConcertPassCard onBuy={handleOpenConcert} />
+              <ConcertPassCard onBuy={handleOpenConcert} onBuyWithRun={handleOpenRunWithConcert} />
               <AddOnActivities
                 selectedRoute={selectedRoute}
                 value={pageAddOns}
@@ -315,6 +325,7 @@ export default function App() {
           initialExtraDogs={registerExtras.dogs}
           initialAddOns={registerAddOns}
           initialMode={registerMode}
+          initialConcert={registerConcert}
           onClose={() => setRegisterModalOpen(false)}
           onRegistrationSuccess={() => {
             setRegisterModalOpen(false);

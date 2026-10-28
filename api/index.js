@@ -29075,7 +29075,8 @@ function createApp() {
       return;
     }
     const routeId = isConcert ? "concert" : isAddonOnly ? "addon" : b.routeId;
-    const concertQty = isConcert ? Math.min(9, Math.max(1, Math.floor(Number(b.concertQty) || 1))) : 0;
+    const wantedConcert = Math.min(9, Math.max(0, Math.floor(Number(b.concertQty) || 0)));
+    const concertQty = isConcert ? Math.max(1, wantedConcert) : !isAddonOnly && !sponsorCode ? wantedConcert : 0;
     if (isAddonOnly && !hasAddOns(addOns)) {
       res.status(400).json({ error: "\u0E01\u0E23\u0E38\u0E13\u0E32\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E01\u0E34\u0E08\u0E01\u0E23\u0E23\u0E21\u0E40\u0E2A\u0E23\u0E34\u0E21\u0E2D\u0E22\u0E48\u0E32\u0E07\u0E19\u0E49\u0E2D\u0E22 1 \u0E2D\u0E22\u0E48\u0E32\u0E07" });
       return;
@@ -29112,7 +29113,7 @@ function createApp() {
       }
       sponsorName = used.sponsorName;
     }
-    const ticketTotal = isAddonOnly ? 0 : isConcert ? CONCERT_PASS_PRICE * concertQty : sponsorCode ? 0 : calcTicketTotal(routeId, extraPeople, extraDogs);
+    const ticketTotal = isAddonOnly ? 0 : isConcert ? CONCERT_PASS_PRICE * concertQty : sponsorCode ? 0 : calcTicketTotal(routeId, extraPeople, extraDogs) + CONCERT_PASS_PRICE * concertQty;
     const total = ticketTotal + addOnSum;
     const token = crypto3.randomBytes(24).toString("base64url");
     const now = /* @__PURE__ */ new Date();
@@ -29128,7 +29129,7 @@ function createApp() {
       routeId,
       routeName: isAddonOnly ? "\u0E01\u0E34\u0E08\u0E01\u0E23\u0E23\u0E21\u0E40\u0E2A\u0E23\u0E34\u0E21\u0E2D\u0E22\u0E48\u0E32\u0E07\u0E40\u0E14\u0E35\u0E22\u0E27 (\u0E44\u0E21\u0E48\u0E27\u0E34\u0E48\u0E07)" : isConcert ? "\u0E15\u0E31\u0E4B\u0E27\u0E04\u0E2D\u0E19\u0E40\u0E2A\u0E34\u0E23\u0E4C\u0E15 / \u0E40\u0E02\u0E49\u0E32\u0E07\u0E32\u0E19 (\u0E44\u0E21\u0E48\u0E27\u0E34\u0E48\u0E07)" : ticketById(routeId).name,
       ticketType: isAddonOnly ? "ADDON" : isConcert ? "CONCERT" : "RUN",
-      concertQty: isConcert ? concertQty : void 0,
+      concertQty: concertQty > 0 ? concertQty : void 0,
       shirtSize,
       runningWithDog: isDog,
       dogName: isDog ? clean(b.dogName, 80) : void 0,
