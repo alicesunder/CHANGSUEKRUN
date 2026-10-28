@@ -2,6 +2,7 @@
  * Browser-side API client. The server is the source of truth for prices,
  * payment status, BIB numbers and admin access.
  */
+import type { AddOnSelection } from '../data/addOns';
 import type { RouteId } from '../types';
 import type { TicketOrder } from './runnerStorage';
 
@@ -12,6 +13,9 @@ export interface PublicConfig {
   bankAccountNo: string;
   paymentTimeoutMinutes: number;
   nextBib: Record<RouteId, string>;
+  /** Wind-tunnel seats (limited) */
+  windTunnelLimit?: number;
+  windTunnelRemaining?: number;
   /** false until the organiser configures Omise — registration is closed until then */
   paymentReady: boolean;
 }
@@ -74,6 +78,8 @@ export interface CreateOrderInput {
   privacyConsent: boolean;
   /** Sponsor code: makes the registration free (run + concert). The server re-checks it. */
   sponsorCode?: string;
+  /** Optional after-run activities; the server works out the price and seat limits itself. */
+  addOns?: AddOnSelection;
 }
 
 const PENDING_KEY = 'changsuek_pending_order_v2';

@@ -24,7 +24,7 @@ import {
   deleteUnusedSponsorCode,
   generateSponsorCode,
   hashToken,
-  insertOrder,
+  insertOrderChecked,
   isRefUsed,
   listOrders,
   listSponsorCodes,
@@ -43,10 +43,12 @@ import {
   tokenMatches,
   updateOrder,
   updateSponsorCode,
+  windTunnelSeatsUsed,
   formatBib,
   ROUTES,
   type StoredOrder,
 } from './store';
+import { WIND_TUNNEL_LIMIT, addOnLabel, addOnPricePerPerson, addOnTotal, hasAddOns, normalizeAddOns } from '../src/data/addOns';
 import { checkCredentials, issueToken, requireAdmin } from './auth';
 import { createOmiseCharge, fetchOmiseQrImage, fetchVerifiedOmiseCharge, omiseKeyMode } from './payments';
 
@@ -127,8 +129,10 @@ async function nextBibPreview() {
 }
 
 async function publicConfig() {
-  const [s, nextBib, key] = await Promise.all([getSettings(), nextBibPreview(), getOmiseKey()]);
+  const [s, nextBib, key, windUsed] = await Promise.all([getSettings(), nextBibPreview(), getOmiseKey(), windTunnelSeatsUsed()]);
   return {
+    windTunnelLimit: WIND_TUNNEL_LIMIT,
+    windTunnelRemaining: Math.max(0, WIND_TUNNEL_LIMIT - windUsed),
     promptPayId: s.promptPayId,
     accountName: s.accountName,
     bankLabel: s.bankLabel,
@@ -206,8 +210,11 @@ export function createApp(): express.Express {
       res.status(400).json({ error: SPONSOR_INVALID_MSG });
       return;
     }
-    // A sponsor registration is free, so it doesn't need the payment gateway.
-    if (!sponsorCode && !(await getOmiseKey())) {
+    // Add-on activities are always paid (a sponsor code only covers the run + concert).
+    const addOns = normalizeAddOns(b.addOns);
+    const addOnSum = addOnTotal(addOns);
+    // A fully free sponsor registration doesn't need the payment gateway.
+    if ((!sponsorCode || addOnSum > 0) && !(await getOmiseKey())) {
       res.status(503).json({ error: 'ระบบชำระเงินยังไม่เปิดใช้งาน กรุณาติดต่อผู้จัดงาน' });
       return;
     }
@@ -249,7 +256,8 @@ export function createApp(): express.Express {
       sponsorName = used.sponsorName;
     }
 
-    const total = sponsorCode ? 0 : calcTicketTotal(routeId, extraPeople, extraDogs);
+    const ticketTotal = sponsorCode ? 0 : calcTicketTotal(routeId, extraPeople, extraDogs);
+    const total = ticketTotal + addOnSum;
     const token = crypto.randomBytes(24).toString('base64url');
     const now = new Date();
     const settings = await getSettings();
@@ -278,6 +286,9 @@ export function createApp(): express.Express {
       paymentMethod: sponsorCode ? 'SPONSOR_CODE' : 'PROMPTPAY_QR',
       sponsorCode: sponsorCode || undefined,
       sponsorName: sponsorName || undefined,
+      addOns: hasAddOns(addOns)
+        ? { ...addOns, pricePerPerson: addOnPricePerPerson(addOns), total: addOnSum, label: addOnLabel(addOns) }
+        : undefined,
       paymentStatus: 'PENDING',
       paymentRef: '',
       senderBank: '',
@@ -290,14 +301,26 @@ export function createApp(): express.Express {
       createdAt: now.toISOString(),
       expiresAt: new Date(now.getTime() + timeoutMin * 60 * 1000).toISOString(),
     };
+    let seats: { ok: true } | { ok: false; remaining: number };
     try {
-      await insertOrder(order);
+      seats = await insertOrderChecked(order, WIND_TUNNEL_LIMIT);
     } catch (err) {
       if (sponsorCode) await releaseSponsorCode(sponsorCode).catch(() => {});
       throw err;
     }
+    if (!seats.ok) {
+      if (sponsorCode) await releaseSponsorCode(sponsorCode).catch(() => {});
+      res.status(409).json({
+        error:
+          seats.remaining > 0
+            ? `อุโมงค์ลมเหลือ ${seats.remaining} ที่ กรุณาลดจำนวนคนหรือเอาอุโมงค์ลมออก`
+            : `อุโมงค์ลมเต็มแล้ว (ครบ ${WIND_TUNNEL_LIMIT} ท่าน)`,
+        windTunnelRemaining: seats.remaining,
+      });
+      return;
+    }
 
-    if (sponsorCode) {
+    if (sponsorCode && total === 0) {
       // Free registration: confirm immediately (the BIB is assigned here, like a paid order).
       let paid: StoredOrder | undefined;
       try {

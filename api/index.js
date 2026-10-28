@@ -28480,12 +28480,27 @@ async function writeOrder(q, o) {
     [o.orderId, o.accessTokenHash, o.routeId, o.paymentStatus, o.verificationStatus, o.bibNumber || "", o.omiseChargeId || null, JSON.stringify(o)]
   );
 }
-async function insertOrder(o) {
-  await dbQuery(
-    `insert into csr.orders (order_id, token_hash, route_id, payment_status, verification_status, bib_number, omise_charge_id, created_at, data)
-     values ($1, $2, $3, $4, $5, $6, $7, $8, $9::jsonb)`,
-    [o.orderId, o.accessTokenHash, o.routeId, o.paymentStatus, o.verificationStatus, o.bibNumber || "", o.omiseChargeId || null, o.createdAt, JSON.stringify(o)]
-  );
+var INSERT_ORDER_SQL = `insert into csr.orders (order_id, token_hash, route_id, payment_status, verification_status, bib_number, omise_charge_id, created_at, data)
+     values ($1, $2, $3, $4, $5, $6, $7, $8, $9::jsonb)`;
+var orderParams = (o) => [o.orderId, o.accessTokenHash, o.routeId, o.paymentStatus, o.verificationStatus, o.bibNumber || "", o.omiseChargeId || null, o.createdAt, JSON.stringify(o)];
+var WIND_TUNNEL_USED_SQL = `select coalesce(sum((data->'addOns'->>'people')::int), 0)::text as n from csr.orders
+  where data->'addOns'->>'windTunnel' = 'true'
+    and (payment_status = 'PAID' or (data->>'expiresAt')::timestamptz > now())`;
+async function windTunnelSeatsUsed() {
+  const rows = await dbQuery(WIND_TUNNEL_USED_SQL);
+  return Number(rows[0]?.n ?? 0);
+}
+async function insertOrderChecked(o, windTunnelLimit) {
+  return dbTx(async (q) => {
+    if (o.addOns?.windTunnel) {
+      await q("select pg_advisory_xact_lock(727001)");
+      const rows = await q(WIND_TUNNEL_USED_SQL);
+      const used = Number(rows[0]?.n ?? 0);
+      if (used + o.addOns.people > windTunnelLimit) return { ok: false, remaining: Math.max(0, windTunnelLimit - used) };
+    }
+    await q(INSERT_ORDER_SQL, orderParams(o));
+    return { ok: true };
+  });
 }
 async function getOrder(orderId) {
   const rows = await dbQuery("select data from csr.orders where order_id = $1", [orderId]);
@@ -28669,6 +28684,53 @@ function toRunnerView(o) {
 function toAdminView(o) {
   const { accessTokenHash, slipFile, ...rest } = o;
   return { ...rest, hasSlip: Boolean(slipFile) };
+}
+
+// src/data/addOns.ts
+var EMPTY_ADD_ONS = { tower: false, gun: "none", windTunnel: false, people: 1 };
+var MAX_ADD_ON_PEOPLE = 9;
+var WIND_TUNNEL_LIMIT = 60;
+var COMBO_PRICES = {
+  T: 350,
+  S: 890,
+  P: 1950,
+  W: 990,
+  TS: 1190,
+  TW: 1190,
+  SW: 1690,
+  TSW: 1990,
+  TP: 2250,
+  PW: 2750,
+  TPW: 3050
+};
+var hasAddOns = (s) => s.tower || s.gun !== "none" || s.windTunnel;
+function comboKey(s) {
+  return (s.tower ? "T" : "") + (s.gun === "standard" ? "S" : s.gun === "premium" ? "P" : "") + (s.windTunnel ? "W" : "");
+}
+function addOnPricePerPerson(s) {
+  return COMBO_PRICES[comboKey(s)] ?? 0;
+}
+function addOnTotal(s) {
+  return hasAddOns(s) ? addOnPricePerPerson(s) * s.people : 0;
+}
+function addOnLabel(s) {
+  const parts = [];
+  if (s.tower) parts.push("\u0E2B\u0E2D\u0E2A\u0E39\u0E07");
+  if (s.gun === "standard") parts.push("\u0E22\u0E34\u0E07\u0E1B\u0E37\u0E19 Standard");
+  if (s.gun === "premium") parts.push("\u0E22\u0E34\u0E07\u0E1B\u0E37\u0E19 Premium");
+  if (s.windTunnel) parts.push("\u0E2D\u0E38\u0E42\u0E21\u0E07\u0E04\u0E4C\u0E25\u0E21");
+  return parts.join(" + ");
+}
+function normalizeAddOns(raw) {
+  const r = raw && typeof raw === "object" ? raw : {};
+  const gun = r.gun === "standard" || r.gun === "premium" ? r.gun : "none";
+  const sel = {
+    tower: r.tower === true,
+    gun,
+    windTunnel: r.windTunnel === true,
+    people: Math.min(MAX_ADD_ON_PEOPLE, Math.max(1, Math.floor(Number(r.people) || 1)))
+  };
+  return hasAddOns(sel) ? sel : { ...EMPTY_ADD_ONS };
 }
 
 // server/auth.ts
@@ -28909,8 +28971,10 @@ async function nextBibPreview() {
   return Object.fromEntries(ROUTE_IDS.map((r) => [r, formatBib(r, (counters[r] || 0) + 1)]));
 }
 async function publicConfig() {
-  const [s, nextBib, key] = await Promise.all([getSettings(), nextBibPreview(), getOmiseKey()]);
+  const [s, nextBib, key, windUsed] = await Promise.all([getSettings(), nextBibPreview(), getOmiseKey(), windTunnelSeatsUsed()]);
   return {
+    windTunnelLimit: WIND_TUNNEL_LIMIT,
+    windTunnelRemaining: Math.max(0, WIND_TUNNEL_LIMIT - windUsed),
     promptPayId: s.promptPayId,
     accountName: s.accountName,
     bankLabel: s.bankLabel,
@@ -28972,7 +29036,9 @@ function createApp() {
       res.status(400).json({ error: SPONSOR_INVALID_MSG });
       return;
     }
-    if (!sponsorCode && !await getOmiseKey()) {
+    const addOns = normalizeAddOns(b.addOns);
+    const addOnSum = addOnTotal(addOns);
+    if ((!sponsorCode || addOnSum > 0) && !await getOmiseKey()) {
       res.status(503).json({ error: "\u0E23\u0E30\u0E1A\u0E1A\u0E0A\u0E33\u0E23\u0E30\u0E40\u0E07\u0E34\u0E19\u0E22\u0E31\u0E07\u0E44\u0E21\u0E48\u0E40\u0E1B\u0E34\u0E14\u0E43\u0E0A\u0E49\u0E07\u0E32\u0E19 \u0E01\u0E23\u0E38\u0E13\u0E32\u0E15\u0E34\u0E14\u0E15\u0E48\u0E2D\u0E1C\u0E39\u0E49\u0E08\u0E31\u0E14\u0E07\u0E32\u0E19" });
       return;
     }
@@ -29009,7 +29075,8 @@ function createApp() {
       }
       sponsorName = used.sponsorName;
     }
-    const total = sponsorCode ? 0 : calcTicketTotal(routeId, extraPeople, extraDogs);
+    const ticketTotal = sponsorCode ? 0 : calcTicketTotal(routeId, extraPeople, extraDogs);
+    const total = ticketTotal + addOnSum;
     const token = crypto3.randomBytes(24).toString("base64url");
     const now = /* @__PURE__ */ new Date();
     const settings = await getSettings();
@@ -29037,6 +29104,7 @@ function createApp() {
       paymentMethod: sponsorCode ? "SPONSOR_CODE" : "PROMPTPAY_QR",
       sponsorCode: sponsorCode || void 0,
       sponsorName: sponsorName || void 0,
+      addOns: hasAddOns(addOns) ? { ...addOns, pricePerPerson: addOnPricePerPerson(addOns), total: addOnSum, label: addOnLabel(addOns) } : void 0,
       paymentStatus: "PENDING",
       paymentRef: "",
       senderBank: "",
@@ -29049,14 +29117,24 @@ function createApp() {
       createdAt: now.toISOString(),
       expiresAt: new Date(now.getTime() + timeoutMin * 60 * 1e3).toISOString()
     };
+    let seats;
     try {
-      await insertOrder(order);
+      seats = await insertOrderChecked(order, WIND_TUNNEL_LIMIT);
     } catch (err) {
       if (sponsorCode) await releaseSponsorCode(sponsorCode).catch(() => {
       });
       throw err;
     }
-    if (sponsorCode) {
+    if (!seats.ok) {
+      if (sponsorCode) await releaseSponsorCode(sponsorCode).catch(() => {
+      });
+      res.status(409).json({
+        error: seats.remaining > 0 ? `\u0E2D\u0E38\u0E42\u0E21\u0E07\u0E04\u0E4C\u0E25\u0E21\u0E40\u0E2B\u0E25\u0E37\u0E2D ${seats.remaining} \u0E17\u0E35\u0E48 \u0E01\u0E23\u0E38\u0E13\u0E32\u0E25\u0E14\u0E08\u0E33\u0E19\u0E27\u0E19\u0E04\u0E19\u0E2B\u0E23\u0E37\u0E2D\u0E40\u0E2D\u0E32\u0E2D\u0E38\u0E42\u0E21\u0E07\u0E04\u0E4C\u0E25\u0E21\u0E2D\u0E2D\u0E01` : `\u0E2D\u0E38\u0E42\u0E21\u0E07\u0E04\u0E4C\u0E25\u0E21\u0E40\u0E15\u0E47\u0E21\u0E41\u0E25\u0E49\u0E27 (\u0E04\u0E23\u0E1A ${WIND_TUNNEL_LIMIT} \u0E17\u0E48\u0E32\u0E19)`,
+        windTunnelRemaining: seats.remaining
+      });
+      return;
+    }
+    if (sponsorCode && total === 0) {
       let paid;
       try {
         paid = await markOrderPaid(order.orderId, {

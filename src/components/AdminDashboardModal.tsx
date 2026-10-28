@@ -1081,6 +1081,11 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
                                 <div className="font-mono text-[11px] text-slate-500 mt-0.5">
                                   {isPiiMasked ? maskEmailAddress(order.email) : order.email}
                                 </div>
+                                {order.addOns && (
+                                  <div className="text-[11px] font-extrabold text-[#B45309] mt-0.5">
+                                    🎉 กิจกรรมเสริม: {order.addOns.label} × {order.addOns.people} คน ({formatBaht(order.addOns.total)} บาท)
+                                  </div>
+                                )}
                                 {order.extraRunnerNames && (
                                   <div className="text-[11px] font-bold text-purple-700 mt-0.5">
                                     + ผู้ร่วมวิ่ง: {order.extraRunnerNames}

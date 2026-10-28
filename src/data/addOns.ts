@@ -126,4 +126,96 @@ export const PREMIUM_GUNS: string[] = [
   'HK MP5 SD (9mm) พร้อม Red dot และ Suppressor',
 ];
 
+// ---------------------------------------------------------------------------
+// Selection + pricing (shared by the website and the server — the server is the one that decides)
+// ---------------------------------------------------------------------------
+export type GunLevel = 'none' | 'standard' | 'premium';
+
+export interface AddOnSelection {
+  tower: boolean;
+  gun: GunLevel;
+  windTunnel: boolean;
+  /** how many people join the add-on activities (price is per person) */
+  people: number;
+}
+
+export const EMPTY_ADD_ONS: AddOnSelection = { tower: false, gun: 'none', windTunnel: false, people: 1 };
+export const MAX_ADD_ON_PEOPLE = 9;
+export const WIND_TUNNEL_LIMIT = 60;
+
+/** Per-person price of every allowed combination (T = tower, S/P = shooting Standard/Premium, W = wind tunnel). */
+const COMBO_PRICES: Record<string, number> = {
+  T: 350,
+  S: 890,
+  P: 1950,
+  W: 990,
+  TS: 1190,
+  TW: 1190,
+  SW: 1690,
+  TSW: 1990,
+  TP: 2250,
+  PW: 2750,
+  TPW: 3050,
+};
+
+const SINGLE_PRICES = { tower: 350, standard: 890, premium: 1950, windTunnel: 990 };
+
+export const hasAddOns = (s: AddOnSelection): boolean => s.tower || s.gun !== 'none' || s.windTunnel;
+
+function comboKey(s: AddOnSelection): string {
+  return (s.tower ? 'T' : '') + (s.gun === 'standard' ? 'S' : s.gun === 'premium' ? 'P' : '') + (s.windTunnel ? 'W' : '');
+}
+
+/** Per-person price (package price when the combination has one). */
+export function addOnPricePerPerson(s: AddOnSelection): number {
+  return COMBO_PRICES[comboKey(s)] ?? 0;
+}
+
+/** What the same activities would cost bought one by one, per person. */
+export function addOnSeparatePerPerson(s: AddOnSelection): number {
+  return (
+    (s.tower ? SINGLE_PRICES.tower : 0) +
+    (s.gun === 'standard' ? SINGLE_PRICES.standard : s.gun === 'premium' ? SINGLE_PRICES.premium : 0) +
+    (s.windTunnel ? SINGLE_PRICES.windTunnel : 0)
+  );
+}
+
+export function addOnSavingPerPerson(s: AddOnSelection): number {
+  return Math.max(0, addOnSeparatePerPerson(s) - addOnPricePerPerson(s));
+}
+
+export function addOnTotal(s: AddOnSelection): number {
+  return hasAddOns(s) ? addOnPricePerPerson(s) * s.people : 0;
+}
+
+export function addOnLabel(s: AddOnSelection): string {
+  const parts: string[] = [];
+  if (s.tower) parts.push('หอสูง');
+  if (s.gun === 'standard') parts.push('ยิงปืน Standard');
+  if (s.gun === 'premium') parts.push('ยิงปืน Premium');
+  if (s.windTunnel) parts.push('อุโมงค์ลม');
+  return parts.join(' + ');
+}
+
+/** Cleans whatever the browser sent into a valid selection (never trusts it). */
+export function normalizeAddOns(raw: unknown): AddOnSelection {
+  const r = (raw && typeof raw === 'object' ? raw : {}) as Record<string, unknown>;
+  const gun: GunLevel = r.gun === 'standard' || r.gun === 'premium' ? r.gun : 'none';
+  const sel: AddOnSelection = {
+    tower: r.tower === true,
+    gun,
+    windTunnel: r.windTunnel === true,
+    people: Math.min(MAX_ADD_ON_PEOPLE, Math.max(1, Math.floor(Number(r.people) || 1))),
+  };
+  return hasAddOns(sel) ? sel : { ...EMPTY_ADD_ONS };
+}
+
+/** One-tap bundles shown on the page (they just fill in the selection). */
+export const QUICK_BUNDLES: { id: string; label: string; selection: Omit<AddOnSelection, 'people'> }[] = [
+  { id: 'tower-std', label: 'หอสูง + ยิงปืน Standard', selection: { tower: true, gun: 'standard', windTunnel: false } },
+  { id: 'tower-wind', label: 'หอสูง + อุโมงค์ลม', selection: { tower: true, gun: 'none', windTunnel: true } },
+  { id: 'std-wind', label: 'ยิงปืน Standard + อุโมงค์ลม', selection: { tower: false, gun: 'standard', windTunnel: true } },
+  { id: 'full', label: 'FULL EXPERIENCE ครบ 3 กิจกรรม', selection: { tower: true, gun: 'standard', windTunnel: true } },
+];
+
 export const formatBaht = (n: number): string => n.toLocaleString('th-TH');

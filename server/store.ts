@@ -38,6 +38,8 @@ export interface StoredOrder {
   /** Set when the registration was made free with a sponsor code */
   sponsorCode?: string;
   sponsorName?: string;
+  /** Optional after-run activities bought with the ticket */
+  addOns?: { tower: boolean; gun: 'none' | 'standard' | 'premium'; windTunnel: boolean; people: number; pricePerPerson: number; total: number; label: string };
   paymentStatus: 'PAID' | 'PENDING';
   paymentRef: string;
   senderBank: string;
@@ -148,12 +150,39 @@ async function writeOrder(q: Q, o: StoredOrder): Promise<void> {
   );
 }
 
+const INSERT_ORDER_SQL = `insert into csr.orders (order_id, token_hash, route_id, payment_status, verification_status, bib_number, omise_charge_id, created_at, data)
+     values ($1, $2, $3, $4, $5, $6, $7, $8, $9::jsonb)`;
+const orderParams = (o: StoredOrder) => [o.orderId, o.accessTokenHash, o.routeId, o.paymentStatus, o.verificationStatus, o.bibNumber || '', o.omiseChargeId || null, o.createdAt, JSON.stringify(o)];
+
 export async function insertOrder(o: StoredOrder): Promise<void> {
-  await dbQuery(
-    `insert into csr.orders (order_id, token_hash, route_id, payment_status, verification_status, bib_number, omise_charge_id, created_at, data)
-     values ($1, $2, $3, $4, $5, $6, $7, $8, $9::jsonb)`,
-    [o.orderId, o.accessTokenHash, o.routeId, o.paymentStatus, o.verificationStatus, o.bibNumber || '', o.omiseChargeId || null, o.createdAt, JSON.stringify(o)]
-  );
+  await dbQuery(INSERT_ORDER_SQL, orderParams(o));
+}
+
+// Wind-tunnel seats are limited. An order holds seats while it is paid, or unpaid but still within its payment window.
+const WIND_TUNNEL_USED_SQL = `select coalesce(sum((data->'addOns'->>'people')::int), 0)::text as n from csr.orders
+  where data->'addOns'->>'windTunnel' = 'true'
+    and (payment_status = 'PAID' or (data->>'expiresAt')::timestamptz > now())`;
+
+export async function windTunnelSeatsUsed(): Promise<number> {
+  const rows = await dbQuery<{ n: string }>(WIND_TUNNEL_USED_SQL);
+  return Number(rows[0]?.n ?? 0);
+}
+
+/** Inserts the order; if it takes wind-tunnel seats, checks the limit under a lock so two buyers can't both take the last seat. */
+export async function insertOrderChecked(
+  o: StoredOrder,
+  windTunnelLimit: number
+): Promise<{ ok: true } | { ok: false; remaining: number }> {
+  return dbTx(async (q) => {
+    if (o.addOns?.windTunnel) {
+      await q('select pg_advisory_xact_lock(727001)');
+      const rows = await q<{ n: string }>(WIND_TUNNEL_USED_SQL);
+      const used = Number(rows[0]?.n ?? 0);
+      if (used + o.addOns.people > windTunnelLimit) return { ok: false as const, remaining: Math.max(0, windTunnelLimit - used) };
+    }
+    await q(INSERT_ORDER_SQL, orderParams(o));
+    return { ok: true as const };
+  });
 }
 
 export async function getOrder(orderId: string): Promise<StoredOrder | undefined> {

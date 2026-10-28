@@ -35,6 +35,7 @@ export interface RunnerProfile {
   totalPrice?: number;
   paymentMethod?: 'PROMPTPAY_QR' | 'SPONSOR_CODE';
   sponsorName?: string;
+  addOns?: { tower: boolean; gun: 'none' | 'standard' | 'premium'; windTunnel: boolean; people: number; pricePerPerson: number; total: number; label: string };
   paymentStatus?: 'PAID' | 'PENDING';
   paymentRef?: string;
   senderBank?: string;

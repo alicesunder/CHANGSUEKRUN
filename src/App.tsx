@@ -15,6 +15,7 @@ import { Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
 import { EventObjectiveSection } from './components/EventObjectiveSection';
 import { AddOnActivities } from './components/AddOnActivities';
+import type { AddOnSelection } from './data/addOns';
 import { RaceDistances } from './components/RaceDistances';
 import { SponsorsSection } from './components/SponsorsSection';
 import { PrivacyNotice } from './components/PrivacyNotice';
@@ -57,6 +58,7 @@ export default function App() {
   const [registerModalOpen, setRegisterModalOpen] = useState(false);
   const [registerTargetRoute, setRegisterTargetRoute] = useState<RouteId>('5km');
   const [registerExtras, setRegisterExtras] = useState({ people: 0, dogs: 0 });
+  const [registerAddOns, setRegisterAddOns] = useState<AddOnSelection | undefined>(undefined);
   const [comparisonModalOpen, setComparisonModalOpen] = useState(false);
   const [videoModalOpen, setVideoModalOpen] = useState(false);
   const [paceModalOpen, setPaceModalOpen] = useState(false);
@@ -78,8 +80,9 @@ export default function App() {
 
   const handleScrollToMap = scrollToRouteMap;
 
-  const handleOpenRegister = (distance?: RouteId, extras?: { people: number; dogs: number }) => {
+  const handleOpenRegister = (distance?: RouteId, extras?: { people: number; dogs: number }, addOns?: AddOnSelection) => {
     setRegisterExtras(extras ?? { people: 0, dogs: 0 });
+    setRegisterAddOns(addOns);
     if (distance) {
       setRegisterTargetRoute(distance);
     } else {
@@ -138,7 +141,7 @@ export default function App() {
         />
 
         {/* 5.5 กิจกรรมเสริมพร้อมงานวิ่งสุนัข (หอสูง / ยิงปืน / อุโมงค์ลม + แพ็กเกจ) */}
-        <AddOnActivities onOpenRegister={() => handleOpenRegister()} />
+        <AddOnActivities onOpenRegister={(sel) => handleOpenRegister(undefined, undefined, sel)} />
 
         {/* 6. 2-Column Side-by-Side: กำหนดการวันแข่งขัน (Left) & เส้นทางวิ่ง GPS Survey (Right) */}
         <LazySection id="schedule-and-map" minHeight={1100}>
@@ -259,6 +262,7 @@ export default function App() {
           initialRoute={registerTargetRoute}
           initialExtraPeople={registerExtras.people}
           initialExtraDogs={registerExtras.dogs}
+          initialAddOns={registerAddOns}
           onClose={() => setRegisterModalOpen(false)}
           onRegistrationSuccess={() => {
             setRegisterModalOpen(false);

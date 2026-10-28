@@ -74,6 +74,8 @@ import {
   downloadOfficialBibAsPng,
 } from '../utils/ticketEmailAndPrint';
 import { TicketPrintEmailModal } from './TicketPrintEmailModal';
+import { AddOnPicker } from './AddOnPicker';
+import { EMPTY_ADD_ONS, addOnLabel, addOnTotal, hasAddOns, type AddOnSelection } from '../data/addOns';
 
 interface RegistrationModalProps {
   isOpen: boolean;
@@ -81,6 +83,7 @@ interface RegistrationModalProps {
   initialRoute?: RouteId;
   initialExtraPeople?: number;
   initialExtraDogs?: number;
+  initialAddOns?: AddOnSelection;
   onRegistrationSuccess?: () => void;
   onOpenAdminModal?: () => void;
 }
@@ -205,6 +208,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
   initialRoute = '5km',
   initialExtraPeople = 0,
   initialExtraDogs = 0,
+  initialAddOns,
   onRegistrationSuccess,
   onOpenAdminModal,
 }) => {
@@ -212,6 +216,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
   const [extraPeople, setExtraPeople] = useState(0);
   const [extraDogs, setExtraDogs] = useState(0);
+  const [addOns, setAddOns] = useState<AddOnSelection>(initialAddOns ? { ...initialAddOns } : { ...EMPTY_ADD_ONS });
 
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
@@ -264,8 +269,12 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
   const ticket = ticketById(selectedRoute);
   const theme = ROUTE_THEME[selectedRoute];
   const isDog = isDogCategory(selectedRoute);
-  const total = calcTicketTotal(selectedRoute, extraPeople, extraDogs);
-  const chargeTotal = sponsor ? 0 : total;
+  const ticketTotal = calcTicketTotal(selectedRoute, extraPeople, extraDogs);
+  const addOnSum = addOnTotal(addOns);
+  const total = ticketTotal + addOnSum;
+  // With a sponsor code the run is free; add-on activities are always paid.
+  const chargeTotal = (sponsor ? 0 : ticketTotal) + addOnSum;
+  const isFreeOrder = Boolean(sponsor) && addOnSum === 0;
   const dogCount = isDog ? 1 + extraDogs : 0;
   const peopleCount = isDog ? 1 + extraPeople : 1;
   // Amount to pay always comes from the server order once it exists.
@@ -319,6 +328,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
     setStep(1);
     setExtraPeople(initialExtraPeople);
     setExtraDogs(initialExtraDogs);
+    setAddOns(initialAddOns ? { ...initialAddOns } : { ...EMPTY_ADD_ONS });
     setServerOrder(null);
     setPendingRef(null);
     setFormError(null);
@@ -354,7 +364,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
     return () => {
       cancelled = true;
     };
-  }, [isOpen, initialRoute, initialExtraPeople, initialExtraDogs]);
+  }, [isOpen, initialRoute, initialExtraPeople, initialExtraDogs, initialAddOns]);
 
   // Close with Escape
   useEffect(() => {
@@ -491,6 +501,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
         extraRunnerNames: extraPeople > 0 ? extraRunnerNames.trim() : undefined,
         privacyConsent,
         sponsorCode: sponsor?.code,
+        addOns: hasAddOns(addOns) ? addOns : undefined,
       });
       // Sponsor registrations are confirmed on the spot: skip the payment step.
       if (res.order.paymentStatus === 'PAID') {
@@ -826,6 +837,23 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                     </span>
                   </div>
                 )}
+
+                {/* Add-on activities (optional) */}
+                <div className="rounded-3xl bg-gradient-to-b from-[#FFF8DC] to-white border-[3px] border-[#2A1450] p-4 sm:p-5 shadow-[0_5px_0_#2A1450]">
+                  <div className="flex items-center gap-2.5 mb-3">
+                    <span className="w-10 h-10 rounded-2xl bg-[#FFC928] border-[3px] border-[#2A1450] flex items-center justify-center text-lg" aria-hidden="true">🎉</span>
+                    <div>
+                      <h3 className="text-base font-black text-[#2A1450] leading-tight">เพิ่มความสนุกหลังวิ่ง · กิจกรรมเสริม</h3>
+                      <p className="text-[11px] font-bold text-[#6F6878]">ไม่บังคับ · เลือกหลายอย่างได้ ยิ่งเลือกยิ่งคุ้ม</p>
+                    </div>
+                  </div>
+                  <AddOnPicker
+                    compact
+                    value={addOns}
+                    onChange={setAddOns}
+                    windTunnelRemaining={typeof publicCfg?.windTunnelRemaining === 'number' ? publicCfg.windTunnelRemaining : null}
+                  />
+                </div>
               </div>
 
               {/* Right 5 cols: Live Pass Summary Card with Animated Labrador */}
@@ -905,6 +933,14 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                           <span className="font-extrabold text-[#261247] tabular-nums">
                             +{formatBaht(extraDogs * (ticket.extraDogPrice ?? ticket.addDogPrice ?? 1))} บาท
                           </span>
+                        </div>
+                      )}
+                      {hasAddOns(addOns) && (
+                        <div className="flex justify-between gap-3">
+                          <span>
+                            กิจกรรมเสริม: {addOnLabel(addOns)} × {addOns.people} คน
+                          </span>
+                          <span className="font-extrabold text-[#261247] tabular-nums shrink-0">+{formatBaht(addOnSum)} บาท</span>
                         </div>
                       )}
                     </div>
@@ -1196,7 +1232,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                         <div className="min-w-0">
                           <div className="text-sm font-black truncate">ใช้รหัสสำเร็จ · {sponsor.name}</div>
                           <div className="text-[11px] font-bold text-emerald-800">
-                            ค่าสมัคร 0 บาท (วิ่ง + คอนเสิร์ต) · 1 รหัสต่อผู้วิ่ง 1 คน ไม่รวมผู้ร่วมวิ่ง/น้องหมาเพิ่ม
+                            ค่าสมัครวิ่ง 0 บาท (วิ่ง + คอนเสิร์ต) · 1 รหัสต่อผู้วิ่ง 1 คน ไม่รวมผู้ร่วมวิ่ง/น้องหมาเพิ่มและกิจกรรมเสริม
                           </div>
                         </div>
                       </div>
@@ -1327,16 +1363,16 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
 
                   <button
                     type="submit"
-                    disabled={isCreatingOrder || !privacyConsent || (!sponsor && publicCfg !== null && !publicCfg.paymentReady)}
+                    disabled={isCreatingOrder || !privacyConsent || (!isFreeOrder && publicCfg !== null && !publicCfg.paymentReady)}
                     className="w-full sm:w-auto disabled:opacity-60 disabled:cursor-wait px-8 py-3.5 rounded-2xl bg-gradient-to-r from-[#FFDF5A] via-[#FFC928] to-[#FFAE19] hover:brightness-105 text-[#1E0F38] font-black text-base border border-amber-300 shadow-[0_10px_25px_-6px_rgba(245,158,11,0.5)] active:translate-y-0.5 transition-all flex items-center justify-center gap-2 cursor-pointer"
                   >
-                    {sponsor ? <Gift className="w-5 h-5" /> : <QrCode className="w-5 h-5" />}
+                    {isFreeOrder ? <Gift className="w-5 h-5" /> : <QrCode className="w-5 h-5" />}
                     <span>
                       {isCreatingOrder
-                        ? sponsor
+                        ? isFreeOrder
                           ? 'กำลังลงทะเบียน...'
                           : 'กำลังสร้างคำสั่งซื้อ...'
-                        : sponsor
+                        : isFreeOrder
                           ? 'ยืนยันลงทะเบียนฟรี (รหัสสปอนเซอร์)'
                           : `ไปหน้าสแกนจ่าย PromptPay (${formatBaht(chargeTotal)} บาท)`}
                     </span>
@@ -1894,11 +1930,18 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                       </span>
                       <span className="text-sm font-black text-emerald-800 tabular-nums block">
                         {createdOrder.paymentMethod === 'SPONSOR_CODE'
-                          ? `✓ ฟรี · วิ่ง + คอนเสิร์ต${createdOrder.sponsorName ? ` (${createdOrder.sponsorName})` : ''}`
+                          ? `✓ วิ่ง + คอนเสิร์ต ฟรี${createdOrder.totalPrice > 0 ? ` · ชำระกิจกรรมเสริม ${formatBaht(createdOrder.totalPrice)} บาท` : ''}${createdOrder.sponsorName ? ` (${createdOrder.sponsorName})` : ''}`
                           : `✓ ${formatBaht(createdOrder.totalPrice)} บาท`}
                       </span>
                     </div>
                   </div>
+
+                  {createdOrder.addOns && (
+                    <div className="mt-3 p-3 rounded-2xl bg-[#FFF8DC] border-2 border-[#F5B800] text-xs font-extrabold text-[#2A1450] flex flex-wrap items-center justify-between gap-2">
+                      <span>🎉 กิจกรรมเสริม: {createdOrder.addOns.label} × {createdOrder.addOns.people} คน</span>
+                      <span className="tabular-nums">{formatBaht(createdOrder.addOns.total)} บาท</span>
+                    </div>
+                  )}
 
                   {createdOrder.runningWithDog && (
                     <div className="mt-3 p-3 rounded-2xl bg-[#F0FDF4] border-2 border-[#16A34A] flex items-center justify-between text-xs font-extrabold text-[#14532D]">
