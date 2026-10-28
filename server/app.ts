@@ -216,7 +216,10 @@ export function createApp(): express.Express {
     }
     const b = req.body || {};
     const isConcert = b.ticketType === 'CONCERT';
-    const sponsorCode = !isConcert && b.sponsorCode ? normalizeSponsorCode(b.sponsorCode) : '';
+    // Add-on activities only: no run ticket and no concert ticket
+    const isAddonOnly = b.ticketType === 'ADDON';
+    const noRun = isConcert || isAddonOnly;
+    const sponsorCode = !noRun && b.sponsorCode ? normalizeSponsorCode(b.sponsorCode) : '';
     if (b.sponsorCode && !sponsorCode) {
       res.status(400).json({ error: SPONSOR_INVALID_MSG });
       return;
@@ -230,13 +233,17 @@ export function createApp(): express.Express {
       return;
     }
     // Concert-only pass: no run, no BIB, no shirt (the run ticket already includes the concert)
-    const routeId = (isConcert ? 'concert' : b.routeId) as RouteId;
+    const routeId = (isConcert ? 'concert' : isAddonOnly ? 'addon' : b.routeId) as RouteId;
     const concertQty = isConcert ? Math.min(9, Math.max(1, Math.floor(Number(b.concertQty) || 1))) : 0;
-    if (!isConcert && !ROUTE_IDS.includes(routeId)) {
+    if (isAddonOnly && !hasAddOns(addOns)) {
+      res.status(400).json({ error: 'กรุณาเลือกกิจกรรมเสริมอย่างน้อย 1 อย่าง' });
+      return;
+    }
+    if (!noRun && !ROUTE_IDS.includes(routeId)) {
       res.status(400).json({ error: 'ระยะวิ่งไม่ถูกต้อง' });
       return;
     }
-    const isDog = !isConcert && isDogCategory(routeId);
+    const isDog = !noRun && isDogCategory(routeId);
     // A sponsor code covers one runner (plus the dog); extra people / dogs are not part of it.
     const extraPeople = isDog && !sponsorCode ? Math.min(MAX_EXTRA, Math.max(0, Math.floor(Number(b.extraPeople) || 0))) : 0;
     // Extra dogs are no longer sold: a Dog Run ticket is 1 runner + 1 dog.
@@ -246,13 +253,13 @@ export function createApp(): express.Express {
     const phone = clean(b.phone, 30);
     const email = clean(b.email, 120);
     const emergencyPhone = clean(b.emergencyPhone, 30);
-    const shirtSize = isConcert ? '' : SHIRT_SIZES.includes(b.shirtSize) ? b.shirtSize : '';
+    const shirtSize = noRun ? '' : SHIRT_SIZES.includes(b.shirtSize) ? b.shirtSize : '';
     const errors: string[] = [];
     if (fullName.length < 2) errors.push('กรุณากรอกชื่อ-นามสกุล');
     if (phone.replace(/\D/g, '').length < 9) errors.push('เบอร์โทรศัพท์ไม่ถูกต้อง');
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errors.push('อีเมลไม่ถูกต้อง');
     if (emergencyPhone.replace(/\D/g, '').length < 9) errors.push('เบอร์ติดต่อฉุกเฉินไม่ถูกต้อง');
-    if (!isConcert && !shirtSize) errors.push('กรุณาเลือกไซซ์เสื้อ');
+    if (!noRun && !shirtSize) errors.push('กรุณาเลือกไซซ์เสื้อ');
     if (b.privacyConsent !== true) errors.push('กรุณายอมรับข้อกำหนดและเงื่อนไขและประกาศความเป็นส่วนตัว');
     if (errors.length) {
       res.status(400).json({ error: errors.join(' · ') });
@@ -270,7 +277,7 @@ export function createApp(): express.Express {
       sponsorName = used.sponsorName;
     }
 
-    const ticketTotal = isConcert ? CONCERT_PASS_PRICE * concertQty : sponsorCode ? 0 : calcTicketTotal(routeId, extraPeople, extraDogs);
+    const ticketTotal = isAddonOnly ? 0 : isConcert ? CONCERT_PASS_PRICE * concertQty : sponsorCode ? 0 : calcTicketTotal(routeId, extraPeople, extraDogs);
     const total = ticketTotal + addOnSum;
     const token = crypto.randomBytes(24).toString('base64url');
     const now = new Date();
@@ -285,8 +292,8 @@ export function createApp(): express.Express {
       email,
       emergencyPhone,
       routeId,
-      routeName: isConcert ? 'ตั๋วคอนเสิร์ต / เข้างาน (ไม่วิ่ง)' : ticketById(routeId).name,
-      ticketType: isConcert ? 'CONCERT' : 'RUN',
+      routeName: isAddonOnly ? 'กิจกรรมเสริมอย่างเดียว (ไม่วิ่ง)' : isConcert ? 'ตั๋วคอนเสิร์ต / เข้างาน (ไม่วิ่ง)' : ticketById(routeId).name,
+      ticketType: isAddonOnly ? 'ADDON' : isConcert ? 'CONCERT' : 'RUN',
       concertQty: isConcert ? concertQty : undefined,
       shirtSize,
       runningWithDog: isDog,
@@ -295,7 +302,7 @@ export function createApp(): express.Express {
       extraPeople,
       extraDogs,
       extraRunnerNames: extraPeople > 0 ? clean(b.extraRunnerNames, 240) : undefined,
-      peopleCount: isConcert ? concertQty : isDog ? 1 + extraPeople : 1,
+      peopleCount: isAddonOnly ? addOns.people : isConcert ? concertQty : isDog ? 1 + extraPeople : 1,
       dogCount: isDog ? 1 + extraDogs : 0,
       totalPrice: total,
       bibNumber: '',

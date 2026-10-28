@@ -38,6 +38,8 @@ interface AddOnActivitiesProps {
   onOpenRegister: () => void;
   /** Opens the form for a concert-only pass (no run) + the chosen activities */
   onOpenConcert?: () => void;
+  /** Opens the form for activities only (no run ticket, no concert ticket) */
+  onOpenAddonOnly?: () => void;
 }
 
 const sameKind = (a: AddOnSelection, b: Omit<AddOnSelection, 'people'>) =>
@@ -47,7 +49,7 @@ const sameKind = (a: AddOnSelection, b: Omit<AddOnSelection, 'people'>) =>
  * Step 2 of buying a ticket: optional add-on activities, right under the ticket cards.
  * One compact block: tap activities, see the combined total, register.
  */
-export const AddOnActivities: React.FC<AddOnActivitiesProps> = ({ selectedRoute, value, onChange, onOpenRegister, onOpenConcert }) => {
+export const AddOnActivities: React.FC<AddOnActivitiesProps> = ({ selectedRoute, value, onChange, onOpenRegister, onOpenConcert, onOpenAddonOnly }) => {
   const [windRemaining, setWindRemaining] = useState<number | null>(null);
 
   useEffect(() => {
@@ -94,7 +96,7 @@ export const AddOnActivities: React.FC<AddOnActivitiesProps> = ({ selectedRoute,
                   <span className="px-2.5 py-0.5 rounded-full bg-[#EEE4FA] text-[#6D28D9] text-xs font-extrabold">ไม่บังคับ</span>
                 </h3>
                 <p className="text-xs sm:text-sm font-semibold text-[#4B2D78] leading-snug mt-0.5">
-                  เลือกครบ 3 กิจกรรมลดทันที 10% · เลือกได้อย่างเดียวก็ได้ ไม่ต้องวิ่ง
+                  เลือกครบ 3 กิจกรรมลดทันที 10% · ซื้อกิจกรรมอย่างเดียวก็ได้ ไม่ต้องซื้อตั๋วอื่น
                 </p>
               </div>
             </div>
@@ -191,7 +193,7 @@ export const AddOnActivities: React.FC<AddOnActivitiesProps> = ({ selectedRoute,
                 ) : (
                   <p className="flex items-center gap-2 text-xs font-bold opacity-80">
                     <PawIcon size={14} color="#8B5CF6" />
-                    ยังไม่ได้เลือกกิจกรรมเสริม สมัครวิ่งอย่างเดียวได้เลย
+                    ยังไม่ได้เลือกกิจกรรมเสริม · แตะกิจกรรมด้านบนเพื่อเลือก (หรือสมัครวิ่ง/ซื้อคอนเสิร์ตอย่างเดียวก็ได้)
                   </p>
                 )}
               </div>
@@ -211,13 +213,22 @@ export const AddOnActivities: React.FC<AddOnActivitiesProps> = ({ selectedRoute,
                   >
                     {picked ? 'สมัครวิ่ง + กิจกรรม' : `สมัคร ${ticket.distanceLabel}`}
                   </button>
+                  {onOpenAddonOnly && picked && (
+                    <button
+                      type="button"
+                      onClick={onOpenAddonOnly}
+                      className="min-h-[44px] px-4 py-2 rounded-2xl border-2 border-[#2A1450] bg-[#FFE268] text-[#2A1450] text-xs sm:text-sm font-black whitespace-nowrap cursor-pointer"
+                    >
+                      🎢 ซื้อเฉพาะกิจกรรมเสริม (ไม่ซื้อตั๋วอื่น)
+                    </button>
+                  )}
                   {onOpenConcert && (
                     <button
                       type="button"
                       onClick={onOpenConcert}
                       className="min-h-[44px] px-4 py-2 rounded-2xl border-2 border-[#2A1450] bg-white/90 text-[#2A1450] text-xs sm:text-sm font-extrabold whitespace-nowrap cursor-pointer hover:bg-white"
                     >
-                      🎶 ไม่วิ่ง · ตั๋วคอนเสิร์ต {formatBaht(CONCERT_PASS_PRICE)}฿{picked ? ' + กิจกรรม' : ''}
+                      🎶 ตั๋วคอนเสิร์ต {formatBaht(CONCERT_PASS_PRICE)}฿{picked ? ' + กิจกรรม' : ''}
                     </button>
                   )}
                 </div>

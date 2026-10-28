@@ -28520,7 +28520,7 @@ async function updateOrder(orderId, mutator) {
     return o;
   });
 }
-var BIB_PREFIX = { "10km": "10", "5km": "05", "3km": "03", "1km": "01", concert: "CN" };
+var BIB_PREFIX = { "10km": "10", "5km": "05", "3km": "03", "1km": "01", concert: "CN", addon: "AD" };
 function formatBib(routeId, seq) {
   return `${BIB_PREFIX[routeId] || "05"}-${String(seq).padStart(4, "0")}`;
 }
@@ -29061,7 +29061,9 @@ function createApp() {
     }
     const b = req.body || {};
     const isConcert = b.ticketType === "CONCERT";
-    const sponsorCode = !isConcert && b.sponsorCode ? normalizeSponsorCode(b.sponsorCode) : "";
+    const isAddonOnly = b.ticketType === "ADDON";
+    const noRun = isConcert || isAddonOnly;
+    const sponsorCode = !noRun && b.sponsorCode ? normalizeSponsorCode(b.sponsorCode) : "";
     if (b.sponsorCode && !sponsorCode) {
       res.status(400).json({ error: SPONSOR_INVALID_MSG });
       return;
@@ -29072,26 +29074,30 @@ function createApp() {
       res.status(503).json({ error: "\u0E23\u0E30\u0E1A\u0E1A\u0E0A\u0E33\u0E23\u0E30\u0E40\u0E07\u0E34\u0E19\u0E22\u0E31\u0E07\u0E44\u0E21\u0E48\u0E40\u0E1B\u0E34\u0E14\u0E43\u0E0A\u0E49\u0E07\u0E32\u0E19 \u0E01\u0E23\u0E38\u0E13\u0E32\u0E15\u0E34\u0E14\u0E15\u0E48\u0E2D\u0E1C\u0E39\u0E49\u0E08\u0E31\u0E14\u0E07\u0E32\u0E19" });
       return;
     }
-    const routeId = isConcert ? "concert" : b.routeId;
+    const routeId = isConcert ? "concert" : isAddonOnly ? "addon" : b.routeId;
     const concertQty = isConcert ? Math.min(9, Math.max(1, Math.floor(Number(b.concertQty) || 1))) : 0;
-    if (!isConcert && !ROUTE_IDS.includes(routeId)) {
+    if (isAddonOnly && !hasAddOns(addOns)) {
+      res.status(400).json({ error: "\u0E01\u0E23\u0E38\u0E13\u0E32\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E01\u0E34\u0E08\u0E01\u0E23\u0E23\u0E21\u0E40\u0E2A\u0E23\u0E34\u0E21\u0E2D\u0E22\u0E48\u0E32\u0E07\u0E19\u0E49\u0E2D\u0E22 1 \u0E2D\u0E22\u0E48\u0E32\u0E07" });
+      return;
+    }
+    if (!noRun && !ROUTE_IDS.includes(routeId)) {
       res.status(400).json({ error: "\u0E23\u0E30\u0E22\u0E30\u0E27\u0E34\u0E48\u0E07\u0E44\u0E21\u0E48\u0E16\u0E39\u0E01\u0E15\u0E49\u0E2D\u0E07" });
       return;
     }
-    const isDog = !isConcert && isDogCategory(routeId);
+    const isDog = !noRun && isDogCategory(routeId);
     const extraPeople = isDog && !sponsorCode ? Math.min(MAX_EXTRA, Math.max(0, Math.floor(Number(b.extraPeople) || 0))) : 0;
     const extraDogs = 0;
     const fullName = clean(b.fullName, 120);
     const phone = clean(b.phone, 30);
     const email = clean(b.email, 120);
     const emergencyPhone = clean(b.emergencyPhone, 30);
-    const shirtSize = isConcert ? "" : SHIRT_SIZES.includes(b.shirtSize) ? b.shirtSize : "";
+    const shirtSize = noRun ? "" : SHIRT_SIZES.includes(b.shirtSize) ? b.shirtSize : "";
     const errors = [];
     if (fullName.length < 2) errors.push("\u0E01\u0E23\u0E38\u0E13\u0E32\u0E01\u0E23\u0E2D\u0E01\u0E0A\u0E37\u0E48\u0E2D-\u0E19\u0E32\u0E21\u0E2A\u0E01\u0E38\u0E25");
     if (phone.replace(/\D/g, "").length < 9) errors.push("\u0E40\u0E1A\u0E2D\u0E23\u0E4C\u0E42\u0E17\u0E23\u0E28\u0E31\u0E1E\u0E17\u0E4C\u0E44\u0E21\u0E48\u0E16\u0E39\u0E01\u0E15\u0E49\u0E2D\u0E07");
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errors.push("\u0E2D\u0E35\u0E40\u0E21\u0E25\u0E44\u0E21\u0E48\u0E16\u0E39\u0E01\u0E15\u0E49\u0E2D\u0E07");
     if (emergencyPhone.replace(/\D/g, "").length < 9) errors.push("\u0E40\u0E1A\u0E2D\u0E23\u0E4C\u0E15\u0E34\u0E14\u0E15\u0E48\u0E2D\u0E09\u0E38\u0E01\u0E40\u0E09\u0E34\u0E19\u0E44\u0E21\u0E48\u0E16\u0E39\u0E01\u0E15\u0E49\u0E2D\u0E07");
-    if (!isConcert && !shirtSize) errors.push("\u0E01\u0E23\u0E38\u0E13\u0E32\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E44\u0E0B\u0E0B\u0E4C\u0E40\u0E2A\u0E37\u0E49\u0E2D");
+    if (!noRun && !shirtSize) errors.push("\u0E01\u0E23\u0E38\u0E13\u0E32\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E44\u0E0B\u0E0B\u0E4C\u0E40\u0E2A\u0E37\u0E49\u0E2D");
     if (b.privacyConsent !== true) errors.push("\u0E01\u0E23\u0E38\u0E13\u0E32\u0E22\u0E2D\u0E21\u0E23\u0E31\u0E1A\u0E02\u0E49\u0E2D\u0E01\u0E33\u0E2B\u0E19\u0E14\u0E41\u0E25\u0E30\u0E40\u0E07\u0E37\u0E48\u0E2D\u0E19\u0E44\u0E02\u0E41\u0E25\u0E30\u0E1B\u0E23\u0E30\u0E01\u0E32\u0E28\u0E04\u0E27\u0E32\u0E21\u0E40\u0E1B\u0E47\u0E19\u0E2A\u0E48\u0E27\u0E19\u0E15\u0E31\u0E27");
     if (errors.length) {
       res.status(400).json({ error: errors.join(" \xB7 ") });
@@ -29106,7 +29112,7 @@ function createApp() {
       }
       sponsorName = used.sponsorName;
     }
-    const ticketTotal = isConcert ? CONCERT_PASS_PRICE * concertQty : sponsorCode ? 0 : calcTicketTotal(routeId, extraPeople, extraDogs);
+    const ticketTotal = isAddonOnly ? 0 : isConcert ? CONCERT_PASS_PRICE * concertQty : sponsorCode ? 0 : calcTicketTotal(routeId, extraPeople, extraDogs);
     const total = ticketTotal + addOnSum;
     const token = crypto3.randomBytes(24).toString("base64url");
     const now = /* @__PURE__ */ new Date();
@@ -29120,8 +29126,8 @@ function createApp() {
       email,
       emergencyPhone,
       routeId,
-      routeName: isConcert ? "\u0E15\u0E31\u0E4B\u0E27\u0E04\u0E2D\u0E19\u0E40\u0E2A\u0E34\u0E23\u0E4C\u0E15 / \u0E40\u0E02\u0E49\u0E32\u0E07\u0E32\u0E19 (\u0E44\u0E21\u0E48\u0E27\u0E34\u0E48\u0E07)" : ticketById(routeId).name,
-      ticketType: isConcert ? "CONCERT" : "RUN",
+      routeName: isAddonOnly ? "\u0E01\u0E34\u0E08\u0E01\u0E23\u0E23\u0E21\u0E40\u0E2A\u0E23\u0E34\u0E21\u0E2D\u0E22\u0E48\u0E32\u0E07\u0E40\u0E14\u0E35\u0E22\u0E27 (\u0E44\u0E21\u0E48\u0E27\u0E34\u0E48\u0E07)" : isConcert ? "\u0E15\u0E31\u0E4B\u0E27\u0E04\u0E2D\u0E19\u0E40\u0E2A\u0E34\u0E23\u0E4C\u0E15 / \u0E40\u0E02\u0E49\u0E32\u0E07\u0E32\u0E19 (\u0E44\u0E21\u0E48\u0E27\u0E34\u0E48\u0E07)" : ticketById(routeId).name,
+      ticketType: isAddonOnly ? "ADDON" : isConcert ? "CONCERT" : "RUN",
       concertQty: isConcert ? concertQty : void 0,
       shirtSize,
       runningWithDog: isDog,
@@ -29130,7 +29136,7 @@ function createApp() {
       extraPeople,
       extraDogs,
       extraRunnerNames: extraPeople > 0 ? clean(b.extraRunnerNames, 240) : void 0,
-      peopleCount: isConcert ? concertQty : isDog ? 1 + extraPeople : 1,
+      peopleCount: isAddonOnly ? addOns.people : isConcert ? concertQty : isDog ? 1 + extraPeople : 1,
       dogCount: isDog ? 1 + extraDogs : 0,
       totalPrice: total,
       bibNumber: "",

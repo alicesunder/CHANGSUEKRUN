@@ -24,7 +24,7 @@ export interface StoredOrder {
   /** 'concert' for concert-only passes (no run, no BIB) */
   routeId: RouteId;
   /** RUN = running ticket (includes the concert), CONCERT = concert/entry pass only */
-  ticketType?: 'RUN' | 'CONCERT';
+  ticketType?: 'RUN' | 'CONCERT' | 'ADDON';
   /** number of concert passes (CONCERT orders only) */
   concertQty?: number;
   routeName: string;
@@ -216,7 +216,7 @@ export async function updateOrder(orderId: string, mutator: (o: StoredOrder) => 
   });
 }
 
-const BIB_PREFIX: Record<string, string> = { '10km': '10', '5km': '05', '3km': '03', '1km': '01', concert: 'CN' };
+const BIB_PREFIX: Record<string, string> = { '10km': '10', '5km': '05', '3km': '03', '1km': '01', concert: 'CN', addon: 'AD' };
 export function formatBib(routeId: RouteId, seq: number): string {
   return `${BIB_PREFIX[routeId] || '05'}-${String(seq).padStart(4, '0')}`;
 }

@@ -775,7 +775,7 @@ export const TicketSection: React.FC<TicketSectionProps> = ({
               ซื้อบัตรของคุณ
             </h2>
             <p className="text-xs sm:text-sm font-semibold text-[#6B5A85] mt-0.5">
-              มี 3 ส่วน เลือกอย่างเดียวหรือครบทั้งหมดก็ได้ ไม่จำเป็นต้องวิ่ง
+              มี 3 อย่างให้เลือก ซื้ออย่างเดียว สองอย่าง หรือครบทั้งสามก็ได้
             </p>
             <ol className="mt-2 flex flex-wrap gap-1.5 text-xs font-extrabold" aria-label="3 ส่วนของการซื้อบัตร">
               {[

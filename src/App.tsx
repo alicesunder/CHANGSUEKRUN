@@ -63,7 +63,7 @@ export default function App() {
   const [registerModalOpen, setRegisterModalOpen] = useState(false);
   const [registerTargetRoute, setRegisterTargetRoute] = useState<RouteId>('5km');
   const [registerExtras, setRegisterExtras] = useState({ people: 0, dogs: 0 });
-  const [registerMode, setRegisterMode] = useState<'RUN' | 'CONCERT'>('RUN');
+  const [registerMode, setRegisterMode] = useState<'RUN' | 'CONCERT' | 'ADDON'>('RUN');
   const [registerAddOns, setRegisterAddOns] = useState<AddOnSelection | undefined>(undefined);
   // Activities chosen in the block under the ticket cards; every "register" button carries them into the form
   const [pageAddOns, setPageAddOns] = useState<AddOnSelection>({ ...EMPTY_ADD_ONS });
@@ -121,6 +121,14 @@ export default function App() {
     setRegisterModalOpen(true);
   };
 
+  // Activities only: no run ticket, no concert ticket
+  const handleOpenAddonOnly = () => {
+    setRegisterMode('ADDON');
+    setRegisterExtras({ people: 0, dogs: 0 });
+    setRegisterAddOns(hasAddOns(pageAddOns) ? pageAddOns : undefined);
+    setRegisterModalOpen(true);
+  };
+
   // The old Leaflet simulator is gone: just show the route on the illustrated map
   const handleOpenSimulation = (routeId?: RouteId) => {
     setSelectedRoute(routeId || selectedRoute || '3km');
@@ -173,6 +181,7 @@ export default function App() {
                 onChange={setPageAddOns}
                 onOpenRegister={() => handleOpenRegister(selectedRoute)}
                 onOpenConcert={handleOpenConcert}
+                onOpenAddonOnly={handleOpenAddonOnly}
               />
             </>
           }

@@ -35,7 +35,7 @@ export const ConcertPassCard: React.FC<ConcertPassCardProps> = ({ onBuy }) => (
               </h3>
               <ul className="mt-2 space-y-1 text-sm font-semibold text-white/90">
                 <li className="flex gap-2"><Check className="w-4 h-4 mt-0.5 text-[#10B981] shrink-0" aria-hidden="true" /><span><strong>ตั๋ววิ่งทุกระยะ</strong> ได้เข้าคอนเสิร์ตฟรีอยู่แล้ว</span></li>
-                <li className="flex gap-2"><Check className="w-4 h-4 mt-0.5 text-[#10B981] shrink-0" aria-hidden="true" /><span>ไม่วิ่งก็มาได้ · ซื้อตั๋วคอนเสิร์ตอย่างเดียว หรือมาเล่นกิจกรรมเสริมอย่างเดียว</span></li>
+                <li className="flex gap-2"><Check className="w-4 h-4 mt-0.5 text-[#10B981] shrink-0" aria-hidden="true" /><span>ไม่วิ่งก็ซื้อได้ · ซื้อตั๋วคอนเสิร์ตอย่างเดียว ไม่ต้องวิ่ง ไม่ต้องซื้อกิจกรรมเสริม</span></li>
               </ul>
             </div>
           </div>

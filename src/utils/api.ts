@@ -21,7 +21,7 @@ export interface PublicConfig {
 }
 
 export type ServerOrder = TicketOrder & {
-  ticketType?: 'RUN' | 'CONCERT';
+  ticketType?: 'RUN' | 'CONCERT' | 'ADDON';
   concertQty?: number;
   expiresAt: string;
   omiseChargeId?: string;
@@ -79,7 +79,7 @@ export interface CreateOrderInput {
   extraRunnerNames?: string;
   privacyConsent: boolean;
   /** RUN (default) = running ticket incl. concert; CONCERT = concert/entry pass only (no run, no BIB) */
-  ticketType?: 'RUN' | 'CONCERT';
+  ticketType?: 'RUN' | 'CONCERT' | 'ADDON';
   concertQty?: number;
   /** Sponsor code: makes the registration free (run + concert). The server re-checks it. */
   sponsorCode?: string;
