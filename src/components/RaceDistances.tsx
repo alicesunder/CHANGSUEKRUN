@@ -40,6 +40,8 @@ export const RaceDistances: React.FC<RaceDistancesProps> = ({
           onOpenComparisonModal={onOpenComparisonModal}
         />
 
+        {afterTickets}
+
         <div className="flex flex-wrap justify-center gap-3 mt-8">
           {onOpenComparisonModal && (
             <button
@@ -67,8 +69,6 @@ export const RaceDistances: React.FC<RaceDistancesProps> = ({
             ดูแผนที่เส้นทาง & จำลองการวิ่ง
           </button>
         </div>
-
-        {afterTickets}
 
         {/* Unified Showcase: เสื้อวิ่ง, เหรียญรางวัล Finisher & สิทธิประโยชน์ Race Pack */}
         <div id="merch-showcase" className="mt-10 sm:mt-14 scroll-mt-24">

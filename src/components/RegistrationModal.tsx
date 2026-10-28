@@ -852,7 +852,6 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                     </div>
                   </div>
                   <AddOnPicker
-                    compact
                     value={addOns}
                     onChange={setAddOns}
                     windTunnelRemaining={typeof publicCfg?.windTunnelRemaining === 'number' ? publicCfg.windTunnelRemaining : null}

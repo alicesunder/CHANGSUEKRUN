@@ -15,7 +15,7 @@ import { Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
 import { EventObjectiveSection } from './components/EventObjectiveSection';
 import { AddOnActivities } from './components/AddOnActivities';
-import type { AddOnSelection } from './data/addOns';
+import { EMPTY_ADD_ONS, hasAddOns, type AddOnSelection } from './data/addOns';
 import { RaceDistances } from './components/RaceDistances';
 import { SponsorsSection } from './components/SponsorsSection';
 import { PrivacyNotice } from './components/PrivacyNotice';
@@ -59,6 +59,8 @@ export default function App() {
   const [registerTargetRoute, setRegisterTargetRoute] = useState<RouteId>('5km');
   const [registerExtras, setRegisterExtras] = useState({ people: 0, dogs: 0 });
   const [registerAddOns, setRegisterAddOns] = useState<AddOnSelection | undefined>(undefined);
+  // Activities chosen in the block under the ticket cards; every "register" button carries them into the form
+  const [pageAddOns, setPageAddOns] = useState<AddOnSelection>({ ...EMPTY_ADD_ONS });
   const [comparisonModalOpen, setComparisonModalOpen] = useState(false);
   const [videoModalOpen, setVideoModalOpen] = useState(false);
   const [paceModalOpen, setPaceModalOpen] = useState(false);
@@ -82,7 +84,7 @@ export default function App() {
 
   const handleOpenRegister = (distance?: RouteId, extras?: { people: number; dogs: number }, addOns?: AddOnSelection) => {
     setRegisterExtras(extras ?? { people: 0, dogs: 0 });
-    setRegisterAddOns(addOns);
+    setRegisterAddOns(addOns ?? (hasAddOns(pageAddOns) ? pageAddOns : undefined));
     if (distance) {
       setRegisterTargetRoute(distance);
     } else {
@@ -138,7 +140,14 @@ export default function App() {
           onOpenRegister={handleOpenRegister}
           onOpenComparisonModal={() => setComparisonModalOpen(true)}
           onOpenPaceModal={() => setPaceModalOpen(true)}
-          afterTickets={<AddOnActivities onOpenRegister={(sel) => handleOpenRegister(undefined, undefined, sel)} />}
+          afterTickets={
+            <AddOnActivities
+              selectedRoute={selectedRoute}
+              value={pageAddOns}
+              onChange={setPageAddOns}
+              onOpenRegister={() => handleOpenRegister(selectedRoute)}
+            />
+          }
         />
 
         {/* 6. 2-Column Side-by-Side: กำหนดการวันแข่งขัน (Left) & เส้นทางวิ่ง GPS Survey (Right) */}
