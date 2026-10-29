@@ -53,6 +53,7 @@ import {
   type StoredOrder,
 } from './store';
 import { WIND_TUNNEL_LIMIT, addOnBonusDiscount, addOnLabel, addOnPricePerPerson, addOnTotal, hasAddOns, normalizeAddOns } from '../src/data/addOns';
+import { needsInsurance, parseInsurance, type InsuranceInfo } from '../src/data/insurance';
 import { checkCredentials, issueToken, requireAdmin } from './auth';
 import { createOmiseCharge, fetchOmiseQrImage, fetchVerifiedOmiseCharge, omiseKeyMode } from './payments';
 
@@ -252,13 +253,22 @@ export function createApp(): express.Express {
     // Extra dogs are no longer sold: a Dog Run ticket is 1 runner + 1 dog.
     const extraDogs = 0;
 
-    const fullName = clean(b.fullName, 120);
+    // 5 KM / 10 KM runners are insured: the insurer needs their details (the name comes from these fields)
+    let insurance: InsuranceInfo | undefined;
+    let insuranceError = '';
+    if (!noRun && needsInsurance(routeId)) {
+      const parsed = parseInsurance(b.insurance, b.insuranceConsent);
+      if (parsed.ok) insurance = parsed.value;
+      else insuranceError = parsed.error;
+    }
+    const fullName = insurance ? `${insurance.firstName} ${insurance.lastName}`.slice(0, 120) : clean(b.fullName, 120);
     const phone = clean(b.phone, 30);
     const email = clean(b.email, 120);
     const emergencyPhone = clean(b.emergencyPhone, 30);
     const shirtSize = noRun ? '' : SHIRT_SIZES.includes(b.shirtSize) ? b.shirtSize : '';
     const errors: string[] = [];
-    if (fullName.length < 2) errors.push('กรุณากรอกชื่อ-นามสกุล');
+    if (insuranceError) errors.push(insuranceError);
+    if (!insuranceError && fullName.length < 2) errors.push('กรุณากรอกชื่อ-นามสกุล');
     if (phone.replace(/\D/g, '').length < 9) errors.push('เบอร์โทรศัพท์ไม่ถูกต้อง');
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errors.push('อีเมลไม่ถูกต้อง');
     if (emergencyPhone.replace(/\D/g, '').length < 9) errors.push('เบอร์ติดต่อฉุกเฉินไม่ถูกต้อง');
@@ -304,6 +314,7 @@ export function createApp(): express.Express {
       routeName: isAddonOnly ? 'กิจกรรมเสริมอย่างเดียว (ไม่วิ่ง)' : isConcert ? 'ตั๋วคอนเสิร์ต / เข้างาน (ไม่วิ่ง)' : ticketById(routeId).name,
       ticketType: isAddonOnly ? 'ADDON' : isConcert ? 'CONCERT' : 'RUN',
       concertQty: concertQty > 0 ? concertQty : undefined,
+      insurance,
       shirtSize,
       runningWithDog: isDog,
       dogName: isDog ? clean(b.dogName, 80) : undefined,

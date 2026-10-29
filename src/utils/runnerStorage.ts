@@ -50,7 +50,11 @@ export interface RunnerProfile {
   createdAt: string;
 }
 
+import type { InsuranceInfo } from '../data/insurance';
+
 export interface TicketOrder extends RunnerProfile {
+  /** Accident-insurance details (5 KM / 10 KM runners) */
+  insurance?: InsuranceInfo;
   orderId: string;
   totalPrice: number;
   peopleCount: number;
@@ -703,6 +707,72 @@ export function exportTicketOrdersToCsv(
       ? `ส่งออกไฟล์ CSV แบบปิดบังข้อมูลส่วนบุคคล (PDPA Masked) จำนวน ${orders.length} รายการ`
       : `ส่งออกไฟล์ CSV ข้อมูลเต็ม (Unmasked Full PII) จำนวน ${orders.length} รายการ`,
   });
+}
+
+/**
+ * CSV for the insurance company: one row per paid 5 KM / 10 KM runner, in the order the insurer asked for
+ * (prefix, name, e-mail, phone, gender, birth date, age, blood type, conditions, emergency contact, relationship, phone, shirt, distance).
+ */
+export function exportInsuranceCsv(orders: TicketOrder[], actor = 'admin'): number {
+  const insured = orders.filter((o) => o.insurance && o.paymentStatus === 'PAID');
+  const headers = [
+    'ลำดับ',
+    'คำนำหน้า',
+    'ชื่อ',
+    'นามสกุล',
+    'อีเมล',
+    'เบอร์โทร',
+    'เพศ',
+    'วัน/เดือน/ปีเกิด (ค.ศ.)',
+    'อายุ',
+    'กรุ๊ปเลือด',
+    'โรคประจำตัว',
+    'ชื่อผู้ติดต่อกรณีฉุกเฉิน',
+    'ความสัมพันธ์',
+    'เบอร์โทรผู้ติดต่อฉุกเฉิน',
+    'ขนาดไซต์เสื้อ',
+    'ระยะวิ่ง',
+    'เลข BIB',
+  ];
+  const rows = insured.map((o, i) => {
+    const n = o.insurance!;
+    return [
+      i + 1,
+      n.prefix,
+      n.firstName,
+      n.lastName,
+      o.email,
+      o.phone,
+      n.gender,
+      n.birthDate,
+      n.age,
+      n.bloodType,
+      n.medicalConditions,
+      n.emergencyName,
+      n.relationship,
+      o.emergencyPhone,
+      o.shirtSize,
+      o.routeId === '10km' ? '10 km' : '5 km',
+      o.bibNumber,
+    ];
+  });
+  const csv = [headers.map(sanitizeCsvCell).join(','), ...rows.map((r) => r.map(sanitizeCsvCell).join(','))].join('\r\n');
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `CHANGSUEK_RUN_2027_INSURANCE_${new Date().toISOString().slice(0, 10)}.csv`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+  appendSecurityAuditLog({
+    action: 'CSV_EXPORTED_FULL',
+    severity: 'WARNING',
+    actor,
+    detail: `ส่งออกรายชื่อสำหรับทำประกัน (ข้อมูลสุขภาพ) จำนวน ${insured.length} รายการ`,
+  });
+  return insured.length;
 }
 
 export function getStoredRunnerProfile(): RunnerProfile | null {

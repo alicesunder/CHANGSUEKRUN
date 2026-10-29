@@ -3,6 +3,7 @@
  * payment status, BIB numbers and admin access.
  */
 import type { AddOnSelection } from '../data/addOns';
+import type { InsuranceInfo } from '../data/insurance';
 import type { RouteId } from '../types';
 import type { TicketOrder } from './runnerStorage';
 
@@ -81,6 +82,9 @@ export interface CreateOrderInput {
   /** RUN (default) = running ticket incl. concert; CONCERT = concert/entry pass only (no run, no BIB) */
   ticketType?: 'RUN' | 'CONCERT' | 'ADDON';
   concertQty?: number;
+  /** Insurance details: required for 5 KM / 10 KM runners */
+  insurance?: InsuranceInfo;
+  insuranceConsent?: boolean;
   /** Sponsor code: makes the registration free (run + concert). The server re-checks it. */
   sponsorCode?: string;
   /** Optional after-run activities; the server works out the price and seat limits itself. */

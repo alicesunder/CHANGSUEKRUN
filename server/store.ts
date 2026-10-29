@@ -14,6 +14,8 @@ export type VerificationStatus =
   | 'ADMIN_APPROVED'
   | 'REJECTED';
 
+import type { InsuranceInfo } from '../src/data/insurance';
+
 export interface StoredOrder {
   orderId: string;
   accessTokenHash: string;
@@ -43,6 +45,8 @@ export interface StoredOrder {
   /** Set when the registration was made free with a sponsor code */
   sponsorCode?: string;
   sponsorName?: string;
+  /** Accident-insurance details (5 KM / 10 KM runners only) */
+  insurance?: InsuranceInfo;
   /** Optional after-run activities bought with the ticket */
   addOns?: { tower: boolean; gun: 'none' | 'standard' | 'premium'; windTunnel: boolean; people: number; pricePerPerson: number; total: number; discount?: number; label: string };
   paymentStatus: 'PAID' | 'PENDING';

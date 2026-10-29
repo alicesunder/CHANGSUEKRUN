@@ -28758,6 +28758,56 @@ function normalizeAddOns(raw) {
   return hasAddOns(sel) ? sel : { ...EMPTY_ADD_ONS };
 }
 
+// src/data/insurance.ts
+var INSURANCE_ROUTES = ["5km", "10km"];
+var needsInsurance = (routeId) => INSURANCE_ROUTES.includes(routeId);
+var PREFIXES = ["\u0E19\u0E32\u0E22", "\u0E19\u0E32\u0E07", "\u0E19\u0E32\u0E07\u0E2A\u0E32\u0E27", "\u0E40\u0E14\u0E47\u0E01\u0E0A\u0E32\u0E22", "\u0E40\u0E14\u0E47\u0E01\u0E2B\u0E0D\u0E34\u0E07", "\u0E2D\u0E37\u0E48\u0E19\u0E46"];
+var GENDERS = ["\u0E0A\u0E32\u0E22", "\u0E2B\u0E0D\u0E34\u0E07", "\u0E44\u0E21\u0E48\u0E23\u0E30\u0E1A\u0E38"];
+var BLOOD_TYPES = ["A", "B", "AB", "O", "\u0E44\u0E21\u0E48\u0E17\u0E23\u0E32\u0E1A"];
+var RELATIONSHIPS = ["\u0E1A\u0E34\u0E14\u0E32", "\u0E21\u0E32\u0E23\u0E14\u0E32", "\u0E04\u0E39\u0E48\u0E2A\u0E21\u0E23\u0E2A", "\u0E1A\u0E38\u0E15\u0E23", "\u0E1E\u0E35\u0E48/\u0E19\u0E49\u0E2D\u0E07", "\u0E0D\u0E32\u0E15\u0E34", "\u0E40\u0E1E\u0E37\u0E48\u0E2D\u0E19", "\u0E2D\u0E37\u0E48\u0E19\u0E46"];
+function ageFromBirthDate(birthDate, today = /* @__PURE__ */ new Date()) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(birthDate);
+  if (!m) return null;
+  const y = Number(m[1]);
+  const mo = Number(m[2]);
+  const d = Number(m[3]);
+  const dt = new Date(Date.UTC(y, mo - 1, d));
+  if (dt.getUTCFullYear() !== y || dt.getUTCMonth() !== mo - 1 || dt.getUTCDate() !== d) return null;
+  let age = today.getFullYear() - y;
+  if (today.getMonth() + 1 < mo || today.getMonth() + 1 === mo && today.getDate() < d) age -= 1;
+  return age;
+}
+var clip = (v, n) => typeof v === "string" ? v.replace(/[\u0000-\u001f<>]/g, " ").trim().slice(0, n) : "";
+var oneOf = (v, list) => typeof v === "string" && list.includes(v) ? v : "";
+function parseInsurance(raw, consent) {
+  const r = raw && typeof raw === "object" ? raw : {};
+  const prefix = oneOf(r.prefix, PREFIXES);
+  const firstName = clip(r.firstName, 60);
+  const lastName = clip(r.lastName, 60);
+  const gender = oneOf(r.gender, GENDERS);
+  const birthDate = typeof r.birthDate === "string" ? r.birthDate : "";
+  const age = ageFromBirthDate(birthDate);
+  const bloodType = oneOf(r.bloodType, BLOOD_TYPES);
+  const medicalConditions = clip(r.medicalConditions, 200) || "\u0E44\u0E21\u0E48\u0E21\u0E35";
+  const emergencyName = clip(r.emergencyName, 80);
+  const relationship = oneOf(r.relationship, RELATIONSHIPS);
+  const errors = [];
+  if (!prefix) errors.push("\u0E01\u0E23\u0E38\u0E13\u0E32\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E04\u0E33\u0E19\u0E33\u0E2B\u0E19\u0E49\u0E32");
+  if (firstName.length < 1) errors.push("\u0E01\u0E23\u0E38\u0E13\u0E32\u0E01\u0E23\u0E2D\u0E01\u0E0A\u0E37\u0E48\u0E2D");
+  if (lastName.length < 1) errors.push("\u0E01\u0E23\u0E38\u0E13\u0E32\u0E01\u0E23\u0E2D\u0E01\u0E19\u0E32\u0E21\u0E2A\u0E01\u0E38\u0E25");
+  if (!gender) errors.push("\u0E01\u0E23\u0E38\u0E13\u0E32\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E40\u0E1E\u0E28");
+  if (age === null || age < 0 || age > 110) errors.push("\u0E27\u0E31\u0E19/\u0E40\u0E14\u0E37\u0E2D\u0E19/\u0E1B\u0E35\u0E40\u0E01\u0E34\u0E14 (\u0E04.\u0E28.) \u0E44\u0E21\u0E48\u0E16\u0E39\u0E01\u0E15\u0E49\u0E2D\u0E07");
+  if (!bloodType) errors.push("\u0E01\u0E23\u0E38\u0E13\u0E32\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E01\u0E23\u0E38\u0E4A\u0E1B\u0E40\u0E25\u0E37\u0E2D\u0E14");
+  if (emergencyName.length < 2) errors.push("\u0E01\u0E23\u0E38\u0E13\u0E32\u0E01\u0E23\u0E2D\u0E01\u0E0A\u0E37\u0E48\u0E2D\u0E1C\u0E39\u0E49\u0E15\u0E34\u0E14\u0E15\u0E48\u0E2D\u0E09\u0E38\u0E01\u0E40\u0E09\u0E34\u0E19");
+  if (!relationship) errors.push("\u0E01\u0E23\u0E38\u0E13\u0E32\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E04\u0E27\u0E32\u0E21\u0E2A\u0E31\u0E21\u0E1E\u0E31\u0E19\u0E18\u0E4C\u0E01\u0E31\u0E1A\u0E1C\u0E39\u0E49\u0E15\u0E34\u0E14\u0E15\u0E48\u0E2D\u0E09\u0E38\u0E01\u0E40\u0E09\u0E34\u0E19");
+  if (consent !== true) errors.push("\u0E01\u0E23\u0E38\u0E13\u0E32\u0E22\u0E34\u0E19\u0E22\u0E2D\u0E21\u0E43\u0E2B\u0E49\u0E2A\u0E48\u0E07\u0E02\u0E49\u0E2D\u0E21\u0E39\u0E25\u0E2A\u0E38\u0E02\u0E20\u0E32\u0E1E/\u0E1B\u0E23\u0E30\u0E01\u0E31\u0E19\u0E43\u0E2B\u0E49\u0E1A\u0E23\u0E34\u0E29\u0E31\u0E17\u0E1B\u0E23\u0E30\u0E01\u0E31\u0E19");
+  if (errors.length) return { ok: false, error: errors.join(" \xB7 ") };
+  return {
+    ok: true,
+    value: { prefix, firstName, lastName, gender, birthDate, age, bloodType, medicalConditions, emergencyName, relationship }
+  };
+}
+
 // server/auth.ts
 import crypto2 from "crypto";
 var ADMIN_USERNAME = (process.env.ADMIN_USERNAME || "admin").trim();
@@ -29088,13 +29138,21 @@ function createApp() {
     const isDog = !noRun && isDogCategory(routeId);
     const extraPeople = isDog && !sponsorCode ? Math.min(MAX_EXTRA, Math.max(0, Math.floor(Number(b.extraPeople) || 0))) : 0;
     const extraDogs = 0;
-    const fullName = clean(b.fullName, 120);
+    let insurance;
+    let insuranceError = "";
+    if (!noRun && needsInsurance(routeId)) {
+      const parsed = parseInsurance(b.insurance, b.insuranceConsent);
+      if (parsed.ok) insurance = parsed.value;
+      else insuranceError = parsed.error;
+    }
+    const fullName = insurance ? `${insurance.firstName} ${insurance.lastName}`.slice(0, 120) : clean(b.fullName, 120);
     const phone = clean(b.phone, 30);
     const email = clean(b.email, 120);
     const emergencyPhone = clean(b.emergencyPhone, 30);
     const shirtSize = noRun ? "" : SHIRT_SIZES.includes(b.shirtSize) ? b.shirtSize : "";
     const errors = [];
-    if (fullName.length < 2) errors.push("\u0E01\u0E23\u0E38\u0E13\u0E32\u0E01\u0E23\u0E2D\u0E01\u0E0A\u0E37\u0E48\u0E2D-\u0E19\u0E32\u0E21\u0E2A\u0E01\u0E38\u0E25");
+    if (insuranceError) errors.push(insuranceError);
+    if (!insuranceError && fullName.length < 2) errors.push("\u0E01\u0E23\u0E38\u0E13\u0E32\u0E01\u0E23\u0E2D\u0E01\u0E0A\u0E37\u0E48\u0E2D-\u0E19\u0E32\u0E21\u0E2A\u0E01\u0E38\u0E25");
     if (phone.replace(/\D/g, "").length < 9) errors.push("\u0E40\u0E1A\u0E2D\u0E23\u0E4C\u0E42\u0E17\u0E23\u0E28\u0E31\u0E1E\u0E17\u0E4C\u0E44\u0E21\u0E48\u0E16\u0E39\u0E01\u0E15\u0E49\u0E2D\u0E07");
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errors.push("\u0E2D\u0E35\u0E40\u0E21\u0E25\u0E44\u0E21\u0E48\u0E16\u0E39\u0E01\u0E15\u0E49\u0E2D\u0E07");
     if (emergencyPhone.replace(/\D/g, "").length < 9) errors.push("\u0E40\u0E1A\u0E2D\u0E23\u0E4C\u0E15\u0E34\u0E14\u0E15\u0E48\u0E2D\u0E09\u0E38\u0E01\u0E40\u0E09\u0E34\u0E19\u0E44\u0E21\u0E48\u0E16\u0E39\u0E01\u0E15\u0E49\u0E2D\u0E07");
@@ -29130,6 +29188,7 @@ function createApp() {
       routeName: isAddonOnly ? "\u0E01\u0E34\u0E08\u0E01\u0E23\u0E23\u0E21\u0E40\u0E2A\u0E23\u0E34\u0E21\u0E2D\u0E22\u0E48\u0E32\u0E07\u0E40\u0E14\u0E35\u0E22\u0E27 (\u0E44\u0E21\u0E48\u0E27\u0E34\u0E48\u0E07)" : isConcert ? "\u0E15\u0E31\u0E4B\u0E27\u0E04\u0E2D\u0E19\u0E40\u0E2A\u0E34\u0E23\u0E4C\u0E15 / \u0E40\u0E02\u0E49\u0E32\u0E07\u0E32\u0E19 (\u0E44\u0E21\u0E48\u0E27\u0E34\u0E48\u0E07)" : ticketById(routeId).name,
       ticketType: isAddonOnly ? "ADDON" : isConcert ? "CONCERT" : "RUN",
       concertQty: concertQty > 0 ? concertQty : void 0,
+      insurance,
       shirtSize,
       runningWithDog: isDog,
       dogName: isDog ? clean(b.dogName, 80) : void 0,

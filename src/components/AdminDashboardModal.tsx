@@ -46,6 +46,7 @@ import {
   PaymentVerificationStatus,
   DEFAULT_PROMPTPAY_CONFIG,
   exportTicketOrdersToCsv,
+  exportInsuranceCsv,
   formatBibNumber,
 } from '../utils/runnerStorage';
 import { ServerOrder, adminApi, adminLogin, clearAdminToken, getAdminToken } from '../utils/api';
@@ -921,6 +922,20 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
                     >
                       <Download className="w-4 h-4" />
                       <span>ส่งออก CSV (ซ่อนข้อมูล PDPA)</span>
+                    </button>
+
+                    {/* Export for the insurance company */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const n = exportInsuranceCsv(orders, configForm.adminUsername || 'admin');
+                        setAuditLogs(getSecurityAuditLogs());
+                        showToast(n > 0 ? `ส่งออกรายชื่อทำประกัน ${n} คน (เฉพาะที่ชำระเงินแล้ว)` : 'ยังไม่มีนักวิ่ง 5K/10K ที่ชำระเงินแล้วสำหรับทำประกัน');
+                      }}
+                      className="px-3.5 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-700 text-white text-xs font-extrabold flex items-center gap-1.5 shadow-xs cursor-pointer"
+                    >
+                      <span aria-hidden="true">🛡️</span>
+                      <span>CSV ทำประกัน (5K/10K)</span>
                     </button>
 
                     {/* Export Full CSV */}
@@ -1857,6 +1872,11 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
                     ตรวจสอบการโอนเงิน & ป้าย BIB ของคุณ {inspectingOrder.fullName}
                     {inspectingOrder.bibNumber ? ` (#${inspectingOrder.bibNumber})` : ''}
                   </h3>
+                  {inspectingOrder.insurance && (
+                    <p className="mt-1 text-xs font-bold text-sky-800 bg-sky-50 border border-sky-200 rounded-lg px-2.5 py-1.5">
+                      🛡️ ประกัน: {inspectingOrder.insurance.prefix}{inspectingOrder.insurance.firstName} {inspectingOrder.insurance.lastName} · {inspectingOrder.insurance.gender} · อายุ {inspectingOrder.insurance.age} ปี (เกิด {inspectingOrder.insurance.birthDate}) · เลือด {inspectingOrder.insurance.bloodType} · โรคประจำตัว: {inspectingOrder.insurance.medicalConditions} · ติดต่อฉุกเฉิน: {inspectingOrder.insurance.emergencyName} ({inspectingOrder.insurance.relationship}) {inspectingOrder.emergencyPhone}
+                    </p>
+                  )}
                 </div>
 
                 <div className="flex items-center gap-2">

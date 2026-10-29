@@ -77,6 +77,7 @@ import {
 } from '../utils/ticketEmailAndPrint';
 import { TicketPrintEmailModal } from './TicketPrintEmailModal';
 import { AddOnPicker } from './AddOnPicker';
+import { BLOOD_TYPES, GENDERS, PREFIXES, RELATIONSHIPS, ageFromBirthDate, needsInsurance } from '../data/insurance';
 import { EMPTY_ADD_ONS, addOnBonusDiscount, addOnLabel, addOnTotal, hasAddOns, type AddOnSelection } from '../data/addOns';
 
 interface RegistrationModalProps {
@@ -245,6 +246,17 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [emergencyPhone, setEmergencyPhone] = useState('');
+  // Insurance details (5 KM / 10 KM runners)
+  const [insPrefix, setInsPrefix] = useState('');
+  const [insFirst, setInsFirst] = useState('');
+  const [insLast, setInsLast] = useState('');
+  const [insGender, setInsGender] = useState('');
+  const [insBirth, setInsBirth] = useState('');
+  const [insBlood, setInsBlood] = useState('');
+  const [insMedical, setInsMedical] = useState('');
+  const [insEmName, setInsEmName] = useState('');
+  const [insRel, setInsRel] = useState('');
+  const [insConsent, setInsConsent] = useState(false);
   const [shirtSize, setShirtSize] = useState('L');
   const [dogName, setDogName] = useState('');
   const [dogBreed, setDogBreed] = useState('');
@@ -292,6 +304,9 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
   const ticket = ticketById(selectedRoute);
   const theme = ROUTE_THEME[selectedRoute];
   const isDog = !noRun && isDogCategory(selectedRoute);
+  const insured = !noRun && needsInsurance(selectedRoute);
+  const insAge = ageFromBirthDate(insBirth);
+  const todayIso = new Date().toISOString().slice(0, 10);
   const ticketTotal = (wantRun ? calcTicketTotal(selectedRoute, extraPeople, extraDogs) : 0) + (wantConcert ? CONCERT_PASS_PRICE * concertQty : 0);
   const addOnSum = addOnTotal(addOns);
   const total = ticketTotal + addOnSum;
@@ -521,7 +536,22 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
         concertQty: wantConcert ? concertQty : undefined,
         extraPeople,
         extraDogs,
-        fullName: fullName.trim(),
+        fullName: insured ? `${insFirst.trim()} ${insLast.trim()}` : fullName.trim(),
+        insurance: insured
+          ? {
+              prefix: insPrefix,
+              firstName: insFirst.trim(),
+              lastName: insLast.trim(),
+              gender: insGender,
+              birthDate: insBirth,
+              age: insAge ?? 0,
+              bloodType: insBlood,
+              medicalConditions: insMedical.trim() || 'ไม่มี',
+              emergencyName: insEmName.trim(),
+              relationship: insRel,
+            }
+          : undefined,
+        insuranceConsent: insured ? insConsent : undefined,
         phone: phone.trim(),
         email: email.trim(),
         emergencyPhone: emergencyPhone.trim(),
@@ -1144,6 +1174,28 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                      {insured ? (
+                        <>
+                          <div>
+                            <label className={labelCls}>คำนำหน้า *</label>
+                            <select required value={insPrefix} onChange={(e) => setInsPrefix(e.target.value)} className="w-full min-h-[48px] px-3 rounded-xl border-2 border-[#2A1450]/20 bg-white text-sm font-semibold text-[#2A1450] focus:border-[#7C3AED] outline-none">
+                              <option value="">เลือก</option>
+                              {PREFIXES.map((p) => (
+                                <option key={p} value={p}>{p}</option>
+                              ))}
+                            </select>
+                          </div>
+                          <div className="hidden sm:block" aria-hidden="true" />
+                          <div>
+                            <label className={labelCls}>ชื่อ *</label>
+                            <input type="text" required value={insFirst} onChange={(e) => setInsFirst(e.target.value)} placeholder="เช่น สมชาย" className="w-full min-h-[48px] px-3.5 rounded-xl border-2 border-[#2A1450]/20 bg-white text-sm font-semibold outline-none focus:border-[#7C3AED]" autoComplete="given-name" />
+                          </div>
+                          <div>
+                            <label className={labelCls}>นามสกุล *</label>
+                            <input type="text" required value={insLast} onChange={(e) => setInsLast(e.target.value)} placeholder="เช่น ใจดี" className="w-full min-h-[48px] px-3.5 rounded-xl border-2 border-[#2A1450]/20 bg-white text-sm font-semibold outline-none focus:border-[#7C3AED]" autoComplete="family-name" />
+                          </div>
+                        </>
+                      ) : (
                       <div className="sm:col-span-2">
                         <label className={labelCls}>ชื่อ - นามสกุล (Full Name) *</label>
                         <div className="relative">
@@ -1158,6 +1210,8 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                           />
                         </div>
                       </div>
+
+                      )}
 
                       <div>
                         <label className={labelCls}>เบอร์โทรศัพท์ติดต่อ *</label>
@@ -1223,6 +1277,72 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
 
                   {/* Right 5 cols: Shirt Size Visual Selector + Dog Info */}
                   <div className="lg:col-span-5 space-y-4">
+                    {insured && (
+                      <div className="rounded-3xl border-[3px] border-[var(--ink)] bg-gradient-to-br from-[#E0F7FA] via-white to-[#ECFDF5] p-4 sm:p-5 space-y-3.5 shadow-[0_6px_0_var(--ink)]">
+                        <div className="flex items-start gap-3">
+                          <span className="w-11 h-11 shrink-0 rounded-2xl bg-[#0EA5E9] border-[3px] border-[var(--ink)] flex items-center justify-center text-xl" aria-hidden="true">🛡️</span>
+                          <div>
+                            <h3 className="text-base font-black text-[#2A1450] leading-tight">ข้อมูลสำหรับทำประกัน</h3>
+                            <p className="text-xs font-semibold text-[#4B2D78]">นักวิ่ง 5 KM / 10 KM ทุกคนได้รับความคุ้มครอง กรุณากรอกข้อมูลให้ตรงตามบัตรประชาชน</p>
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                          <div>
+                            <label className={labelCls}>เพศ *</label>
+                            <select required value={insGender} onChange={(e) => setInsGender(e.target.value)} className="w-full min-h-[48px] px-3 rounded-xl border-2 border-[#2A1450]/20 bg-white text-sm font-semibold text-[#2A1450] focus:border-[#7C3AED] outline-none">
+                              <option value="">เลือก</option>
+                              {GENDERS.map((g) => (
+                                <option key={g} value={g}>{g}</option>
+                              ))}
+                            </select>
+                          </div>
+                          <div>
+                            <label className={labelCls}>กรุ๊ปเลือด *</label>
+                            <select required value={insBlood} onChange={(e) => setInsBlood(e.target.value)} className="w-full min-h-[48px] px-3 rounded-xl border-2 border-[#2A1450]/20 bg-white text-sm font-semibold text-[#2A1450] focus:border-[#7C3AED] outline-none">
+                              <option value="">เลือก</option>
+                              {BLOOD_TYPES.map((g) => (
+                                <option key={g} value={g}>{g}</option>
+                              ))}
+                            </select>
+                          </div>
+                          <div>
+                            <label className={labelCls}>วัน/เดือน/ปีเกิด (ค.ศ.) *</label>
+                            <input type="date" required value={insBirth} max={todayIso} min="1900-01-01" onChange={(e) => setInsBirth(e.target.value)} className="w-full min-h-[48px] px-3.5 rounded-xl border-2 border-[#2A1450]/20 bg-white text-sm font-semibold outline-none focus:border-[#7C3AED]" autoComplete="bday" />
+                          </div>
+                          <div>
+                            <label className={labelCls}>อายุ (คำนวณให้อัตโนมัติ)</label>
+                            <div className="min-h-[48px] px-3.5 rounded-xl border-2 border-dashed border-[#2A1450]/25 bg-white/70 flex items-center text-sm font-extrabold text-[#2A1450]" aria-live="polite">
+                              {insAge !== null && insAge >= 0 && insAge <= 110 ? `${insAge} ปี` : '—'}
+                            </div>
+                          </div>
+                          <div className="sm:col-span-2">
+                            <label className={labelCls}>โรคประจำตัว (ถ้าไม่มี เว้นว่างได้)</label>
+                            <input type="text" value={insMedical} maxLength={200} onChange={(e) => setInsMedical(e.target.value)} placeholder="เช่น หอบหืด, เบาหวาน, แพ้ยาเพนิซิลลิน" className="w-full min-h-[48px] px-3.5 rounded-xl border-2 border-[#2A1450]/20 bg-white text-sm font-semibold outline-none focus:border-[#7C3AED]" />
+                          </div>
+                          <div>
+                            <label className={labelCls}>ชื่อผู้ติดต่อกรณีฉุกเฉิน *</label>
+                            <input type="text" required value={insEmName} maxLength={80} onChange={(e) => setInsEmName(e.target.value)} placeholder="ชื่อ-นามสกุล" className="w-full min-h-[48px] px-3.5 rounded-xl border-2 border-[#2A1450]/20 bg-white text-sm font-semibold outline-none focus:border-[#7C3AED]" />
+                          </div>
+                          <div>
+                            <label className={labelCls}>ความสัมพันธ์ *</label>
+                            <select required value={insRel} onChange={(e) => setInsRel(e.target.value)} className="w-full min-h-[48px] px-3 rounded-xl border-2 border-[#2A1450]/20 bg-white text-sm font-semibold text-[#2A1450] focus:border-[#7C3AED] outline-none">
+                              <option value="">เลือก</option>
+                              {RELATIONSHIPS.map((g) => (
+                                <option key={g} value={g}>{g}</option>
+                              ))}
+                            </select>
+                          </div>
+                        </div>
+                        <p className="text-xs font-bold text-[#6B5A85]">เบอร์โทรผู้ติดต่อฉุกเฉินใช้เบอร์ที่กรอกด้านบน · ระยะวิ่ง {ticket.distanceLabel} · ไซส์เสื้อเลือกด้านล่าง</p>
+                        <label className="flex items-start gap-2.5 rounded-2xl bg-white border-2 border-[#2A1450]/20 p-3 cursor-pointer">
+                          <input type="checkbox" required checked={insConsent} onChange={(e) => setInsConsent(e.target.checked)} className="mt-1 w-5 h-5 accent-[#7C3AED] shrink-0" />
+                          <span className="text-xs sm:text-sm font-semibold text-[#2A1450] leading-snug">
+                            ข้าพเจ้ายินยอมให้ผู้จัดงานส่งข้อมูลส่วนบุคคลและข้อมูลสุขภาพข้างต้นให้บริษัทประกันภัย เพื่อใช้ทำประกันอุบัติเหตุสำหรับกิจกรรมนี้เท่านั้น *
+                          </span>
+                        </label>
+                      </div>
+                    )}
+
                     {/* Interactive Shirt Size Grid */}
                     {!noRun && (
                     <div className="bg-white/95 rounded-3xl border-2 border-[#2A1450]/25 p-4 sm:p-5 shadow-xs">
