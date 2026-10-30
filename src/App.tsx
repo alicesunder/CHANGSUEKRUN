@@ -43,8 +43,8 @@ const RouteAndScheduleSection = lazy(() =>
   import('./components/RouteAndScheduleSection').then((m) => ({ default: m.RouteAndScheduleSection }))
 );
 
-// Results block stays hidden until race day has passed (9 Jan 2027)
-const RESULTS_OPEN = Date.now() >= new Date('2027-01-09T00:00:00+07:00').getTime();
+// Results block stays hidden until race day has passed (10 Dec 2026)
+const RESULTS_OPEN = Date.now() >= new Date('2026-12-10T00:00:00+07:00').getTime();
 
 /** Mounts its (lazy) child once `open` first becomes true, then keeps it mounted so close animations still run. */
 function Deferred({ open, children }: { open: boolean; children: React.ReactNode }) {

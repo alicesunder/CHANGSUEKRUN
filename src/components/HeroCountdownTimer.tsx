@@ -8,7 +8,7 @@ interface CountdownTimerProps {
 }
 
 export const HeroCountdownTimer: React.FC<CountdownTimerProps> = ({
-  targetDate = '2027-01-09T16:30:00+07:00',
+  targetDate = '2026-12-10T16:30:00+07:00',
   className = '',
 }) => {
   // Start from the real remaining time so no stale number flashes on first paint
@@ -59,7 +59,7 @@ export const HeroCountdownTimer: React.FC<CountdownTimerProps> = ({
       <div className="flex items-center justify-center lg:justify-start gap-2.5 mb-3">
         <PawIcon size={16} color="#45B9EA" />
         <span className="text-xs sm:text-sm font-extrabold tracking-wider text-white uppercase">
-          CHANGSUEK RUN 2027 <span className="text-[#FFC928]">COUNTDOWN</span>
+          CHANGSUEK RUN 2026 <span className="text-[#FFC928]">COUNTDOWN</span>
         </span>
         <PawIcon size={16} color="#FFC928" />
       </div>

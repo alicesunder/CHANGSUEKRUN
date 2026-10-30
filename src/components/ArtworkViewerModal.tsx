@@ -33,8 +33,8 @@ export const ArtworkViewerModal: React.FC<ArtworkViewerModalProps> = ({
   const handleShare = () => {
     if (navigator.share) {
       navigator.share({
-        title: 'CHANG SUEK RUN 2027 Route Map',
-        text: 'แผนที่เส้นทางวิ่งทางการ เห็นช้างวิ่ง วิ่งตามช้าง 2027 ค่ายนเรศวร ชะอำ',
+        title: 'CHANG SUEK RUN 2026 Route Map',
+        text: 'แผนที่เส้นทางวิ่งทางการ เห็นช้างวิ่ง วิ่งตามช้าง 2026 ค่ายนเรศวร ชะอำ',
         url: window.location.href,
       }).catch(() => {});
     } else {
@@ -61,7 +61,7 @@ export const ArtworkViewerModal: React.FC<ArtworkViewerModalProps> = ({
                 Google Earth Survey & Official Artwork Gallery
               </h3>
               <p className="text-[11px] text-white/60">
-                ข้อมูลรังวัดเส้นทางภาพถ่ายดาวเทียม • CHANG SUEK RUN 2027
+                ข้อมูลรังวัดเส้นทางภาพถ่ายดาวเทียม • CHANG SUEK RUN 2026
               </p>
             </div>
           </div>
@@ -299,7 +299,7 @@ export const ArtworkViewerModal: React.FC<ArtworkViewerModalProps> = ({
         {/* Footer Notes */}
         <div className="p-3 sm:px-6 bg-[#241E2D] border-t border-white/10 flex flex-col sm:flex-row items-center justify-between text-[11px] text-white/60 gap-2">
           <span>
-            © 2027 CHANG SUEK RUN • ค่ายนเรศวร กองบัญชาการตำรวจตระเวนชายแดน • ข้อมูลรังวัด Google Earth
+            © 2026 CHANG SUEK RUN • ค่ายนเรศวร กองบัญชาการตำรวจตระเวนชายแดน • ข้อมูลรังวัด Google Earth
           </span>
           <span className="text-[#FFC928]">
             {currentRouteData ? `${currentRouteData.name} (รอบเส้นขอบ: ${currentRouteData.measuredPerimeterKm} กม.)` : '3.8 KM / 5 KM / 10 KM WAR DOG TRAIL'}

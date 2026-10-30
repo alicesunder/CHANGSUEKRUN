@@ -35,7 +35,7 @@ export const SocialShare: React.FC<SocialShareProps> = ({
       ? ` อีกเพียง ${daysRemaining} วันสู่วันแข่งขัน!`
       : '';
 
-  const shareMessage = `🐘 มาร่วมวิ่งด้วยกันในงาน CHANGSUEK RUN 2027 (เห็นช้างวิ่ง วิ่งตามช้าง) 🏃‍♂️💨 ผมเลือกลงระยะ ${distanceLabel}!${countdownText} มาวิ่งสัมผัสสายลมทะเลชะอำ-หัวหินไปด้วยกันนะ #CHANGSUEKRUN #เห็นช้างวิ่งวิ่งตามช้าง #ชะอำหัวหิน`;
+  const shareMessage = `🐘 มาร่วมวิ่งด้วยกันในงาน CHANGSUEK RUN 2026 (เห็นช้างวิ่ง วิ่งตามช้าง) 🏃‍♂️💨 ผมเลือกลงระยะ ${distanceLabel}!${countdownText} มาวิ่งสัมผัสสายลมทะเลชะอำ-หัวหินไปด้วยกันนะ #CHANGSUEKRUN #เห็นช้างวิ่งวิ่งตามช้าง #ชะอำหัวหิน`;
 
   const getShareUrl = () => {
     if (typeof window !== 'undefined') {

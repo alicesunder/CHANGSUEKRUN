@@ -233,7 +233,7 @@ export const RouteAndScheduleSection: React.FC<RouteAndScheduleProps> = ({
           <div>
             <span className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white border-2 border-[#2A1450] text-[#5B20A8] text-xs font-extrabold uppercase shadow-[0_3px_0_#2A1450] mb-2">
               <Sparkles className="w-3.5 h-3.5 text-[#B45309]" />
-              <span>วันงาน 9 ม.ค. 2570</span>
+              <span>วันงาน 10 ธ.ค. 2569</span>
             </span>
             <h2 className="text-2xl sm:text-4xl font-extrabold text-[#2A1450]">
               กำหนดการ & เส้นทางวิ่งมาตรฐาน GPS
@@ -528,7 +528,7 @@ export const RouteAndScheduleSection: React.FC<RouteAndScheduleProps> = ({
                     กำหนดการ (PDF)
                   </h3>
                   <p className="text-xs text-gray-500 font-medium">
-                    CHANGSUEK RUN 2027 • 9 มกราคม 2570 ณ หาดชะอำ ค่ายนเรศวร
+                    CHANGSUEK RUN 2026 • 10 ธันวาคม 2569 ณ หาดชะอำ ค่ายนเรศวร
                   </p>
                 </div>
               </div>

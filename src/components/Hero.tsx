@@ -211,7 +211,7 @@ export const Hero: React.FC<HeroProps> = ({
 
               <div className="mt-2.5 flex items-center justify-center gap-2 text-[11px] font-bold text-white">
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 backdrop-blur-md border border-white/35 px-3 py-1.5">
-                  <Calendar className="w-3.5 h-3.5 text-[#FFD84D]" /> 9 ม.ค. 2570
+                  <Calendar className="w-3.5 h-3.5 text-[#FFD84D]" /> 10 ธ.ค. 2569
                 </span>
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 backdrop-blur-md border border-white/35 px-3 py-1.5">
                   <MapPin className="w-3.5 h-3.5 text-[#FFD84D]" /> หาดชะอำ (ค่ายนเรศวร)
@@ -267,7 +267,7 @@ export const Hero: React.FC<HeroProps> = ({
             {/* Mobile-First Top Glass Event Pill */}
             <div className="lg:hidden inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/85 backdrop-blur-md border border-white shadow-[0_8px_20px_-6px_rgba(42,20,80,0.18)] text-[11px] font-extrabold text-[#3B1870] mb-3">
               <Sparkles className="w-3.5 h-3.5 text-[#B45309] shrink-0" />
-              <span>9 ม.ค. 2570</span>
+              <span>10 ธ.ค. 2569</span>
               <span className="text-[#7B3FC6]/40">·</span>
               <span>หาดชะอำ (ค่ายนเรศวร)</span>
             </div>
@@ -395,7 +395,7 @@ export const Hero: React.FC<HeroProps> = ({
             <div className="hidden lg:flex mt-6 flex-wrap gap-2.5 justify-start text-xs sm:text-[13px] font-bold text-[#2A1450]">
               <span className="inline-flex items-center gap-2 bg-white/90 backdrop-blur-md rounded-full px-4 py-2 shadow-[0_8px_20px_-6px_rgba(42,20,80,0.18)] border border-white">
                 <Calendar className="w-4 h-4 text-[#6D28D9]" />
-                <span>9 ม.ค. 2570</span>
+                <span>10 ธ.ค. 2569</span>
               </span>
               <span className="inline-flex items-center gap-2 bg-white/90 backdrop-blur-md rounded-full px-4 py-2 shadow-[0_8px_20px_-6px_rgba(42,20,80,0.18)] border border-white">
                 <MapPin className="w-4 h-4 text-[#C2410C]" />
@@ -483,7 +483,7 @@ export const Hero: React.FC<HeroProps> = ({
         <div className="relative z-10 max-w-[1360px] mx-auto px-4 sm:px-8 py-5 sm:py-8 pb-11 sm:pb-14 grid grid-cols-1 lg:grid-cols-12 items-center gap-5 sm:gap-6">
           {/* Left: Countdown Timer (6 cols) */}
           <div className="lg:col-span-6 flex justify-center lg:justify-start">
-            <HeroCountdownTimer targetDate="2027-01-09T16:30:00+07:00" />
+            <HeroCountdownTimer targetDate="2026-12-10T16:30:00+07:00" />
           </div>
 
           {/* Right: Slanted Inspirational Quote (6 cols) */}

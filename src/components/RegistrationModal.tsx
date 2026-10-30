@@ -751,7 +751,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
               <div>
                 <div className="inline-flex items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-[0.18em] text-[#FFE268]">
                   <Sparkles className="w-3 h-3" />
-                  <span>CHANGSUEK RUN 2027 · SMART E-TICKET & AUTO-BIB</span>
+                  <span>CHANGSUEK RUN 2026 · SMART E-TICKET & AUTO-BIB</span>
                 </div>
                 <h2 className="text-lg sm:text-2xl font-black tracking-tight text-white leading-tight">
                   {isAddonOnly ? 'ซื้อกิจกรรมเสริม' : isConcert ? 'ซื้อตั๋วคอนเสิร์ต / เข้างาน' : 'สมัครวิ่ง & รับบัตรวิ่ง E-BIB'}
@@ -1027,7 +1027,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                   <div className="p-4 space-y-3">
                     <div className="flex flex-wrap gap-1.5">
                       <span className="inline-flex items-center gap-1 text-xs font-extrabold px-2.5 py-1 rounded-full bg-[#F3E8FF] text-[#4B2D78]">
-                        <Calendar className="w-3.5 h-3.5" /> 9 ม.ค. 2570
+                        <Calendar className="w-3.5 h-3.5" /> 10 ธ.ค. 2569
                       </span>
                       <span className="inline-flex items-center gap-1 text-xs font-extrabold px-2.5 py-1 rounded-full bg-[#FEF3C7] text-[#92400E]">
                         <Clock className="w-3.5 h-3.5" /> ปล่อยตัว {theme.startTime}
@@ -2078,7 +2078,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                 >
                   <div>
                     <span className="text-[10px] font-mono font-extrabold uppercase tracking-[0.2em] text-[#FFC928] block">
-                      CHANGSUEK RUN 2027 · VERIFIED OFFICIAL E-TICKET & BIB PASS
+                      CHANGSUEK RUN 2026 · VERIFIED OFFICIAL E-TICKET & BIB PASS
                     </span>
                     <span className="text-lg font-black">{createdOrder.routeName}</span>
                   </div>
@@ -2159,7 +2159,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                         เวลาปล่อยตัว
                       </span>
                       <span className="text-sm font-black text-[#2A1450] block">
-                        {theme.startTime} (9 ม.ค. 70)
+                        {theme.startTime} (10 ธ.ค. 69)
                       </span>
                     </div>
                     <div className="p-3 rounded-2xl bg-emerald-50 border-2 border-emerald-500/40">

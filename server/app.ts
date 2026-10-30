@@ -1,5 +1,5 @@
 /**
- * CHANG SUEK RUN 2027 — API (Express app, no listener).
+ * CHANG SUEK RUN 2026 — API (Express app, no listener).
  * Used by server.ts (local / any Node host) and by the Vercel function (api/index.js).
  *
  * Money rules (all enforced here, never in the browser):

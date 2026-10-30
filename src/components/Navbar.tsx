@@ -66,7 +66,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               handleLogoClick();
             }}
             className="flex items-center gap-2 cursor-pointer transition-transform hover:scale-[1.02] active:scale-95 select-none shrink-0"
-            title="CHANGSUEK RUN 2027 - เห็นช้างวิ่ง วิ่งตามช้าง"
+            title="CHANGSUEK RUN 2026 - เห็นช้างวิ่ง วิ่งตามช้าง"
           >
             <img
               src="/images/brand/changsuek-run-logo.webp"

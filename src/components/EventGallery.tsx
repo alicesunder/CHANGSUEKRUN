@@ -191,7 +191,7 @@ export const EventGallery: React.FC = () => {
                   {selectedPhoto.description}
                 </p>
                 <div className="p-3.5 rounded-2xl bg-[#FAF9FC] border border-[#EEE4FA] text-xs text-[#54239A] font-bold">
-                  🌟 ร่วมเป็นส่วนหนึ่งของภาพความทรงจำนี้ใน CHANG SUEK RUN 2027 ค่ายนเรศวร ชะอำ-หัวหิน
+                  🌟 ร่วมเป็นส่วนหนึ่งของภาพความทรงจำนี้ใน CHANG SUEK RUN 2026 ค่ายนเรศวร ชะอำ-หัวหิน
                 </div>
                 <button
                   onClick={() => setSelectedPhoto(null)}

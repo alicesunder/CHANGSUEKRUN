@@ -637,7 +637,7 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
             <div>
               <div className="flex flex-wrap items-center gap-2">
                 <span className="text-[10px] font-mono font-extrabold uppercase tracking-[0.2em] text-[#FFC928]">
-                  CHANGSUEK RUN 2027 · SECURE ADMIN CONSOLE
+                  CHANGSUEK RUN 2026 · SECURE ADMIN CONSOLE
                 </span>
                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 text-[10px] font-bold">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />

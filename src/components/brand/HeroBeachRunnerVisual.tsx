@@ -75,7 +75,7 @@ export const HeroBeachRunnerVisual: React.FC<HeroBeachRunnerVisualProps> = ({ on
               {/* Jersey Graphic Logo on Back */}
               <circle cx="80" cy="94" r="14" fill="#FFFFFF" opacity="0.9" />
               <text x="80" y="93" fontSize="5.5" fontWeight="900" textAnchor="middle" fill="#5B249D">CHANG SUEK</text>
-              <text x="80" y="100" fontSize="6" fontWeight="900" textAnchor="middle" fill="#FFC928">2027</text>
+              <text x="80" y="100" fontSize="6" fontWeight="900" textAnchor="middle" fill="#FFC928">2026</text>
 
               {/* Arms */}
               {/* Left arm swinging back */}

@@ -96,17 +96,17 @@ export const TicketPrintEmailModal: React.FC<TicketPrintEmailModalProps> = ({
 
   const handleOpenMailClient = () => {
     const subject = encodeURIComponent(
-      `[บัตรวิ่ง E-Ticket & BIB #${profile.bibNumber}] งานวิ่งช้างศึกรัน CHANGSUEK RUN 2027`
+      `[บัตรวิ่ง E-Ticket & BIB #${profile.bibNumber}] งานวิ่งช้างศึกรัน CHANGSUEK RUN 2026`
     );
     const body = encodeURIComponent(
       `สวัสดีคุณ ${profile.fullName}\n\n` +
-        `ระบบยืนยันการชำระเงินอัตโนมัติและออกบัตรวิ่งงาน CHANGSUEK RUN 2027 เรียบร้อยแล้ว\n` +
+        `ระบบยืนยันการชำระเงินอัตโนมัติและออกบัตรวิ่งงาน CHANGSUEK RUN 2026 เรียบร้อยแล้ว\n` +
         `----------------------------------------\n` +
         `• รหัสคำสั่งซื้อ: ${orderId}\n` +
         `• หมายเลขประจำตัวนักวิ่ง (BIB): #${profile.bibNumber}\n` +
         `• ระยะทาง: ${profile.routeName} (${profile.routeId.toUpperCase()})\n` +
         `• ไซส์เสื้อวิ่ง: Size ${profile.shirtSize}\n` +
-        `• เวลาปล่อยตัว: ${meta.startTime} (วันเสาร์ที่ 9 ม.ค. 2570 ณ ค่ายนเรศวร ชะอำ-หัวหิน)\n` +
+        `• เวลาปล่อยตัว: ${meta.startTime} (วันพฤหัสบดีที่ 10 ธ.ค. 2569 ณ ค่ายนเรศวร ชะอำ-หัวหิน)\n` +
         `• ยอดชำระสุทธิ: ${formatBaht(totalAmount)} บาท (รหัสอ้างอิง: ${profile.paymentRef || 'PROMPTPAY-VERIFIED'})\n` +
         `----------------------------------------\n` +
         `กรุณาแสดงอีเมลหรือป้าย E-BIB นี้ที่จุดรับเสื้อและเหรียญรางวัลในวันงาน\n`
@@ -336,7 +336,7 @@ export const TicketPrintEmailModal: React.FC<TicketPrintEmailModalProps> = ({
                           OFFICIAL E-RECEIPT & AUTOMATIC PAYMENT CONFIRMATION
                         </span>
                         <h2 className="text-lg sm:text-xl font-black text-[#2A1450]">
-                          ใบสำคัญรับเงิน / ยืนยันการสมัครวิ่งช้างศึกรัน 2027
+                          ใบสำคัญรับเงิน / ยืนยันการสมัครวิ่งช้างศึกรัน 2026
                         </h2>
                         <p className="text-xs font-bold text-[#6B5A85]">
                           โครงการวิ่งช้างศึกรัน (เห็นช้างวิ่ง วิ่งตามช้าง) · ศูนย์ฝึกสุนัขตำรวจ ค่ายนเรศวร ชะอำ-หัวหิน
@@ -389,7 +389,7 @@ export const TicketPrintEmailModal: React.FC<TicketPrintEmailModalProps> = ({
                     >
                       <div>
                         <span className="text-[10px] font-mono font-extrabold uppercase tracking-widest text-[#FFC928] block">
-                          CHANGSUEK RUN 2027 · E-TICKET & RACE KIT PICKUP PASS
+                          CHANGSUEK RUN 2026 · E-TICKET & RACE KIT PICKUP PASS
                         </span>
                         <span className="text-base sm:text-lg font-black">
                           บัตรรับเสื้อวิ่งและอุปกรณ์แข่งขัน (แสดง QR นี้ในวันรับบิบ)
@@ -436,7 +436,7 @@ export const TicketPrintEmailModal: React.FC<TicketPrintEmailModalProps> = ({
                               วันและสถานที่จัดงาน
                             </span>
                             <span className="font-bold text-[#2A1450]">
-                              เสาร์ 9 ม.ค. 2570 · ค่ายนเรศวร
+                              พฤหัสบดี 10 ธ.ค. 2569 · ค่ายนเรศวร
                             </span>
                           </div>
                           <div>
@@ -508,7 +508,7 @@ export const TicketPrintEmailModal: React.FC<TicketPrintEmailModalProps> = ({
                     >
                       <div>
                         <span className="text-[11px] font-mono font-extrabold uppercase tracking-[0.22em] text-[#FFC928] block">
-                          CHANGSUEK RUN 2027 · OFFICIAL RACE BIB
+                          CHANGSUEK RUN 2026 · OFFICIAL RACE BIB
                         </span>
                         <span className="text-lg sm:text-xl font-black block">
                           เห็นช้างวิ่ง วิ่งตามช้าง • ค่ายนเรศวร
@@ -577,7 +577,7 @@ export const TicketPrintEmailModal: React.FC<TicketPrintEmailModalProps> = ({
                   <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#2A1450]/10 pb-2">
                     <span className="font-black text-sm text-[#2A1450]">
                       [ชำระเงินสำเร็จ] บัตรวิ่ง E-Ticket และป้ายหมายเลข BIB #{profile.bibNumber} งาน
-                      CHANGSUEK RUN 2027
+                      CHANGSUEK RUN 2026
                     </span>
                     <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-extrabold text-[11px]">
                       ✓ ส่งอัตโนมัติแล้ว (Auto-Dispatched)
@@ -600,7 +600,7 @@ export const TicketPrintEmailModal: React.FC<TicketPrintEmailModalProps> = ({
                   </p>
                   <p>
                     ขอแสดงความยินดี! ระบบอัตโนมัติของโครงการวิ่ง{' '}
-                    <strong>CHANGSUEK RUN 2027 (เห็นช้างวิ่ง วิ่งตามช้าง)</strong>{' '}
+                    <strong>CHANGSUEK RUN 2026 (เห็นช้างวิ่ง วิ่งตามช้าง)</strong>{' '}
                     ได้ตรวจสอบยอดเงินโอนผ่านระบบ PromptPay QR ของคุณจำนวน{' '}
                     <strong>{formatBaht(totalAmount)} บาท</strong> เรียบร้อยแล้ว
                     และได้ออกบัตรวิ่งพร้อมหมายเลขประจำตัวนักวิ่ง (BIB) ให้คุณทันทีดังนี้:
@@ -641,7 +641,7 @@ export const TicketPrintEmailModal: React.FC<TicketPrintEmailModalProps> = ({
                       <Calendar className="w-4 h-4 text-[#6D28D9] shrink-0" />
                       <div>
                         <div className="font-bold text-slate-500">วันแข่งขัน</div>
-                        <div className="font-black">เสาร์ 9 ม.ค. 2570</div>
+                        <div className="font-black">พฤหัสบดี 10 ธ.ค. 2569</div>
                       </div>
                     </div>
                     <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 flex items-center gap-2">

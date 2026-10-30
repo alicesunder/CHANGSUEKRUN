@@ -45,7 +45,7 @@ export const EasterEggElephant: React.FC<EasterEggElephantProps> = ({ isActive, 
         className="absolute bottom-24 flex items-center gap-3 bg-[#FFC928] text-[#17151C] px-5 py-3 rounded-full shadow-2xl border-2 border-[#17151C] font-black text-sm md:text-base animate-bounce"
         style={{ left: `${Math.max(20, Math.min(posX - 40, window.innerWidth - 320))}px` }}
       >
-        <span>🐘 วิ่งตามช้าง! RUN TOGETHER 2027 🎉</span>
+        <span>🐘 วิ่งตามช้าง! RUN TOGETHER 2026 🎉</span>
       </div>
 
       {/* Elephant running */}

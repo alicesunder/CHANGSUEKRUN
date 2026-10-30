@@ -237,7 +237,7 @@ export const RacePackCardVisual: React.FC<{
         />
         <div className="absolute inset-0 bg-gradient-to-t from-[#25183B]/70 via-transparent to-transparent" />
         <span className="absolute bottom-2 left-2.5 text-[10px] font-bold text-white bg-[#5B20A8]/90 px-2.5 py-0.5 rounded-full border border-white/30">
-          OFFICIAL JERSEY 2027
+          OFFICIAL JERSEY 2026
         </span>
       </div>
     );
@@ -275,7 +275,7 @@ export const RacePackCardVisual: React.FC<{
           </div>
           <div className="text-center py-1 bg-[#FAF7FD] rounded-lg border border-purple-100">
             <div className="text-[7px] font-bold text-gray-400 tracking-widest">RFID TIMING BIB</div>
-            <div className="font-mono text-2xl font-black text-[#25183B] leading-none my-0.5">2027</div>
+            <div className="font-mono text-2xl font-black text-[#25183B] leading-none my-0.5">2026</div>
           </div>
           <div className="mt-1.5 flex items-center justify-between text-[8px] font-bold text-[#5B20A8]">
             <span>RUNNER NAME</span>

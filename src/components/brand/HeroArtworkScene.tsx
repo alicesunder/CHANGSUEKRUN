@@ -156,7 +156,7 @@ export const HeroArtworkScene: React.FC<HeroArtworkSceneProps> = ({
 
         {/* 2. RUNNING CHARACTERS (From official logo event.png) */}
         
-        {/* CHARACTER 1: THE PURPLE RUNNING ELEPHANT (with Bib 2027) */}
+        {/* CHARACTER 1: THE PURPLE RUNNING ELEPHANT (with Bib 2026) */}
         <g
           id="heroElephant"
           filter="url(#heroDropShadow)"
@@ -175,12 +175,12 @@ export const HeroArtworkScene: React.FC<HeroArtworkSceneProps> = ({
           {/* Main Elephant Body */}
           <ellipse cx="295" cy="210" rx="128" ry="98" fill="url(#heroElephantGrad)" stroke="#18151D" strokeWidth="5.5" />
 
-          {/* 2027 Sports BIB on Elephant Back */}
+          {/* 2026 Sports BIB on Elephant Back */}
           <g transform="rotate(12 385 175)">
             <rect x="355" y="150" width="70" height="48" rx="8" fill="#FFFFFF" stroke="#18151D" strokeWidth="4" />
             <path d="M 345,145 L 375,153" stroke="#FFC928" strokeWidth="7" strokeLinecap="round" />
             <text x="390" y="184" fontFamily="'Prompt', sans-serif" fontWeight="900" fontSize="24" fill="#18151D" textAnchor="middle">
-              2027
+              2026
             </text>
           </g>
 

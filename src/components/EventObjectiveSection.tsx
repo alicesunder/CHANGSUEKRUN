@@ -8,23 +8,23 @@ export const EventObjectiveSection: React.FC = () => {
   const pillars = [
     {
       title: 'พัฒนาศูนย์ฝึกสุนัขตำรวจ',
-      subtitle: 'ค่ายพระรามหก อ.ชะอำ จ.เพชรบุรี',
+      subtitle: 'กองบังคับการฝึกพิเศษ กองบัญชาการ ตชด.',
       Icon: ShieldCheck,
       bg: 'linear-gradient(135deg, #F3E8FF 0%, #E9D5FF 100%)',
       color: '#6D28D9',
       border: '#D8B4FE',
     },
     {
-      title: 'ส่งเสริมสุขภาพคน & สัตว์เลี้ยง',
-      subtitle: 'ออกกำลังกายเคียงข้างเพื่อนสี่ขา',
+      title: 'กองทุนสวัสดิการ ตชด.',
+      subtitle: 'ข้าราชการ ครอบครัว ครูและนักเรียนโรงเรียน ตชด.',
       Icon: HeartHandshake,
       bg: 'linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%)',
       color: '#B45309',
       border: '#FDE68A',
     },
     {
-      title: 'สานสัมพันธ์ ตชด. กับประชาชน',
-      subtitle: 'ผ่านกิจกรรมสร้างสรรค์เพื่อสังคม',
+      title: 'ออกกำลังกายเคียงข้างเพื่อนสี่ขา',
+      subtitle: 'สานสัมพันธ์ ตชด. กับประชาชน',
       Icon: Users,
       bg: 'linear-gradient(135deg, #DCFCE7 0%, #BBF7D0 100%)',
       color: '#166534',
@@ -72,13 +72,13 @@ export const EventObjectiveSection: React.FC = () => {
                   <div className="flex-1">
                     <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white leading-tight">
                       วิ่งด้วยใจ เพื่อพัฒนาสุนัขตำรวจ{' '}
-                      <span className="text-[#FFE268]">สร้างความปลอดภัยให้สังคม</span>
+                      <span className="text-[#FFE268]">และดูแลครอบครัว ตชด.</span>
                     </h2>
                   </div>
                   <div className="shrink-0 self-center sm:self-auto">
                     <LabradorMascot
                       size={82}
-                      badgeText="K9 ค่ายพระรามหก"
+                      badgeText="K9 ตชด."
                       glowColor="rgba(255, 226, 104, 0.38)"
                     />
                   </div>
@@ -86,21 +86,43 @@ export const EventObjectiveSection: React.FC = () => {
 
                 <div className="space-y-3 text-sm sm:text-base text-purple-100/95 leading-relaxed font-medium pt-1">
                   <p>
-                    การจัดงาน{' '}
+                    งาน{' '}
                     <strong className="text-[#FFE28A] font-extrabold">
-                      CHANGSUEK RUN – เห็นช้างวิ่ง วิ่งตามช้าง
+                      BPP Paw Patrol Run 2026
                     </strong>{' '}
-                    มีวัตถุประสงค์เพื่อระดมทุนและส่งเสริมการมีส่วนร่วมของประชาชนในการสนับสนุนการพัฒนา{' '}
+                    (CHANGSUEK RUN – เห็นช้างวิ่ง วิ่งตามช้าง) จัดโดยกองบัญชาการตำรวจตระเวนชายแดน
+                    ในวัน
+                    <strong className="text-white font-bold">พฤหัสบดีที่ 10 ธันวาคม 2569</strong>{' '}
+                    ณ ค่ายนเรศวร อำเภอชะอำ จังหวัดเพชรบุรี{' '}
                     <span className="underline decoration-[#FFC928]/80 decoration-2 underline-offset-4 font-bold text-white">
-                      ศูนย์ฝึกสุนัขตำรวจ ค่ายพระรามหก อำเภอชะอำ จังหวัดเพชรบุรี
+                      รายได้ทั้งหมดหลังหักค่าใช้จ่าย
                     </span>{' '}
-                    ให้มีความพร้อมด้านสถานที่ อุปกรณ์ และขีดความสามารถในการฝึกสุนัขตำรวจ
-                    เพื่อเพิ่มประสิทธิภาพการปฏิบัติภารกิจด้านการรักษาความปลอดภัยและการให้บริการประชาชนอย่างยั่งยืน
+                    จะนำไปใช้ 2 เรื่อง
                   </p>
+                  <ol className="space-y-2">
+                    <li className="flex gap-2.5">
+                      <span className="shrink-0 w-6 h-6 rounded-full bg-[#FFC928] text-[#261247] text-xs font-extrabold flex items-center justify-center mt-0.5">
+                        1
+                      </span>
+                      <span>
+                        พัฒนาและยกระดับขีดความสามารถของกองกำกับการศูนย์ฝึกสุนัขตำรวจ
+                        กองบังคับการฝึกพิเศษ กองบัญชาการตำรวจตระเวนชายแดน
+                      </span>
+                    </li>
+                    <li className="flex gap-2.5">
+                      <span className="shrink-0 w-6 h-6 rounded-full bg-[#FFC928] text-[#261247] text-xs font-extrabold flex items-center justify-center mt-0.5">
+                        2
+                      </span>
+                      <span>
+                        เป็นกองทุนสวัสดิการช่วยเหลือข้าราชการตำรวจตระเวนชายแดน ครอบครัว
+                        ครูและนักเรียนโรงเรียนตำรวจตระเวนชายแดน
+                      </span>
+                    </li>
+                  </ol>
                   <p>
                     พร้อมทั้งส่งเสริมการออกกำลังกาย การดูแลสุขภาพสัตว์เลี้ยง
                     และสร้างความสัมพันธ์อันดีระหว่างตำรวจตระเวนชายแดนกับประชาชน
-                    ผ่านกิจกรรมสร้างสรรค์ที่ทุกคนสามารถมีส่วนร่วมได้
+                    ผ่านกิจกรรมที่ทุกคนมีส่วนร่วมได้
                   </p>
                 </div>
               </div>

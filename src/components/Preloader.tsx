@@ -57,7 +57,7 @@ export const Preloader: React.FC<PreloaderProps> = ({ onComplete }) => {
       <div className="relative z-10 flex flex-col items-center max-w-sm px-6 text-center">
         {/* Brand Title */}
         <div className="inline-block px-3 py-1 mb-2 text-xs font-extrabold tracking-wider text-[#54239A] uppercase bg-[#EEE4FA] rounded-full border border-[#7B3FC6]/20">
-          CHANG SUEK RUN 2027
+          CHANG SUEK RUN 2026
         </div>
         <h1 className="text-2xl font-black text-[#17151C] mb-1">
           เห็นช้างวิ่ง วิ่งตามช้าง

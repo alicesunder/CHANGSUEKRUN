@@ -1,7 +1,7 @@
 import React from 'react';
 
 /**
- * CHANG SUEK RUN 2027 Brand Characters & Graphic Motifs
+ * CHANG SUEK RUN 2026 Brand Characters & Graphic Motifs
  * Perfectly crafted vector art capturing:
  * - The Joyful Purple Elephant (#7B3FC6, #54239A, #9F65EB) with yellow ears (#FFC928) & sports bib
  * - The Cheerful Golden Dog (#E6A854, #F5B800) with red bandana (#EF5350)
@@ -22,7 +22,7 @@ export const ElephantCharacter: React.FC<CharacterProps & { showBib?: boolean; b
   size = 140,
   isAnimated = true,
   showBib = true,
-  bibNumber = '2027',
+  bibNumber = '2026',
   mood = 'running',
 }) => {
   return (

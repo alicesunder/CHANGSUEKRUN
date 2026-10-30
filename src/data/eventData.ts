@@ -16,15 +16,16 @@ import {
 export const eventInfo = {
   name: 'เห็นช้างวิ่ง วิ่งตามช้าง',
   englishName: 'CHANG SUEK RUN',
-  year: 2027,
-  edition: '2027',
+  officialName: 'BPP Paw Patrol Run 2026',
+  year: 2026,
+  edition: '2026',
   tagline: 'RUN TOGETHER',
   subSlogan: 'วิ่งสนุก...ไปด้วยกัน สำหรับทุกคนในครอบครัว',
   subSloganEn: 'RUN WITH YOUR BEST FRIEND',
   description:
     'งานวิ่งมวลชนและครอบครัวสุดอบอุ่นริมหาดประวัติศาสตร์ชะอำ-หัวหิน ท่ามกลางธรรมชาติ ป่าสน ป่าชายเลน และกลิ่นอายค่ายนเรศวร กองบัญชาการตำรวจตระเวนชายแดน สัมผัสประสบการณ์ร่วมวิ่งเคียงข้างเพื่อนซี้สี่ขาและช้างศึกคู่ใจในบรรยากาศเปี่ยมพลัง',
-  date: null as string | null, // Official date pending confirmation
-  dateNotice: 'กำหนดการวันแข่งขันจะแจ้งให้ทราบอย่างเป็นทางการเร็ว ๆ นี้',
+  date: '2026-12-10' as string | null, // พฤหัสบดีที่ 10 ธันวาคม 2569 (ตามคำสั่ง ตชด.)
+  dateNotice: 'พฤหัสบดีที่ 10 ธันวาคม 2569',
   venue: 'ค่ายนเรศวร กองบัญชาการตำรวจตระเวนชายแดน / บริเวณหาดโรงแรม Sea Sand Sun',
   venueShort: 'ค่ายนเรศวร ชะอำ-หัวหิน',
   locationProvince: 'เพชรบุรี (รอยต่อชะอำ-หัวหิน)',
@@ -633,7 +634,7 @@ export const scheduleData: ScheduleDay[] = [
         day: 'day_before',
         time: '10:00 - 19:00',
         title: 'เปิดงานแสดงสินค้าวิ่งและของดีเมืองเพชรบุรี (Running Expo)',
-        description: 'บูทอุปกรณ์วิ่ง อาหารพื้นเมืองเพชรบุรี และสินค้าที่ระลึก CHANG SUEK RUN 2027',
+        description: 'บูทอุปกรณ์วิ่ง อาหารพื้นเมืองเพชรบุรี และสินค้าที่ระลึก CHANG SUEK RUN 2026',
         iconName: 'ShoppingBag',
       },
       {
@@ -853,7 +854,7 @@ export const facilitiesData: FacilityItem[] = [
     iconName: 'Camera',
     operatingHours: '05:45 - 09:00 น.',
     location: 'ริมหาด และหน้าพระราชนิเวศน์มฤคทายวัน',
-    description: 'ซุ้มถ่ายภาพสัญลักษณ์ CHANG SUEK RUN 2027 ช่างภาพมืออาชีพบันทึกภาพฟรีตลอดเส้นทาง',
+    description: 'ซุ้มถ่ายภาพสัญลักษณ์ CHANG SUEK RUN 2026 ช่างภาพมืออาชีพบันทึกภาพฟรีตลอดเส้นทาง',
     locationNote: 'ริมหาด และหน้าพระราชนิเวศน์มฤคทายวัน',
     notes: 'ค้นหาภาพถ่ายฟรีได้จากระบบ Face Recognition หลังจบงาน',
   },
@@ -988,7 +989,7 @@ export const faqData: FAQItem[] = [
   {
     id: 'faq-1',
     category: 'general',
-    question: 'งานวิ่ง CHANG SUEK RUN 2027 จัดขึ้นที่ไหน?',
+    question: 'งานวิ่ง CHANG SUEK RUN 2026 จัดขึ้นที่ไหน?',
     answer:
       'จัดขึ้น ณ ค่ายนเรศวร กองบัญชาการตำรวจตระเวนชายแดน บริเวณหน้าหาดโรงแรม Sea Sand Sun อำเภอชะอำ จังหวัดเพชรบุรี (รอยต่อชะอำ-หัวหิน ถนนเพชรเกษม กม. 219)',
   },
@@ -1049,7 +1050,7 @@ export const announcementsData: Announcement[] = [
     id: 'ann-1',
     date: 'อัปเดตล่าสุด',
     category: 'กำหนดการ',
-    title: 'เตรียมพบกับการเปิดรับสมัคร CHANG SUEK RUN 2027 อย่างเป็นทางการเร็ว ๆ นี้',
+    title: 'เตรียมพบกับการเปิดรับสมัคร CHANG SUEK RUN 2026 อย่างเป็นทางการเร็ว ๆ นี้',
     summary:
       'คณะกรรมการกำลังสรุปรายละเอียดระบบรับสมัครออนไลน์และแพ็กเกจเสื้อที่ระลึก พร้อมโปรโมชั่น Early Bird สุดพิเศษ โปรดติดตามประกาศผ่านช่องทางทางการ',
     content:
@@ -1060,7 +1061,7 @@ export const announcementsData: Announcement[] = [
     id: 'ann-2',
     date: 'อัปเดตล่าสุด',
     category: 'เส้นทาง',
-    title: 'เปิดตัวผังเส้นทางวิ่ง 3.8 KM, 5 KM, 10 KM WAR DOG TRAIL ประจำปี 2027',
+    title: 'เปิดตัวผังเส้นทางวิ่ง 3.8 KM, 5 KM, 10 KM WAR DOG TRAIL ประจำปี 2026',
     summary:
       'ชวนชมแผนที่เส้นทางวิ่งตัวอย่างที่ผสมผสานระหว่างชายหาดค่ายนเรศวร ป่าสน และสนามฝึกน้องสุนัขสงคราม ออกแบบให้วิ่งสนุกและปลอดภัยสำหรับทุกคน',
     content:

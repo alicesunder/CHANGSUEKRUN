@@ -73,7 +73,7 @@ export const RunnerCenter: React.FC<RunnerCenterProps> = ({
             <div>
               <div className="flex items-center gap-2">
                 <span className="text-[10px] font-black uppercase tracking-widest text-[#FFC928]">
-                  CHANGSUEK RUN 2027
+                  CHANGSUEK RUN 2026
                 </span>
                 <span className="text-[9px] bg-white/20 text-white px-2 py-0.5 rounded-full font-bold">
                   RUNNER CENTER
@@ -177,7 +177,7 @@ export const RunnerCenter: React.FC<RunnerCenterProps> = ({
                         <Calendar className="w-4 h-4 text-[#5B20A8]" />
                         <span>กำหนดการสำคัญวันแข่งขัน</span>
                       </div>
-                      <span className="text-xs font-bold text-[#5B20A8]">9 ม.ค. 2570</span>
+                      <span className="text-xs font-bold text-[#5B20A8]">10 ธ.ค. 2569</span>
                     </div>
 
                     <div className="grid grid-cols-3 gap-2 text-center text-xs">
@@ -233,7 +233,7 @@ export const RunnerCenter: React.FC<RunnerCenterProps> = ({
                   การเดินทางของคุณเริ่มต้นที่นี่
                 </h3>
                 <p className="text-xs sm:text-sm text-gray-600 leading-relaxed max-w-md mx-auto">
-                  ยังไม่พบข้อมูลการลงทะเบียนในอุปกรณ์นี้ สมัครเข้าร่วมงานช้างศึกรัน 2027 เพื่อรับหมายเลข BIB, ตรวจสอบเช็กลิสต์ความพร้อม และจำลองเส้นทางวิ่งของคุณได้ทันที!
+                  ยังไม่พบข้อมูลการลงทะเบียนในอุปกรณ์นี้ สมัครเข้าร่วมงานช้างศึกรัน 2026 เพื่อรับหมายเลข BIB, ตรวจสอบเช็กลิสต์ความพร้อม และจำลองเส้นทางวิ่งของคุณได้ทันที!
                 </p>
               </div>
 

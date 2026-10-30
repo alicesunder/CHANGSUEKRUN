@@ -93,7 +93,7 @@ export const VideoTeaserModal: React.FC<VideoTeaserModalProps> = ({
             </span>
             <div>
               <h3 className="text-base sm:text-lg font-black leading-tight">
-                CHANG SUEK RUN 2027 • บรรยากาศเส้นทางจริง
+                CHANG SUEK RUN 2026 • บรรยากาศเส้นทางจริง
               </h3>
               <p className="text-xs text-white/80">
                 ค่ายนเรศวร ตชด. & หาดโรงแรม Sea Sand Sun ชะอำ-หัวหิน

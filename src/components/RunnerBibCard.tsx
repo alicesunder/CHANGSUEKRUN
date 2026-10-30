@@ -138,11 +138,11 @@ export const RunnerBibCard: React.FC<RunnerBibCardProps> = ({
   };
 
   const handleShare = async () => {
-    const text = `ฉันสมัคร CHANGSUEK RUN 2027 เรียบร้อยแล้ว! หมายเลข BIB #${profile.bibNumber} ระยะ ${profile.routeName} ร่วมวิ่งด้วยกันนะ! #เห็นช้างวิ่งวิ่งตามช้าง`;
+    const text = `ฉันสมัคร CHANGSUEK RUN 2026 เรียบร้อยแล้ว! หมายเลข BIB #${profile.bibNumber} ระยะ ${profile.routeName} ร่วมวิ่งด้วยกันนะ! #เห็นช้างวิ่งวิ่งตามช้าง`;
     if (navigator.share) {
       try {
         await navigator.share({
-          title: 'CHANGSUEK RUN 2027 BIB',
+          title: 'CHANGSUEK RUN 2026 BIB',
           text,
           url: window.location.href,
         });
@@ -211,7 +211,7 @@ export const RunnerBibCard: React.FC<RunnerBibCardProps> = ({
                 </div>
                 <div>
                   <span className="block text-[10px] font-mono font-extrabold tracking-[0.22em] text-[#FFC928] uppercase">
-                    CHANGSUEK RUN 2027 · OFFICIAL BIB
+                    CHANGSUEK RUN 2026 · OFFICIAL BIB
                   </span>
                   <span className="block text-sm sm:text-base font-extrabold text-white leading-tight">
                     เห็นช้างวิ่ง วิ่งตามช้าง • ค่ายนเรศวร
@@ -321,7 +321,7 @@ export const RunnerBibCard: React.FC<RunnerBibCardProps> = ({
               <div className="mt-4 pt-3 border-t-2 border-dashed border-[#2A1450]/25 flex items-center justify-between text-[10px] text-[#4B2D78] font-mono">
                 <div>
                   <span className="font-extrabold block text-[#2A1450]">
-                    CSR-2027-{profile.routeId.toUpperCase()}-{profile.bibNumber}
+                    CSR-2026-{profile.routeId.toUpperCase()}-{profile.bibNumber}
                   </span>
                   <span className="text-[9px] font-sans font-bold text-[#6B5A85]">
                     RFID TIMING CHIP EMBEDDED · แสดงบัตรนี้ในวันรับ Race Pack
@@ -429,7 +429,7 @@ export const RunnerBibCard: React.FC<RunnerBibCardProps> = ({
             </div>
 
             <div className="text-center text-[11px] text-white/65 pt-2 border-t border-white/10">
-              แตะที่การ์ดเพื่อพลิกกลับด้านหน้า • CHANGSUEK RUN 2027
+              แตะที่การ์ดเพื่อพลิกกลับด้านหน้า • CHANGSUEK RUN 2026
             </div>
           </div>
         </motion.div>
