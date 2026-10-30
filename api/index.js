@@ -28727,16 +28727,26 @@ function comboKey(s) {
 function addOnPricePerPerson(s) {
   return COMBO_PRICES[comboKey(s)] ?? 0;
 }
-var ALL_THREE_DISCOUNT_RATE = 0.1;
-function hasAllThree(s) {
-  return s.tower && s.gun !== "none" && s.windTunnel;
+var CONCERT_BUNDLE_RATE = 0.1;
+var ADDON_TWO_RATE = 0.1;
+var ADDON_THREE_RATE = 0.15;
+function activityCount(s) {
+  return (s.tower ? 1 : 0) + (s.gun !== "none" ? 1 : 0) + (s.windTunnel ? 1 : 0);
 }
-function addOnBonusDiscount(s) {
-  if (!hasAddOns(s) || !hasAllThree(s)) return 0;
-  return Math.round(addOnPricePerPerson(s) * s.people * ALL_THREE_DISCOUNT_RATE);
+function addOnDiscountRate(s, eligible) {
+  if (!eligible || !hasAddOns(s)) return 0;
+  const n = activityCount(s);
+  return n >= 3 ? ADDON_THREE_RATE : n === 2 ? ADDON_TWO_RATE : 0;
 }
-function addOnTotal(s) {
-  return hasAddOns(s) ? addOnPricePerPerson(s) * s.people - addOnBonusDiscount(s) : 0;
+function addOnBonusDiscount(s, eligible) {
+  const rate = addOnDiscountRate(s, eligible);
+  return rate > 0 ? Math.round(addOnPricePerPerson(s) * s.people * rate) : 0;
+}
+function addOnTotal(s, eligible) {
+  return hasAddOns(s) ? addOnPricePerPerson(s) * s.people - addOnBonusDiscount(s, eligible) : 0;
+}
+function concertDiscountPerTicket(unitPrice, eligible) {
+  return eligible ? Math.round(unitPrice * CONCERT_BUNDLE_RATE) : 0;
 }
 function addOnLabel(s) {
   const parts = [];
@@ -29119,7 +29129,8 @@ function createApp() {
       return;
     }
     const addOns = normalizeAddOns(b.addOns);
-    const addOnSum = addOnTotal(addOns);
+    const discountEligible = !noRun && !sponsorCode;
+    const addOnSum = addOnTotal(addOns, discountEligible);
     if ((!sponsorCode || addOnSum > 0) && !await getOmiseKey()) {
       res.status(503).json({ error: "\u0E23\u0E30\u0E1A\u0E1A\u0E0A\u0E33\u0E23\u0E30\u0E40\u0E07\u0E34\u0E19\u0E22\u0E31\u0E07\u0E44\u0E21\u0E48\u0E40\u0E1B\u0E34\u0E14\u0E43\u0E0A\u0E49\u0E07\u0E32\u0E19 \u0E01\u0E23\u0E38\u0E13\u0E32\u0E15\u0E34\u0E14\u0E15\u0E48\u0E2D\u0E1C\u0E39\u0E49\u0E08\u0E31\u0E14\u0E07\u0E32\u0E19" });
       return;
@@ -29171,7 +29182,8 @@ function createApp() {
       }
       sponsorName = used.sponsorName;
     }
-    const ticketTotal = isAddonOnly ? 0 : isConcert ? CONCERT_PASS_PRICE * concertQty : sponsorCode ? 0 : calcTicketTotal(routeId, extraPeople, extraDogs) + CONCERT_PASS_PRICE * concertQty;
+    const concertDiscount = concertQty * concertDiscountPerTicket(CONCERT_PASS_PRICE, discountEligible);
+    const ticketTotal = isAddonOnly ? 0 : isConcert ? CONCERT_PASS_PRICE * concertQty : sponsorCode ? 0 : calcTicketTotal(routeId, extraPeople, extraDogs) + CONCERT_PASS_PRICE * concertQty - concertDiscount;
     const total = ticketTotal + addOnSum;
     const token = crypto3.randomBytes(24).toString("base64url");
     const now = /* @__PURE__ */ new Date();
@@ -29188,6 +29200,7 @@ function createApp() {
       routeName: isAddonOnly ? "\u0E01\u0E34\u0E08\u0E01\u0E23\u0E23\u0E21\u0E40\u0E2A\u0E23\u0E34\u0E21\u0E2D\u0E22\u0E48\u0E32\u0E07\u0E40\u0E14\u0E35\u0E22\u0E27 (\u0E44\u0E21\u0E48\u0E27\u0E34\u0E48\u0E07)" : isConcert ? "\u0E15\u0E31\u0E4B\u0E27\u0E04\u0E2D\u0E19\u0E40\u0E2A\u0E34\u0E23\u0E4C\u0E15 / \u0E40\u0E02\u0E49\u0E32\u0E07\u0E32\u0E19 (\u0E44\u0E21\u0E48\u0E27\u0E34\u0E48\u0E07)" : ticketById(routeId).name,
       ticketType: isAddonOnly ? "ADDON" : isConcert ? "CONCERT" : "RUN",
       concertQty: concertQty > 0 ? concertQty : void 0,
+      concertDiscount: concertDiscount > 0 ? concertDiscount : void 0,
       insurance,
       shirtSize,
       runningWithDog: isDog,
@@ -29203,7 +29216,7 @@ function createApp() {
       paymentMethod: sponsorCode ? "SPONSOR_CODE" : "PROMPTPAY_QR",
       sponsorCode: sponsorCode || void 0,
       sponsorName: sponsorName || void 0,
-      addOns: hasAddOns(addOns) ? { ...addOns, pricePerPerson: addOnPricePerPerson(addOns), total: addOnSum, discount: addOnBonusDiscount(addOns), label: addOnLabel(addOns) } : void 0,
+      addOns: hasAddOns(addOns) ? { ...addOns, pricePerPerson: addOnPricePerPerson(addOns), total: addOnSum, discount: addOnBonusDiscount(addOns, discountEligible), label: addOnLabel(addOns) } : void 0,
       paymentStatus: "PENDING",
       paymentRef: "",
       senderBank: "",

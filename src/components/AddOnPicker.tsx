@@ -15,6 +15,8 @@ import {
 import { PawIcon } from './brand/DogDecor';
 
 interface AddOnPickerProps {
+  /** true when the order has a run ticket (the bundle discounts apply) */
+  discountEligible?: boolean;
   value: AddOnSelection;
   onChange: (next: AddOnSelection) => void;
   /** Wind-tunnel seats still free (null = unknown yet) */
@@ -174,12 +176,12 @@ export const PeopleStepper: React.FC<{ value: number; onChange: (n: number) => v
   </div>
 );
 
-export const AddOnPicker: React.FC<AddOnPickerProps> = ({ value, onChange, windTunnelRemaining = null, showResult = true, layout = 'grid' }) => {
+export const AddOnPicker: React.FC<AddOnPickerProps> = ({ value, onChange, windTunnelRemaining = null, showResult = true, layout = 'grid', discountEligible = false }) => {
   const set = (patch: Partial<AddOnSelection>) => onChange({ ...value, ...patch });
   const picked = hasAddOns(value);
   const perPerson = addOnPricePerPerson(value);
   const saving = addOnSavingPerPerson(value);
-  const total = addOnTotal(value);
+  const total = addOnTotal(value, discountEligible);
   const isFull = value.tower && value.gun === 'standard' && value.windTunnel;
   const gunOn = value.gun !== 'none';
   const gun = ADD_ON_THEMES.gun;

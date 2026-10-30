@@ -78,7 +78,7 @@ import {
 import { TicketPrintEmailModal } from './TicketPrintEmailModal';
 import { AddOnPicker } from './AddOnPicker';
 import { BLOOD_TYPES, GENDERS, PREFIXES, RELATIONSHIPS, ageFromBirthDate, needsInsurance } from '../data/insurance';
-import { EMPTY_ADD_ONS, addOnBonusDiscount, addOnLabel, addOnTotal, hasAddOns, type AddOnSelection } from '../data/addOns';
+import { EMPTY_ADD_ONS, addOnBonusDiscount, addOnDiscountRate, addOnLabel, addOnTotal, concertDiscountPerTicket, hasAddOns, percentOf, type AddOnSelection } from '../data/addOns';
 
 interface RegistrationModalProps {
   isOpen: boolean;
@@ -307,11 +307,14 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
   const insured = !noRun && needsInsurance(selectedRoute);
   const insAge = ageFromBirthDate(insBirth);
   const todayIso = new Date().toISOString().slice(0, 10);
-  const ticketTotal = (wantRun ? calcTicketTotal(selectedRoute, extraPeople, extraDogs) : 0) + (wantConcert ? CONCERT_PASS_PRICE * concertQty : 0);
-  const addOnSum = addOnTotal(addOns);
+  // Bundle discounts need a run ticket and never stack with a sponsor code.
+  const sponsorOn = Boolean(sponsor) && wantRun;
+  const discountEligible = wantRun && !sponsorOn;
+  const concertDiscount = wantConcert ? concertQty * concertDiscountPerTicket(CONCERT_PASS_PRICE, discountEligible) : 0;
+  const ticketTotal = (wantRun ? calcTicketTotal(selectedRoute, extraPeople, extraDogs) : 0) + (wantConcert ? CONCERT_PASS_PRICE * concertQty - concertDiscount : 0);
+  const addOnSum = addOnTotal(addOns, discountEligible);
   const total = ticketTotal + addOnSum;
   // With a sponsor code the run is free; add-on activities are always paid.
-  const sponsorOn = Boolean(sponsor) && wantRun;
   const chargeTotal = (sponsorOn ? 0 : ticketTotal) + addOnSum;
   const isFreeOrder = sponsorOn && addOnSum === 0;
   const dogCount = isDog ? 1 + extraDogs : 0;
@@ -969,6 +972,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                     value={addOns}
                     onChange={setAddOns}
                     windTunnelRemaining={typeof publicCfg?.windTunnelRemaining === 'number' ? publicCfg.windTunnelRemaining : null}
+                    discountEligible={discountEligible}
                   />
                 </div>
                 </div>
@@ -1046,6 +1050,12 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                           <span className="font-extrabold text-[#261247] tabular-nums">{formatBaht(CONCERT_PASS_PRICE * concertQty)} บาท</span>
                         </div>
                       )}
+                      {concertDiscount > 0 && (
+                        <div className="flex justify-between gap-3 text-emerald-700">
+                          <span>🎶 ส่วนลดซื้อคู่วิ่ง + คอนเสิร์ต (10%)</span>
+                          <span className="font-extrabold tabular-nums shrink-0">-{formatBaht(concertDiscount)} บาท</span>
+                        </div>
+                      )}
                       {isDog && extraPeople > 0 && (
                         <div className="flex justify-between">
                           <span>ผู้ร่วมวิ่งเพิ่ม × {extraPeople} คน</span>
@@ -1067,13 +1077,13 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                           <span>
                             กิจกรรมเสริม: {addOnLabel(addOns)} × {addOns.people} คน
                           </span>
-                          <span className="font-extrabold text-[#261247] tabular-nums shrink-0">+{formatBaht(addOnSum + addOnBonusDiscount(addOns))} บาท</span>
+                          <span className="font-extrabold text-[#261247] tabular-nums shrink-0">+{formatBaht(addOnSum + addOnBonusDiscount(addOns, discountEligible))} บาท</span>
                         </div>
                       )}
-                      {addOnBonusDiscount(addOns) > 0 && (
+                      {addOnBonusDiscount(addOns, discountEligible) > 0 && (
                         <div className="flex justify-between gap-3 text-emerald-700">
-                          <span>🎉 ส่วนลดครบ 3 กิจกรรม (10%)</span>
-                          <span className="font-extrabold tabular-nums shrink-0">-{formatBaht(addOnBonusDiscount(addOns))} บาท</span>
+                          <span>🎉 {`ส่วนลดวิ่ง + ${addOns.tower && addOns.gun !== 'none' && addOns.windTunnel ? 'ครบ 3' : '2'} กิจกรรม (${percentOf(addOnDiscountRate(addOns, discountEligible))}%)`}</span>
+                          <span className="font-extrabold tabular-nums shrink-0">-{formatBaht(addOnBonusDiscount(addOns, discountEligible))} บาท</span>
                         </div>
                       )}
                     </div>

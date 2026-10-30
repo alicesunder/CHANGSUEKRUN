@@ -52,7 +52,7 @@ import {
   ROUTES,
   type StoredOrder,
 } from './store';
-import { WIND_TUNNEL_LIMIT, addOnBonusDiscount, addOnLabel, addOnPricePerPerson, addOnTotal, hasAddOns, normalizeAddOns } from '../src/data/addOns';
+import { WIND_TUNNEL_LIMIT, addOnBonusDiscount, addOnLabel, addOnPricePerPerson, addOnTotal, concertDiscountPerTicket, hasAddOns, normalizeAddOns } from '../src/data/addOns';
 import { needsInsurance, parseInsurance, type InsuranceInfo } from '../src/data/insurance';
 import { checkCredentials, issueToken, requireAdmin } from './auth';
 import { createOmiseCharge, fetchOmiseQrImage, fetchVerifiedOmiseCharge, omiseKeyMode } from './payments';
@@ -227,7 +227,9 @@ export function createApp(): express.Express {
     }
     // Add-on activities are always paid (a sponsor code only covers the run + concert).
     const addOns = normalizeAddOns(b.addOns);
-    const addOnSum = addOnTotal(addOns);
+    // Bundle discounts need a run ticket in the same order and never stack with a sponsor code.
+    const discountEligible = !noRun && !sponsorCode;
+    const addOnSum = addOnTotal(addOns, discountEligible);
     // A fully free sponsor registration doesn't need the payment gateway.
     if ((!sponsorCode || addOnSum > 0) && !(await getOmiseKey())) {
       res.status(503).json({ error: 'ระบบชำระเงินยังไม่เปิดใช้งาน กรุณาติดต่อผู้จัดงาน' });
@@ -290,13 +292,14 @@ export function createApp(): express.Express {
       sponsorName = used.sponsorName;
     }
 
+    const concertDiscount = concertQty * concertDiscountPerTicket(CONCERT_PASS_PRICE, discountEligible);
     const ticketTotal = isAddonOnly
       ? 0
       : isConcert
         ? CONCERT_PASS_PRICE * concertQty
         : sponsorCode
           ? 0
-          : calcTicketTotal(routeId, extraPeople, extraDogs) + CONCERT_PASS_PRICE * concertQty;
+          : calcTicketTotal(routeId, extraPeople, extraDogs) + CONCERT_PASS_PRICE * concertQty - concertDiscount;
     const total = ticketTotal + addOnSum;
     const token = crypto.randomBytes(24).toString('base64url');
     const now = new Date();
@@ -314,6 +317,7 @@ export function createApp(): express.Express {
       routeName: isAddonOnly ? 'กิจกรรมเสริมอย่างเดียว (ไม่วิ่ง)' : isConcert ? 'ตั๋วคอนเสิร์ต / เข้างาน (ไม่วิ่ง)' : ticketById(routeId).name,
       ticketType: isAddonOnly ? 'ADDON' : isConcert ? 'CONCERT' : 'RUN',
       concertQty: concertQty > 0 ? concertQty : undefined,
+      concertDiscount: concertDiscount > 0 ? concertDiscount : undefined,
       insurance,
       shirtSize,
       runningWithDog: isDog,
@@ -330,7 +334,7 @@ export function createApp(): express.Express {
       sponsorCode: sponsorCode || undefined,
       sponsorName: sponsorName || undefined,
       addOns: hasAddOns(addOns)
-        ? { ...addOns, pricePerPerson: addOnPricePerPerson(addOns), total: addOnSum, discount: addOnBonusDiscount(addOns), label: addOnLabel(addOns) }
+        ? { ...addOns, pricePerPerson: addOnPricePerPerson(addOns), total: addOnSum, discount: addOnBonusDiscount(addOns, discountEligible), label: addOnLabel(addOns) }
         : undefined,
       paymentStatus: 'PENDING',
       paymentRef: '',

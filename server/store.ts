@@ -29,6 +29,8 @@ export interface StoredOrder {
   ticketType?: 'RUN' | 'CONCERT' | 'ADDON';
   /** number of concert passes (CONCERT orders only) */
   concertQty?: number;
+  /** baht taken off the concert tickets by the run + concert bundle */
+  concertDiscount?: number;
   routeName: string;
   shirtSize: string;
   runningWithDog: boolean;

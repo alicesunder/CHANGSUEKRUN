@@ -15,7 +15,7 @@ export interface AddOnActivity {
 }
 
 export const ADD_ON_TEASER =
-  'เพิ่มความมันส์หลังวิ่ง! สมัครกิจกรรมเสริมพร้อมงานวิ่งสุนัข ซื้อเป็นแพ็กเกจคุ้มกว่า เริ่มต้น 1,190 บาท และถ้าเลือกครบ 3 กิจกรรมลดทันทีอีก 10% อุโมงค์ลมจำกัด 60 ท่านเท่านั้น';
+  'เพิ่มความมันส์หลังวิ่ง! สมัครกิจกรรมเสริมพร้อมงานวิ่ง ซื้อเป็นแพ็กเกจคุ้มกว่า เริ่มต้น 1,190 บาท ซื้อตั๋ววิ่ง + 2 กิจกรรม ลด 10% และครบ 3 กิจกรรม ลด 15% อุโมงค์ลมจำกัด 60 ท่านเท่านั้น';
 
 export const ADD_ON_ACTIVITIES: AddOnActivity[] = [
   {
@@ -184,21 +184,47 @@ export function addOnSavingPerPerson(s: AddOnSelection): number {
   return Math.max(0, addOnSeparatePerPerson(s) - addOnPricePerPerson(s));
 }
 
-/** Choosing all three activities (tower + shooting + wind tunnel) takes 10% off the activities. */
-export const ALL_THREE_DISCOUNT_RATE = 0.1;
+// ---------------------------------------------------------------------------
+// Bundle discounts — every one of them needs a run ticket in the same order (and none applies with a sponsor code):
+//   run + concert            → each concert ticket 10% off
+//   run + any 2 activities   → activities 10% off
+//   run + all 3 activities   → activities 15% off
+// ---------------------------------------------------------------------------
+export const CONCERT_BUNDLE_RATE = 0.1;
+export const ADDON_TWO_RATE = 0.1;
+export const ADDON_THREE_RATE = 0.15;
+
+export const percentOf = (rate: number): number => Math.round(rate * 100);
+
+/** How many of the three activities are chosen (tower, shooting, wind tunnel). */
+export function activityCount(s: AddOnSelection): number {
+  return (s.tower ? 1 : 0) + (s.gun !== 'none' ? 1 : 0) + (s.windTunnel ? 1 : 0);
+}
 
 export function hasAllThree(s: AddOnSelection): boolean {
   return s.tower && s.gun !== 'none' && s.windTunnel;
 }
 
-/** Baht taken off by the all-three bonus (whole baht). */
-export function addOnBonusDiscount(s: AddOnSelection): number {
-  if (!hasAddOns(s) || !hasAllThree(s)) return 0;
-  return Math.round(addOnPricePerPerson(s) * s.people * ALL_THREE_DISCOUNT_RATE);
+/** Discount rate on the activities (0 when there is no run ticket, or fewer than 2 activities). */
+export function addOnDiscountRate(s: AddOnSelection, eligible: boolean): number {
+  if (!eligible || !hasAddOns(s)) return 0;
+  const n = activityCount(s);
+  return n >= 3 ? ADDON_THREE_RATE : n === 2 ? ADDON_TWO_RATE : 0;
 }
 
-export function addOnTotal(s: AddOnSelection): number {
-  return hasAddOns(s) ? addOnPricePerPerson(s) * s.people - addOnBonusDiscount(s) : 0;
+/** Baht taken off the activities (whole baht). */
+export function addOnBonusDiscount(s: AddOnSelection, eligible: boolean): number {
+  const rate = addOnDiscountRate(s, eligible);
+  return rate > 0 ? Math.round(addOnPricePerPerson(s) * s.people * rate) : 0;
+}
+
+export function addOnTotal(s: AddOnSelection, eligible: boolean): number {
+  return hasAddOns(s) ? addOnPricePerPerson(s) * s.people - addOnBonusDiscount(s, eligible) : 0;
+}
+
+/** Baht off ONE concert ticket when it is bought together with a run ticket. */
+export function concertDiscountPerTicket(unitPrice: number, eligible: boolean): number {
+  return eligible ? Math.round(unitPrice * CONCERT_BUNDLE_RATE) : 0;
 }
 
 export function addOnLabel(s: AddOnSelection): string {

@@ -9,27 +9,32 @@ import {
   FULL_EXPERIENCE,
   PREMIUM_GUNS,
   STANDARD_GUNS,
+  ADDON_THREE_RATE,
+  activityCount as countActivities,
   addOnBonusDiscount,
+  addOnDiscountRate,
   addOnLabel,
   addOnPricePerPerson,
   addOnTotal,
+  concertDiscountPerTicket,
   formatBaht,
   hasAddOns,
-  hasAllThree,
+  percentOf,
 } from '../data/addOns';
 import { getPublicConfig } from '../utils/api';
 import { AddOnPicker, PeopleStepper } from './AddOnPicker';
-import { DiscountCelebration } from './PerkCelebration';
+import { DealStrip, DiscountCelebration } from './PerkCelebration';
 import { LABRADOR_SVG_PATH } from './brand/LabradorMascot';
 import { PawIcon } from './brand/DogDecor';
 
 // ---------------------------------------------------------------------------
 // The three parts share one look: a vivid gradient header ribbon + white body
 // ---------------------------------------------------------------------------
+const BRAND_HEADER = 'linear-gradient(135deg, #2A1450 0%, #4C1D95 55%, #6D28D9 100%)';
 const STATIONS = {
-  run: { n: 1, emoji: '🏃', title: 'ตั๋ววิ่ง', hint: 'เลือก 1 ระยะ (ไม่วิ่งก็ข้ามได้)', grad: 'linear-gradient(135deg, #6366F1 0%, #9333EA 52%, #EC4899 100%)' },
-  concert: { n: 2, emoji: '🎶', title: 'ตั๋วคอนเสิร์ต', hint: 'ริมหาด หลัง 17.30 น. · ซื้อแยกได้', grad: 'linear-gradient(135deg, #F59E0B 0%, #FF6B6B 100%)' },
-  addon: { n: 3, emoji: '🎢', title: 'กิจกรรมเสริม', hint: 'ครบ 3 อย่าง ลดทันที 10%', grad: 'linear-gradient(135deg, #10B981 0%, #0EA5E9 100%)' },
+  run: { n: 1, emoji: '🏃', title: 'ตั๋ววิ่ง', hint: 'เลือก 1 ระยะ (ไม่วิ่งก็ข้ามได้)', grad: BRAND_HEADER },
+  concert: { n: 2, emoji: '🎶', title: 'ตั๋วคอนเสิร์ต', hint: 'ริมหาด หลัง 17.30 น. · ซื้อแยกได้', grad: BRAND_HEADER },
+  addon: { n: 3, emoji: '🎢', title: 'กิจกรรมเสริม', hint: 'ซื้อคู่ตั๋ววิ่ง 2 อย่างลด 10% · ครบ 3 อย่างลด 15%', grad: BRAND_HEADER },
 } as const;
 type StationKey = keyof typeof STATIONS;
 
@@ -161,14 +166,14 @@ const StationCard: React.FC<{ id: string; k: StationKey; done: boolean; children
       aria-labelledby={`${id}-title`}
       className="relative scroll-mt-24 rounded-[30px] bg-white border-[3px] border-[var(--ink)] shadow-[6px_7px_0_var(--ink)]"
     >
-      <header className="relative overflow-hidden flex items-center gap-3 px-4 sm:px-5 py-3.5 rounded-t-[27px] text-white" style={{ background: s.grad }}>
+      <header className="relative overflow-hidden flex items-center gap-3 px-4 sm:px-5 py-3 rounded-t-[27px] text-white" style={{ background: s.grad }}>
         <span aria-hidden="true" className="pointer-events-none absolute -top-10 -right-6 w-36 h-36 rounded-full bg-white/25 blur-2xl" />
         <span aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-px bg-white/70" />
         <motion.span
           aria-hidden="true"
           animate={done ? { rotate: [0, -14, 14, 0], scale: [1, 1.18, 1] } : { rotate: 0, scale: 1 }}
           transition={{ duration: 0.5 }}
-          className="relative w-12 h-12 shrink-0 rounded-2xl bg-white border-[3px] border-[var(--ink)] flex items-center justify-center text-2xl shadow-[0_3px_0_var(--ink)]"
+          className="relative w-11 h-11 shrink-0 rounded-2xl bg-white border-[3px] border-[var(--ink)] flex items-center justify-center text-xl shadow-[0_3px_0_var(--ink)]"
         >
           {s.emoji}
           <span
@@ -179,7 +184,7 @@ const StationCard: React.FC<{ id: string; k: StationKey; done: boolean; children
           </span>
         </motion.span>
         <div className="relative min-w-0 flex-1">
-          <h3 id={`${id}-title`} className="text-xl sm:text-2xl font-extrabold leading-tight drop-shadow-[0_2px_6px_rgba(0,0,0,0.2)]">
+          <h3 id={`${id}-title`} className="text-lg sm:text-xl font-extrabold leading-tight">
             {s.title}
           </h3>
           <p className="text-xs sm:text-sm font-bold text-white/90 leading-snug">{s.hint}</p>
@@ -423,14 +428,33 @@ export const TicketShop: React.FC<TicketShopProps> = ({
   }, []);
 
   const picked = hasAddOns(addOns);
-  const allThree = picked && hasAllThree(addOns);
+  // Every bundle discount needs a run ticket in the basket.
+  const eligible = !!run;
+  const activityCount = countActivities(addOns);
+  const addOnRate = addOnDiscountRate(addOns, eligible);
   const runPrice = run ? calcTicketTotal(run, 0, 0) : 0;
-  const concertPrice = CONCERT_PASS_PRICE * concertQty;
-  const bonus = addOnBonusDiscount(addOns);
-  const addOnPrice = addOnTotal(addOns);
+  const concertUnitOff = concertDiscountPerTicket(CONCERT_PASS_PRICE, eligible);
+  const concertOff = concertUnitOff * concertQty;
+  const concertPrice = CONCERT_PASS_PRICE * concertQty - concertOff;
+  const bonus = addOnBonusDiscount(addOns, eligible);
+  const addOnPrice = addOnTotal(addOns, eligible);
   const total = runPrice + concertPrice + addOnPrice;
+  const totalSaved = concertOff + bonus;
   const count = (run ? 1 : 0) + (concertQty > 0 ? 1 : 0) + (picked ? 1 : 0);
-  const activityCount = (addOns.tower ? 1 : 0) + (addOns.gun !== 'none' ? 1 : 0) + (addOns.windTunnel ? 1 : 0);
+  const concertDeal = eligible && concertQty > 0;
+  const addOnDealLabel = addOnRate >= ADDON_THREE_RATE ? 'ครบ 3 กิจกรรม 🎉🎉' : 'วิ่ง + 2 กิจกรรม 🎉';
+  // what to do next to unlock a better price
+  const nudge = !run
+    ? concertQty > 0 || picked
+      ? 'เพิ่มตั๋ววิ่ง = ปลดล็อกส่วนลดทุกอย่างในตะกร้า! 🏃'
+      : ''
+    : concertQty === 0
+      ? `เพิ่มตั๋วคอนเสิร์ต ลดทันที ${formatBaht(CONCERT_PASS_PRICE * 0.1)} บาท/ใบ 🎶`
+      : activityCount === 1
+        ? 'อีก 1 กิจกรรม ลด 10% ทันที! 🎢'
+        : activityCount === 2
+          ? 'อีก 1 กิจกรรม ลดเป็น 15%!!! 🔥'
+          : '';
 
   const lines: { key: string; emoji: string; tint: string; label: string; sub?: string; price: number; onRemove: () => void }[] = [];
   if (run) {
@@ -438,7 +462,7 @@ export const TicketShop: React.FC<TicketShopProps> = ({
     lines.push({ key: 'run', emoji: '🏃', tint: LOOK[run].accentSoft, label: `วิ่ง ${t.distanceLabel}`, sub: t.name, price: runPrice, onRemove: () => onRunChange(null) });
   }
   if (concertQty > 0) {
-    lines.push({ key: 'concert', emoji: '🎶', tint: '#FEF3C7', label: `คอนเสิร์ต × ${concertQty}`, sub: `${formatBaht(CONCERT_PASS_PRICE)} บาท/ใบ`, price: concertPrice, onRemove: () => onConcertQtyChange(0) });
+    lines.push({ key: 'concert', emoji: '🎶', tint: '#FEF3C7', label: `คอนเสิร์ต × ${concertQty}`, sub: concertOff > 0 ? `ลด 10% เหลือ ${formatBaht(CONCERT_PASS_PRICE - concertUnitOff)} บาท/ใบ (−${formatBaht(concertOff)})` : `${formatBaht(CONCERT_PASS_PRICE)} บาท/ใบ`, price: concertPrice, onRemove: () => onConcertQtyChange(0) });
   }
   if (picked) {
     lines.push({
@@ -446,7 +470,7 @@ export const TicketShop: React.FC<TicketShopProps> = ({
       emoji: '🎢',
       tint: '#E0F7FA',
       label: `${addOnLabel(addOns)} × ${addOns.people}`,
-      sub: bonus > 0 ? `รวมส่วนลด 10% แล้ว (−${formatBaht(bonus)})` : `${formatBaht(addOnPricePerPerson(addOns))} บาท/คน`,
+      sub: bonus > 0 ? `ลด ${percentOf(addOnRate)}% แล้ว (−${formatBaht(bonus)})` : `${formatBaht(addOnPricePerPerson(addOns))} บาท/คน`,
       price: addOnPrice,
       onRemove: () => onAddOnsChange({ ...EMPTY_ADD_ONS }),
     });
@@ -467,66 +491,27 @@ export const TicketShop: React.FC<TicketShopProps> = ({
   );
 
   return (
-    <div className="relative rounded-[40px] p-[4px] shadow-[0_40px_90px_-30px_rgba(147,51,234,0.55)]" style={{ background: 'linear-gradient(120deg, #FF7A59, #FFC928, #10B981, #0EA5E9, #9333EA, #EC4899)' }}>
-      <div className="relative rounded-[36px] px-3 sm:px-6 lg:px-8 py-8 sm:py-10" style={{ background: 'linear-gradient(160deg, #FFF7E6 0%, #FDF0FF 40%, #EEF4FF 75%, #E9FBF5 100%)' }}>
+    <div className="relative rounded-[40px] p-[3px] shadow-[0_30px_70px_-30px_rgba(76,29,149,0.5)]" style={{ background: 'linear-gradient(120deg, #7C3AED, #EC4899 55%, #FFC928)' }}>
+      <div className="relative rounded-[36px] px-3 sm:px-6 lg:px-8 py-8 sm:py-10" style={{ background: 'linear-gradient(165deg, #FFFBF1 0%, #FAF5FF 60%, #F5F0FF 100%)' }}>
         {/* party lights (clipped to the frame; the frame itself stays unclipped so the basket can stick) */}
         <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden rounded-[36px]">
           <span className="absolute -top-24 -left-20 w-80 h-80 rounded-full bg-[#FFC928]/35 blur-3xl" />
-          <span className="absolute top-1/3 -right-24 w-96 h-96 rounded-full bg-[#EC4899]/20 blur-3xl" />
-          <span className="absolute -bottom-24 left-1/4 w-96 h-96 rounded-full bg-[#0EA5E9]/20 blur-3xl" />
-          {['🎉', '🐾', '✨', '🎈', '⭐'].map((e, i) => (
-            <motion.span
-              key={e}
-              className="absolute text-2xl hidden sm:block"
-              style={{ top: `${[3, 8, 3, 9, 6][i]}%`, left: `${[6, 18, 80, 90, 66][i]}%` }}
-              animate={{ y: [0, -10, 0], rotate: [-10, 10, -10] }}
-              transition={{ duration: 3 + i * 0.4, repeat: Infinity, ease: 'easeInOut' }}
-            >
-              {e}
-            </motion.span>
-          ))}
+          <span className="absolute top-1/3 -right-24 w-96 h-96 rounded-full bg-[#7C3AED]/12 blur-3xl" />
+          <span className="absolute -bottom-24 left-1/4 w-96 h-96 rounded-full bg-[#FFC928]/20 blur-3xl" />
         </div>
 
-        {/* ---------- Heading ---------- */}
-        <div className="relative text-center max-w-2xl mx-auto mb-7 sm:mb-9">
-          <motion.img
-            src={LABRADOR_SVG_PATH}
-            alt=""
-            aria-hidden="true"
-            className="mx-auto w-16 h-[70px] object-contain"
-            animate={{ y: [0, -6, 0], rotate: [-3, 3, -3] }}
-            transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
-          />
-          <span className="inline-block mt-1 px-4 py-1 rounded-full text-white text-xs font-extrabold tracking-[0.2em] border-2 border-[var(--ink)] shadow-[0_3px_0_var(--ink)]" style={{ background: 'linear-gradient(90deg, #FF4E88, #9333EA, #0EA5E9)' }}>
-            TICKET SHOP
-          </span>
-          <h2 className="mt-3 font-hero text-3xl sm:text-5xl font-bold leading-[1.35]">
-            <span className="inline-block bg-gradient-to-r from-[#FF4E88] via-[#9333EA] to-[#0EA5E9] bg-clip-text text-transparent px-1 pt-2 pb-1">ซื้อบัตรงานวิ่ง</span>
-          </h2>
-          <p className="mt-1 text-sm sm:text-base font-bold text-[#4B2D78]">
-            เลือกได้ 1, 2 หรือครบ 3 อย่าง <span className="text-[#EC4899]">แล้วจ่ายทีเดียวจบ</span>
-          </p>
-          <ol className="mt-4 flex flex-wrap justify-center gap-2" aria-label="3 ส่วนของร้าน">
-            {(Object.keys(STATIONS) as StationKey[]).map((k) => {
-              const s = STATIONS[k];
-              const done = k === 'run' ? !!run : k === 'concert' ? concertQty > 0 : picked;
-              return (
-                <li key={k}>
-                  <a
-                    href={`#shop-${k}`}
-                    className="inline-flex items-center gap-1.5 min-h-[44px] px-3.5 rounded-full border-[3px] border-[var(--ink)] text-sm font-extrabold text-white shadow-[0_3px_0_var(--ink)] transition-transform hover:-translate-y-0.5"
-                    style={{ background: s.grad }}
-                  >
-                    <span aria-hidden="true" className="w-5 h-5 rounded-full bg-white text-[var(--ink)] text-xs font-black flex items-center justify-center">
-                      {done ? '✓' : s.n}
-                    </span>
-                    <span aria-hidden="true">{s.emoji}</span>
-                    {s.title}
-                  </a>
-                </li>
-              );
-            })}
-          </ol>
+        {/* ---------- Heading + deals ---------- */}
+        <div className="relative mb-5 sm:mb-6 space-y-3">
+          <div className="text-center">
+            <h2 className="font-hero text-4xl sm:text-6xl font-extrabold leading-[1.4]">
+              <span className="inline-block bg-gradient-to-r from-[#4C1D95] via-[#7C3AED] to-[#EC4899] bg-clip-text px-1 pt-2 pb-1 text-transparent">ซื้อบัตรงานวิ่ง</span>
+            </h2>
+            <span aria-hidden="true" className="mx-auto mt-0.5 block h-1.5 w-24 rounded-full bg-[#FFC928]" />
+            <p className="mt-2 text-sm font-bold text-[#4B2D78]">
+              เลือกได้ 1, 2 หรือครบ 3 อย่าง <span className="text-[#7C3AED]">แล้วจ่ายทีเดียวจบ</span>
+            </p>
+          </div>
+          <DealStrip hasRun={eligible} hasConcert={concertQty > 0} activities={activityCount} />
         </div>
 
         <div className="relative grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-7 items-start">
@@ -578,7 +563,14 @@ export const TicketShop: React.FC<TicketShopProps> = ({
             {/* 2. Concert */}
             <StationCard id="shop-concert" k="concert" done={concertQty > 0}>
               <span id="concert-pass" className="block h-0 scroll-mt-28" aria-hidden="true" />
+              <div className="relative">
+              <DiscountCelebration active={concertDeal} burstKey={`concert-${concertQty > 0}`} kicker="วิ่ง + คอนเสิร์ต 🎶🏃" headline="ลดทันที 10%!!!" discount={concertOff} pieces={60} />
               <div className="relative overflow-hidden rounded-[24px] border-[3px] border-[var(--ink)] bg-gradient-to-br from-[#241047] via-[#341866] to-[#4A1F8F] text-white p-4 sm:p-5">
+                {eligible && (
+                  <span aria-hidden="true" className="deal-sticker absolute top-2 right-2 z-10 px-2.5 py-1 rounded-full border-2 border-[var(--ink)] bg-[#FFE268] text-[var(--ink)] text-xs font-black shadow-[0_3px_0_var(--ink)]">
+                    ลด 10%!
+                  </span>
+                )}
                 <span aria-hidden="true" className="pointer-events-none absolute -top-14 -left-10 w-48 h-48 rounded-full bg-[#FFC928]/30 blur-3xl" />
                 <span aria-hidden="true" className="pointer-events-none absolute -bottom-16 -right-10 w-56 h-56 rounded-full bg-[#EC4899]/35 blur-3xl" />
                 <div className="relative flex flex-col sm:flex-row sm:items-center gap-4">
@@ -590,8 +582,14 @@ export const TicketShop: React.FC<TicketShopProps> = ({
                       <p className="text-lg font-extrabold leading-tight">คอนเสิร์ตริมหาดชะอำ</p>
                       <p className="text-xs sm:text-sm font-semibold text-white/85 leading-snug">ไม่ต้องวิ่งก็มาได้ · ซื้อให้ทั้งครอบครัวได้</p>
                       <p className="mt-1 text-2xl font-black text-[#FFD84D] tabular-nums leading-none">
-                        {formatBaht(CONCERT_PASS_PRICE)} <span className="text-xs font-bold text-white/85">บาท / ใบ</span>
+                        {concertUnitOff > 0 && <span className="mr-1.5 text-base font-bold text-white/60 line-through">{formatBaht(CONCERT_PASS_PRICE)}</span>}
+                        {formatBaht(CONCERT_PASS_PRICE - concertUnitOff)} <span className="text-xs font-bold text-white/85">บาท / ใบ</span>
                       </p>
+                      {!eligible && (
+                        <p className="mt-1.5 inline-block rounded-full bg-[#FFE268] px-2.5 py-1 text-xs font-extrabold text-[var(--ink)]">
+                          🏃 ซื้อคู่ตั๋ววิ่ง ลดเหลือ {formatBaht(CONCERT_PASS_PRICE - Math.round(CONCERT_PASS_PRICE * 0.1))} บาท/ใบ!
+                        </p>
+                      )}
                     </div>
                   </div>
                   <div className="flex items-center justify-between sm:justify-end gap-3">
@@ -600,12 +598,13 @@ export const TicketShop: React.FC<TicketShopProps> = ({
                   </div>
                 </div>
               </div>
+              </div>
             </StationCard>
 
             {/* 3. Activities */}
             <div className="relative">
-              <DiscountCelebration active={allThree} discount={bonus} />
-              <div className={`rounded-[34px] p-[3px] transition-all ${allThree ? 'addon-celebrate' : ''}`}>
+              <DiscountCelebration active={addOnRate > 0} burstKey={`addon-${addOnRate}`} kicker={addOnDealLabel} headline={`ลดทันที ${percentOf(addOnRate)}%!!!`} discount={bonus} pieces={addOnRate >= ADDON_THREE_RATE ? 110 : 60} />
+              <div className={`rounded-[34px] p-[3px] transition-all ${addOnRate > 0 ? 'addon-celebrate' : ''}`}>
                 <StationCard
                   id="shop-addon"
                   k="addon"
@@ -626,10 +625,18 @@ export const TicketShop: React.FC<TicketShopProps> = ({
                   }
                 >
                   <span id="addons" className="block h-0 scroll-mt-28" aria-hidden="true" />
-                  <p className={`mb-3 rounded-2xl px-3 py-2 text-sm font-extrabold text-center border-2 ${allThree ? 'bg-[#FFE268] border-[var(--ink)] text-[var(--ink)]' : 'bg-gradient-to-r from-[#E0F7FA] to-[#ECFDF5] border-[#0EA5E9]/30 text-[#0369A1]'}`}>
-                    {allThree ? '🎉 ครบ 3 กิจกรรมแล้ว! ลดทันที 10%' : activityCount === 2 ? 'อีกแค่ 1 กิจกรรม ได้ส่วนลด 10% ทันที!' : 'เลือกครบ 3 กิจกรรม ลดทันที 10% 🎁'}
+                  <p className={`mb-3 rounded-2xl px-3 py-2 text-sm font-extrabold text-center border-2 ${addOnRate > 0 ? 'bg-[#FFE268] border-[var(--ink)] text-[var(--ink)]' : 'bg-gradient-to-r from-[#E0F7FA] to-[#ECFDF5] border-[#0EA5E9]/30 text-[#0369A1]'}`}>
+                    {!eligible
+                      ? '🏃 เลือกตั๋ววิ่งด้วย → เลือก 2 กิจกรรมลด 10% · ครบ 3 กิจกรรมลด 15%!'
+                      : addOnRate >= ADDON_THREE_RATE
+                        ? '🎉🎉 ครบ 3 กิจกรรมแล้ว! ลดทันที 15% สุดคุ้ม!!!'
+                        : addOnRate > 0
+                          ? '🎉 ลด 10% แล้ว! เพิ่มอีก 1 กิจกรรม ลดเป็น 15%!'
+                          : activityCount === 1
+                            ? 'อีก 1 กิจกรรม ลด 10% ทันที! 🎁'
+                            : 'เลือก 2 กิจกรรม ลด 10% · ครบ 3 ลด 15% 🎁'}
                   </p>
-                  <AddOnPicker value={addOns} onChange={onAddOnsChange} windTunnelRemaining={windRemaining} showResult={false} layout="rows" />
+                  <AddOnPicker value={addOns} onChange={onAddOnsChange} windTunnelRemaining={windRemaining} showResult={false} layout="rows" discountEligible={eligible} />
                   <AnimatePresence>
                     {picked && (
                       <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
@@ -647,13 +654,13 @@ export const TicketShop: React.FC<TicketShopProps> = ({
                     </summary>
                     <div className="px-4 pb-4 grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                       <div>
-                        <p className="font-extrabold text-[#0369A1] mb-1">แพ็กเกจ (ต่อคน)</p>
+                        <p className="font-extrabold text-[#0369A1] mb-1">แพ็กเกจ (ต่อคน) · ราคาหลังลดเมื่อซื้อพร้อมตั๋ววิ่ง</p>
                         <ul className="space-y-1 font-semibold text-[var(--ink)]">
                           <li className="flex justify-between gap-2"><span>หอสูง + ยิงปืน Standard</span><span className="tabular-nums">1,190</span></li>
                           <li className="flex justify-between gap-2"><span>หอสูง + อุโมงค์ลม</span><span className="tabular-nums">1,190</span></li>
                           <li className="flex justify-between gap-2"><span>ยิงปืน Standard + อุโมงค์ลม</span><span className="tabular-nums">1,690</span></li>
-                          <li className="flex justify-between gap-2 font-extrabold"><span>ครบ 3 กิจกรรม</span><span className="tabular-nums">{formatBaht(FULL_EXPERIENCE.price)} → {formatBaht(Math.round(FULL_EXPERIENCE.price * 0.9))}</span></li>
-                          <li className="flex justify-between gap-2"><span>ครบ 3 + ยิงปืน Premium</span><span className="tabular-nums">3,050 → 2,745</span></li>
+                          <li className="flex justify-between gap-2 font-extrabold"><span>ครบ 3 กิจกรรม</span><span className="tabular-nums">{formatBaht(FULL_EXPERIENCE.price)} → {formatBaht(FULL_EXPERIENCE.price - Math.round(FULL_EXPERIENCE.price * ADDON_THREE_RATE))}</span></li>
+                          <li className="flex justify-between gap-2"><span>ครบ 3 + ยิงปืน Premium</span><span className="tabular-nums">3,050 → {formatBaht(3050 - Math.round(3050 * ADDON_THREE_RATE))}</span></li>
                         </ul>
                       </div>
                       <div>
@@ -710,9 +717,25 @@ export const TicketShop: React.FC<TicketShopProps> = ({
                     </AnimatePresence>
                   </ul>
                 )}
+                {totalSaved > 0 && (
+                  <motion.div
+                    key={totalSaved}
+                    initial={{ scale: 0.8, rotate: -3 }}
+                    animate={{ scale: 1, rotate: 0 }}
+                    transition={{ type: 'spring', stiffness: 400, damping: 12 }}
+                    className="mt-3 rounded-2xl border-[3px] border-[var(--ink)] px-3 py-2 text-center text-[var(--ink)] shadow-[0_4px_0_var(--ink)]"
+                    style={{ background: 'linear-gradient(135deg, #FFE268, #FFC928 50%, #FF7A59)' }}
+                  >
+                    <span className="block text-xs font-extrabold">🎉 คุณประหยัดไปแล้ว</span>
+                    <span className="block text-2xl font-black tabular-nums leading-tight">{formatBaht(totalSaved)} บาท!</span>
+                  </motion.div>
+                )}
+                {nudge && (
+                  <p className="mt-3 rounded-2xl bg-[#FDF0FF] border-2 border-dashed border-[#9333EA]/50 px-3 py-2 text-center text-xs font-extrabold text-[#6D28D9]">{nudge}</p>
+                )}
                 <div className="my-4 border-t-[3px] border-dashed border-[var(--ink)]/15" />
                 <div className="flex items-end justify-between mb-4">
-                  <span className="text-sm font-extrabold text-[#6B5A85]">ยอดรวม</span>
+                  <span className="text-sm font-extrabold text-[#6B5A85]">ยอดรวม{totalSaved > 0 && <s className="ml-2 text-xs font-bold opacity-70 tabular-nums">{formatBaht(total + totalSaved)}</s>}</span>
                   <motion.span
                     key={total}
                     initial={{ scale: 1.25, color: '#EC4899' }}
@@ -749,6 +772,7 @@ export const TicketShop: React.FC<TicketShopProps> = ({
                 </span>
                 <motion.span key={total} initial={{ scale: 1.15 }} animate={{ scale: 1 }} className="block origin-left text-xl font-black text-[var(--ink)] tabular-nums leading-tight">
                   {formatBaht(total)} <span className="text-xs font-bold">บาท</span>
+                  {totalSaved > 0 && <span className="ml-2 align-middle inline-block whitespace-nowrap rounded-full bg-[#FFE268] border-2 border-[var(--ink)] px-2 py-0.5 text-[11px] font-black">ประหยัด {formatBaht(totalSaved)} 🎉</span>}
                 </motion.span>
               </span>
               {checkoutBtn(true)}
