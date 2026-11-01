@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { RouteId } from '../types';
 import { RouteIllustratedMap } from './RouteIllustratedMap';
+import { ActivityMap } from './ActivityMap';
 import { routesData } from '../data/eventData';
 import {
   ArrowRight,
@@ -445,6 +446,9 @@ export const RouteAndScheduleSection: React.FC<RouteAndScheduleProps> = ({
                   showLegend={false}
                   className="mb-3.5"
                 />
+
+                {/* Pins for the three after-run activities */}
+                <ActivityMap className="mb-3.5" />
 
                 {/* Active Route Mini Telemetry Strip */}
                 <div className="grid grid-cols-3 gap-2.5 mb-3.5 bg-[#FAF7FF] rounded-2xl p-2.5 border border-purple-100">
