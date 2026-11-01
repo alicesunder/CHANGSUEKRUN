@@ -50,7 +50,7 @@ export const FAQSection: React.FC = () => {
             <Sparkles className="w-3.5 h-3.5 text-[#B45309]" />
             <span>ถามบ่อย</span>
           </span>
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-[#2A1450] mt-3">
+          <h2 className="squiggle squiggle-center text-3xl sm:text-4xl font-extrabold text-[#2A1450] mt-3">
             คำถามที่พบบ่อย (FAQ)
           </h2>
           <p className="text-xs sm:text-sm text-[#6B5A85] font-semibold mt-1.5">

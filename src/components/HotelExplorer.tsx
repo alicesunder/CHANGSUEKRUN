@@ -242,7 +242,7 @@ export const HotelExplorer: React.FC<HotelExplorerProps> = () => {
                 <PawIcon className="w-6 h-6" />
               </span>
               <div>
-                <h2 className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-[#2A1450] leading-tight">
+                <h2 className="squiggle text-xl sm:text-2xl lg:text-3xl font-extrabold text-[#2A1450] leading-tight">
                   ที่พักใกล้สนาม วิ่งสบาย พักสบาย
                 </h2>
                 <p className="text-xs sm:text-sm text-[#6B5A85] font-bold mt-0.5">
@@ -266,7 +266,7 @@ export const HotelExplorer: React.FC<HotelExplorerProps> = () => {
           </div>
 
           {/* 4 Featured Hotel Cards Grid */}
-          <div className="relative z-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+          <div data-reveal-stagger="tilt" className="relative z-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
             {FEATURED_MOCKUP_HOTELS.map((item) => (
               <div
                 key={item.id}

@@ -18,6 +18,7 @@ import { RouteId } from '../types';
 import { HeroCountdownTimer } from './HeroCountdownTimer';
 import { PawIcon } from './brand/DogDecor';
 import { LabradorMascot } from './brand/LabradorMascot';
+import { BouncyText } from './BouncyText';
 
 interface HeroProps {
   onOpenArtworkModal: () => void;
@@ -190,7 +191,7 @@ export const Hero: React.FC<HeroProps> = ({
                 style={{ textShadow: '0 2px 0 #2A1450, 0 5px 16px rgba(25,10,60,.55)' }}
               >
                 <span className="block">วิ่งสนุกไปกับ</span>
-                <span className="block text-[#FFD84D]">เพื่อนสี่ขาคู่ใจ</span>
+                <BouncyText text="เพื่อนสี่ขาคู่ใจ" className="block text-[#FFD84D]" delayMs={450} />
               </p>
             </motion.div>
 
@@ -302,9 +303,12 @@ export const Hero: React.FC<HeroProps> = ({
                   gradient line gets vertical padding so bg-clip-text doesn't cut them off. */}
               <h1 className="font-hero text-[38px] sm:text-[56px] lg:text-[62px] font-semibold leading-[1.28] text-[#2D1052] drop-shadow-[0_2px_0_rgba(255,255,255,0.95)]">
                 <span className="block">วิ่งสนุกไปกับ</span>
-                <span className="inline-block pt-1 pb-2 -mt-1 font-bold bg-gradient-to-r from-[#5B20A8] via-[#7C3AED] to-[#C026D3] bg-clip-text text-transparent drop-shadow-none">
-                  เพื่อนสี่ขาคู่ใจ
-                </span>
+                <BouncyText
+                  text="เพื่อนสี่ขาคู่ใจ"
+                  className="inline-block pt-1 pb-2 -mt-1 font-bold drop-shadow-none cursor-default"
+                  gradient="linear-gradient(90deg, #5B20A8, #7C3AED, #C026D3)"
+                  delayMs={350}
+                />
               </h1>
             </div>
 

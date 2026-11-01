@@ -2,6 +2,8 @@ import React from 'react';
 import { Mail, Phone, MapPin, ArrowUp, ShieldCheck } from 'lucide-react';
 import { eventInfo } from '../data/eventData';
 import { openPrivacyNotice } from './PrivacyNotice';
+import { PawIcon } from './brand/DogDecor';
+import { LABRADOR_SVG_PATH } from './brand/LabradorMascot';
 
 interface FooterProps {
   onOpenArtworkModal: () => void;
@@ -20,8 +22,29 @@ export const Footer: React.FC<FooterProps> = ({
   };
 
   return (
-    <footer id="footer" className="bg-[#17092B] text-white pt-16 pb-10 border-t border-white/10 relative">
-      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
+    <footer id="footer" className="bg-[#17092B] text-white pt-24 pb-10 relative overflow-hidden">
+      {/* Scalloped top edge + a pup trotting along it */}
+      <svg
+        viewBox="0 0 1440 48"
+        preserveAspectRatio="none"
+        aria-hidden="true"
+        className="absolute top-0 left-0 w-full h-8 sm:h-12 text-[#FAF7FF]"
+      >
+        <path d="M0 0 H1440 V18 Q1380 46 1320 18 T1200 18 T1080 18 T960 18 T840 18 T720 18 T600 18 T480 18 T360 18 T240 18 T120 18 T0 18 Z" fill="currentColor" />
+      </svg>
+      <div aria-hidden="true" className="pointer-events-none absolute left-0 top-9 sm:top-12 w-full h-12">
+        <div className="footer-stroll absolute left-0 top-0 flex items-end gap-2">
+          <img src={LABRADOR_SVG_PATH} alt="" className="w-11 h-12 object-contain scale-x-[-1]" loading="lazy" decoding="async" />
+          <span className="mb-1 flex gap-1.5 opacity-70">
+            <PawIcon size={12} color="#FFC928" style={{ rotate: '80deg' }} />
+            <PawIcon size={12} color="#C4A1FF" style={{ rotate: '100deg', marginTop: 6 }} />
+            <PawIcon size={12} color="#FFC928" style={{ rotate: '80deg' }} />
+          </span>
+        </div>
+      </div>
+      <div aria-hidden="true" className="pointer-events-none absolute -bottom-24 -left-16 w-72 h-72 rounded-full bg-[#7B3FC6]/25 blur-3xl" />
+      <div aria-hidden="true" className="pointer-events-none absolute -top-10 right-0 w-64 h-64 rounded-full bg-[#FFC928]/10 blur-3xl" />
+      <div className="relative max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* 4 Columns matching mockup */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-8 lg:gap-10 pb-12 border-b border-white/10">
@@ -39,9 +62,10 @@ export const Footer: React.FC<FooterProps> = ({
               งานวิ่งริมทะเลชะอำ-หัวหิน ณ หาดชะอำ (ค่ายนเรศวร) จ.เพชรบุรี วันที่ 10 ธันวาคม 2569 ก้าวไปด้วยกันเพื่อสุขภาพ รอยยิ้ม และเพื่อนสี่ขา
             </p>
 
-            {/* Handwritten cursive script matching mockup */}
-            <div className="text-sm font-serif italic text-[#FFCC00] mt-1">
+            {/* Handwritten sign-off */}
+            <div className="font-comic text-base font-bold text-[#FFCC00] mt-1 -rotate-2 inline-flex items-center gap-1.5">
               “Run Together a Brighter Tomorrow”
+              <span className="animate-bounce-subtle inline-block">💛</span>
             </div>
           </div>
 
@@ -52,22 +76,22 @@ export const Footer: React.FC<FooterProps> = ({
             </h4>
             <ul className="space-y-2.5 text-xs text-white/70 font-semibold">
               <li>
-                <a href="#hero" className="inline-block py-1.5 hover:text-[#FFCC00] transition-colors">หน้าแรก</a>
+                <a href="#hero" className="inline-block py-1.5 hover:text-[#FFCC00] hover:translate-x-1.5 transition-all before:content-['🐾'] before:mr-1.5 before:opacity-0 hover:before:opacity-100 before:transition-opacity">หน้าแรก</a>
               </li>
               <li>
-                <a href="#experience" className="inline-block py-1.5 hover:text-[#FFCC00] transition-colors">รายละเอียดงาน</a>
+                <a href="#experience" className="inline-block py-1.5 hover:text-[#FFCC00] hover:translate-x-1.5 transition-all before:content-['🐾'] before:mr-1.5 before:opacity-0 hover:before:opacity-100 before:transition-opacity">รายละเอียดงาน</a>
               </li>
               <li>
-                <a href="#distances" className="inline-block py-1.5 hover:text-[#FFCC00] transition-colors">ระยะวิ่ง (10K / 5K / Dog 3.8K / Dog 1K)</a>
+                <a href="#distances" className="inline-block py-1.5 hover:text-[#FFCC00] hover:translate-x-1.5 transition-all before:content-['🐾'] before:mr-1.5 before:opacity-0 hover:before:opacity-100 before:transition-opacity">ระยะวิ่ง (10K / 5K / Dog 3.8K / Dog 1K)</a>
               </li>
               <li>
-                <a href="#schedule-and-map" className="inline-block py-1.5 hover:text-[#FFCC00] transition-colors">เส้นทางวิ่ง & กำหนดการแข่งขัน</a>
+                <a href="#schedule-and-map" className="inline-block py-1.5 hover:text-[#FFCC00] hover:translate-x-1.5 transition-all before:content-['🐾'] before:mr-1.5 before:opacity-0 hover:before:opacity-100 before:transition-opacity">เส้นทางวิ่ง & กำหนดการแข่งขัน</a>
               </li>
               <li>
-                <a href="#hotels" className="inline-block py-1.5 hover:text-[#FFCC00] transition-colors">ที่พักใกล้สถานที่จัดงาน</a>
+                <a href="#hotels" className="inline-block py-1.5 hover:text-[#FFCC00] hover:translate-x-1.5 transition-all before:content-['🐾'] before:mr-1.5 before:opacity-0 hover:before:opacity-100 before:transition-opacity">ที่พักใกล้สถานที่จัดงาน</a>
               </li>
               <li>
-                <a href="#faq" className="inline-block py-1.5 hover:text-[#FFCC00] transition-colors">คำถามที่พบบ่อย (FAQ)</a>
+                <a href="#faq" className="inline-block py-1.5 hover:text-[#FFCC00] hover:translate-x-1.5 transition-all before:content-['🐾'] before:mr-1.5 before:opacity-0 hover:before:opacity-100 before:transition-opacity">คำถามที่พบบ่อย (FAQ)</a>
               </li>
             </ul>
           </div>

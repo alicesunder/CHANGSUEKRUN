@@ -194,7 +194,7 @@ export const MerchShowcase: React.FC<MerchShowcaseProps> = ({ onOpenRegister, cl
           <span className="inline-flex items-center gap-1.5 rounded-full bg-[#FFC928] text-[#2A1450] text-xs sm:text-sm font-bold px-3.5 py-1.5">
             <PawPrint className="w-4 h-4" /> ของที่คุณจะได้รับ
           </span>
-          <h3 id="race-kit-heading" className="mt-3 font-hero text-3xl sm:text-4xl font-bold text-white">
+          <h3 id="race-kit-heading" data-reveal="pop" className="squiggle squiggle-center mt-3 font-hero text-3xl sm:text-4xl font-bold text-white">
             ของที่ระลึกสำหรับนักวิ่งช้างศึก
           </h3>
           <p className="mt-2 text-sm sm:text-base font-medium text-white/85">
@@ -215,7 +215,7 @@ export const MerchShowcase: React.FC<MerchShowcaseProps> = ({ onOpenRegister, cl
           <span aria-hidden="true" className="h-px flex-1 bg-[#FFC928]/30" />
           <span className="shrink-0 rounded-full bg-white/10 px-2.5 py-0.5 text-xs font-bold text-white/85">{allItems.length} ชิ้น</span>
         </div>
-        <ul className="mt-4 grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-3">
+        <ul data-reveal-stagger="tilt" className="mt-4 grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-3">
           {allItems.map((k, i) => renderTile(k, i + 1, !!k.wide))}
         </ul>
 
@@ -225,7 +225,7 @@ export const MerchShowcase: React.FC<MerchShowcaseProps> = ({ onOpenRegister, cl
           <span aria-hidden="true" className="h-px flex-1 bg-[#FFC928]/30" />
           <span className="shrink-0 rounded-full bg-white/10 px-2.5 py-0.5 text-xs font-bold text-white/85">Dog Run · {dogItems.length} ชิ้น</span>
         </div>
-        <ul className="mt-4 grid grid-cols-2 gap-3 sm:gap-5">
+        <ul data-reveal-stagger="tilt" className="mt-4 grid grid-cols-2 gap-3 sm:gap-5">
           {dogItems.map((k, i) => renderTile(k, allItems.length + i + 1, true))}
         </ul>
 

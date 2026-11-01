@@ -97,7 +97,7 @@ export const SponsorsSection: React.FC = () => {
     >
       <div className="max-w-[1180px] mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="mb-8 sm:mb-10 text-center">
-          <h2 id="sponsors-heading" className="text-4xl sm:text-5xl font-bold text-[#2A1450]">
+          <h2 id="sponsors-heading" className="squiggle squiggle-center text-4xl sm:text-5xl font-bold text-[#2A1450]">
             ผู้สนับสนุนงาน
           </h2>
           <p className="mt-2 text-sm sm:text-base font-medium text-[#4B2D78]">

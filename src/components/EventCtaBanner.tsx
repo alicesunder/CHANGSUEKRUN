@@ -1,7 +1,7 @@
 import React from 'react';
 import { ArrowRight } from 'lucide-react';
 import { PawIcon } from './brand/DogDecor';
-import { LabradorMascot } from './brand/LabradorMascot';
+import { LABRADOR_SVG_PATH } from './brand/LabradorMascot';
 
 interface EventCtaBannerProps {
   onOpenRegisterModal: () => void;
@@ -18,17 +18,21 @@ export const EventCtaBanner: React.FC<EventCtaBannerProps> = ({ onOpenRegisterMo
         <div className="flex flex-col md:flex-row items-center justify-between gap-6 sm:gap-8 bg-white/10 border border-white/25 rounded-[32px] p-6 sm:p-9 backdrop-blur-xl shadow-[0_24px_54px_-16px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.25)]">
           {/* Left Mascot + Text */}
           <div className="flex flex-col sm:flex-row items-center gap-5 text-center sm:text-left">
-            <LabradorMascot
-              size={88}
-              speechText="เจอกันที่ชะอำนะ!"
-              glowColor="rgba(255, 201, 40, 0.45)"
-            />
+            {/* Sticker-style mascot (the old soft glow made the dog look washed out on the purple glass) */}
+            <div className="relative shrink-0 mt-3 sm:mt-0">
+              <div className="jelly w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-gradient-to-b from-[#FFE268] to-[#FFB300] border-[3px] border-[#261247] shadow-[0_6px_0_#261247] flex items-end justify-center overflow-hidden -rotate-6">
+                <img src={LABRADOR_SVG_PATH} alt="น้องลาบราดอร์" className="w-[86%] h-[86%] object-contain translate-y-1.5" loading="lazy" decoding="async" />
+              </div>
+              <span className="absolute -top-4 sm:-top-7 left-1/2 sm:left-[-10px] -translate-x-1/2 sm:translate-x-0 -rotate-6 whitespace-nowrap rounded-2xl rounded-bl-sm bg-white text-[#261247] border-2 border-[#261247] px-2.5 py-0.5 text-[11px] font-extrabold shadow-[0_3px_0_#261247] animate-bounce-subtle">
+                เจอกันที่ชะอำนะ! 🐾
+              </span>
+            </div>
             <div>
               <span className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-extrabold text-[#FFE268] uppercase tracking-wider mb-1">
                 <PawIcon size={16} color="#FFE268" />
                 <span>พร้อมออกวิ่งไปกับเพื่อนสี่ขาหรือยัง?</span>
               </span>
-              <h2 className="text-2xl sm:text-4xl font-extrabold text-white">
+              <h2 className="squiggle squiggle-center sm:after:ml-0 text-2xl sm:text-4xl font-extrabold text-white">
                 มาร่วมเป็นส่วนหนึ่งของ <span className="text-[#FFE268]">CHANGSUEK RUN 2026</span>
               </h2>
               <p className="text-xs sm:text-sm text-purple-100 font-medium mt-2">

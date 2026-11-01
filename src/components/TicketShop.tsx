@@ -538,10 +538,9 @@ export const TicketShop: React.FC<TicketShopProps> = ({
         {/* ---------- Heading + deals ---------- */}
         <div className="relative mb-5 sm:mb-6 space-y-3">
           <div className="text-center">
-            <h2 className="font-hero text-4xl sm:text-6xl font-extrabold leading-[1.4]">
+            <h2 className="squiggle squiggle-center font-hero text-4xl sm:text-6xl font-extrabold leading-[1.4]">
               <span className="inline-block bg-gradient-to-r from-[#4C1D95] via-[#7C3AED] to-[#EC4899] bg-clip-text px-1 pt-2 pb-1 text-transparent">ซื้อบัตรงานวิ่ง</span>
             </h2>
-            <span aria-hidden="true" className="mx-auto mt-0.5 block h-1.5 w-24 rounded-full bg-[#FFC928]" />
             <p className="mt-2 text-sm font-bold text-[#4B2D78]">
               เลือกได้ 1, 2 หรือครบ 3 อย่าง <span className="text-[#7C3AED]">แล้วจ่ายทีเดียวจบ</span>
             </p>

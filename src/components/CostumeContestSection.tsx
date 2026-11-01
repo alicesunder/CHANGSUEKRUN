@@ -74,7 +74,7 @@ export const CostumeContestSection: React.FC = () => (
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white border-2 border-[var(--ink)] text-xs font-extrabold text-[#BE185D]">
               🐾 กิจกรรมพิเศษสำหรับคู่วิ่ง Dog Run
             </span>
-            <h2 id="costume-heading" className="mt-2 font-hero text-2xl sm:text-3xl font-bold text-[var(--ink)] leading-[1.35]">
+            <h2 id="costume-heading" className="squiggle squiggle-pink mt-2 font-hero text-2xl sm:text-3xl font-bold text-[var(--ink)] leading-[1.35]">
               ประกวดแต่งตัว <span className="text-[#EC4899]">น้องหมา</span> &amp; <span className="text-[#7C3AED]">เจ้าของ</span>
             </h2>
             <p className="mt-1 text-sm sm:text-base font-semibold text-[#4B2D78] leading-relaxed">
@@ -82,7 +82,7 @@ export const CostumeContestSection: React.FC = () => (
             </p>
           </div>
 
-          <ol className="grid grid-cols-2 sm:grid-cols-4 gap-2" aria-label="ขั้นตอนการประกวด">
+          <ol data-reveal-stagger="pop" className="grid grid-cols-2 sm:grid-cols-4 gap-2" aria-label="ขั้นตอนการประกวด">
             {STEPS.map((s, i) => (
               <motion.li
                 key={s.text}

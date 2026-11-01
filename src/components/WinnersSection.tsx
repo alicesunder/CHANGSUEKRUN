@@ -37,7 +37,7 @@ export const WinnersSection: React.FC = () => {
             >
               <Trophy className="w-8 h-8 text-[#2A1450]" />
             </motion.span>
-            <h2 id="winners-heading" className="mt-3 font-hero text-3xl sm:text-4xl font-bold text-[#2A1450]">
+            <h2 id="winners-heading" className="squiggle squiggle-center mt-3 font-hero text-3xl sm:text-4xl font-bold text-[#2A1450]">
               ประกาศอันดับผู้ชนะ
             </h2>
 

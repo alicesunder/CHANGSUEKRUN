@@ -85,7 +85,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   key={link.label}
                   href={link.href}
                   onClick={() => setActiveHref(link.href)}
-                  className={`text-xs xl:text-[13px] font-bold px-3 py-1.5 transition-all whitespace-nowrap rounded-full ${
+                  className={`relative text-xs xl:text-[13px] font-bold px-3 py-1.5 transition-all whitespace-nowrap rounded-full after:absolute after:left-1/2 after:bottom-0 after:h-[3px] after:w-0 after:-translate-x-1/2 after:rounded-full after:bg-[#FFC928] after:transition-all after:duration-300 hover:after:w-[60%] hover:-translate-y-px ${
                     isActive
                       ? 'text-white font-extrabold bg-white/15 border border-white/25 shadow-2xs'
                       : 'text-white/85 hover:text-white hover:bg-white/10'
@@ -128,8 +128,9 @@ export const Navbar: React.FC<NavbarProps> = ({
             <button
               type="button"
               onClick={onOpenRegisterModal}
-              className="bg-[#FFC928] hover:bg-[#FFD645] text-[#1F1035] text-xs sm:text-[13px] font-extrabold px-5 py-1.5 rounded-full shadow-md hover:shadow-lg transition-all transform hover:-translate-y-0.5 active:translate-y-0 cursor-pointer whitespace-nowrap"
+              className="attn jelly inline-flex items-center gap-1 bg-[#FFC928] hover:bg-[#FFD645] text-[#1F1035] text-xs sm:text-[13px] font-extrabold px-5 py-1.5 rounded-full shadow-md hover:shadow-lg transition-all transform hover:-translate-y-0.5 active:translate-y-0 cursor-pointer whitespace-nowrap"
             >
+              <span aria-hidden="true">🐾</span>
               ซื้อบัตร
             </button>
 

@@ -728,6 +728,104 @@ h1, h2, h3, h4, h5, h6 {
 .eq-bar { animation: eqBounce 0.9s ease-in-out infinite; }
 @media (prefers-reduced-motion: reduce) { .eq-bar { animation: none; height: 14px; } }
 
+/* ================= Playful layer (PlayfulFX, PeekingPup, FunRibbon, BouncyText) ================= */
+
+/* Scroll reveal variants: data-reveal="pop" | "left" | "right" | "tilt" (default: rise) */
+.rv-init[data-reveal="pop"] { translate: none; scale: .82; }
+.rv-init[data-reveal="left"] { translate: -40px 0; scale: 1; }
+.rv-init[data-reveal="right"] { translate: 40px 0; scale: 1; }
+.rv-init[data-reveal="tilt"] { translate: 0 30px; rotate: -3deg; scale: .94; }
+.rv-in[data-reveal="tilt"] { rotate: 0deg; transition: opacity .7s ease, translate .7s cubic-bezier(.2,1.3,.4,1), scale .7s cubic-bezier(.2,1.3,.4,1), rotate .8s cubic-bezier(.2,1.6,.4,1) !important; transition-delay: var(--rv-delay, 0ms) !important; }
+
+/* Hand-drawn squiggle under a heading; it draws itself when the heading scrolls in */
+.squiggle { position: relative; }
+.squiggle::after {
+  content: '';
+  display: block;
+  width: min(150px, 60%);
+  height: 14px;
+  margin-top: 4px;
+  background: no-repeat center / 100% 100% url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 150 14'%3E%3Cpath d='M3 9 C 15 1, 25 1, 36 8 S 58 15, 70 7 S 93 0, 105 8 S 128 14, 147 5' fill='none' stroke='%23FFC928' stroke-width='5' stroke-linecap='round'/%3E%3C/svg%3E");
+  clip-path: inset(0 100% 0 0);
+  transition: clip-path .9s cubic-bezier(.6,0,.2,1) .25s;
+}
+.squiggle-center::after { margin-inline: auto; }
+.squiggle-pink::after { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 150 14'%3E%3Cpath d='M3 9 C 15 1, 25 1, 36 8 S 58 15, 70 7 S 93 0, 105 8 S 128 14, 147 5' fill='none' stroke='%23FF6FA8' stroke-width='5' stroke-linecap='round'/%3E%3C/svg%3E"); }
+.squiggle.rv-in::after, .squiggle:not(.rv-init)::after { clip-path: inset(0 0 0 0); }
+.squiggle.rv-init::after { clip-path: inset(0 100% 0 0); }
+
+/* Paw prints left behind by the mouse (desktop) */
+.paw-layer { position: fixed; inset: 0; pointer-events: none; z-index: 65; overflow: hidden; }
+.paw-step {
+  position: absolute; width: 18px; height: 18px; margin: -9px 0 0 -9px;
+  background: no-repeat center / contain url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64' fill='%237B3FC6'%3E%3Cellipse cx='14' cy='26' rx='7' ry='9' transform='rotate(-18 14 26)'/%3E%3Cellipse cx='27' cy='14' rx='6.5' ry='9' transform='rotate(-6 27 14)'/%3E%3Cellipse cx='42' cy='14' rx='6.5' ry='9' transform='rotate(6 42 14)'/%3E%3Cellipse cx='54' cy='26' rx='7' ry='9' transform='rotate(18 54 26)'/%3E%3Cpath d='M32 28c-9 0-17 9-15 17 1.5 6 7 7 11 6 2.5-.6 5.5-.6 8 0 4 1 9.5 0 11-6 2-8-6-17-15-17z'/%3E%3C/svg%3E");
+  animation: pawStep 1.1s ease-out forwards;
+}
+.paw-step.gold { filter: hue-rotate(160deg) saturate(2.4) brightness(1.5); }
+@keyframes pawStep {
+  0% { opacity: 0; scale: .4; }
+  15% { opacity: .55; scale: 1.05; }
+  100% { opacity: 0; scale: .9; }
+}
+
+/* Tap/click burst: little hearts, paws and bones fly out */
+.boop {
+  position: absolute; font-size: 18px; line-height: 1; margin: -9px 0 0 -9px; user-select: none;
+  animation: boopFly .75s cubic-bezier(.2,.8,.3,1) forwards;
+}
+@keyframes boopFly {
+  0% { opacity: 1; translate: 0 0; scale: .4; rotate: 0deg; }
+  60% { opacity: 1; }
+  100% { opacity: 0; translate: var(--dx) var(--dy); scale: 1.1; rotate: var(--rot); }
+}
+
+/* Bouncy hero letters */
+.bouncy-char { display: inline-block; white-space: pre; animation: letterDrop .7s cubic-bezier(.3,1.7,.5,1) both; animation-delay: var(--d); }
+.bouncy-text:hover .bouncy-char { animation: letterHop .6s ease both; animation-delay: calc(var(--i) * 40ms); }
+@keyframes letterDrop { 0% { opacity: 0; translate: 0 -0.7em; scale: .6 1.3; } 60% { opacity: 1; translate: 0 .08em; scale: 1.08 .9; } 100% { translate: 0 0; scale: 1; } }
+@keyframes letterHop { 0%, 100% { translate: 0 0; } 40% { translate: 0 -0.22em; rotate: -6deg; } 70% { translate: 0 .04em; rotate: 3deg; } }
+
+/* Tilted marquee ribbon */
+.fun-ribbon-track { display: flex; width: max-content; animation: dealMarquee 38s linear infinite; }
+.fun-ribbon:hover .fun-ribbon-track { animation-play-state: paused; }
+.fun-ribbon-track.reverse { animation-direction: reverse; animation-duration: 46s; }
+
+/* Peeking puppy */
+.pup-peek { transition: translate .55s cubic-bezier(.3,1.5,.5,1), opacity .3s ease; }
+.pup-peek[data-show="false"] { translate: -130% 0; opacity: 0; pointer-events: none; }
+.pup-head { animation: pupBob 2.8s ease-in-out infinite; transform-origin: 50% 90%; }
+.pup-head.happy { animation: pupHappy .7s ease-in-out 2; }
+@keyframes pupBob { 0%, 100% { rotate: -4deg; } 50% { rotate: 5deg; translate: 0 -3px; } }
+@keyframes pupHappy { 0%, 100% { rotate: 0deg; scale: 1; } 25% { rotate: -14deg; scale: 1.08; } 75% { rotate: 14deg; scale: 1.08; } }
+.pup-bubble { animation: popIn .4s cubic-bezier(.3,1.6,.5,1) both; }
+
+/* Jelly buttons: chunky "ink" buttons wobble on hover and squish on press */
+@keyframes jelly { 0%, 100% { scale: 1 1; } 30% { scale: 1.06 .94; } 50% { scale: .96 1.05; } 70% { scale: 1.02 .98; } }
+.btn-paw:hover, .luminous-pill-btn:hover, .jelly:hover { animation: jelly .55s ease; }
+main button:active:not(:disabled), .btn-paw:active { scale: .96; }
+
+/* Gentle floating doodles (stars, hearts, bones) next to headings */
+.doodle { position: absolute; pointer-events: none; animation: doodleFloat 4.5s ease-in-out infinite; }
+@keyframes doodleFloat { 0%, 100% { translate: 0 0; rotate: -8deg; } 50% { translate: 0 -8px; rotate: 10deg; } }
+
+/* Every few seconds the main CTA gives a little "notice me" wiggle */
+.attn { animation: attn 6s ease-in-out infinite; }
+.attn:hover { animation: jelly .55s ease; }
+@keyframes attn { 0%, 86%, 100% { rotate: 0deg; } 89% { rotate: -7deg; } 92% { rotate: 6deg; } 95% { rotate: -3deg; } }
+
+/* Footer paw-print stroll */
+.footer-stroll { animation: trot 22s linear infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .squiggle::after, .squiggle.rv-init::after { clip-path: none; transition: none; }
+  .paw-layer { display: none; }
+  .bouncy-char, .bouncy-text:hover .bouncy-char { animation: none; }
+  .fun-ribbon-track { animation: none; }
+  .pup-head, .pup-head.happy, .pup-bubble, .doodle, .footer-stroll, .attn, .attn:hover { animation: none; }
+  .btn-paw:hover, .luminous-pill-btn:hover, .jelly:hover { animation: none; }
+  .rv-init[data-reveal] { opacity: 1; translate: none; scale: none; rotate: none; }
+}
+
 /* deal ribbon + stickers */
 @keyframes dealMarquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 .deal-marquee-track { display: flex; width: max-content; animation: dealMarquee 24s linear infinite; }

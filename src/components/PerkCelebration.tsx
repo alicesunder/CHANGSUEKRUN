@@ -151,7 +151,7 @@ export const DealStrip: React.FC<DealStripProps> = ({ hasRun, hasGaConcert, hasC
         🎁 ยิ่งซื้อคู่ ยิ่งลด
         <span className="ml-1.5 font-bold text-[#6B5A85]">· ส่วนลดกิจกรรมรวมสูงสุด {percentOf(ADDON_MAX_RATE)}%</span>
       </p>
-      <ul className="grid grid-cols-2 sm:grid-cols-4 gap-2" aria-label="โปรโมชั่นส่วนลด">
+      <ul data-reveal-stagger="pop" className="grid grid-cols-2 sm:grid-cols-4 gap-2" aria-label="โปรโมชั่นส่วนลด">
         {deals.map((d) => (
           <motion.li
             key={d.key}

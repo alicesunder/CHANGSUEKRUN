@@ -236,8 +236,8 @@ export const RouteAndScheduleSection: React.FC<RouteAndScheduleProps> = ({
               <Sparkles className="w-3.5 h-3.5 text-[#B45309]" />
               <span>วันงาน 10 ธ.ค. 2569</span>
             </span>
-            <h2 className="text-2xl sm:text-4xl font-extrabold text-[#2A1450]">
-              กำหนดการ & เส้นทางวิ่งมาตรฐาน GPS
+            <h2 className="squiggle text-2xl sm:text-4xl font-extrabold text-[#2A1450]">
+              กำหนดการ & <span className="whitespace-nowrap">เส้นทางวิ่ง</span>มาตรฐาน GPS
             </h2>
           </div>
           <p className="text-xs sm:text-sm font-bold text-[#4B2D78]">
@@ -288,7 +288,7 @@ export const RouteAndScheduleSection: React.FC<RouteAndScheduleProps> = ({
                 </div>
 
                 {/* Timeline List with Bold Time Pills & Interactive Highlighting */}
-                <div className="mt-4 relative space-y-2">
+                <div className="mt-4 relative space-y-2" data-reveal-stagger="left">
                   {/* Continuous Vertical Line */}
                   <div
                     aria-hidden="true"
@@ -331,7 +331,7 @@ export const RouteAndScheduleSection: React.FC<RouteAndScheduleProps> = ({
 
                         {/* Bold Time Badge */}
                         <span
-                          className={`px-2.5 py-1 rounded-xl font-mono text-[11px] sm:text-xs font-black tabular-nums shrink-0 border min-w-[88px] sm:min-w-[118px] text-center ${
+                          className={`px-2 py-1 rounded-xl font-mono text-[11px] sm:text-xs font-black tabular-nums shrink-0 border min-w-[88px] sm:min-w-[100px] text-center ${
                             isSelectedRouteRow
                               ? 'bg-[#2A1450] text-[#FFC928] border-[#2A1450]'
                               : row.isGoldDot
@@ -344,14 +344,20 @@ export const RouteAndScheduleSection: React.FC<RouteAndScheduleProps> = ({
 
                         {/* Pastel Icon Box */}
                         <span
-                          className="hidden sm:flex w-8 h-8 rounded-xl items-center justify-center shrink-0 border border-white shadow-xs"
+                          className="hidden sm:flex w-8 h-8 rounded-xl items-center justify-center shrink-0 border border-white shadow-xs transition-transform duration-300 group-hover:-rotate-12 group-hover:scale-125"
                           style={{ background: row.iconBg, color: row.iconColor }}
                         >
                           <Icon className="w-4 h-4 stroke-[2.4]" />
                         </span>
 
-                        {/* Activity Title & Subtitle */}
+                        {/* Activity Title & Subtitle (the badge sits above the title so the title gets the full width) */}
                         <div className="flex-1 min-w-0">
+                          <span
+                            className="hidden xl:inline-block text-[9.5px] font-extrabold px-2 py-px rounded-full mb-0.5 tracking-wide"
+                            style={{ background: row.iconBg, color: row.iconColor }}
+                          >
+                            {row.badge}
+                          </span>
                           <div className="text-xs sm:text-sm font-extrabold text-[#2A1450] leading-snug">
                             {row.title}
                           </div>
@@ -361,14 +367,6 @@ export const RouteAndScheduleSection: React.FC<RouteAndScheduleProps> = ({
                             </div>
                           )}
                         </div>
-
-                        {/* Right Wave Tag */}
-                        <span
-                          className="hidden xl:inline-block text-[10px] font-extrabold px-2.5 py-1 rounded-full shrink-0"
-                          style={{ background: row.iconBg, color: row.iconColor }}
-                        >
-                          {row.badge}
-                        </span>
                       </div>
                     );
                   })}

@@ -7,6 +7,9 @@ import React, { Suspense, lazy, useEffect, useState } from 'react';
 import { Sparkles, X } from 'lucide-react';
 import { RouteId } from './types';
 import { ScrollFX } from './components/ScrollFX';
+import { PlayfulFX } from './components/PlayfulFX';
+import { PeekingPup } from './components/PeekingPup';
+import { FunRibbon } from './components/FunRibbon';
 import { CustomCursor } from './components/CustomCursor';
 import { EasterEggElephant } from './components/EasterEggElephant';
 import { MobileBottomNav } from './components/MobileBottomNav';
@@ -155,6 +158,8 @@ export default function App() {
       {/* 1. Desktop Custom Cursor & Scroll Progress */}
       <CustomCursor />
       <ScrollFX />
+      <PlayfulFX />
+      <PeekingPup />
 
       {/* 2. Easter Egg Elephant */}
       <EasterEggElephant
@@ -178,6 +183,8 @@ export default function App() {
           onOpenRegisterModal={goToShop}
           onSelectDistance={handleSelectDistance}
         />
+
+        <FunRibbon />
 
         {/* 5. เลือกบัตรวิ่งของคุณ (Preserved 3D Collectible Tickets + Price Calculator + Unified Race Pack & Merch) */}
         <RaceDistances
@@ -230,10 +237,20 @@ export default function App() {
           className="bg-gradient-to-b from-[#EFE6FC] via-[#FAF7FF] to-[#E0F2FE]/60 relative overflow-hidden"
         >
           <details className="group">
-            <summary className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8 py-5 min-h-[56px] flex items-center justify-between gap-3 cursor-pointer list-none text-base font-extrabold text-[#2A1450]">
-              <span>🌤️ สภาพอากาศ & เช็กลิสต์เตรียมตัวก่อนวิ่ง</span>
-              <span className="text-sm text-[#5B20A8] group-open:hidden">ดูเพิ่ม ▾</span>
-              <span className="text-sm text-[#5B20A8] hidden group-open:inline">ซ่อน ▴</span>
+            <summary className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8 py-5 cursor-pointer list-none [&::-webkit-details-marker]:hidden">
+              <span className="jelly flex items-center justify-between gap-3 min-h-[60px] rounded-[22px] bg-white border-[3px] border-[#2A1450] shadow-[0_5px_0_#2A1450] px-4 sm:px-5 py-2.5">
+                <span className="flex items-center gap-3 text-base font-extrabold text-[#2A1450]">
+                  <span className="animate-bounce-gentle inline-block text-2xl" aria-hidden="true">🌤️</span>
+                  <span>
+                    สภาพอากาศ & เช็กลิสต์เตรียมตัวก่อนวิ่ง
+                    <span className="block text-xs font-bold text-[#6B5A85]">อุณหภูมิริมหาด + ของที่ต้องพก (ทั้งคนและน้องหมา)</span>
+                  </span>
+                </span>
+                <span className="shrink-0 rounded-full bg-[#FFC928] border-2 border-[#2A1450] px-3 py-1 text-xs font-extrabold text-[#2A1450]">
+                  <span className="group-open:hidden">ดูเพิ่ม ▾</span>
+                  <span className="hidden group-open:inline">ซ่อน ▴</span>
+                </span>
+              </span>
             </summary>
             <div className="pb-10">
           <div className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
