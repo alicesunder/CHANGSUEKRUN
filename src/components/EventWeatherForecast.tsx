@@ -179,7 +179,7 @@ export const EventWeatherForecast: React.FC = () => {
                 </h3>
                 <span className="inline-flex items-center gap-1 text-xs font-bold text-[#0369A1]">
                   <MapPin className="w-3.5 h-3.5" />
-                  <span>หาดชะอำ (ค่ายนเรศวร - ค่ายพระราม 6)</span>
+                  <span>หาดชะอำ (ค่ายนเรศวร)</span>
                 </span>
               </div>
             </div>

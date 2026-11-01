@@ -36,7 +36,7 @@ export const Footer: React.FC<FooterProps> = ({
             />
             
             <p className="text-xs text-purple-200/80 leading-relaxed mb-4 max-w-sm">
-              งานวิ่งริมทะเลชะอำ-หัวหิน ณ หาดชะอำ (ค่ายนเรศวร - ค่ายพระราม 6) จ.เพชรบุรี วันที่ 10 ธันวาคม 2569 ก้าวไปด้วยกันเพื่อสุขภาพ รอยยิ้ม และเพื่อนสี่ขา
+              งานวิ่งริมทะเลชะอำ-หัวหิน ณ หาดชะอำ (ค่ายนเรศวร) จ.เพชรบุรี วันที่ 10 ธันวาคม 2569 ก้าวไปด้วยกันเพื่อสุขภาพ รอยยิ้ม และเพื่อนสี่ขา
             </p>
 
             {/* Handwritten cursive script matching mockup */}
@@ -80,7 +80,7 @@ export const Footer: React.FC<FooterProps> = ({
             <div className="space-y-3 text-xs text-white/70">
               <div className="flex items-start gap-2">
                 <MapPin className="w-4 h-4 text-[#FFCC00] flex-shrink-0 mt-0.5" />
-                <span>หาดชะอำ (ค่ายนเรศวร - ค่ายพระราม 6) อ.ชะอำ จ.เพชรบุรี</span>
+                <span>หาดชะอำ (ค่ายนเรศวร) อ.ชะอำ จ.เพชรบุรี</span>
               </div>
               <div className="flex items-center gap-2">
                 <Phone className="w-4 h-4 text-[#FFCC00] flex-shrink-0" />
