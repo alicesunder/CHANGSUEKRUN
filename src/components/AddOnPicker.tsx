@@ -2,6 +2,7 @@ import React from 'react';
 import { Check, Crosshair, Minus, Plus, Sparkles, Star, TowerControl, Wind } from 'lucide-react';
 import {
   AddOnSelection,
+  DiscountContext,
   GunLevel,
   MAX_ADD_ON_PEOPLE,
   WIND_TUNNEL_LIMIT,
@@ -15,8 +16,8 @@ import {
 import { PawIcon } from './brand/DogDecor';
 
 interface AddOnPickerProps {
-  /** true when the order has a run ticket (the bundle discounts apply) */
-  discountEligible?: boolean;
+  /** what else is in the order (decides the bundle discounts) */
+  discountCtx?: DiscountContext;
   value: AddOnSelection;
   onChange: (next: AddOnSelection) => void;
   /** Wind-tunnel seats still free (null = unknown yet) */
@@ -143,8 +144,8 @@ const Chip: React.FC<ChipProps> = ({ theme, title, sub, price, icon, active, dis
   );
 };
 
-const GUN_SEGMENTS: { id: GunLevel; label: string; price?: number }[] = [
-  { id: 'none', label: 'ไม่เล่น' },
+// Tap a level to pick it, tap the picked level again to cancel (same as the other activities).
+const GUN_SEGMENTS: { id: Exclude<GunLevel, 'none'>; label: string; price: number }[] = [
   { id: 'standard', label: 'Standard', price: 890 },
   { id: 'premium', label: 'Premium', price: 1950 },
 ];
@@ -176,12 +177,14 @@ export const PeopleStepper: React.FC<{ value: number; onChange: (n: number) => v
   </div>
 );
 
-export const AddOnPicker: React.FC<AddOnPickerProps> = ({ value, onChange, windTunnelRemaining = null, showResult = true, layout = 'grid', discountEligible = false }) => {
+const NO_BUNDLE: DiscountContext = { hasRun: false, hasConcert: false };
+
+export const AddOnPicker: React.FC<AddOnPickerProps> = ({ value, onChange, windTunnelRemaining = null, showResult = true, layout = 'grid', discountCtx = NO_BUNDLE }) => {
   const set = (patch: Partial<AddOnSelection>) => onChange({ ...value, ...patch });
   const picked = hasAddOns(value);
   const perPerson = addOnPricePerPerson(value);
   const saving = addOnSavingPerPerson(value);
-  const total = addOnTotal(value, discountEligible);
+  const total = addOnTotal(value, discountCtx);
   const isFull = value.tower && value.gun === 'standard' && value.windTunnel;
   const gunOn = value.gun !== 'none';
   const gun = ADD_ON_THEMES.gun;
@@ -222,7 +225,7 @@ export const AddOnPicker: React.FC<AddOnPickerProps> = ({ value, onChange, windT
               <span className={`block text-[11.5px] font-semibold leading-snug ${gunOn ? 'text-white/90' : 'text-[#4B2D78]/85'}`}>ครูฝึกส่วนตัวดูแลใกล้ชิด · 10 นัด</span>
             </span>
           </div>
-          <div className="relative grid grid-cols-3 gap-1.5 px-3 pb-3">
+          <div className="relative grid grid-cols-2 gap-1.5 px-3 pb-3">
             {GUN_SEGMENTS.map((o) => {
               const on = value.gun === o.id;
               return (
@@ -231,7 +234,8 @@ export const AddOnPicker: React.FC<AddOnPickerProps> = ({ value, onChange, windT
                   type="button"
                   role="radio"
                   aria-checked={on}
-                  onClick={() => set({ gun: o.id })}
+                  aria-label={on ? `ยิงปืน ${o.label} (แตะอีกครั้งเพื่อยกเลิก)` : `ยิงปืน ${o.label}`}
+                  onClick={() => set({ gun: on ? 'none' : o.id })}
                   className={`min-h-[46px] px-1.5 py-1 rounded-xl text-center leading-tight transition-all border-2 focus:outline-none focus-visible:ring-4 focus-visible:ring-[#7B3FC6]/50 cursor-pointer ${
                     on
                       ? 'bg-white text-[#2A1450] border-white shadow-[0_8px_14px_-6px_rgba(0,0,0,0.4)]'
@@ -240,13 +244,11 @@ export const AddOnPicker: React.FC<AddOnPickerProps> = ({ value, onChange, windT
                         : 'bg-white/80 text-[#2A1450] border-[#8B5CF6]/20 hover:border-[#8B5CF6]/60'
                   }`}
                 >
-                  <span className="block text-[12.5px] font-extrabold">{o.label}</span>
-                  {o.price && (
-                    <span className={`block text-[11px] font-bold tabular-nums ${on ? 'text-[#7C3AED]' : ''}`}>
-                      {formatBaht(o.price)}
-                      {o.id === 'premium' && <span className="ml-1 text-[9.5px] line-through opacity-70">2,200</span>}
-                    </span>
-                  )}
+                  <span className="block text-[12.5px] font-extrabold">{on && '✓ '}{o.label}</span>
+                  <span className={`block text-[11px] font-bold tabular-nums ${on ? 'text-[#7C3AED]' : ''}`}>
+                    {formatBaht(o.price)}
+                    {o.id === 'premium' && <span className="ml-1 text-[9.5px] line-through opacity-70">2,200</span>}
+                  </span>
                 </button>
               );
             })}

@@ -1,5 +1,5 @@
 import React from 'react';
-import { HeartHandshake, ShieldCheck, Sparkles, Users } from 'lucide-react';
+import { HeartHandshake, ShieldCheck, Sparkles } from 'lucide-react';
 import { motion } from 'motion/react';
 import { PawIcon } from './brand/DogDecor';
 import { LabradorMascot } from './brand/LabradorMascot';
@@ -21,14 +21,6 @@ export const EventObjectiveSection: React.FC = () => {
       bg: 'linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%)',
       color: '#B45309',
       border: '#FDE68A',
-    },
-    {
-      title: 'ออกกำลังกายเคียงข้างเพื่อนสี่ขา',
-      subtitle: 'สานสัมพันธ์ ตชด. กับประชาชน',
-      Icon: Users,
-      bg: 'linear-gradient(135deg, #DCFCE7 0%, #BBF7D0 100%)',
-      color: '#166534',
-      border: '#BBF7D0',
     },
   ];
 
@@ -86,18 +78,15 @@ export const EventObjectiveSection: React.FC = () => {
 
                 <div className="space-y-3 text-sm sm:text-base text-purple-100/95 leading-relaxed font-medium pt-1">
                   <p>
-                    งาน{' '}
+                    การจัดกิจกรรม{' '}
                     <strong className="text-[#FFE28A] font-extrabold">
-                      BPP Paw Patrol Run 2026
+                      ช้างศึก รัน เห็นช้างวิ่ง วิ่งตามช้าง (CHANGSUEK RUN 2026)
                     </strong>{' '}
-                    (CHANGSUEK RUN – เห็นช้างวิ่ง วิ่งตามช้าง) จัดโดยกองบัญชาการตำรวจตระเวนชายแดน
-                    ในวัน
-                    <strong className="text-white font-bold">พฤหัสบดีที่ 10 ธันวาคม 2569</strong>{' '}
-                    ณ ค่ายนเรศวร อำเภอชะอำ จังหวัดเพชรบุรี{' '}
+                    มีวัตถุประสงค์เพื่อนำ{' '}
                     <span className="underline decoration-[#FFC928]/80 decoration-2 underline-offset-4 font-bold text-white">
                       รายได้ทั้งหมดหลังหักค่าใช้จ่าย
                     </span>{' '}
-                    จะนำไปใช้ 2 เรื่อง
+                    ไปใช้ใน 2 เรื่อง
                   </p>
                   <ol className="space-y-2">
                     <li className="flex gap-2.5">
@@ -105,7 +94,7 @@ export const EventObjectiveSection: React.FC = () => {
                         1
                       </span>
                       <span>
-                        พัฒนาและยกระดับขีดความสามารถของกองกำกับการศูนย์ฝึกสุนัขตำรวจ
+                        การพัฒนาและยกระดับขีดความสามารถของกองกำกับการศูนย์ฝึกสุนัขตำรวจ
                         กองบังคับการฝึกพิเศษ กองบัญชาการตำรวจตระเวนชายแดน
                       </span>
                     </li>
@@ -119,11 +108,6 @@ export const EventObjectiveSection: React.FC = () => {
                       </span>
                     </li>
                   </ol>
-                  <p>
-                    พร้อมทั้งส่งเสริมการออกกำลังกาย การดูแลสุขภาพสัตว์เลี้ยง
-                    และสร้างความสัมพันธ์อันดีระหว่างตำรวจตระเวนชายแดนกับประชาชน
-                    ผ่านกิจกรรมที่ทุกคนมีส่วนร่วมได้
-                  </p>
                 </div>
               </div>
 

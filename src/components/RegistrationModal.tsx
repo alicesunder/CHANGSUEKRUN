@@ -39,6 +39,7 @@ import {
   PartyPopper,
   Gift,
   Music,
+  Crown,
 } from 'lucide-react';
 import { RouteId } from '../types';
 import { DogCharacter, ElephantCharacter } from './brand/BrandCharacters';
@@ -66,6 +67,9 @@ import {
   isDogCategory,
   calcTicketTotal,
   CONCERT_PASS_PRICE,
+  MAX_VIP_TABLES,
+  VIP_TABLE_PRICE,
+  VIP_TABLE_SEATS,
   formatBaht,
 } from '../data/eventData';
 import {
@@ -78,7 +82,7 @@ import {
 import { TicketPrintEmailModal } from './TicketPrintEmailModal';
 import { AddOnPicker } from './AddOnPicker';
 import { BLOOD_TYPES, GENDERS, PREFIXES, RELATIONSHIPS, ageFromBirthDate, needsInsurance } from '../data/insurance';
-import { EMPTY_ADD_ONS, addOnBonusDiscount, addOnDiscountRate, addOnLabel, addOnTotal, concertDiscountPerTicket, hasAddOns, percentOf, type AddOnSelection } from '../data/addOns';
+import { EMPTY_ADD_ONS, addOnBonusDiscount, addOnConcertRate, addOnCountRate, addOnDiscountRate, addOnLabel, addOnTotal, concertDiscountPerTicket, hasAddOns, percentOf, type AddOnSelection } from '../data/addOns';
 
 interface RegistrationModalProps {
   isOpen: boolean;
@@ -93,6 +97,8 @@ interface RegistrationModalProps {
   initialConcert?: boolean;
   /** how many concert tickets to start with */
   initialConcertQty?: number;
+  /** how many VIP tables to start with */
+  initialVipTables?: number;
   onRegistrationSuccess?: () => void;
   onOpenAdminModal?: () => void;
 }
@@ -221,6 +227,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
   initialMode = 'RUN',
   initialConcert = false,
   initialConcertQty = 1,
+  initialVipTables = 0,
   onRegistrationSuccess,
   onOpenAdminModal,
 }) => {
@@ -231,7 +238,11 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
   const [wantConcert, setWantConcert] = useState(initialMode === 'CONCERT' || initialConcert);
   const [wantAddons, setWantAddons] = useState(initialMode === 'ADDON' || Boolean(initialAddOns));
   const mode: 'RUN' | 'CONCERT' | 'ADDON' = wantRun ? 'RUN' : wantConcert ? 'CONCERT' : 'ADDON';
-  const [concertQty, setConcertQty] = useState(Math.max(1, initialConcertQty));
+  // GA tickets may be 0 when VIP tables are bought instead; at least one of the two when the concert is ticked
+  const [concertQty, setConcertQty] = useState(initialVipTables > 0 ? initialConcertQty : Math.max(1, initialConcertQty));
+  const [vipTablesState, setVipTables] = useState(initialVipTables);
+  const vipTables = wantConcert ? vipTablesState : 0;
+  const gaQty = wantConcert ? concertQty : 0;
   const isConcert = mode === 'CONCERT';
   const isAddonOnly = mode === 'ADDON';
   const noRun = mode !== 'RUN';
@@ -307,18 +318,21 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
   const insured = !noRun && needsInsurance(selectedRoute);
   const insAge = ageFromBirthDate(insBirth);
   const todayIso = new Date().toISOString().slice(0, 10);
-  // Bundle discounts need a run ticket and never stack with a sponsor code.
+  // Bundle discounts never stack with a sponsor code (rules in data/addOns.ts; the server decides the real price).
   const sponsorOn = Boolean(sponsor) && wantRun;
-  const discountEligible = wantRun && !sponsorOn;
-  const concertDiscount = wantConcert ? concertQty * concertDiscountPerTicket(CONCERT_PASS_PRICE, discountEligible) : 0;
-  const ticketTotal = (wantRun ? calcTicketTotal(selectedRoute, extraPeople, extraDogs) : 0) + (wantConcert ? CONCERT_PASS_PRICE * concertQty - concertDiscount : 0);
-  const addOnSum = addOnTotal(addOns, discountEligible);
+  const discountCtx = { hasRun: wantRun, hasConcert: gaQty > 0 || vipTables > 0, sponsor: sponsorOn };
+  const concertDiscount = gaQty * concertDiscountPerTicket(CONCERT_PASS_PRICE, wantRun && !sponsorOn);
+  const vipTotal = VIP_TABLE_PRICE * vipTables;
+  const ticketTotal = (wantRun ? calcTicketTotal(selectedRoute, extraPeople, extraDogs) : 0) + (wantConcert ? CONCERT_PASS_PRICE * gaQty - concertDiscount + vipTotal : 0);
+  const addOnSum = addOnTotal(addOns, discountCtx);
+  const addOnOff = addOnBonusDiscount(addOns, discountCtx);
+  const concertMissing = wantConcert && gaQty === 0 && vipTables === 0;
   const total = ticketTotal + addOnSum;
   // With a sponsor code the run is free; add-on activities are always paid.
   const chargeTotal = (sponsorOn ? 0 : ticketTotal) + addOnSum;
   const isFreeOrder = sponsorOn && addOnSum === 0;
   const dogCount = isDog ? 1 + extraDogs : 0;
-  const peopleCount = isAddonOnly ? addOns.people : isConcert ? concertQty : isDog ? 1 + extraPeople : 1;
+  const peopleCount = isAddonOnly ? addOns.people : isConcert ? gaQty + vipTables * VIP_TABLE_SEATS : isDog ? 1 + extraPeople : 1;
   // Amount to pay always comes from the server order once it exists.
   const payAmount = serverOrder?.totalPrice ?? total;
   const nextBibPreview = publicCfg?.nextBib?.[selectedRoute] ?? '—';
@@ -374,7 +388,8 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
     setWantRun(initialMode === 'RUN');
     setWantConcert(initialMode === 'CONCERT' || initialConcert);
     setWantAddons(initialMode === 'ADDON' || Boolean(initialAddOns));
-    setConcertQty(Math.max(1, initialConcertQty));
+    setConcertQty(initialVipTables > 0 ? initialConcertQty : Math.max(1, initialConcertQty));
+    setVipTables(initialVipTables);
     setServerOrder(null);
     setPendingRef(null);
     setFormError(null);
@@ -410,7 +425,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
     return () => {
       cancelled = true;
     };
-  }, [isOpen, initialRoute, initialExtraPeople, initialExtraDogs, initialAddOns, initialMode, initialConcert, initialConcertQty]);
+  }, [isOpen, initialRoute, initialExtraPeople, initialExtraDogs, initialAddOns, initialMode, initialConcert, initialConcertQty, initialVipTables]);
 
   // Close with Escape
   useEffect(() => {
@@ -536,7 +551,8 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
       const res = await createOrder({
         routeId: selectedRoute,
         ticketType: mode,
-        concertQty: wantConcert ? concertQty : undefined,
+        concertQty: wantConcert ? gaQty : undefined,
+        vipTables: vipTables > 0 ? vipTables : undefined,
         extraPeople,
         extraDogs,
         fullName: insured ? `${insFirst.trim()} ${insLast.trim()}` : fullName.trim(),
@@ -830,7 +846,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                     {([
                       { key: 'run', emoji: '🏃', title: 'ตั๋ววิ่ง', sub: 'เลือกระยะด้านล่าง', on: wantRun, set: setWantRun },
-                      { key: 'concert', emoji: '🎶', title: 'ตั๋วคอนเสิร์ต', sub: formatBaht(CONCERT_PASS_PRICE) + ' บาท / คน', on: wantConcert, set: setWantConcert },
+                      { key: 'concert', emoji: '🎶', title: 'ตั๋วคอนเสิร์ต', sub: `GA ${formatBaht(CONCERT_PASS_PRICE)} · VIP โต๊ะ`, on: wantConcert, set: setWantConcert },
                       { key: 'addon', emoji: '🎢', title: 'กิจกรรมเสริม', sub: 'หอสูง · ยิงปืน · อุโมงค์ลม', on: wantAddons, set: setWantAddons },
                     ] as const).map((m) => (
                       <button
@@ -868,13 +884,30 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                     </div>
                     <div className="rounded-2xl bg-white p-3 text-[#2A1450]">
                       <Stepper
-                        label="จำนวนตั๋วคอนเสิร์ต"
+                        label="ตั๋วคอนเสิร์ต GA"
                         hint={`${formatBaht(CONCERT_PASS_PRICE)} บาท / คน`}
                         value={concertQty}
-                        onChange={(n: number) => setConcertQty(Math.min(9, Math.max(1, n)))}
+                        onChange={(n: number) => setConcertQty(Math.min(9, Math.max(vipTablesState > 0 ? 0 : 1, n)))}
                         icon={<Music className="w-5 h-5" />}
                       />
                     </div>
+                    <div className="rounded-2xl bg-white p-3 text-[#2A1450]">
+                      <Stepper
+                        label="VIP TABLE (6 ท่าน)"
+                        hint={`${formatBaht(VIP_TABLE_PRICE)} บาท / โต๊ะ`}
+                        value={vipTablesState}
+                        onChange={(n: number) => {
+                          const next = Math.min(MAX_VIP_TABLES, Math.max(0, n));
+                          setVipTables(next);
+                          if (next === 0 && concertQty === 0) setConcertQty(1);
+                        }}
+                        icon={<Crown className="w-5 h-5" />}
+                        max={MAX_VIP_TABLES}
+                      />
+                    </div>
+                    {concertMissing && (
+                      <p role="alert" className="text-xs font-bold text-[#FFE268]">กรุณาเลือกตั๋ว GA หรือ VIP TABLE อย่างน้อย 1 อย่าง</p>
+                    )}
                   </div>
                 )}
 
@@ -972,7 +1005,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                     value={addOns}
                     onChange={setAddOns}
                     windTunnelRemaining={typeof publicCfg?.windTunnelRemaining === 'number' ? publicCfg.windTunnelRemaining : null}
-                    discountEligible={discountEligible}
+                    discountCtx={discountCtx}
                   />
                 </div>
                 </div>
@@ -1044,10 +1077,16 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                           <span className="font-extrabold text-[#261247] tabular-nums">{formatBaht(ticket.basePrice)} บาท</span>
                         </div>
                       )}
-                      {wantConcert && (
+                      {gaQty > 0 && (
                         <div className="flex justify-between">
-                          <span>{`ตั๋วคอนเสิร์ต × ${concertQty}`}</span>
-                          <span className="font-extrabold text-[#261247] tabular-nums">{formatBaht(CONCERT_PASS_PRICE * concertQty)} บาท</span>
+                          <span>{`ตั๋วคอนเสิร์ต GA × ${gaQty}`}</span>
+                          <span className="font-extrabold text-[#261247] tabular-nums">{formatBaht(CONCERT_PASS_PRICE * gaQty)} บาท</span>
+                        </div>
+                      )}
+                      {vipTables > 0 && (
+                        <div className="flex justify-between">
+                          <span>{`VIP TABLE × ${vipTables} โต๊ะ (${vipTables * VIP_TABLE_SEATS} ท่าน)`}</span>
+                          <span className="font-extrabold text-[#261247] tabular-nums">{formatBaht(vipTotal)} บาท</span>
                         </div>
                       )}
                       {concertDiscount > 0 && (
@@ -1077,13 +1116,23 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                           <span>
                             กิจกรรมเสริม: {addOnLabel(addOns)} × {addOns.people} คน
                           </span>
-                          <span className="font-extrabold text-[#261247] tabular-nums shrink-0">+{formatBaht(addOnSum + addOnBonusDiscount(addOns, discountEligible))} บาท</span>
+                          <span className="font-extrabold text-[#261247] tabular-nums shrink-0">+{formatBaht(addOnSum + addOnOff)} บาท</span>
                         </div>
                       )}
-                      {addOnBonusDiscount(addOns, discountEligible) > 0 && (
+                      {addOnOff > 0 && (
                         <div className="flex justify-between gap-3 text-emerald-700">
-                          <span>🎉 {`ส่วนลดวิ่ง + ${addOns.tower && addOns.gun !== 'none' && addOns.windTunnel ? 'ครบ 3' : '2'} กิจกรรม (${percentOf(addOnDiscountRate(addOns, discountEligible))}%)`}</span>
-                          <span className="font-extrabold tabular-nums shrink-0">-{formatBaht(addOnBonusDiscount(addOns, discountEligible))} บาท</span>
+                          <span>
+                            🎉 ส่วนลดกิจกรรม {percentOf(addOnDiscountRate(addOns, discountCtx))}%
+                            {' ('}
+                            {[
+                              addOnCountRate(addOns, discountCtx) > 0 && `${addOns.tower && addOns.gun !== 'none' && addOns.windTunnel && wantRun ? 'วิ่ง + ครบ 3' : '2'} กิจกรรม ${percentOf(addOnCountRate(addOns, discountCtx))}%`,
+                              addOnConcertRate(addOns, discountCtx) > 0 && `มีคอนเสิร์ต +${percentOf(addOnConcertRate(addOns, discountCtx))}%`,
+                            ]
+                              .filter(Boolean)
+                              .join(' · ')}
+                            {')'}
+                          </span>
+                          <span className="font-extrabold tabular-nums shrink-0">-{formatBaht(addOnOff)} บาท</span>
                         </div>
                       )}
                     </div>
@@ -1109,10 +1158,10 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                     <button
                       type="button"
                       onClick={() => setStep(2)}
-                      disabled={addonMissing}
+                      disabled={addonMissing || concertMissing}
                       className="disabled:opacity-50 disabled:cursor-not-allowed w-full py-3.5 px-5 rounded-2xl bg-gradient-to-r from-[#FFE268] via-[#FFC928] to-[#F59E0B] hover:brightness-105 text-[#261247] font-black text-base border-2 border-[#261247] luminous-pill-btn active:translate-y-0.5 transition-all flex items-center justify-center gap-2 cursor-pointer"
                     >
-                      <span>{addonMissing ? 'เลือกอย่างน้อย 1 อย่างก่อน (วิ่ง / คอนเสิร์ต / กิจกรรม)' : 'ดำเนินการต่อ · กรอกข้อมูลผู้สมัคร'}</span>
+                      <span>{addonMissing ? 'เลือกอย่างน้อย 1 อย่างก่อน (วิ่ง / คอนเสิร์ต / กิจกรรม)' : concertMissing ? 'เลือกตั๋ว GA หรือ VIP TABLE ก่อน' : 'ดำเนินการต่อ · กรอกข้อมูลผู้สมัคร'}</span>
                       <ArrowRight className="w-5 h-5 stroke-[2.5]" />
                     </button>
                   </div>

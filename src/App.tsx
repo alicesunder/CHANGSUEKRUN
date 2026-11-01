@@ -70,7 +70,9 @@ export default function App() {
   // Ticket shop basket: run distance (or none) and concert tickets
   const [shopRun, setShopRun] = useState<RouteId | null>(null);
   const [shopConcertQty, setShopConcertQty] = useState(0);
+  const [shopVipTables, setShopVipTables] = useState(0);
   const [registerConcertQty, setRegisterConcertQty] = useState(1);
+  const [registerVipTables, setRegisterVipTables] = useState(0);
   const [comparisonModalOpen, setComparisonModalOpen] = useState(false);
   const [videoModalOpen, setVideoModalOpen] = useState(false);
   const [paceModalOpen, setPaceModalOpen] = useState(false);
@@ -115,6 +117,7 @@ export default function App() {
     setRegisterMode('RUN');
     setRegisterConcert(false);
     setRegisterConcertQty(1);
+    setRegisterVipTables(0);
     setRegisterExtras(extras ?? { people: 0, dogs: 0 });
     setRegisterAddOns(addOns ?? (hasAddOns(pageAddOns) ? pageAddOns : undefined));
     if (distance) {
@@ -128,10 +131,12 @@ export default function App() {
   // Checkout from the ticket shop: open the form with exactly what is in the basket
   const handleShopCheckout = () => {
     const addOnsPicked = hasAddOns(pageAddOns);
-    if (!shopRun && shopConcertQty === 0 && !addOnsPicked) return;
-    setRegisterMode(shopRun ? 'RUN' : shopConcertQty > 0 ? 'CONCERT' : 'ADDON');
-    setRegisterConcert(shopConcertQty > 0);
-    setRegisterConcertQty(Math.max(1, shopConcertQty));
+    const shopConcert = shopConcertQty > 0 || shopVipTables > 0;
+    if (!shopRun && !shopConcert && !addOnsPicked) return;
+    setRegisterMode(shopRun ? 'RUN' : shopConcert ? 'CONCERT' : 'ADDON');
+    setRegisterConcert(shopConcert);
+    setRegisterConcertQty(shopVipTables > 0 ? shopConcertQty : Math.max(1, shopConcertQty));
+    setRegisterVipTables(shopVipTables);
     setRegisterTargetRoute(shopRun ?? selectedRoute);
     if (shopRun) setSelectedRoute(shopRun);
     setRegisterExtras({ people: 0, dogs: 0 });
@@ -191,6 +196,8 @@ export default function App() {
               }}
               concertQty={shopConcertQty}
               onConcertQtyChange={setShopConcertQty}
+              vipTables={shopVipTables}
+              onVipTablesChange={setShopVipTables}
               addOns={pageAddOns}
               onAddOnsChange={setPageAddOns}
               onCheckout={handleShopCheckout}
@@ -331,6 +338,7 @@ export default function App() {
           initialMode={registerMode}
           initialConcert={registerConcert}
           initialConcertQty={registerConcertQty}
+          initialVipTables={registerVipTables}
           onClose={() => setRegisterModalOpen(false)}
           onRegistrationSuccess={() => {
             setRegisterModalOpen(false);

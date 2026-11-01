@@ -24,6 +24,7 @@ export interface PublicConfig {
 export type ServerOrder = TicketOrder & {
   ticketType?: 'RUN' | 'CONCERT' | 'ADDON';
   concertQty?: number;
+  vipTables?: number;
   expiresAt: string;
   omiseChargeId?: string;
   omiseQrImageUrl?: string;
@@ -82,6 +83,8 @@ export interface CreateOrderInput {
   /** RUN (default) = running ticket incl. concert; CONCERT = concert/entry pass only (no run, no BIB) */
   ticketType?: 'RUN' | 'CONCERT' | 'ADDON';
   concertQty?: number;
+  /** VIP concert tables (6 seats each) */
+  vipTables?: number;
   /** Insurance details: required for 5 KM / 10 KM runners */
   insurance?: InsuranceInfo;
   insuranceConsent?: boolean;

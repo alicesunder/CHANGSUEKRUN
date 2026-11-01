@@ -1201,7 +1201,20 @@ export const isDogCategory = (id: RouteId) => ticketById(id).group === 'dog';
 export const formatBaht = (n: number) => `${n.toLocaleString('th-TH')}`;
 
 /** Concert-only pass (no run): entry to the evening concert; add-on activities can be bought on top. */
-export const CONCERT_PASS_PRICE = 700;
+export const CONCERT_PASS_PRICE = 990;
+
+/** VIP table at the concert: one price per table of 6 seats (no bundle discount on it). */
+export const VIP_TABLE_PRICE = 15900;
+export const VIP_TABLE_SEATS = 6;
+export const MAX_VIP_TABLES = 3;
+export const VIP_TABLE_PERKS = [
+  'Reserved VIP Table พร้อมที่นั่ง 6 ท่าน',
+  'Premium Stage View',
+  'VIP Fast Track Entrance',
+  'VIP Parking 2 คัน',
+  'Complimentary Drinking Water & Snack Set',
+  'ตามเงื่อนไขของผู้จัดงาน',
+];
 
 // Dog Run tickets cover 1 runner + 1 dog; extra dogs are no longer sold (extraDogs is ignored).
 export const calcTicketTotal = (id: RouteId, extraPeople = 0, _extraDogs = 0) => {

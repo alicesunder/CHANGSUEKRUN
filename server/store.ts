@@ -31,6 +31,8 @@ export interface StoredOrder {
   concertQty?: number;
   /** baht taken off the concert tickets by the run + concert bundle */
   concertDiscount?: number;
+  /** VIP concert tables (6 seats each), bought in the same order */
+  vipTables?: number;
   routeName: string;
   shirtSize: string;
   runningWithDog: boolean;

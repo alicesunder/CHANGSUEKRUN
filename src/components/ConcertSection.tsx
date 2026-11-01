@@ -1,12 +1,14 @@
 import React from 'react';
 import { Music } from 'lucide-react';
+import { CONCERT_PASS_PRICE, VIP_TABLE_PRICE, formatBaht } from '../data/eventData';
 
 const PHOTOS = [
+  { src: '/images/concert/run-atmosphere.jpg', alt: 'นักวิ่งในเสื้อสีม่วงเดินผ่านซุ้มปล่อยตัวบนชายหาด ยิ้มและชูนิ้วโป้ง', cap: 'บรรยากาศงานวิ่งริมหาด ตชด. ครั้งที่ผ่านมา' },
   { src: '/images/concert/stage.webp', alt: 'เวทีคอนเสิร์ตยามเย็นพร้อมจอ LED และแสงสีม่วง มีผู้ชมถือโทรศัพท์ถ่ายภาพ', cap: 'เวทีกลางแจ้ง จอ LED และแสงสีตอนค่ำ' },
   { src: '/images/concert/crowd.webp', alt: 'ผู้ชมนั่งบนสนามหญ้าชมคอนเสิร์ตริมหาดตอนพลบค่ำ', cap: 'นั่งชิลล์ริมหาด ฟังดนตรีสดหลังจบการวิ่ง' },
 ];
 
-/** Atmosphere photos of the evening concert, shown below the schedule & GPS section. */
+/** Atmosphere photos of the run and the evening concert, shown below the schedule & GPS section. */
 export const ConcertSection: React.FC = () => (
   <section id="concert" aria-labelledby="concert-heading" className="py-10 sm:py-14 scroll-mt-20">
     <div className="max-w-[1100px] mx-auto px-4 sm:px-6">
@@ -22,14 +24,14 @@ export const ConcertSection: React.FC = () => (
               <Music className="w-4 h-4" /> หลังปล่อยตัว 17.30 น. เป็นต้นไป
             </span>
             <h2 id="concert-heading" className="mt-3 font-hero text-3xl sm:text-4xl font-bold text-white">
-              บรรยากาศคอนเสิร์ต
+              บรรยากาศงานวิ่ง & คอนเสิร์ต
             </h2>
             <p className="mt-2 text-sm sm:text-base font-medium text-white/85">
-              จบการวิ่งแล้วมาผ่อนคลายกับดนตรีสดริมหาด ทั้งครอบครัวและน้องสุนัข
+              วิ่งริมหาดกับเพื่อนสี่ขา แล้วต่อด้วยดนตรีสดริมหาด ทั้งครอบครัวและน้องสุนัข
             </p>
           </div>
 
-          <ul className="mt-7 flex gap-4 overflow-x-auto snap-x snap-mandatory -mx-4 px-4 pb-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:mx-0 md:px-0 md:pb-0 md:grid md:grid-cols-2 sm:gap-5 md:overflow-visible">
+          <ul className="mt-7 flex gap-4 overflow-x-auto snap-x snap-mandatory -mx-4 px-4 pb-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:mx-0 md:px-0 md:pb-0 md:grid md:grid-cols-3 sm:gap-5 md:overflow-visible">
             {PHOTOS.map((p) => (
               <li key={p.src} className="shrink-0 w-[85%] snap-start md:w-auto rounded-3xl overflow-hidden bg-white/[0.07] border-2 border-[#FFC928]/35">
                 <img
@@ -48,9 +50,12 @@ export const ConcertSection: React.FC = () => (
               href="#shop-concert"
               className="inline-flex items-center gap-2 min-h-[52px] px-7 rounded-2xl bg-[#FFC928] text-[#2A1450] text-base font-extrabold border-[3px] border-[#140826] shadow-[0_6px_0_#140826] active:translate-y-0.5"
             >
-              🎶 ซื้อตั๋วคอนเสิร์ต 700 บาท
+              🎶 ซื้อตั๋วคอนเสิร์ต GA {formatBaht(CONCERT_PASS_PRICE)} บาท
             </a>
           </div>
+          <p className="mt-3 text-center text-sm font-bold text-[#FFE28A]">
+            หรือจอง VIP TABLE {formatBaht(VIP_TABLE_PRICE)} บาท/โต๊ะ (6 ท่าน)
+          </p>
           <p className="mt-4 text-center text-xs font-medium text-white/70">
             ภาพบรรยากาศประกอบ รายชื่อศิลปินและการแสดงจะประกาศอีกครั้งผ่านช่องทางทางการ
           </p>

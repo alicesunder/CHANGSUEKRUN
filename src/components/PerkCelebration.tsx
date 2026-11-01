@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ADDON_THREE_RATE, ADDON_TWO_RATE, CONCERT_BUNDLE_RATE, formatBaht, percentOf } from '../data/addOns';
+import { ADDON_CONCERT_RATE, ADDON_MAX_RATE, ADDON_THREE_RATE, ADDON_TWO_RATE, CONCERT_BUNDLE_RATE, formatBaht, percentOf } from '../data/addOns';
 import { CONCERT_PASS_PRICE } from '../data/eventData';
 
 const COLORS = ['#FFC928', '#EC4899', '#9333EA', '#0EA5E9', '#10B981', '#FB923C', '#FFFFFF'];
@@ -49,9 +49,13 @@ interface CelebrationProps {
   pieces?: number;
 }
 
+/** How long the price-tag sign stays up; it sits over the card, so it must not linger over the buttons. */
+const SIGN_MS = 2600;
+
 /** Confetti shower + a bouncing price-tag sign. Plays every time a deal unlocks (or improves). */
 export const DiscountCelebration: React.FC<CelebrationProps> = ({ active, burstKey, kicker, headline, discount, pieces = 70 }) => {
   const [burst, setBurst] = useState(0);
+  const [signUp, setSignUp] = useState(false);
   const prev = useRef('');
   const reduced = useMemo(prefersReducedMotion, []);
 
@@ -60,6 +64,13 @@ export const DiscountCelebration: React.FC<CelebrationProps> = ({ active, burstK
     if (key && key !== prev.current) setBurst((b) => b + 1);
     prev.current = key;
   }, [active, burstKey]);
+
+  useEffect(() => {
+    if (!burst) return;
+    setSignUp(true);
+    const t = window.setTimeout(() => setSignUp(false), SIGN_MS);
+    return () => window.clearTimeout(t);
+  }, [burst]);
 
   const list = useMemo(() => (burst ? makePieces(reduced ? 0 : pieces) : []), [burst, reduced, pieces]);
 
@@ -87,7 +98,7 @@ export const DiscountCelebration: React.FC<CelebrationProps> = ({ active, burstK
       </div>
 
       <AnimatePresence mode="wait">
-        {active && (
+        {active && signUp && (
           <motion.div
             key={`sign-${burstKey}`}
             role="status"
@@ -96,7 +107,7 @@ export const DiscountCelebration: React.FC<CelebrationProps> = ({ active, burstK
             animate={{ scale: 1, rotate: -4, y: 0, opacity: 1 }}
             exit={{ scale: 0, rotate: 14, opacity: 0 }}
             transition={{ type: 'spring', stiffness: 380, damping: 10 }}
-            className="absolute -top-7 right-1 sm:right-6 z-40 origin-bottom-left max-w-[88%]"
+            className="pointer-events-none absolute -top-7 right-1 sm:right-6 z-40 origin-bottom-left max-w-[88%]"
           >
             <motion.div
               animate={{ rotate: [-4, 3, -4], y: [0, -6, 0], scale: [1, 1.04, 1] }}
@@ -118,25 +129,29 @@ export const DiscountCelebration: React.FC<CelebrationProps> = ({ active, burstK
 
 interface DealStripProps {
   hasRun: boolean;
+  /** GA concert tickets in the basket (the run + concert deal is on GA only) */
+  hasGaConcert: boolean;
+  /** GA or VIP concert in the basket */
   hasConcert: boolean;
   activities: number;
 }
 
-/** One slim row that shows the three bundle deals and lights each one up when the basket qualifies. */
-export const DealStrip: React.FC<DealStripProps> = ({ hasRun, hasConcert, activities }) => {
+/** One slim row that shows the bundle deals and lights each one up when the basket qualifies. */
+export const DealStrip: React.FC<DealStripProps> = ({ hasRun, hasGaConcert, hasConcert, activities }) => {
   const concertNet = CONCERT_PASS_PRICE - Math.round(CONCERT_PASS_PRICE * CONCERT_BUNDLE_RATE);
   const deals = [
-    { key: 'concert', label: 'วิ่ง + คอนเสิร์ต', big: `ลด ${percentOf(CONCERT_BUNDLE_RATE)}%`, note: `เหลือ ${formatBaht(concertNet)} บาท/ใบ`, on: hasRun && hasConcert },
-    { key: 'two', label: 'วิ่ง + 2 กิจกรรม', big: `ลด ${percentOf(ADDON_TWO_RATE)}%`, note: 'ค่ากิจกรรมเสริม', on: hasRun && activities >= 2 },
-    { key: 'three', label: 'วิ่ง + ครบ 3 กิจกรรม', big: `ลด ${percentOf(ADDON_THREE_RATE)}%`, note: 'สุดคุ้ม!', on: hasRun && activities >= 3 },
+    { key: 'concert', label: 'วิ่ง + คอนเสิร์ต GA', big: `ลด ${percentOf(CONCERT_BUNDLE_RATE)}%`, note: `เหลือ ${formatBaht(concertNet)} บาท/ใบ`, on: hasRun && hasGaConcert },
+    { key: 'two', label: '2 กิจกรรมขึ้นไป', big: `ลด ${percentOf(ADDON_TWO_RATE)}%`, note: 'ค่ากิจกรรมเสริม', on: activities >= 2 },
+    { key: 'three', label: 'วิ่ง + ครบ 3 กิจกรรม', big: `ลด ${percentOf(ADDON_THREE_RATE)}%`, note: 'แทน 10%', on: hasRun && activities >= 3 },
+    { key: 'concert-addon', label: 'คอนเสิร์ต + กิจกรรม', big: `+${percentOf(ADDON_CONCERT_RATE)}%`, note: 'ลดเพิ่มค่ากิจกรรม', on: hasConcert && activities >= 1 },
   ];
   return (
     <div className="rounded-2xl border-2 border-[#7C3AED]/20 bg-white/80 p-2.5 sm:p-3">
       <p className="px-1 pb-2 text-xs sm:text-sm font-extrabold text-[#2A1450]">
-        🎁 ซื้อคู่ตั๋ววิ่ง รับส่วนลดทันที
-        {!hasRun && <span className="ml-1.5 font-bold text-[#6B5A85]">· เลือกตั๋ววิ่งก่อนเพื่อปลดล็อก</span>}
+        🎁 ยิ่งซื้อคู่ ยิ่งลด
+        <span className="ml-1.5 font-bold text-[#6B5A85]">· ส่วนลดกิจกรรมรวมสูงสุด {percentOf(ADDON_MAX_RATE)}%</span>
       </p>
-      <ul className="grid grid-cols-3 gap-2" aria-label="โปรโมชั่นส่วนลด">
+      <ul className="grid grid-cols-2 sm:grid-cols-4 gap-2" aria-label="โปรโมชั่นส่วนลด">
         {deals.map((d) => (
           <motion.li
             key={d.key}

@@ -14,7 +14,6 @@ import {
   ChevronUp,
   Table as TableIcon,
   LayoutList,
-  Map as MapIcon,
   CheckCircle2,
   AlertCircle,
   Building,
@@ -24,7 +23,6 @@ import {
   Compass,
   ArrowRight,
 } from 'lucide-react';
-const HotelMap = React.lazy(() => import('./HotelMap').then((m) => ({ default: m.HotelMap })));
 import { getGoogleMapsUrl } from '../utils/geo';
 import { PawIcon } from './brand/DogDecor';
 
@@ -91,7 +89,7 @@ const FEATURED_MOCKUP_HOTELS = [
 
 export const HotelExplorer: React.FC<HotelExplorerProps> = () => {
   const [directoryExpanded, setDirectoryExpanded] = useState(false);
-  const [viewMode, setViewMode] = useState<'cards' | 'table' | 'map'>('cards');
+  const [viewMode, setViewMode] = useState<'cards' | 'table'>('cards');
   const [searchQuery, setSearchQuery] = useState('');
   const [distanceFilter, setDistanceFilter] = useState<'all' | 'under3' | '3to5' | 'above5'>('all');
   const [priceFilter, setPriceFilter] = useState<'all' | 'budget' | 'mid' | 'premium'>('all');
@@ -360,17 +358,6 @@ export const HotelExplorer: React.FC<HotelExplorerProps> = () => {
                   <TableIcon className="w-3.5 h-3.5" />
                   <span>ตาราง</span>
                 </button>
-                <button
-                  onClick={() => setViewMode('map')}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                    viewMode === 'map'
-                      ? 'bg-[#5B20A8] text-white shadow-xs font-black'
-                      : 'text-slate-600 hover:text-[#5B20A8]'
-                  }`}
-                >
-                  <MapIcon className="w-3.5 h-3.5" />
-                  <span>แผนที่</span>
-                </button>
               </div>
             </div>
 
@@ -626,14 +613,6 @@ export const HotelExplorer: React.FC<HotelExplorerProps> = () => {
                     </tbody>
                   </table>
                 </div>
-              </div>
-            )}
-
-            {viewMode === 'map' && (
-              <div className="bg-white border border-purple-100 rounded-2xl overflow-hidden p-2 min-h-[420px]">
-                <React.Suspense fallback={<div className="min-h-[400px]" aria-busy="true" />}>
-                  <HotelMap compact={true} />
-                </React.Suspense>
               </div>
             )}
           </div>

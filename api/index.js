@@ -28244,7 +28244,10 @@ var ticketCategories = [
 ];
 var ticketById = (id) => ticketCategories.find((t) => t.id === id) ?? ticketCategories[0];
 var isDogCategory = (id) => ticketById(id).group === "dog";
-var CONCERT_PASS_PRICE = 700;
+var CONCERT_PASS_PRICE = 990;
+var VIP_TABLE_PRICE = 15900;
+var VIP_TABLE_SEATS = 6;
+var MAX_VIP_TABLES = 3;
 var calcTicketTotal = (id, extraPeople = 0, _extraDogs = 0) => {
   const t = ticketById(id);
   return t.basePrice + extraPeople * (t.addPersonPrice ?? 0);
@@ -28730,20 +28733,29 @@ function addOnPricePerPerson(s) {
 var CONCERT_BUNDLE_RATE = 0.1;
 var ADDON_TWO_RATE = 0.1;
 var ADDON_THREE_RATE = 0.15;
+var ADDON_CONCERT_RATE = 0.1;
+var ADDON_MAX_RATE = 0.2;
 function activityCount(s) {
   return (s.tower ? 1 : 0) + (s.gun !== "none" ? 1 : 0) + (s.windTunnel ? 1 : 0);
 }
-function addOnDiscountRate(s, eligible) {
-  if (!eligible || !hasAddOns(s)) return 0;
+function addOnCountRate(s, ctx) {
+  if (ctx.sponsor || !hasAddOns(s)) return 0;
   const n = activityCount(s);
-  return n >= 3 ? ADDON_THREE_RATE : n === 2 ? ADDON_TWO_RATE : 0;
+  return n >= 3 && ctx.hasRun ? ADDON_THREE_RATE : n >= 2 ? ADDON_TWO_RATE : 0;
 }
-function addOnBonusDiscount(s, eligible) {
-  const rate = addOnDiscountRate(s, eligible);
+function addOnConcertRate(s, ctx) {
+  return !ctx.sponsor && ctx.hasConcert && hasAddOns(s) ? ADDON_CONCERT_RATE : 0;
+}
+function addOnDiscountRate(s, ctx) {
+  const sum = addOnCountRate(s, ctx) + addOnConcertRate(s, ctx);
+  return Math.min(ADDON_MAX_RATE, Math.round(sum * 100) / 100);
+}
+function addOnBonusDiscount(s, ctx) {
+  const rate = addOnDiscountRate(s, ctx);
   return rate > 0 ? Math.round(addOnPricePerPerson(s) * s.people * rate) : 0;
 }
-function addOnTotal(s, eligible) {
-  return hasAddOns(s) ? addOnPricePerPerson(s) * s.people - addOnBonusDiscount(s, eligible) : 0;
+function addOnTotal(s, ctx) {
+  return hasAddOns(s) ? addOnPricePerPerson(s) * s.people - addOnBonusDiscount(s, ctx) : 0;
 }
 function concertDiscountPerTicket(unitPrice, eligible) {
   return eligible ? Math.round(unitPrice * CONCERT_BUNDLE_RATE) : 0;
@@ -29129,15 +29141,17 @@ function createApp() {
       return;
     }
     const addOns = normalizeAddOns(b.addOns);
-    const discountEligible = !noRun && !sponsorCode;
-    const addOnSum = addOnTotal(addOns, discountEligible);
+    const routeId = isConcert ? "concert" : isAddonOnly ? "addon" : b.routeId;
+    const concertAllowed = !isAddonOnly && !sponsorCode;
+    const wantedConcert = Math.min(9, Math.max(0, Math.floor(Number(b.concertQty) || 0)));
+    const vipTables = concertAllowed ? Math.min(MAX_VIP_TABLES, Math.max(0, Math.floor(Number(b.vipTables) || 0))) : 0;
+    const concertQty = isConcert ? vipTables > 0 ? wantedConcert : Math.max(1, wantedConcert) : concertAllowed ? wantedConcert : 0;
+    const discountCtx = { hasRun: !noRun, hasConcert: concertQty > 0 || vipTables > 0, sponsor: !!sponsorCode };
+    const addOnSum = addOnTotal(addOns, discountCtx);
     if ((!sponsorCode || addOnSum > 0) && !await getOmiseKey()) {
       res.status(503).json({ error: "\u0E23\u0E30\u0E1A\u0E1A\u0E0A\u0E33\u0E23\u0E30\u0E40\u0E07\u0E34\u0E19\u0E22\u0E31\u0E07\u0E44\u0E21\u0E48\u0E40\u0E1B\u0E34\u0E14\u0E43\u0E0A\u0E49\u0E07\u0E32\u0E19 \u0E01\u0E23\u0E38\u0E13\u0E32\u0E15\u0E34\u0E14\u0E15\u0E48\u0E2D\u0E1C\u0E39\u0E49\u0E08\u0E31\u0E14\u0E07\u0E32\u0E19" });
       return;
     }
-    const routeId = isConcert ? "concert" : isAddonOnly ? "addon" : b.routeId;
-    const wantedConcert = Math.min(9, Math.max(0, Math.floor(Number(b.concertQty) || 0)));
-    const concertQty = isConcert ? Math.max(1, wantedConcert) : !isAddonOnly && !sponsorCode ? wantedConcert : 0;
     if (isAddonOnly && !hasAddOns(addOns)) {
       res.status(400).json({ error: "\u0E01\u0E23\u0E38\u0E13\u0E32\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E01\u0E34\u0E08\u0E01\u0E23\u0E23\u0E21\u0E40\u0E2A\u0E23\u0E34\u0E21\u0E2D\u0E22\u0E48\u0E32\u0E07\u0E19\u0E49\u0E2D\u0E22 1 \u0E2D\u0E22\u0E48\u0E32\u0E07" });
       return;
@@ -29182,8 +29196,9 @@ function createApp() {
       }
       sponsorName = used.sponsorName;
     }
-    const concertDiscount = concertQty * concertDiscountPerTicket(CONCERT_PASS_PRICE, discountEligible);
-    const ticketTotal = isAddonOnly ? 0 : isConcert ? CONCERT_PASS_PRICE * concertQty : sponsorCode ? 0 : calcTicketTotal(routeId, extraPeople, extraDogs) + CONCERT_PASS_PRICE * concertQty - concertDiscount;
+    const concertDiscount = concertQty * concertDiscountPerTicket(CONCERT_PASS_PRICE, !noRun && !sponsorCode);
+    const vipTotal = VIP_TABLE_PRICE * vipTables;
+    const ticketTotal = isAddonOnly ? 0 : isConcert ? CONCERT_PASS_PRICE * concertQty + vipTotal : sponsorCode ? 0 : calcTicketTotal(routeId, extraPeople, extraDogs) + CONCERT_PASS_PRICE * concertQty - concertDiscount + vipTotal;
     const total = ticketTotal + addOnSum;
     const token = crypto3.randomBytes(24).toString("base64url");
     const now = /* @__PURE__ */ new Date();
@@ -29197,10 +29212,12 @@ function createApp() {
       email,
       emergencyPhone,
       routeId,
-      routeName: isAddonOnly ? "\u0E01\u0E34\u0E08\u0E01\u0E23\u0E23\u0E21\u0E40\u0E2A\u0E23\u0E34\u0E21\u0E2D\u0E22\u0E48\u0E32\u0E07\u0E40\u0E14\u0E35\u0E22\u0E27 (\u0E44\u0E21\u0E48\u0E27\u0E34\u0E48\u0E07)" : isConcert ? "\u0E15\u0E31\u0E4B\u0E27\u0E04\u0E2D\u0E19\u0E40\u0E2A\u0E34\u0E23\u0E4C\u0E15 / \u0E40\u0E02\u0E49\u0E32\u0E07\u0E32\u0E19 (\u0E44\u0E21\u0E48\u0E27\u0E34\u0E48\u0E07)" : ticketById(routeId).name,
+      // The VIP tables go into the name too, so the admin list, scanner and e-ticket all show them.
+      routeName: (isAddonOnly ? "\u0E01\u0E34\u0E08\u0E01\u0E23\u0E23\u0E21\u0E40\u0E2A\u0E23\u0E34\u0E21\u0E2D\u0E22\u0E48\u0E32\u0E07\u0E40\u0E14\u0E35\u0E22\u0E27 (\u0E44\u0E21\u0E48\u0E27\u0E34\u0E48\u0E07)" : isConcert ? "\u0E15\u0E31\u0E4B\u0E27\u0E04\u0E2D\u0E19\u0E40\u0E2A\u0E34\u0E23\u0E4C\u0E15 / \u0E40\u0E02\u0E49\u0E32\u0E07\u0E32\u0E19 (\u0E44\u0E21\u0E48\u0E27\u0E34\u0E48\u0E07)" : ticketById(routeId).name) + (vipTables > 0 ? ` + VIP TABLE \xD7 ${vipTables} \u0E42\u0E15\u0E4A\u0E30 (${vipTables * VIP_TABLE_SEATS} \u0E17\u0E48\u0E32\u0E19)` : ""),
       ticketType: isAddonOnly ? "ADDON" : isConcert ? "CONCERT" : "RUN",
       concertQty: concertQty > 0 ? concertQty : void 0,
       concertDiscount: concertDiscount > 0 ? concertDiscount : void 0,
+      vipTables: vipTables > 0 ? vipTables : void 0,
       insurance,
       shirtSize,
       runningWithDog: isDog,
@@ -29209,14 +29226,14 @@ function createApp() {
       extraPeople,
       extraDogs,
       extraRunnerNames: extraPeople > 0 ? clean(b.extraRunnerNames, 240) : void 0,
-      peopleCount: isAddonOnly ? addOns.people : isConcert ? concertQty : isDog ? 1 + extraPeople : 1,
+      peopleCount: isAddonOnly ? addOns.people : isConcert ? concertQty + vipTables * VIP_TABLE_SEATS : isDog ? 1 + extraPeople : 1,
       dogCount: isDog ? 1 + extraDogs : 0,
       totalPrice: total,
       bibNumber: "",
       paymentMethod: sponsorCode ? "SPONSOR_CODE" : "PROMPTPAY_QR",
       sponsorCode: sponsorCode || void 0,
       sponsorName: sponsorName || void 0,
-      addOns: hasAddOns(addOns) ? { ...addOns, pricePerPerson: addOnPricePerPerson(addOns), total: addOnSum, discount: addOnBonusDiscount(addOns, discountEligible), label: addOnLabel(addOns) } : void 0,
+      addOns: hasAddOns(addOns) ? { ...addOns, pricePerPerson: addOnPricePerPerson(addOns), total: addOnSum, discount: addOnBonusDiscount(addOns, discountCtx), label: addOnLabel(addOns) } : void 0,
       paymentStatus: "PENDING",
       paymentRef: "",
       senderBank: "",

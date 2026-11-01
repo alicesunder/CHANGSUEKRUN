@@ -13,7 +13,7 @@
 import express from 'express';
 import crypto from 'crypto';
 import type { RouteId } from '../src/types';
-import { CONCERT_PASS_PRICE, calcTicketTotal, isDogCategory, ticketById, ticketCategories } from '../src/data/eventData';
+import { CONCERT_PASS_PRICE, MAX_VIP_TABLES, VIP_TABLE_PRICE, VIP_TABLE_SEATS, calcTicketTotal, isDogCategory, ticketById, ticketCategories } from '../src/data/eventData';
 import {
   deleteOrder,
   getBibCounters,
@@ -227,20 +227,22 @@ export function createApp(): express.Express {
     }
     // Add-on activities are always paid (a sponsor code only covers the run + concert).
     const addOns = normalizeAddOns(b.addOns);
-    // Bundle discounts need a run ticket in the same order and never stack with a sponsor code.
-    const discountEligible = !noRun && !sponsorCode;
-    const addOnSum = addOnTotal(addOns, discountEligible);
+    // Concert-only pass: no run, no BIB, no shirt (the run ticket already includes the concert)
+    const routeId = (isConcert ? 'concert' : isAddonOnly ? 'addon' : b.routeId) as RouteId;
+    // Concert tickets (GA and VIP tables) are sold separately: alone, or together with a run ticket and/or activities.
+    // (A sponsor code already covers the run + one concert entry, so no extra concert tickets are charged with it.)
+    const concertAllowed = !isAddonOnly && !sponsorCode;
+    const wantedConcert = Math.min(9, Math.max(0, Math.floor(Number(b.concertQty) || 0)));
+    const vipTables = concertAllowed ? Math.min(MAX_VIP_TABLES, Math.max(0, Math.floor(Number(b.vipTables) || 0))) : 0;
+    const concertQty = isConcert ? (vipTables > 0 ? wantedConcert : Math.max(1, wantedConcert)) : concertAllowed ? wantedConcert : 0;
+    // Bundle discounts never stack with a sponsor code; see src/data/addOns.ts for the rules.
+    const discountCtx = { hasRun: !noRun, hasConcert: concertQty > 0 || vipTables > 0, sponsor: !!sponsorCode };
+    const addOnSum = addOnTotal(addOns, discountCtx);
     // A fully free sponsor registration doesn't need the payment gateway.
     if ((!sponsorCode || addOnSum > 0) && !(await getOmiseKey())) {
       res.status(503).json({ error: 'ระบบชำระเงินยังไม่เปิดใช้งาน กรุณาติดต่อผู้จัดงาน' });
       return;
     }
-    // Concert-only pass: no run, no BIB, no shirt (the run ticket already includes the concert)
-    const routeId = (isConcert ? 'concert' : isAddonOnly ? 'addon' : b.routeId) as RouteId;
-    // Concert tickets are sold separately: alone, or together with a run ticket and/or activities.
-    // (A sponsor code already covers the run + one concert entry, so no extra concert tickets are charged with it.)
-    const wantedConcert = Math.min(9, Math.max(0, Math.floor(Number(b.concertQty) || 0)));
-    const concertQty = isConcert ? Math.max(1, wantedConcert) : !isAddonOnly && !sponsorCode ? wantedConcert : 0;
     if (isAddonOnly && !hasAddOns(addOns)) {
       res.status(400).json({ error: 'กรุณาเลือกกิจกรรมเสริมอย่างน้อย 1 อย่าง' });
       return;
@@ -292,14 +294,15 @@ export function createApp(): express.Express {
       sponsorName = used.sponsorName;
     }
 
-    const concertDiscount = concertQty * concertDiscountPerTicket(CONCERT_PASS_PRICE, discountEligible);
+    const concertDiscount = concertQty * concertDiscountPerTicket(CONCERT_PASS_PRICE, !noRun && !sponsorCode);
+    const vipTotal = VIP_TABLE_PRICE * vipTables;
     const ticketTotal = isAddonOnly
       ? 0
       : isConcert
-        ? CONCERT_PASS_PRICE * concertQty
+        ? CONCERT_PASS_PRICE * concertQty + vipTotal
         : sponsorCode
           ? 0
-          : calcTicketTotal(routeId, extraPeople, extraDogs) + CONCERT_PASS_PRICE * concertQty - concertDiscount;
+          : calcTicketTotal(routeId, extraPeople, extraDogs) + CONCERT_PASS_PRICE * concertQty - concertDiscount + vipTotal;
     const total = ticketTotal + addOnSum;
     const token = crypto.randomBytes(24).toString('base64url');
     const now = new Date();
@@ -314,10 +317,14 @@ export function createApp(): express.Express {
       email,
       emergencyPhone,
       routeId,
-      routeName: isAddonOnly ? 'กิจกรรมเสริมอย่างเดียว (ไม่วิ่ง)' : isConcert ? 'ตั๋วคอนเสิร์ต / เข้างาน (ไม่วิ่ง)' : ticketById(routeId).name,
+      // The VIP tables go into the name too, so the admin list, scanner and e-ticket all show them.
+      routeName:
+        (isAddonOnly ? 'กิจกรรมเสริมอย่างเดียว (ไม่วิ่ง)' : isConcert ? 'ตั๋วคอนเสิร์ต / เข้างาน (ไม่วิ่ง)' : ticketById(routeId).name) +
+        (vipTables > 0 ? ` + VIP TABLE × ${vipTables} โต๊ะ (${vipTables * VIP_TABLE_SEATS} ท่าน)` : ''),
       ticketType: isAddonOnly ? 'ADDON' : isConcert ? 'CONCERT' : 'RUN',
       concertQty: concertQty > 0 ? concertQty : undefined,
       concertDiscount: concertDiscount > 0 ? concertDiscount : undefined,
+      vipTables: vipTables > 0 ? vipTables : undefined,
       insurance,
       shirtSize,
       runningWithDog: isDog,
@@ -326,7 +333,7 @@ export function createApp(): express.Express {
       extraPeople,
       extraDogs,
       extraRunnerNames: extraPeople > 0 ? clean(b.extraRunnerNames, 240) : undefined,
-      peopleCount: isAddonOnly ? addOns.people : isConcert ? concertQty : isDog ? 1 + extraPeople : 1,
+      peopleCount: isAddonOnly ? addOns.people : isConcert ? concertQty + vipTables * VIP_TABLE_SEATS : isDog ? 1 + extraPeople : 1,
       dogCount: isDog ? 1 + extraDogs : 0,
       totalPrice: total,
       bibNumber: '',
@@ -334,7 +341,7 @@ export function createApp(): express.Express {
       sponsorCode: sponsorCode || undefined,
       sponsorName: sponsorName || undefined,
       addOns: hasAddOns(addOns)
-        ? { ...addOns, pricePerPerson: addOnPricePerPerson(addOns), total: addOnSum, discount: addOnBonusDiscount(addOns, discountEligible), label: addOnLabel(addOns) }
+        ? { ...addOns, pricePerPerson: addOnPricePerPerson(addOns), total: addOnSum, discount: addOnBonusDiscount(addOns, discountCtx), label: addOnLabel(addOns) }
         : undefined,
       paymentStatus: 'PENDING',
       paymentRef: '',
