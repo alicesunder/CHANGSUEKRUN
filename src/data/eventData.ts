@@ -16,7 +16,7 @@ import {
 export const eventInfo = {
   name: 'เห็นช้างวิ่ง วิ่งตามช้าง',
   englishName: 'CHANG SUEK RUN',
-  officialName: 'BPP Paw Patrol Run 2026',
+  officialName: 'CHANGSUEK RUN 2026',
   year: 2026,
   edition: '2026',
   tagline: 'RUN TOGETHER',

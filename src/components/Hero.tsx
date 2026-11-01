@@ -205,7 +205,7 @@ export const Hero: React.FC<HeroProps> = ({
             >
               <p className="text-[12px] font-semibold leading-relaxed text-white/92 max-w-[340px] mx-auto [@media(max-height:700px)]:hidden">
                 งานวิ่งการกุศลรักษ์ช้างและพัฒนาศูนย์ฝึกสุนัขตำรวจ{' '}
-                <span className="whitespace-nowrap">ค่ายพระรามหก</span> ริมชายหาด
+                <span className="whitespace-nowrap">ค่ายนเรศวร</span> ริมชายหาด
                 <span className="whitespace-nowrap">ชะอำ-หัวหิน</span>
               </p>
 
@@ -310,7 +310,7 @@ export const Hero: React.FC<HeroProps> = ({
 
             <p className="mt-2 sm:mt-3 text-xs sm:text-base font-bold text-[#3A1F5D] max-w-[360px] sm:max-w-[520px] mx-auto lg:mx-0 leading-relaxed text-balance">
               งานวิ่งการกุศลรักษ์ช้างและพัฒนาศูนย์ฝึกสุนัขตำรวจ{' '}
-              <span className="whitespace-nowrap">ค่ายพระรามหก</span>
+              <span className="whitespace-nowrap">ค่ายนเรศวร</span>
               <br className="hidden sm:inline" /> ริมชายหาด
               <span className="whitespace-nowrap">ชะอำ-หัวหิน</span> บรรยากาศอบอุ่นสำหรับทุกครอบครัว
             </p>
