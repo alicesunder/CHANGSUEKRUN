@@ -1,5 +1,6 @@
 import React from 'react';
-import { Check, Crosshair, Minus, Plus, Sparkles, Star, TowerControl, Wind } from 'lucide-react';
+import { Check, Crosshair, ExternalLink, MapPin, Minus, Plus, Sparkles, Star, TowerControl, Wind } from 'lucide-react';
+import { ACTIVITY_LOCATIONS, type ActivityLocation } from '../data/activityLocations';
 import {
   AddOnSelection,
   DiscountContext,
@@ -179,6 +180,24 @@ export const PeopleStepper: React.FC<{ value: number; onChange: (n: number) => v
 
 const NO_BUNDLE: DiscountContext = { hasRun: false, hasConcert: false };
 
+/** Opens the activity's pin in Google Maps. Sits under the card, not inside it (a link can't live inside the card's button). */
+const PinLink: React.FC<{ id: ActivityLocation['id'] }> = ({ id }) => {
+  const loc = ACTIVITY_LOCATIONS.find((a) => a.id === id);
+  if (!loc) return null;
+  return (
+    <a
+      href={loc.mapsUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="self-start inline-flex items-center gap-1 min-h-[32px] px-1 text-[12px] font-extrabold text-[#5B20A8] underline underline-offset-2 hover:text-[#2A1450]"
+    >
+      <MapPin className="w-3.5 h-3.5" style={{ color: loc.color }} aria-hidden="true" />
+      ดูตำแหน่ง{loc.name}
+      <ExternalLink className="w-3 h-3" aria-hidden="true" />
+    </a>
+  );
+};
+
 export const AddOnPicker: React.FC<AddOnPickerProps> = ({ value, onChange, windTunnelRemaining = null, showResult = true, layout = 'grid', discountCtx = NO_BUNDLE }) => {
   const set = (patch: Partial<AddOnSelection>) => onChange({ ...value, ...patch });
   const picked = hasAddOns(value);
@@ -196,6 +215,7 @@ export const AddOnPicker: React.FC<AddOnPickerProps> = ({ value, onChange, windT
   return (
     <div className="space-y-3">
       <div className={layout === 'rows' ? 'grid grid-cols-1 gap-2.5' : 'grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4'}>
+        <div className="flex flex-col gap-1">
         <Chip
           theme="tower"
           title="หอสูง"
@@ -205,8 +225,11 @@ export const AddOnPicker: React.FC<AddOnPickerProps> = ({ value, onChange, windT
           onToggle={() => set({ tower: !value.tower })}
           icon={<TowerControl className="w-5 h-5 text-[#047857]" aria-hidden="true" />}
         />
+        <PinLink id="tower" />
+        </div>
 
         {/* ยิงปืน: choose a level */}
+        <div className="flex flex-col gap-1">
         <div
           role="radiogroup"
           aria-label="ยิงปืน"
@@ -254,7 +277,10 @@ export const AddOnPicker: React.FC<AddOnPickerProps> = ({ value, onChange, windT
             })}
           </div>
         </div>
+        <PinLink id="gun" />
+        </div>
 
+        <div className="flex flex-col gap-1">
         <Chip
           theme="wind"
           title="อุโมงค์ลม"
@@ -274,6 +300,8 @@ export const AddOnPicker: React.FC<AddOnPickerProps> = ({ value, onChange, windT
             </span>
           }
         />
+        <PinLink id="wind" />
+        </div>
       </div>
 
       {windShort && (
