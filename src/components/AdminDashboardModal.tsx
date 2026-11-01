@@ -67,7 +67,8 @@ import {
 import { formatBaht, ticketById } from '../data/eventData';
 import { RunnerBibCard } from './RunnerBibCard';
 import { PawIcon } from './brand/DogDecor';
-import { OmiseSettingsCard } from './OmiseSettingsCard';
+import { EasySlipSettingsCard } from './EasySlipSettingsCard';
+import { AdminSlipView } from './AdminSlipView';
 
 interface AdminDashboardModalProps {
   isOpen: boolean;
@@ -1690,8 +1691,8 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
                   </div>
                 </div>
 
-                {/* Payment gateway (Omise only) */}
-                <OmiseSettingsCard />
+                {/* Payment check: PromptPay transfer + slip (EasySlip) */}
+                <EasySlipSettingsCard />
 
                 {/* 2. Admin Username, Password & Security Policy Settings */}
                 <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-xs space-y-4">
@@ -1919,22 +1920,7 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-5 items-start">
                   {/* Left 6 cols: Bank e-Slip Image */}
                   <div className="md:col-span-6 bg-slate-100 rounded-2xl p-3 border border-slate-200 text-center">
-                    <div className="py-10 px-4 space-y-2 text-xs font-bold text-slate-600">
-                      <CreditCard className="w-8 h-8 mx-auto text-purple-700" />
-                      <div className="text-sm font-black text-slate-900">
-                        {inspectingOrder.paymentStatus === 'PAID'
-                          ? inspectingOrder.verificationStatus === 'ADMIN_APPROVED'
-                            ? 'แอดมินอนุมัติด้วยตนเอง'
-                            : 'ชำระผ่าน Omise PromptPay แล้ว'
-                          : 'ยังไม่ได้รับการชำระเงินจาก Omise'}
-                      </div>
-                      <div className="font-mono break-all">
-                        {inspectingOrder.paymentRef || (inspectingOrder as ServerOrder).omiseChargeId || '-'}
-                      </div>
-                      <p className="font-semibold text-slate-500">
-                        ตรวจรายการได้ใน Omise Dashboard → Charges
-                      </p>
-                    </div>
+                    <AdminSlipView order={inspectingOrder as ServerOrder} />
                   </div>
 
                   {/* Right 6 cols: Audit Details & Approve / Reject Buttons */}

@@ -29,10 +29,8 @@ import {
   FileText,
   Printer,
   Upload,
-  RotateCcw,
   AlertTriangle,
   ScanLine,
-  Timer,
   Building2,
   Eye,
   Trophy,
@@ -47,6 +45,8 @@ import { PawIcon } from './brand/DogDecor';
 import { LABRADOR_SVG_PATH, LabradorMascot } from './brand/LabradorMascot';
 import { playVictoryCelebrationSound } from '../utils/ticketSoundFx';
 import { TicketOrder, saveRunnerProfile } from '../utils/runnerStorage';
+import { formatThaiBankAccount, generatePromptPayPayload } from '../utils/promptPay';
+import { processUploadedSlipImage } from '../utils/slipVerifier';
 import { openPrivacyNotice } from './PrivacyNotice';
 import { openTerms } from './TermsSection';
 import {
@@ -56,8 +56,7 @@ import {
   checkSponsorCode,
   createOrder,
   fetchOrder,
-  fetchQrObjectUrl,
-  renewQr,
+  uploadSlip,
   getPublicConfig,
   loadPendingOrderRef,
   savePendingOrderRef,
@@ -296,10 +295,6 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
   const [copiedPromptPay, setCopiedPromptPay] = useState(false);
   const [createdOrder, setCreatedOrder] = useState<TicketOrder | null>(null);
 
-  // Payment timer (informational — a late transfer can still be submitted)
-  const [nowMs, setNowMs] = useState<number>(Date.now());
-  const [qrShownUntil, setQrShownUntil] = useState<number>(0);
-
   const [celebrationKey, setCelebrationKey] = useState<number>(1);
 
   // Step 4 Email & Print States
@@ -336,13 +331,6 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
   // Amount to pay always comes from the server order once it exists.
   const payAmount = serverOrder?.totalPrice ?? total;
   const nextBibPreview = publicCfg?.nextBib?.[selectedRoute] ?? '—';
-
-  const totalTimeoutSec = Math.max(1, publicCfg?.paymentTimeoutMinutes || 15) * 60;
-  const deadlineMs = Math.max(
-    serverOrder ? new Date(serverOrder.expiresAt).getTime() : 0,
-    qrShownUntil
-  );
-  const remainingSeconds = serverOrder ? Math.max(0, Math.floor((deadlineMs - nowMs) / 1000)) : totalTimeoutSec;
 
   /** Payment confirmed by the server -> show the ticket. */
   const finalizePaidOrder = async (order: ServerOrder) => {
@@ -399,7 +387,6 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
     setCreatedOrder(null);
     setEmailLog(null);
     setTicketCheckInQrUrl('');
-    setQrShownUntil(0);
 
     getPublicConfig(true)
       .then((cfg) => !cancelled && setPublicCfg(cfg))
@@ -437,52 +424,49 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
     return () => window.removeEventListener('keydown', onKey);
   }, [isOpen, onClose, printModalOpen]);
 
-  // 1-second clock while on the payment step
-  useEffect(() => {
-    if (!isOpen || step !== 3) return;
-    const timer = window.setInterval(() => setNowMs(Date.now()), 1000);
-    return () => window.clearInterval(timer);
-  }, [isOpen, step]);
 
-  // Omise QR, loaded through our server so it can be saved/downloaded on a phone
+  // PromptPay QR with the exact amount, made in the browser from the organiser's PromptPay ID
   const [qrError, setQrError] = useState<string | null>(null);
-  const [isRenewingQr, setIsRenewingQr] = useState(false);
+  const qrPromptPayId = publicCfg?.promptPayId || '';
+  const qrAmount = serverOrder?.totalPrice ?? 0;
   useEffect(() => {
-    if (!isOpen || step !== 3 || !pendingRef || !serverOrder?.omiseChargeId) return;
-    let objectUrl = '';
+    if (!isOpen || step !== 3 || !qrPromptPayId || qrAmount <= 0) return;
     let cancelled = false;
     setQrDataUrl('');
     setQrError(null);
-    fetchQrObjectUrl(pendingRef)
-      .then((u) => {
-        objectUrl = u;
-        if (!cancelled) setQrDataUrl(u);
-      })
-      .catch(() => !cancelled && setQrError('โหลด QR ไม่สำเร็จ กรุณากด "สร้าง QR ใหม่"'));
+    QRCode.toDataURL(generatePromptPayPayload(qrPromptPayId, qrAmount), { width: 480, margin: 1, errorCorrectionLevel: 'M' })
+      .then((u) => !cancelled && setQrDataUrl(u))
+      .catch(() => !cancelled && setQrError('สร้าง QR ไม่สำเร็จ กรุณาโอนเข้าบัญชีด้านล่างแทน'));
     return () => {
       cancelled = true;
-      if (objectUrl) URL.revokeObjectURL(objectUrl);
     };
-  }, [isOpen, step, pendingRef?.orderId, serverOrder?.omiseChargeId]);
+  }, [isOpen, step, qrPromptPayId, qrAmount]);
 
-  const handleRenewQr = async () => {
-    if (!pendingRef || isRenewingQr) return;
-    setIsRenewingQr(true);
-    setQrError(null);
+  // Slip upload: the server checks it with EasySlip; PAID comes back right away when it passes.
+  const [slipBusy, setSlipBusy] = useState(false);
+  const [slipMessage, setSlipMessage] = useState<{ ok: boolean; text: string } | null>(null);
+  const handleSlipFile = async (file: File | undefined) => {
+    if (!file || !pendingRef || slipBusy) return;
+    setSlipBusy(true);
+    setSlipMessage(null);
     try {
-      const o = await renewQr(pendingRef);
-      setServerOrder(o);
-      setQrShownUntil(0);
-      setNowMs(Date.now());
-      if (o.paymentStatus === 'PAID') finalizePaidOrder(o);
+      const { dataUrl } = await processUploadedSlipImage(file);
+      const res = await uploadSlip(pendingRef, dataUrl);
+      setServerOrder(res.order);
+      if (res.order.paymentStatus === 'PAID') {
+        finalizePaidOrder(res.order);
+        return;
+      }
+      setSlipMessage({ ok: true, text: res.message || 'ได้รับสลิปแล้ว รอเจ้าหน้าที่ตรวจ' });
     } catch (err) {
-      setQrError(err instanceof Error ? err.message : 'สร้าง QR ใหม่ไม่สำเร็จ');
+      setSlipMessage({ ok: false, text: err instanceof Error ? err.message : 'ส่งสลิปไม่สำเร็จ กรุณาลองใหม่' });
     } finally {
-      setIsRenewingQr(false);
+      setSlipBusy(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
 
-  // Poll the server for payment confirmation (Omise or admin approval)
+  // Poll the server for payment confirmation (admin approval of a slip under review, or an old Omise charge)
   useEffect(() => {
     if (!isOpen || step !== 3 || !pendingRef) return;
     let cancelled = false;
@@ -592,7 +576,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
       setPendingRef(ref);
       setServerOrder(res.order);
       setPublicCfg(res.config);
-            setNowMs(Date.now());
+      setSlipMessage(null);
       setStep(3);
     } catch (err) {
       setFormError(err instanceof Error ? err.message : 'สร้างคำสั่งซื้อไม่สำเร็จ กรุณาลองใหม่');
@@ -614,7 +598,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
     setTimeout(() => setCopiedPromptPay(false), 2200);
   };
 
-  // Saves the QR as a real PNG (Omise serves SVG, which phone galleries and bank apps can't open)
+  // Saves the QR as a PNG with a white border so bank apps can scan it from the gallery
   const handleDownloadQrImage = () => {
     if (!qrDataUrl) return;
     const img = new Image();
@@ -645,17 +629,6 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
     img.src = qrDataUrl;
   };
 
-  // Format MM:SS countdown
-  const formatCountdown = (sec: number) => {
-    const mins = Math.floor(sec / 60);
-    const rem = sec % 60;
-    return `${String(mins).padStart(2, '0')}:${String(rem).padStart(2, '0')}`;
-  };
-
-  const timerProgressPct =
-    totalTimeoutSec > 0 ? Math.max(0, Math.min(100, (remainingSeconds / totalTimeoutSec) * 100)) : 0;
-  const isTimerExpired = remainingSeconds <= 0;
-  const isTimerLow = remainingSeconds > 0 && remainingSeconds <= 180;
 
   const steps = [
     { num: 1, title: 'เลือกระยะวิ่ง', sub: 'Package & Add-on' },
@@ -1674,60 +1647,20 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
           {/* ---------------------------------------------------------- */}
           {step === 3 && serverOrder && (
             <div className="space-y-4">
-              {/* Payment timer bar */}
-              <div
-                className={`rounded-2xl border-2 p-3.5 sm:px-5 transition-colors ${
-                  isTimerExpired
-                    ? 'bg-rose-950 text-white border-rose-500'
-                    : isTimerLow
-                    ? 'bg-amber-950 text-white border-amber-400'
-                    : 'bg-[#180B30] text-white border-[#2A1450]'
-                }`}
-              >
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    <div
-                      className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 font-black ${
-                        isTimerExpired
-                          ? 'bg-rose-500 text-white'
-                          : isTimerLow
-                          ? 'bg-amber-400 text-slate-950 animate-pulse'
-                          : 'bg-[#FFC928] text-[#180B30]'
-                      }`}
-                    >
-                      <Timer className="w-5 h-5 stroke-[2.5]" />
-                    </div>
-                    <div>
-                      <span className="text-[10px] font-mono font-extrabold uppercase tracking-wider text-[#FFC928]">
-                        คำสั่งซื้อ {serverOrder.orderId}
-                      </span>
-                      <p className="text-xs sm:text-sm font-extrabold text-white mt-0.5">
-                        {isTimerExpired
-                          ? 'QR หมดอายุ — กดสร้าง QR ใหม่เพื่อชำระเงิน'
-                          : 'สแกนจ่ายภายในเวลาที่กำหนด ระบบจะยืนยันให้อัตโนมัติ ไม่ต้องแนบสลิป'}
-                      </p>
-                    </div>
+              {/* Order header */}
+              <div className="rounded-2xl border-2 p-3.5 sm:px-5 bg-[#180B30] text-white border-[#2A1450]">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 font-black bg-[#FFC928] text-[#180B30]">
+                    <Upload className="w-5 h-5 stroke-[2.5]" />
                   </div>
-                  <div className="text-right ml-auto">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-white/70 block">
-                      เวลาที่เหลือ
+                  <div>
+                    <span className="text-[10px] font-mono font-extrabold uppercase tracking-wider text-[#FFC928]">
+                      คำสั่งซื้อ {serverOrder.orderId}
                     </span>
-                    <span
-                      className={`font-mono text-2xl sm:text-3xl font-black tabular-nums tracking-wider ${
-                        isTimerExpired ? 'text-rose-400' : isTimerLow ? 'text-amber-300' : 'text-[#FFC928]'
-                      }`}
-                    >
-                      {formatCountdown(remainingSeconds)}
-                    </span>
+                    <p className="text-xs sm:text-sm font-extrabold text-white mt-0.5">
+                      โอนเงินผ่านพร้อมเพย์ แล้วแนบสลิป ระบบตรวจสลิปให้อัตโนมัติ ผ่านแล้วได้ตั๋วทันที
+                    </p>
                   </div>
-                </div>
-                <div className="w-full h-2 rounded-full bg-white/15 overflow-hidden mt-3">
-                  <div
-                    style={{ width: `${timerProgressPct}%` }}
-                    className={`h-full transition-all duration-700 ${
-                      isTimerExpired ? 'bg-rose-500' : isTimerLow ? 'bg-amber-400' : 'bg-emerald-400'
-                    }`}
-                  />
                 </div>
               </div>
 
@@ -1755,37 +1688,11 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                           <img loading="lazy" decoding="async"
                             src={qrDataUrl}
                             alt={`PromptPay QR ${payAmount} บาท`}
-                            className={`w-48 h-48 sm:w-56 sm:h-56 object-contain mx-auto select-none transition-all ${
-                              isTimerExpired ? 'blur-md opacity-30' : ''
-                            }`}
+                            className="w-48 h-48 sm:w-56 sm:h-56 object-contain mx-auto select-none"
                           />
                         ) : (
-                          <div className="w-48 h-48 sm:w-56 sm:h-56 flex items-center justify-center text-xs font-bold text-slate-400">
-                            {qrError ? (
-                              <button type="button" onClick={handleRenewQr} className="text-rose-700 underline cursor-pointer px-3">
-                                {qrError}
-                              </button>
-                            ) : (
-                              'กำลังโหลด QR Code...'
-                            )}
-                          </div>
-                        )}
-                        {isTimerExpired && (
-                          <div className="absolute inset-0 flex flex-col items-center justify-center p-4 bg-slate-950/80 rounded-2xl text-white">
-                            <AlertTriangle className="w-10 h-10 text-amber-400 mb-2" />
-                            <div className="text-sm font-black">QR หมดอายุแล้ว</div>
-                            <p className="text-[11px] text-white/80 mt-0.5 mb-3">
-                              ยังไม่ได้โอน? กดเพื่อรับ QR ใบใหม่ ยอดเท่าเดิม
-                            </p>
-                            <button
-                              type="button"
-                              onClick={handleRenewQr}
-                              disabled={isRenewingQr}
-                              className="px-4 py-2 rounded-xl bg-[#FFC928] text-[#180B30] text-xs font-black flex items-center gap-1.5 cursor-pointer disabled:opacity-60"
-                            >
-                              <RotateCcw className="w-3.5 h-3.5" />
-                              <span>{isRenewingQr ? 'กำลังสร้าง...' : 'สร้าง QR ใหม่'}</span>
-                            </button>
+                          <div className="w-48 h-48 sm:w-56 sm:h-56 flex items-center justify-center text-xs font-bold text-slate-400 px-3">
+                            {qrError || 'กำลังสร้าง QR Code...'}
                           </div>
                         )}
                         <div className="mt-2 pt-2 border-t border-slate-200 flex items-center justify-center gap-1.5 text-[11px] font-extrabold text-[#113566]">
@@ -1814,7 +1721,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                       <button
                         type="button"
                         onClick={handleDownloadQrImage}
-                        disabled={isTimerExpired || !qrDataUrl}
+                        disabled={!qrDataUrl}
                         className="w-full py-2.5 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 disabled:opacity-40 text-[#113566] text-xs font-extrabold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
                       >
                         <Download className="w-3.5 h-3.5" />
@@ -1836,7 +1743,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                           ยืนยันการชำระเงิน
                         </span>
                         <h3 className="text-base sm:text-lg font-black text-[#2A1450]">
-                          สแกนจ่ายแล้วระบบจะยืนยันให้อัตโนมัติ
+                          โอนแล้วแนบสลิปที่นี่
                         </h3>
                       </div>
                     </div>
@@ -1852,22 +1759,57 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                       </div>
                     ) : (
                       <>
-                        <div role="status" className="rounded-2xl bg-[#180B30] text-white p-4 text-sm flex items-center gap-3">
-                          <span className="relative flex h-3 w-3 shrink-0">
-                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                            <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-400" />
-                          </span>
-                          <span className="font-bold">
-                            รอการชำระเงิน {formatBaht(payAmount)} บาท — ระบบจะยืนยันให้อัตโนมัติ
-                          </span>
-                        </div>
                         <ol className="rounded-2xl bg-[#FAF7FF] border border-[#2A1450]/15 p-3.5 text-xs text-[#4B2D78] font-semibold space-y-1.5 list-decimal list-inside">
                           <li>เปิดแอปธนาคารแล้วสแกน QR (ถ้าใช้มือถือเครื่องเดียวกัน กด "ดาวน์โหลดรูป QR" แล้วสแกนจากรูปในแอปธนาคาร)</li>
-                          <li>ตรวจยอด <strong className="text-emerald-700">{payAmount.toLocaleString('th-TH', { minimumFractionDigits: 2 })} บาท</strong> แล้วยืนยันการโอน</li>
-                          <li>กลับมาที่หน้านี้ เลข BIB จะขึ้นเองภายในไม่กี่วินาที — ไม่ต้องแนบสลิป</li>
+                          <li>โอนยอด <strong className="text-emerald-700">{payAmount.toLocaleString('th-TH', { minimumFractionDigits: 2 })} บาท</strong> ให้ตรงทุกสตางค์</li>
+                          <li>กดปุ่มด้านล่างแล้วเลือกรูปสลิปจากแอปธนาคาร ผ่านแล้วได้เลข BIB / ตั๋วทันที</li>
                         </ol>
+                        {publicCfg?.bankAccountNo && (
+                          <div className="rounded-2xl bg-slate-50 border border-slate-200 p-3 text-xs text-slate-700 font-semibold space-y-0.5">
+                            <div className="font-extrabold text-slate-500">หรือโอนเข้าบัญชี (ยอดเท่ากัน)</div>
+                            <div className="font-black text-[#2A1450]">
+                              {publicCfg.bankLabel} <span className="font-mono">{formatThaiBankAccount(publicCfg.bankAccountNo)}</span>
+                            </div>
+                            <div>{publicCfg.accountName}</div>
+                          </div>
+                        )}
+
+                        <input
+                          ref={fileInputRef}
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => handleSlipFile(e.target.files?.[0])}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => fileInputRef.current?.click()}
+                          disabled={slipBusy || serverOrder.verificationStatus === 'PENDING_REVIEW'}
+                          className="w-full min-h-[56px] rounded-2xl border-[3px] border-[#2A1450] bg-gradient-to-b from-[#FFD84D] to-[#FFB300] text-[#180B30] text-base font-black flex items-center justify-center gap-2 shadow-[0_5px_0_#2A1450] active:translate-y-0.5 cursor-pointer disabled:opacity-60"
+                        >
+                          <Upload className="w-5 h-5" />
+                          <span>{slipBusy ? 'กำลังตรวจสลิป...' : 'แนบสลิปการโอน'}</span>
+                        </button>
+
+                        {serverOrder.verificationStatus === 'PENDING_REVIEW' ? (
+                          <div role="status" className="rounded-2xl bg-amber-50 border-2 border-amber-400 p-3.5 text-xs text-amber-900 font-bold">
+                            ได้รับสลิปแล้ว ระบบตรวจอัตโนมัติไม่ได้ เจ้าหน้าที่จะตรวจและยืนยันให้ หน้านี้จะขึ้นตั๋วเองเมื่อยืนยันแล้ว
+                          </div>
+                        ) : (
+                          slipMessage && (
+                            <div
+                              role={slipMessage.ok ? 'status' : 'alert'}
+                              className={`rounded-2xl border-2 p-3.5 text-xs font-bold flex items-start gap-2 ${
+                                slipMessage.ok ? 'bg-emerald-50 border-emerald-500 text-emerald-900' : 'bg-rose-50 border-rose-500 text-rose-900'
+                              }`}
+                            >
+                              {!slipMessage.ok && <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />}
+                              <span>{slipMessage.text}</span>
+                            </div>
+                          )
+                        )}
                         <p className="text-[11px] font-semibold text-[#6B5A85]">
-                          ปิดหน้านี้ได้ เปิดหน้าสมัครอีกครั้งจากเครื่องนี้เพื่อดูสถานะ
+                          ปิดหน้านี้ได้ เปิดหน้าสมัครอีกครั้งจากเครื่องนี้เพื่อแนบสลิปหรือดูสถานะ
                         </p>
                       </>
                     )}

@@ -1,10 +1,83 @@
 /**
- * Omise PromptPay — the only payment method.
+ * Payments.
  *
- * Trust model: a charge counts as paid only after we fetch it from api.omise.co
+ * New orders: the runner transfers by PromptPay and uploads the slip; EasySlip reads the slip
+ * from the bank's own record (not from the picture), and app.ts checks amount, receiver, date and reuse.
+ *
+ * Omise (old orders only): a charge counts as paid only after we fetch it from api.omise.co
  * with our own secret key. Webhook bodies are treated as a hint, never as proof.
  */
-import { getOmiseKey } from './store';
+import { getEasySlipKey, getOmiseKey } from './store';
+
+// ---------------------------------------------------------------------------
+// EasySlip (https://document.easyslip.com/en/v2/verify/bank/base64)
+// ---------------------------------------------------------------------------
+export interface EasySlipResult {
+  /** false when EasySlip gave no slip data; errorCode then says why */
+  ok: boolean;
+  errorCode?: string;
+  transRef?: string;
+  date?: string;
+  amount?: number;
+  senderBank?: string;
+  senderName?: string;
+  receiverName?: string;
+  /** Receiver bank account / PromptPay numbers as printed (usually masked, e.g. xxx-x-x7764-x) */
+  receiverAccounts: string[];
+  /** EasySlip matched the receiver to an account registered in its dashboard */
+  matchedAccount: boolean;
+  /** EasySlip has seen this slip before (on any request with our key) */
+  isDuplicate: boolean;
+}
+
+export async function verifySlipWithEasySlip(imageDataUrl: string, amountBaht: number, remark: string): Promise<EasySlipResult> {
+  const apiKey = await getEasySlipKey();
+  const empty: EasySlipResult = { ok: false, receiverAccounts: [], matchedAccount: false, isDuplicate: false };
+  if (!apiKey) return { ...empty, errorCode: 'MISSING_API_KEY' };
+  try {
+    const resp = await fetch('https://api.easyslip.com/v2/verify/bank', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ base64: imageDataUrl, remark, matchAccount: true, matchAmount: amountBaht, checkDuplicate: true }),
+      signal: AbortSignal.timeout(20_000),
+    });
+    const json: any = await resp.json().catch(() => ({}));
+    const raw = json?.data?.rawSlip;
+    if (!resp.ok || json?.success !== true || !raw) {
+      return { ...empty, errorCode: String(json?.error?.code || `HTTP_${resp.status}`) };
+    }
+    const acc = raw.receiver?.account || {};
+    return {
+      ok: true,
+      transRef: String(raw.transRef || ''),
+      date: String(raw.date || ''),
+      amount: Number(raw.amount?.amount),
+      senderBank: String(raw.sender?.bank?.short || raw.sender?.bank?.name || ''),
+      senderName: String(raw.sender?.account?.name?.th || raw.sender?.account?.name?.en || ''),
+      receiverName: String(acc.name?.th || acc.name?.en || ''),
+      receiverAccounts: [acc.bank?.account, acc.proxy?.account].filter((a): a is string => typeof a === 'string' && a.length > 0),
+      matchedAccount: Boolean(json.data.matchedAccount),
+      isDuplicate: json.data.isDuplicate === true,
+    };
+  } catch (err: any) {
+    return { ...empty, errorCode: err?.name === 'TimeoutError' ? 'TIMEOUT' : 'NETWORK' };
+  }
+}
+
+/** True when a printed (masked) account number fits ours: same length, every visible digit equal, at least 3 visible. */
+export function maskedAccountMatches(printed: string, ours: string): boolean {
+  const p = printed.replace(/[^0-9xX*]/g, '');
+  const d = ours.replace(/[^0-9]/g, '');
+  if (!p || p.length !== d.length) return false;
+  let seen = 0;
+  for (let i = 0; i < p.length; i++) {
+    if (/[0-9]/.test(p[i])) {
+      if (p[i] !== d[i]) return false;
+      seen++;
+    }
+  }
+  return seen >= 3;
+}
 
 // ---------------------------------------------------------------------------
 // Omise

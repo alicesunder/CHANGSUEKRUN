@@ -17,7 +17,7 @@ export interface PublicConfig {
   /** Wind-tunnel seats (limited) */
   windTunnelLimit?: number;
   windTunnelRemaining?: number;
-  /** false until the organiser configures Omise — registration is closed until then */
+  /** false until the organiser configures EasySlip — registration is closed until then */
   paymentReady: boolean;
 }
 
@@ -29,6 +29,10 @@ export type ServerOrder = TicketOrder & {
   omiseChargeId?: string;
   omiseQrImageUrl?: string;
   hasSlip?: boolean;
+  slipCheckedAt?: string;
+  slipRef?: string;
+  slipNote?: string;
+  slipAttempts?: number;
   aiReview?: string;
   verificationNote?: string;
   paidAt?: string;
@@ -148,21 +152,15 @@ export async function fetchOrder(ref: PendingOrderRef): Promise<ServerOrder> {
   return res.order;
 }
 
-/** Loads the Omise QR through our server and returns a same-origin object URL (savable on phones). */
-export async function fetchQrObjectUrl(ref: PendingOrderRef): Promise<string> {
-  const resp = await fetch(`/api/orders/${encodeURIComponent(ref.orderId)}/qr`, {
-    headers: { 'x-order-token': ref.accessToken },
-  });
-  if (!resp.ok) throw new ApiError('โหลด QR ไม่สำเร็จ', resp.status);
-  return URL.createObjectURL(await resp.blob());
-}
-
-export async function renewQr(ref: PendingOrderRef): Promise<ServerOrder> {
-  const res = await request<{ order: ServerOrder }>(`/api/orders/${encodeURIComponent(ref.orderId)}/renew-qr`, {
-    method: 'POST',
-    headers: { 'x-order-token': ref.accessToken },
-  });
-  return res.order;
+/** Sends the transfer slip; the server checks it with EasySlip. A slip that fails comes back as an ApiError with the reason. */
+export async function uploadSlip(
+  ref: PendingOrderRef,
+  image: string
+): Promise<{ order: ServerOrder; review?: boolean; message?: string }> {
+  return request<{ order: ServerOrder; review?: boolean; message?: string }>(
+    `/api/orders/${encodeURIComponent(ref.orderId)}/slip`,
+    { method: 'POST', headers: { ...jsonHeaders, 'x-order-token': ref.accessToken }, body: JSON.stringify({ image }) }
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -295,15 +293,17 @@ export const adminApi = {
       headers: jsonHeaders,
       body: JSON.stringify({ settings, bibCounters }),
     }),
+  getSlip: (orderId: string) =>
+    adminFetch<{ image: string }>(`/api/admin/orders/${encodeURIComponent(orderId)}/slip`),
   gatewayStatus: () =>
     adminFetch<GatewayStatus>('/api/admin/payment-gateway'),
-  setOmiseKey: (secretKey: string) =>
+  setEasySlipKey: (apiKey: string) =>
     adminFetch<GatewayStatus>('/api/admin/payment-gateway', {
       method: 'POST',
       headers: jsonHeaders,
-      body: JSON.stringify({ secretKey }),
+      body: JSON.stringify({ apiKey }),
     }),
-  clearOmiseKey: () =>
+  clearEasySlipKey: () =>
     adminFetch<GatewayStatus>('/api/admin/payment-gateway', {
       method: 'POST',
       headers: jsonHeaders,
@@ -312,7 +312,5 @@ export const adminApi = {
 };
 
 export interface GatewayStatus {
-  hasOmiseKey: boolean;
-  mode: 'live' | 'test' | null;
-  webhookPath: string;
+  hasEasySlipKey: boolean;
 }

@@ -28452,11 +28452,16 @@ async function getOmiseKey() {
   const saved = rows[0] ? asObj(rows[0].value).omiseSecretKey : void 0;
   return (saved ?? (process.env.OMISE_SECRET_KEY || "")).trim();
 }
-async function setOmiseKey(key) {
+async function getEasySlipKey() {
+  const rows = await dbQuery("select value from csr.settings where key = 'easyslip'");
+  const saved = rows[0] ? asObj(rows[0].value).apiKey : void 0;
+  return (saved || process.env.EASYSLIP_API_KEY || "").trim();
+}
+async function setEasySlipKey(key) {
   await dbQuery(
-    `insert into csr.settings (key, value) values ('gateway', $1::jsonb)
+    `insert into csr.settings (key, value) values ('easyslip', $1::jsonb)
      on conflict (key) do update set value = excluded.value, updated_at = now()`,
-    [JSON.stringify({ omiseSecretKey: key })]
+    [JSON.stringify({ apiKey: key })]
   );
 }
 function hashToken(token) {
@@ -28507,7 +28512,10 @@ async function getOrder(orderId) {
   return rows[0] ? rowToOrder(rows[0]) : void 0;
 }
 async function listOrders() {
-  const rows = await dbQuery("select data from csr.orders order by created_at desc, order_id desc");
+  const rows = await dbQuery(
+    `select case when data ? 'slipFile' then (data - 'slipFile') || '{"slipFile":"stored"}'::jsonb else data end as data
+     from csr.orders order by created_at desc, order_id desc`
+  );
   return rows.map(rowToOrder);
 }
 async function deleteOrder(orderId) {
@@ -28555,12 +28563,19 @@ async function isRefUsed(ref) {
   const rows = await dbQuery("select 1 from csr.used_refs where ref = $1", [ref.toUpperCase()]);
   return rows.length > 0;
 }
+var RefUsedError = class extends Error {
+};
 async function markOrderPaid(orderId, info) {
   return dbTx(async (q) => {
     const rows = await q("select data from csr.orders where order_id = $1 for update", [orderId]);
     if (!rows[0]) return void 0;
     const order = rowToOrder(rows[0]);
     if (order.paymentStatus === "PAID" && order.bibNumber) return order;
+    if (info.exclusiveRef && info.paymentRef) {
+      await q("insert into csr.used_refs (ref, order_id) values ($1, $2) on conflict (ref) do nothing", [info.paymentRef.toUpperCase(), orderId]);
+      const owner = await q("select order_id from csr.used_refs where ref = $1", [info.paymentRef.toUpperCase()]);
+      if (owner[0]?.order_id !== orderId) throw new RefUsedError(info.paymentRef);
+    }
     const now = (/* @__PURE__ */ new Date()).toISOString();
     if (!order.bibNumber) {
       const c = await q(
@@ -28679,7 +28694,7 @@ async function rateLimited(key, limit, windowMs) {
 function toRunnerView(o) {
   const { accessTokenHash, slipFile, slipHash, aiReview, omisePastChargeIds, omiseQrImageUrl, ...rest } = o;
   void omiseQrImageUrl;
-  return rest;
+  return { ...rest, hasSlip: Boolean(slipFile) };
 }
 function toAdminView(o) {
   const { accessTokenHash, slipFile, ...rest } = o;
@@ -28937,38 +28952,54 @@ function requireAdmin(req, res, next) {
 }
 
 // server/payments.ts
-function omiseAuth(secretKey) {
-  return `Basic ${Buffer.from(`${secretKey}:`).toString("base64")}`;
-}
-async function createOmiseCharge(params) {
-  const secretKey = await getOmiseKey();
-  if (!secretKey) return { error: "Omise not configured" };
-  const body = new URLSearchParams();
-  body.append("amount", String(Math.round(params.amountBaht * 100)));
-  body.append("currency", "THB");
-  body.append("source[type]", "promptpay");
-  body.append("metadata[orderId]", params.orderId);
+async function verifySlipWithEasySlip(imageDataUrl, amountBaht, remark) {
+  const apiKey = await getEasySlipKey();
+  const empty = { ok: false, receiverAccounts: [], matchedAccount: false, isDuplicate: false };
+  if (!apiKey) return { ...empty, errorCode: "MISSING_API_KEY" };
   try {
-    const resp = await fetch("https://api.omise.co/charges", {
+    const resp = await fetch("https://api.easyslip.com/v2/verify/bank", {
       method: "POST",
-      headers: {
-        Authorization: omiseAuth(secretKey),
-        "Content-Type": "application/x-www-form-urlencoded"
-      },
-      body: body.toString()
+      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ base64: imageDataUrl, remark, matchAccount: true, matchAmount: amountBaht, checkDuplicate: true }),
+      signal: AbortSignal.timeout(2e4)
     });
     const json = await resp.json().catch(() => ({}));
-    if (resp.ok && json?.id) {
-      return {
-        chargeId: json.id,
-        qrImageUrl: json?.source?.scannable_code?.image?.download_uri || "",
-        expiresAt: typeof json?.expires_at === "string" ? json.expires_at : void 0
-      };
+    const raw = json?.data?.rawSlip;
+    if (!resp.ok || json?.success !== true || !raw) {
+      return { ...empty, errorCode: String(json?.error?.code || `HTTP_${resp.status}`) };
     }
-    return { error: json?.message || `Omise HTTP ${resp.status}` };
+    const acc = raw.receiver?.account || {};
+    return {
+      ok: true,
+      transRef: String(raw.transRef || ""),
+      date: String(raw.date || ""),
+      amount: Number(raw.amount?.amount),
+      senderBank: String(raw.sender?.bank?.short || raw.sender?.bank?.name || ""),
+      senderName: String(raw.sender?.account?.name?.th || raw.sender?.account?.name?.en || ""),
+      receiverName: String(acc.name?.th || acc.name?.en || ""),
+      receiverAccounts: [acc.bank?.account, acc.proxy?.account].filter((a) => typeof a === "string" && a.length > 0),
+      matchedAccount: Boolean(json.data.matchedAccount),
+      isDuplicate: json.data.isDuplicate === true
+    };
   } catch (err) {
-    return { error: err?.message || "Cannot reach api.omise.co" };
+    return { ...empty, errorCode: err?.name === "TimeoutError" ? "TIMEOUT" : "NETWORK" };
   }
+}
+function maskedAccountMatches(printed, ours) {
+  const p = printed.replace(/[^0-9xX*]/g, "");
+  const d = ours.replace(/[^0-9]/g, "");
+  if (!p || p.length !== d.length) return false;
+  let seen = 0;
+  for (let i = 0; i < p.length; i++) {
+    if (/[0-9]/.test(p[i])) {
+      if (p[i] !== d[i]) return false;
+      seen++;
+    }
+  }
+  return seen >= 3;
+}
+function omiseAuth(secretKey) {
+  return `Basic ${Buffer.from(`${secretKey}:`).toString("base64")}`;
 }
 async function fetchVerifiedOmiseCharge(chargeId) {
   const secretKey = await getOmiseKey();
@@ -28987,30 +29018,6 @@ async function fetchVerifiedOmiseCharge(chargeId) {
       currency: String(c?.currency || "").toUpperCase(),
       chargeId: c?.id
     };
-  } catch {
-    return null;
-  }
-}
-async function omiseKeyMode() {
-  const key = await getOmiseKey();
-  if (!key) return null;
-  return key.startsWith("skey_test_") ? "test" : "live";
-}
-async function fetchOmiseQrImage(url) {
-  let host = "";
-  try {
-    host = new URL(url).hostname;
-  } catch {
-    return null;
-  }
-  if (!(host === "omise.co" || host.endsWith(".omise.co"))) return null;
-  const secretKey = await getOmiseKey();
-  try {
-    const resp = await fetch(url, secretKey ? { headers: { Authorization: omiseAuth(secretKey) } } : {});
-    if (!resp.ok) return null;
-    const type = resp.headers.get("content-type") || "image/svg+xml";
-    if (!type.startsWith("image/")) return null;
-    return { type, body: Buffer.from(await resp.arrayBuffer()) };
   } catch {
     return null;
   }
@@ -29068,7 +29075,7 @@ async function nextBibPreview() {
   return Object.fromEntries(ROUTE_IDS.map((r) => [r, formatBib(r, (counters[r] || 0) + 1)]));
 }
 async function publicConfig() {
-  const [s, nextBib, key, windUsed] = await Promise.all([getSettings(), nextBibPreview(), getOmiseKey(), windTunnelSeatsUsed()]);
+  const [s, nextBib, key, windUsed] = await Promise.all([getSettings(), nextBibPreview(), getEasySlipKey(), windTunnelSeatsUsed()]);
   return {
     windTunnelLimit: WIND_TUNNEL_LIMIT,
     windTunnelRemaining: Math.max(0, WIND_TUNNEL_LIMIT - windUsed),
@@ -29078,16 +29085,25 @@ async function publicConfig() {
     bankAccountNo: s.bankAccountNo,
     paymentTimeoutMinutes: s.paymentTimeoutMinutes,
     nextBib,
-    /** false until an Omise secret key is configured — registration is closed until then */
+    /** false until an EasySlip API key is configured — registration is closed until then */
     paymentReady: Boolean(key)
   };
 }
 async function gatewayStatus() {
-  return {
-    hasOmiseKey: Boolean(await getOmiseKey()),
-    mode: await omiseKeyMode(),
-    webhookPath: "/api/payment-webhook"
-  };
+  return { hasEasySlipKey: Boolean(await getEasySlipKey()) };
+}
+function slipProblems(slip, order, ours) {
+  const out = [];
+  if (Math.round((slip.amount ?? -1) * 100) !== Math.round(order.totalPrice * 100)) {
+    out.push(`\u0E22\u0E2D\u0E14\u0E43\u0E19\u0E2A\u0E25\u0E34\u0E1B ${slip.amount ?? "-"} \u0E1A\u0E32\u0E17 \u0E44\u0E21\u0E48\u0E15\u0E23\u0E07\u0E01\u0E31\u0E1A\u0E22\u0E2D\u0E14\u0E17\u0E35\u0E48\u0E15\u0E49\u0E2D\u0E07\u0E0A\u0E33\u0E23\u0E30 ${order.totalPrice} \u0E1A\u0E32\u0E17`);
+  }
+  const paidAt = Date.parse(slip.date || "");
+  if (!Number.isFinite(paidAt) || paidAt < Date.parse(order.createdAt) - 10 * 60 * 1e3) {
+    out.push("\u0E2A\u0E25\u0E34\u0E1B\u0E19\u0E35\u0E49\u0E42\u0E2D\u0E19\u0E01\u0E48\u0E2D\u0E19\u0E2A\u0E23\u0E49\u0E32\u0E07\u0E04\u0E33\u0E2A\u0E31\u0E48\u0E07\u0E0B\u0E37\u0E49\u0E2D \u0E01\u0E23\u0E38\u0E13\u0E32\u0E43\u0E0A\u0E49\u0E2A\u0E25\u0E34\u0E1B\u0E17\u0E35\u0E48\u0E42\u0E2D\u0E19\u0E2A\u0E33\u0E2B\u0E23\u0E31\u0E1A\u0E04\u0E33\u0E2A\u0E31\u0E48\u0E07\u0E0B\u0E37\u0E49\u0E2D\u0E19\u0E35\u0E49");
+  }
+  const receiverOk = slip.matchedAccount || slip.receiverAccounts.some((p) => ours.some((a) => a && maskedAccountMatches(p, a)));
+  if (!receiverOk) out.push("\u0E1A\u0E31\u0E0D\u0E0A\u0E35\u0E1C\u0E39\u0E49\u0E23\u0E31\u0E1A\u0E43\u0E19\u0E2A\u0E25\u0E34\u0E1B\u0E44\u0E21\u0E48\u0E43\u0E0A\u0E48\u0E1A\u0E31\u0E0D\u0E0A\u0E35\u0E02\u0E2D\u0E07\u0E07\u0E32\u0E19");
+  return out;
 }
 var h = (fn) => (req, res, next) => {
   fn(req, res).catch((err) => {
@@ -29148,7 +29164,7 @@ function createApp() {
     const concertQty = isConcert ? vipTables > 0 ? wantedConcert : Math.max(1, wantedConcert) : concertAllowed ? wantedConcert : 0;
     const discountCtx = { hasRun: !noRun, hasConcert: concertQty > 0 || vipTables > 0, sponsor: !!sponsorCode };
     const addOnSum = addOnTotal(addOns, discountCtx);
-    if ((!sponsorCode || addOnSum > 0) && !await getOmiseKey()) {
+    if ((!sponsorCode || addOnSum > 0) && !await getEasySlipKey()) {
       res.status(503).json({ error: "\u0E23\u0E30\u0E1A\u0E1A\u0E0A\u0E33\u0E23\u0E30\u0E40\u0E07\u0E34\u0E19\u0E22\u0E31\u0E07\u0E44\u0E21\u0E48\u0E40\u0E1B\u0E34\u0E14\u0E43\u0E0A\u0E49\u0E07\u0E32\u0E19 \u0E01\u0E23\u0E38\u0E13\u0E32\u0E15\u0E34\u0E14\u0E15\u0E48\u0E2D\u0E1C\u0E39\u0E49\u0E08\u0E31\u0E14\u0E07\u0E32\u0E19" });
       return;
     }
@@ -29283,19 +29299,7 @@ function createApp() {
       res.json({ order: toRunnerView(paid || order), accessToken: token, config: await publicConfig() });
       return;
     }
-    const charge = await createOmiseCharge({ amountBaht: total, orderId: order.orderId });
-    if (!charge.chargeId || !charge.qrImageUrl) {
-      console.warn(`[omise] charge create failed for ${order.orderId}: ${charge.error}`);
-      await deleteOrder(order.orderId);
-      res.status(502).json({ error: "\u0E2A\u0E23\u0E49\u0E32\u0E07 QR \u0E0A\u0E33\u0E23\u0E30\u0E40\u0E07\u0E34\u0E19\u0E44\u0E21\u0E48\u0E2A\u0E33\u0E40\u0E23\u0E47\u0E08 \u0E01\u0E23\u0E38\u0E13\u0E32\u0E25\u0E2D\u0E07\u0E43\u0E2B\u0E21\u0E48\u0E2D\u0E35\u0E01\u0E04\u0E23\u0E31\u0E49\u0E07" });
-      return;
-    }
-    const saved = await updateOrder(order.orderId, (o) => {
-      o.omiseChargeId = charge.chargeId;
-      o.omiseQrImageUrl = charge.qrImageUrl;
-      if (charge.expiresAt) o.expiresAt = charge.expiresAt;
-    });
-    res.json({ order: toRunnerView(saved || order), accessToken: token, config: await publicConfig() });
+    res.json({ order: toRunnerView(order), accessToken: token, config: await publicConfig() });
   }));
   app2.get("/api/orders/:orderId", h(async (req, res) => {
     let order = await loadOwnedOrder(req, res);
@@ -29303,44 +29307,88 @@ function createApp() {
     order = await settleAll(order);
     res.json({ order: toRunnerView(order) });
   }));
-  app2.get("/api/orders/:orderId/qr", h(async (req, res) => {
-    const order = await loadOwnedOrder(req, res);
-    if (!order) return;
-    const img = order.omiseQrImageUrl ? await fetchOmiseQrImage(order.omiseQrImageUrl) : null;
-    if (!img) {
-      res.status(502).json({ error: "\u0E42\u0E2B\u0E25\u0E14 QR \u0E44\u0E21\u0E48\u0E2A\u0E33\u0E40\u0E23\u0E47\u0E08" });
-      return;
-    }
-    res.setHeader("Content-Type", img.type);
-    res.setHeader("Cache-Control", "private, max-age=300");
-    res.setHeader("Content-Security-Policy", "default-src 'none'; style-src 'unsafe-inline'; sandbox");
-    res.send(img.body);
-  }));
-  app2.post("/api/orders/:orderId/renew-qr", h(async (req, res) => {
+  app2.post("/api/orders/:orderId/slip", import_express.default.json({ limit: "5mb" }), h(async (req, res) => {
     let order = await loadOwnedOrder(req, res);
     if (!order) return;
-    if (await rateLimited(`renew:${order.orderId}`, 6, 60 * 60 * 1e3)) {
-      res.status(429).json({ error: "\u0E02\u0E2D QR \u0E43\u0E2B\u0E21\u0E48\u0E1A\u0E48\u0E2D\u0E22\u0E40\u0E01\u0E34\u0E19\u0E44\u0E1B \u0E01\u0E23\u0E38\u0E13\u0E32\u0E23\u0E2D\u0E2A\u0E31\u0E01\u0E04\u0E23\u0E39\u0E48" });
-      return;
-    }
     order = await settleAll(order);
     if (order.paymentStatus === "PAID") {
       res.json({ order: toRunnerView(order) });
       return;
     }
-    const charge = await createOmiseCharge({ amountBaht: order.totalPrice, orderId: order.orderId });
-    if (!charge.chargeId || !charge.qrImageUrl) {
-      res.status(502).json({ error: "\u0E2A\u0E23\u0E49\u0E32\u0E07 QR \u0E43\u0E2B\u0E21\u0E48\u0E44\u0E21\u0E48\u0E2A\u0E33\u0E40\u0E23\u0E47\u0E08 \u0E01\u0E23\u0E38\u0E13\u0E32\u0E25\u0E2D\u0E07\u0E43\u0E2B\u0E21\u0E48" });
+    if (order.verificationStatus === "REJECTED") {
+      res.status(400).json({ error: "\u0E04\u0E33\u0E2A\u0E31\u0E48\u0E07\u0E0B\u0E37\u0E49\u0E2D\u0E19\u0E35\u0E49\u0E16\u0E39\u0E01\u0E22\u0E01\u0E40\u0E25\u0E34\u0E01\u0E42\u0E14\u0E22\u0E40\u0E08\u0E49\u0E32\u0E2B\u0E19\u0E49\u0E32\u0E17\u0E35\u0E48 \u0E01\u0E23\u0E38\u0E13\u0E32\u0E15\u0E34\u0E14\u0E15\u0E48\u0E2D\u0E1C\u0E39\u0E49\u0E08\u0E31\u0E14\u0E07\u0E32\u0E19" });
       return;
     }
-    const timeoutMin = Math.max(1, (await getSettings()).paymentTimeoutMinutes || 15);
-    const saved = await updateOrder(order.orderId, (o) => {
-      if (o.omiseChargeId) o.omisePastChargeIds = [...o.omisePastChargeIds || [], o.omiseChargeId].slice(-10);
-      o.omiseChargeId = charge.chargeId;
-      o.omiseQrImageUrl = charge.qrImageUrl;
-      o.expiresAt = charge.expiresAt || new Date(Date.now() + timeoutMin * 60 * 1e3).toISOString();
+    if (await rateLimited(`slip:${order.orderId}`, 8, 60 * 60 * 1e3) || await rateLimited(`slip-ip:${clientIp(req)}`, 20, 60 * 60 * 1e3)) {
+      res.status(429).json({ error: "\u0E2A\u0E48\u0E07\u0E2A\u0E25\u0E34\u0E1B\u0E1A\u0E48\u0E2D\u0E22\u0E40\u0E01\u0E34\u0E19\u0E44\u0E1B \u0E01\u0E23\u0E38\u0E13\u0E32\u0E23\u0E2D\u0E2A\u0E31\u0E01\u0E04\u0E23\u0E39\u0E48\u0E41\u0E25\u0E49\u0E27\u0E25\u0E2D\u0E07\u0E43\u0E2B\u0E21\u0E48" });
+      return;
+    }
+    const image = typeof req.body?.image === "string" ? req.body.image : "";
+    if (!/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/]+=*$/.test(image) || image.length > 4e6) {
+      res.status(400).json({ error: "\u0E44\u0E1F\u0E25\u0E4C\u0E2A\u0E25\u0E34\u0E1B\u0E44\u0E21\u0E48\u0E16\u0E39\u0E01\u0E15\u0E49\u0E2D\u0E07 \u0E01\u0E23\u0E38\u0E13\u0E32\u0E41\u0E19\u0E1A\u0E23\u0E39\u0E1B\u0E2A\u0E25\u0E34\u0E1B (JPG / PNG)" });
+      return;
+    }
+    if (!await getEasySlipKey()) {
+      res.status(503).json({ error: "\u0E23\u0E30\u0E1A\u0E1A\u0E15\u0E23\u0E27\u0E08\u0E2A\u0E25\u0E34\u0E1B\u0E22\u0E31\u0E07\u0E44\u0E21\u0E48\u0E40\u0E1B\u0E34\u0E14\u0E43\u0E0A\u0E49\u0E07\u0E32\u0E19 \u0E01\u0E23\u0E38\u0E13\u0E32\u0E15\u0E34\u0E14\u0E15\u0E48\u0E2D\u0E1C\u0E39\u0E49\u0E08\u0E31\u0E14\u0E07\u0E32\u0E19" });
+      return;
+    }
+    const slip = await verifySlipWithEasySlip(image, order.totalPrice, order.orderId);
+    const settings = await getSettings();
+    let problems = [];
+    let review = "";
+    if (!slip.ok) {
+      const code = slip.errorCode || "";
+      if (code === "SLIP_NOT_FOUND" || code === "VALIDATION_ERROR" || code === "IMAGE_SIZE_TOO_LARGE") {
+        problems = ["\u0E2D\u0E48\u0E32\u0E19\u0E2A\u0E25\u0E34\u0E1B\u0E44\u0E21\u0E48\u0E44\u0E14\u0E49\u0E2B\u0E23\u0E37\u0E2D\u0E44\u0E21\u0E48\u0E1E\u0E1A\u0E23\u0E32\u0E22\u0E01\u0E32\u0E23\u0E19\u0E35\u0E49\u0E43\u0E19\u0E23\u0E30\u0E1A\u0E1A\u0E18\u0E19\u0E32\u0E04\u0E32\u0E23 \u0E01\u0E23\u0E38\u0E13\u0E32\u0E41\u0E19\u0E1A\u0E23\u0E39\u0E1B\u0E2A\u0E25\u0E34\u0E1B\u0E15\u0E31\u0E27\u0E08\u0E23\u0E34\u0E07\u0E17\u0E35\u0E48\u0E40\u0E2B\u0E47\u0E19 QR \u0E0A\u0E31\u0E14 \u0E46"];
+      } else if (code === "SLIP_PENDING") {
+        problems = ["\u0E18\u0E19\u0E32\u0E04\u0E32\u0E23\u0E22\u0E31\u0E07\u0E44\u0E21\u0E48\u0E22\u0E37\u0E19\u0E22\u0E31\u0E19\u0E23\u0E32\u0E22\u0E01\u0E32\u0E23\u0E19\u0E35\u0E49 \u0E01\u0E23\u0E38\u0E13\u0E32\u0E25\u0E2D\u0E07\u0E2A\u0E48\u0E07\u0E2A\u0E25\u0E34\u0E1B\u0E2D\u0E35\u0E01\u0E04\u0E23\u0E31\u0E49\u0E07\u0E43\u0E19 2\u20133 \u0E19\u0E32\u0E17\u0E35"];
+      } else {
+        console.warn(`[slip] EasySlip error for ${order.orderId}: ${code}`);
+        review = `\u0E15\u0E23\u0E27\u0E08\u0E2A\u0E25\u0E34\u0E1B\u0E2D\u0E31\u0E15\u0E42\u0E19\u0E21\u0E31\u0E15\u0E34\u0E44\u0E21\u0E48\u0E44\u0E14\u0E49 (${code}) \u0E23\u0E2D\u0E40\u0E08\u0E49\u0E32\u0E2B\u0E19\u0E49\u0E32\u0E17\u0E35\u0E48\u0E15\u0E23\u0E27\u0E08`;
+      }
+    } else {
+      problems = slipProblems(slip, order, [settings.bankAccountNo, settings.promptPayId]);
+      if (!problems.length && await isRefUsed(slip.transRef || "")) problems = ["\u0E2A\u0E25\u0E34\u0E1B\u0E19\u0E35\u0E49\u0E16\u0E39\u0E01\u0E43\u0E0A\u0E49\u0E0A\u0E33\u0E23\u0E30\u0E04\u0E33\u0E2A\u0E31\u0E48\u0E07\u0E0B\u0E37\u0E49\u0E2D\u0E2D\u0E37\u0E48\u0E19\u0E44\u0E1B\u0E41\u0E25\u0E49\u0E27"];
+      if (!problems.length && !slip.transRef) review = "\u0E2A\u0E25\u0E34\u0E1B\u0E44\u0E21\u0E48\u0E21\u0E35\u0E40\u0E25\u0E02\u0E17\u0E35\u0E48\u0E23\u0E32\u0E22\u0E01\u0E32\u0E23 \u0E23\u0E2D\u0E40\u0E08\u0E49\u0E32\u0E2B\u0E19\u0E49\u0E32\u0E17\u0E35\u0E48\u0E15\u0E23\u0E27\u0E08";
+      if (!problems.length && !review && slip.isDuplicate) review = "EasySlip \u0E41\u0E08\u0E49\u0E07\u0E27\u0E48\u0E32\u0E40\u0E04\u0E22\u0E15\u0E23\u0E27\u0E08\u0E2A\u0E25\u0E34\u0E1B\u0E19\u0E35\u0E49\u0E41\u0E25\u0E49\u0E27 \u0E23\u0E2D\u0E40\u0E08\u0E49\u0E32\u0E2B\u0E19\u0E49\u0E32\u0E17\u0E35\u0E48\u0E15\u0E23\u0E27\u0E08";
+    }
+    const readout = slip.ok ? `EasySlip: ${slip.amount} \u0E1A\u0E32\u0E17 \xB7 ${slip.senderBank} ${slip.senderName} \u2192 ${slip.receiverName} (${slip.receiverAccounts.join(", ")}) \xB7 ${slip.date} \xB7 ref ${slip.transRef}` : `EasySlip: ${slip.errorCode}`;
+    const note = [readout, ...problems, review].filter(Boolean).join(" \xB7 ");
+    await updateOrder(order.orderId, (o) => {
+      o.slipAttempts = (o.slipAttempts || 0) + 1;
+      if (problems.length && o.verificationStatus === "PENDING_REVIEW") return;
+      o.slipFile = image;
+      o.slipHash = crypto3.createHash("sha256").update(image).digest("hex");
+      o.slipCheckedAt = (/* @__PURE__ */ new Date()).toISOString();
+      o.slipRef = slip.transRef || void 0;
+      o.slipNote = note.slice(0, 600);
+      if (review) o.verificationStatus = "PENDING_REVIEW";
+      if (slip.senderBank) o.senderBank = slip.senderBank;
     });
-    res.json({ order: toRunnerView(saved || order) });
+    if (!problems.length && !review) {
+      try {
+        const paid = await markOrderPaid(order.orderId, {
+          status: "AUTO_VERIFIED",
+          verifiedBy: "EasySlip (\u0E15\u0E23\u0E27\u0E08\u0E2A\u0E25\u0E34\u0E1B\u0E2D\u0E31\u0E15\u0E42\u0E19\u0E21\u0E31\u0E15\u0E34)",
+          paymentRef: slip.transRef,
+          senderBank: slip.senderBank || "",
+          note,
+          exclusiveRef: true
+        });
+        console.log(`[slip] ${order.orderId} paid by slip ${slip.transRef}`);
+        res.json({ order: toRunnerView(paid) });
+        return;
+      } catch (err) {
+        if (!(err instanceof RefUsedError)) throw err;
+        problems = ["\u0E2A\u0E25\u0E34\u0E1B\u0E19\u0E35\u0E49\u0E16\u0E39\u0E01\u0E43\u0E0A\u0E49\u0E0A\u0E33\u0E23\u0E30\u0E04\u0E33\u0E2A\u0E31\u0E48\u0E07\u0E0B\u0E37\u0E49\u0E2D\u0E2D\u0E37\u0E48\u0E19\u0E44\u0E1B\u0E41\u0E25\u0E49\u0E27"];
+      }
+    }
+    const latest = await getOrder(order.orderId);
+    if (review) {
+      res.json({ order: toRunnerView(latest), review: true, message: "\u0E44\u0E14\u0E49\u0E23\u0E31\u0E1A\u0E2A\u0E25\u0E34\u0E1B\u0E41\u0E25\u0E49\u0E27 \u0E23\u0E30\u0E1A\u0E1A\u0E15\u0E23\u0E27\u0E08\u0E2D\u0E31\u0E15\u0E42\u0E19\u0E21\u0E31\u0E15\u0E34\u0E44\u0E21\u0E48\u0E44\u0E14\u0E49 \u0E40\u0E08\u0E49\u0E32\u0E2B\u0E19\u0E49\u0E32\u0E17\u0E35\u0E48\u0E08\u0E30\u0E15\u0E23\u0E27\u0E08\u0E41\u0E25\u0E30\u0E22\u0E37\u0E19\u0E22\u0E31\u0E19\u0E43\u0E2B\u0E49" });
+      return;
+    }
+    res.status(400).json({ error: `\u0E2A\u0E25\u0E34\u0E1B\u0E44\u0E21\u0E48\u0E1C\u0E48\u0E32\u0E19: ${problems.join(" \xB7 ")}`, order: toRunnerView(latest) });
   }));
   app2.post("/api/payment-webhook", smallJson, h(async (req, res) => {
     const chargeId = req.body?.data?.object === "charge" ? String(req.body.data.id || "") : "";
@@ -29417,7 +29465,7 @@ function createApp() {
     const admin = req.admin.username;
     const status = req.body?.status;
     if (status === "ADMIN_APPROVED") {
-      const ref = clean(req.body?.paymentRef, 60) || order.paymentRef || `MANUAL-${order.orderId}`;
+      const ref = clean(req.body?.paymentRef, 60) || order.paymentRef || order.slipRef || `MANUAL-${order.orderId}`;
       if (ref !== order.paymentRef && await isRefUsed(ref)) {
         res.status(400).json({ error: `\u0E40\u0E25\u0E02\u0E17\u0E35\u0E48\u0E23\u0E32\u0E22\u0E01\u0E32\u0E23 ${ref} \u0E16\u0E39\u0E01\u0E43\u0E0A\u0E49\u0E01\u0E31\u0E1A\u0E04\u0E33\u0E2A\u0E31\u0E48\u0E07\u0E0B\u0E37\u0E49\u0E2D\u0E2D\u0E37\u0E48\u0E19\u0E41\u0E25\u0E49\u0E27` });
         return;
@@ -29442,6 +29490,15 @@ function createApp() {
     }
     console.log(`[admin] ${admin} set ${orderId} -> ${status}`);
     res.json({ order: toAdminView(await getOrder(orderId)) });
+  }));
+  app2.get("/api/admin/orders/:orderId/slip", requireAdmin, h(async (req, res) => {
+    const order = await getOrder(String(req.params.orderId));
+    if (!order?.slipFile) {
+      res.status(404).json({ error: "\u0E04\u0E33\u0E2A\u0E31\u0E48\u0E07\u0E0B\u0E37\u0E49\u0E2D\u0E19\u0E35\u0E49\u0E22\u0E31\u0E07\u0E44\u0E21\u0E48\u0E21\u0E35\u0E2A\u0E25\u0E34\u0E1B" });
+      return;
+    }
+    res.setHeader("Cache-Control", "private, no-store");
+    res.json({ image: order.slipFile });
   }));
   app2.post("/api/admin/orders/:orderId/kit", requireAdmin, h(async (req, res) => {
     const orderId = String(req.params.orderId);
@@ -29586,18 +29643,18 @@ function createApp() {
   app2.post("/api/admin/payment-gateway", requireAdmin, smallJson, h(async (req, res) => {
     const admin = req.admin.username;
     if (req.body?.clear === true) {
-      await setOmiseKey("");
-      console.log(`[admin] ${admin} removed the Omise key`);
+      await setEasySlipKey("");
+      console.log(`[admin] ${admin} removed the EasySlip key`);
       res.json(await gatewayStatus());
       return;
     }
-    const key = String(req.body?.secretKey || "").trim();
-    if (!/^skey_(test_)?[A-Za-z0-9]{10,}$/.test(key)) {
-      res.status(400).json({ error: "Omise Secret Key \u0E15\u0E49\u0E2D\u0E07\u0E02\u0E36\u0E49\u0E19\u0E15\u0E49\u0E19\u0E14\u0E49\u0E27\u0E22 skey_ \u0E2B\u0E23\u0E37\u0E2D skey_test_" });
+    const key = String(req.body?.apiKey || "").trim();
+    if (!/^[A-Za-z0-9._-]{16,200}$/.test(key)) {
+      res.status(400).json({ error: "EasySlip API Key \u0E44\u0E21\u0E48\u0E16\u0E39\u0E01\u0E15\u0E49\u0E2D\u0E07 \u0E01\u0E23\u0E38\u0E13\u0E32\u0E04\u0E31\u0E14\u0E25\u0E2D\u0E01\u0E08\u0E32\u0E01 EasySlip Dashboard \u0E21\u0E32\u0E27\u0E32\u0E07\u0E43\u0E2B\u0E21\u0E48" });
       return;
     }
-    await setOmiseKey(key);
-    console.log(`[admin] ${admin} set the Omise key (${key.startsWith("skey_test_") ? "test" : "live"})`);
+    await setEasySlipKey(key);
+    console.log(`[admin] ${admin} set the EasySlip key`);
     res.json(await gatewayStatus());
   }));
   app2.use("/api", (_req, res) => {

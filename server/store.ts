@@ -62,6 +62,11 @@ export interface StoredOrder {
   verificationNote?: string;
   slipFile?: string;
   slipHash?: string;
+  /** Last slip check: when, what EasySlip read, and why it passed or failed */
+  slipCheckedAt?: string;
+  slipRef?: string;
+  slipNote?: string;
+  slipAttempts?: number;
   aiReview?: string;
   omiseChargeId?: string;
   omiseQrImageUrl?: string;
@@ -134,6 +139,21 @@ export async function setOmiseKey(key: string): Promise<void> {
   );
 }
 
+/** EasySlip API key: a key saved from the admin page wins; otherwise the EASYSLIP_API_KEY env var. */
+export async function getEasySlipKey(): Promise<string> {
+  const rows = await dbQuery<{ value: unknown }>("select value from csr.settings where key = 'easyslip'");
+  const saved = rows[0] ? asObj<{ apiKey?: string }>(rows[0].value).apiKey : undefined;
+  return (saved || process.env.EASYSLIP_API_KEY || '').trim();
+}
+
+export async function setEasySlipKey(key: string): Promise<void> {
+  await dbQuery(
+    `insert into csr.settings (key, value) values ('easyslip', $1::jsonb)
+     on conflict (key) do update set value = excluded.value, updated_at = now()`,
+    [JSON.stringify({ apiKey: key })]
+  );
+}
+
 // ---------------------------------------------------------------------------
 // Orders
 // ---------------------------------------------------------------------------
@@ -203,8 +223,12 @@ export async function getOrder(orderId: string): Promise<StoredOrder | undefined
   return rows[0] ? rowToOrder(rows[0]) : undefined;
 }
 
+/** All orders, newest first. Slip images are left out (slipFile is just 'stored' when there is one). */
 export async function listOrders(): Promise<StoredOrder[]> {
-  const rows = await dbQuery<{ data: unknown }>('select data from csr.orders order by created_at desc, order_id desc');
+  const rows = await dbQuery<{ data: unknown }>(
+    `select case when data ? 'slipFile' then (data - 'slipFile') || '{"slipFile":"stored"}'::jsonb else data end as data
+     from csr.orders order by created_at desc, order_id desc`
+  );
   return rows.map(rowToOrder);
 }
 
@@ -261,19 +285,28 @@ export async function isRefUsed(ref: string): Promise<boolean> {
   return rows.length > 0;
 }
 
+/** Thrown by markOrderPaid when an exclusive payment ref (a slip) already paid another order. */
+export class RefUsedError extends Error {}
+
 /**
  * Marks an order paid and assigns its BIB, atomically. Idempotent: an order that is already
  * paid is returned unchanged, so a repeated webhook never consumes a second BIB number.
+ * With exclusiveRef, the ref is claimed first and the whole thing rolls back if another order owns it.
  */
 export async function markOrderPaid(
   orderId: string,
-  info: { status: 'AUTO_VERIFIED' | 'ADMIN_APPROVED'; verifiedBy: string; paymentRef: string; senderBank: string; note?: string }
+  info: { status: 'AUTO_VERIFIED' | 'ADMIN_APPROVED'; verifiedBy: string; paymentRef: string; senderBank: string; note?: string; exclusiveRef?: boolean }
 ): Promise<StoredOrder | undefined> {
   return dbTx(async (q) => {
     const rows = await q<{ data: unknown }>('select data from csr.orders where order_id = $1 for update', [orderId]);
     if (!rows[0]) return undefined;
     const order = rowToOrder(rows[0]);
     if (order.paymentStatus === 'PAID' && order.bibNumber) return order;
+    if (info.exclusiveRef && info.paymentRef) {
+      await q('insert into csr.used_refs (ref, order_id) values ($1, $2) on conflict (ref) do nothing', [info.paymentRef.toUpperCase(), orderId]);
+      const owner = await q<{ order_id: string }>('select order_id from csr.used_refs where ref = $1', [info.paymentRef.toUpperCase()]);
+      if (owner[0]?.order_id !== orderId) throw new RefUsedError(info.paymentRef);
+    }
 
     const now = new Date().toISOString();
     if (!order.bibNumber) {
@@ -449,7 +482,7 @@ export async function rateLimited(key: string, limit: number, windowMs: number):
 export function toRunnerView(o: StoredOrder) {
   const { accessTokenHash, slipFile, slipHash, aiReview, omisePastChargeIds, omiseQrImageUrl, ...rest } = o;
   void omiseQrImageUrl;
-  return rest;
+  return { ...rest, hasSlip: Boolean(slipFile) };
 }
 
 /** What an authenticated admin sees (no token hash). */
