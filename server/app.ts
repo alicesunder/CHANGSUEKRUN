@@ -61,9 +61,9 @@ import { checkCredentials, issueToken, requireAdmin } from './auth';
 import { fetchVerifiedOmiseCharge, maskedAccountMatches, verifySlipWithEasySlip } from './payments';
 
 /** Must match PRIVACY_POLICY_VERSION in src/components/PrivacyNotice.tsx */
-const PRIVACY_POLICY_VERSION = '2026-10-22';
+const PRIVACY_POLICY_VERSION = '2026-11-01';
 /** Must match TERMS_VERSION in src/data/terms.ts */
-const TERMS_VERSION = '2026-10-22';
+const TERMS_VERSION = '2026-11-01';
 
 const ROUTE_IDS: RouteId[] = ticketCategories.map((t) => t.id);
 const SHIRT_SIZES = ['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL'];

@@ -29024,8 +29024,8 @@ async function fetchVerifiedOmiseCharge(chargeId) {
 }
 
 // server/app.ts
-var PRIVACY_POLICY_VERSION = "2026-10-22";
-var TERMS_VERSION = "2026-10-22";
+var PRIVACY_POLICY_VERSION = "2026-11-01";
+var TERMS_VERSION = "2026-11-01";
 var ROUTE_IDS = ticketCategories.map((t) => t.id);
 var SHIRT_SIZES = ["XS", "S", "M", "L", "XL", "2XL", "3XL"];
 var MAX_EXTRA = 9;
