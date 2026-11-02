@@ -81,6 +81,8 @@ import { AddOnPicker } from './AddOnPicker';
 import { BLOOD_TYPES, GENDERS, PREFIXES, RELATIONSHIPS, ageFromBirthDate, needsInsurance } from '../data/insurance';
 import { SHOOTING_CONSENT_LINES, digitsOnly, formatThaiId, isValidThaiId, type Shooter } from '../data/shooting';
 import { VIP_PARKING_PER_TABLE, type ParkingPlate } from '../data/vipParking';
+import { waiversFor, type WaiverActivity, type WaiverParticipant } from '../data/activityWaivers';
+import { ActivityWaiverForm, mergeParticipant } from './ActivityWaiverForm';
 import { ParkingPasses } from './ParkingPass';
 import { EMPTY_ADD_ONS, addOnBonusDiscount, addOnConcertRate, addOnCountRate, addOnDiscountRate, addOnLabel, addOnTotal, concertDiscountPerTicket, hasAddOns, percentOf, type AddOnSelection } from '../data/addOns';
 
@@ -273,6 +275,10 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
   // Shooting: name + national ID for each person, plus one consent
   const [shooters, setShooters] = useState<Shooter[]>([]);
   const [shootingConsent, setShootingConsent] = useState(false);
+  // Tower / wind tunnel: the buyer's edits to each participant, and which waivers were accepted
+  // (stored as the details they were accepted for, so changing a detail asks again)
+  const [waiverEdits, setWaiverEdits] = useState<Partial<WaiverParticipant>[]>([]);
+  const [waiverAccepted, setWaiverAccepted] = useState<Partial<Record<WaiverActivity, string>>>({});
   const [shirtSize, setShirtSize] = useState('L');
   const [dogName, setDogName] = useState('');
   const [dogBreed, setDogBreed] = useState('');
@@ -329,6 +335,18 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
   const addOnOff = addOnBonusDiscount(addOns, discountCtx);
   const concertMissing = wantConcert && gaQty === 0 && vipTables === 0;
   const hasGun = wantAddons && addOns.gun !== 'none';
+  const waiverActivities = waiversFor(addOns);
+  const buyerName = insured ? `${insFirst.trim()} ${insLast.trim()}`.trim() : fullName.trim();
+  const waiverPeople: WaiverParticipant[] = Array.from({ length: waiverActivities.length ? addOns.people : 0 }, (_, i) =>
+    mergeParticipant(
+      i === 0
+        ? { fullName: buyerName, phone: digitsOnly(phone), birthDate: insured ? insBirth : '', idCard: hasGun ? shooters[0]?.idCard : '' }
+        : { fullName: hasGun ? shooters[i]?.fullName : '', idCard: hasGun ? shooters[i]?.idCard : '' },
+      waiverEdits[i]
+    )
+  );
+  const waiverKey = JSON.stringify(waiverPeople);
+  const waiversDone = waiverActivities.every((a) => waiverAccepted[a] === waiverKey);
   const total = ticketTotal + addOnSum;
   // With a sponsor code the run is free; add-on activities are always paid.
   const chargeTotal = (sponsorOn ? 0 : ticketTotal) + addOnSum;
@@ -561,6 +579,9 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
         parkingPlates: vipTables > 0 ? plates.slice(0, vipTables * VIP_PARKING_PER_TABLE).filter((p) => p.plate.trim() || p.province.trim()) : undefined,
         shooters: hasGun ? Array.from({ length: addOns.people }, (_, i) => ({ fullName: shooters[i]?.fullName?.trim() || '', idCard: digitsOnly(shooters[i]?.idCard || '') })) : undefined,
         shootingConsent: hasGun ? shootingConsent : undefined,
+        activityWaiver: waiverActivities.length
+          ? { participants: waiverPeople, accepted: Object.fromEntries(waiverActivities.map((a) => [a, waiverAccepted[a] === waiverKey])) }
+          : undefined,
         phone: phone.trim(),
         email: email.trim(),
         emergencyPhone: emergencyPhone.trim(),
@@ -1514,6 +1535,24 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                       </div>
                     )}
 
+                    {/* TOWER / WIND TUNNEL: participant details filled into the legal waivers, read + accept before paying */}
+                    {waiverActivities.length > 0 && (
+                      <ActivityWaiverForm
+                        activities={waiverActivities}
+                        people={waiverPeople}
+                        onEdit={(i, patch) =>
+                          setWaiverEdits((ws) => {
+                            const next = [...ws];
+                            const prev = ws[i] || {};
+                            next[i] = { ...prev, ...patch, windHealth: patch.windHealth ? { ...(prev.windHealth || {}), ...patch.windHealth } : prev.windHealth };
+                            return next;
+                          })
+                        }
+                        accepted={Object.fromEntries(waiverActivities.map((a) => [a, waiverAccepted[a] === waiverKey]))}
+                        onAccept={(a) => setWaiverAccepted((w) => ({ ...w, [a]: waiverKey }))}
+                      />
+                    )}
+
                     {/* Interactive Shirt Size Grid */}
                     {!noRun && (
                     <div className="bg-white/95 rounded-3xl border-2 border-[#2A1450]/25 p-4 sm:p-5 shadow-xs">
@@ -1742,6 +1781,13 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                   </div>
                 )}
 
+                {!waiversDone && (
+                  <div className="relative z-10 p-3 rounded-2xl bg-amber-50 border-2 border-amber-400 text-amber-900 text-xs font-extrabold flex items-center gap-2">
+                    <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+                    <span>กรุณาอ่านและกดยอมรับเอกสารสละสิทธิ์ฟ้องร้อง ({waiverActivities.filter((a) => waiverAccepted[a] !== waiverKey).map((a) => (a === 'tower' ? 'โดดหอสูง' : 'อุโมงค์ลม')).join(', ')}) ก่อนชำระเงิน</span>
+                  </div>
+                )}
+
                 {formError && (
                   <div role="alert" className="relative z-10 p-3 rounded-2xl bg-rose-50 border-2 border-rose-500 text-rose-800 text-xs font-extrabold flex items-center gap-2">
                     <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
@@ -1762,7 +1808,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
 
                   <button
                     type="submit"
-                    disabled={isCreatingOrder || !privacyConsent || (!isFreeOrder && publicCfg !== null && !publicCfg.paymentReady)}
+                    disabled={isCreatingOrder || !privacyConsent || !waiversDone || (!isFreeOrder && publicCfg !== null && !publicCfg.paymentReady)}
                     className="w-full sm:w-auto disabled:opacity-60 disabled:cursor-wait px-8 py-3.5 rounded-2xl bg-gradient-to-r from-[#FFDF5A] via-[#FFC928] to-[#FFAE19] hover:brightness-105 text-[#1E0F38] font-black text-base border border-amber-300 shadow-[0_10px_25px_-6px_rgba(245,158,11,0.5)] active:translate-y-0.5 transition-all flex items-center justify-center gap-2 cursor-pointer"
                   >
                     {isFreeOrder ? <Gift className="w-5 h-5" /> : <QrCode className="w-5 h-5" />}

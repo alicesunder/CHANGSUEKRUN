@@ -58,6 +58,7 @@ import {
 import { WIND_TUNNEL_LIMIT, addOnBonusDiscount, addOnLabel, addOnPricePerPerson, addOnTotal, concertDiscountPerTicket, hasAddOns, normalizeAddOns } from '../src/data/addOns';
 import { needsInsurance, parseInsurance, type InsuranceInfo } from '../src/data/insurance';
 import { parseShooting, type ShootingInfo } from '../src/data/shooting';
+import { parseActivityWaiver, waiversFor, type ActivityWaiverInfo } from '../src/data/activityWaivers';
 import { parseParkingPlates, type ParkingPlate } from '../src/data/vipParking';
 import { checkCredentials, issueToken, requireAdmin } from './auth';
 import { fetchVerifiedOmiseCharge, maskedAccountMatches, verifySlipWithEasySlip } from './payments';
@@ -313,8 +314,18 @@ export function createApp(): express.Express {
       if (p.ok) shooting = p.value;
       else shootingError = p.error;
     }
+    // Tower / wind tunnel need every participant's details for the legal waivers, and each document accepted.
+    let activityWaiver: ActivityWaiverInfo | undefined;
+    let waiverError = '';
+    const waiverActivities = waiversFor(addOns);
+    if (waiverActivities.length) {
+      const p = parseActivityWaiver(b.activityWaiver, addOns.people, waiverActivities);
+      if (p.ok) activityWaiver = p.value;
+      else waiverError = p.error;
+    }
     const errors: string[] = [];
     if (insuranceError) errors.push(insuranceError);
+    if (waiverError) errors.push(waiverError);
     if (parkingError) errors.push(parkingError);
     if (shootingError) errors.push(shootingError);
     if (!insuranceError && fullName.length < 2) errors.push('กรุณากรอกชื่อ-นามสกุล');
@@ -372,6 +383,7 @@ export function createApp(): express.Express {
       vipTables: vipTables > 0 ? vipTables : undefined,
       parkingPlates,
       shooting,
+      activityWaiver,
       insurance,
       shirtSize,
       runningWithDog: isDog,

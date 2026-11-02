@@ -1,9 +1,11 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import { Download, Search } from 'lucide-react';
 import type { ServerOrder } from '../utils/api';
 import { WIND_TUNNEL_LIMIT, formatBaht } from '../data/addOns';
 import { formatThaiId } from '../data/shooting';
 import { maskEmailAddress, maskPhoneNumber } from '../utils/securityShield';
+import { WAIVER_LABEL, WIND_HEALTH_QUESTIONS, ageOn, thaiDate } from '../data/activityWaivers';
+import { WaiverDocument, printWaivers } from './WaiverDocument';
 
 /** One "station" = one thing a buyer can sign up for: a run distance, the concert, VIP tables or an activity. */
 interface Station {
@@ -91,7 +93,7 @@ export const AdminStationRoster: React.FC<{
     active.id.startsWith('gun') && o.shooting?.shooters?.length ? o.shooting.shooters.map((x) => x.fullName).join(', ') : '';
 
   const exportCsv = () => {
-    const head = ['ลำดับ', 'สถานะ', 'คำสั่งซื้อ', 'BIB/เลขบัตร', 'ชื่อ', `จำนวน (${active.unit})`, 'โทร', 'อีเมล', 'ผู้ร่วมเพิ่มเติม', 'น้องสุนัข', 'ผู้ยิงปืน', 'ยอดชำระ', 'สั่งเมื่อ', 'ชำระเมื่อ'];
+    const head = ['ลำดับ', 'สถานะ', 'คำสั่งซื้อ', 'BIB/เลขบัตร', 'ชื่อ', `จำนวน (${active.unit})`, 'โทร', 'อีเมล', 'ผู้ร่วมเพิ่มเติม', 'น้องสุนัข', 'ผู้ยิงปืน', 'ผู้ร่วมกิจกรรม (เอกสารสละสิทธิ์)', 'ยอดชำระ', 'สั่งเมื่อ', 'ชำระเมื่อ'];
     const lines = rows.map((o, i) =>
       [
         i + 1,
@@ -105,6 +107,7 @@ export const AdminStationRoster: React.FC<{
         o.extraRunnerNames || '',
         o.runningWithDog ? `${o.dogName || ''} ${o.dogBreed ? `(${o.dogBreed})` : ''}`.trim() : '',
         shooters(o),
+        o.activityWaiver?.participants?.map((p) => p.fullName).join(', ') || '',
         o.totalPrice,
         fmtDate(o.createdAt),
         fmtDate(o.paidAt),
@@ -238,6 +241,9 @@ export const AdminStationRoster: React.FC<{
                       </div>
                     ) : null}
                     {shooters(o) ? <div>🎯 {shooters(o)}</div> : null}
+                    {(active.id === 'tower' || active.id === 'wind') && o.activityWaiver?.participants?.length ? (
+                      <div>📜 {o.activityWaiver.participants.map((p) => p.fullName).join(', ')}</div>
+                    ) : null}
                     {active.id === 'vip' && o.parkingPlates?.length ? <div>🚗 {o.parkingPlates.map((p) => `${p.plate} ${p.province}`).join(', ')}</div> : null}
                     {o.addOns && !['tower', 'gun-standard', 'gun-premium', 'wind'].includes(active.id) ? <div className="text-slate-500">{o.addOns.label}</div> : null}
                   </td>
@@ -350,6 +356,7 @@ export const OrderFullDetails: React.FC<{ order: ServerOrder }> = ({ order: o })
   ];
 
   return (
+    <div className="space-y-3">
     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
       {groups.map((g) => (
         <div key={g.title} className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
@@ -364,6 +371,79 @@ export const OrderFullDetails: React.FC<{ order: ServerOrder }> = ({ order: o })
           </dl>
         </div>
       ))}
+    </div>
+    {o.activityWaiver && <WaiverAdminPanel order={o} />}
+    </div>
+  );
+};
+
+/** Tower / wind-tunnel waivers of one order: participants, health answers, and the filled documents to print. */
+const WaiverAdminPanel: React.FC<{ order: ServerOrder }> = ({ order: o }) => {
+  const w = o.activityWaiver!;
+  const docsRef = useRef<HTMLDivElement | null>(null);
+  const [preview, setPreview] = useState(false);
+  return (
+    <div className="rounded-2xl border border-teal-300 bg-teal-50 p-3">
+      <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+        <div className="text-xs font-black text-slate-700">
+          📜 เอกสารสละสิทธิ์ฟ้องร้อง · {w.activities.map((a) => `${WAIVER_LABEL[a]} (ยอมรับ ${fmtDate(w.acceptedAt[a])})`).join(' · ')}
+          <span className="ml-1.5 font-semibold text-slate-500">ฉบับ {w.version}</span>
+        </div>
+        <div className="flex gap-1.5">
+          <button type="button" onClick={() => setPreview((v) => !v)} className="px-2.5 py-1.5 rounded-lg bg-white border border-teal-400 text-teal-800 text-xs font-extrabold cursor-pointer">
+            {preview ? 'ซ่อนเอกสาร' : 'ดูเอกสารที่กรอกแล้ว'}
+          </button>
+          <button
+            type="button"
+            onClick={() => printWaivers(docsRef.current, `เอกสารสละสิทธิ์ ${o.orderId}`)}
+            className="px-2.5 py-1.5 rounded-lg bg-teal-700 text-white text-xs font-extrabold cursor-pointer"
+          >
+            🖨️ พิมพ์ / บันทึก PDF ({w.activities.length * w.participants.length} ฉบับ)
+          </button>
+        </div>
+      </div>
+      <div className="overflow-x-auto">
+        <table className="w-full text-xs border-collapse">
+          <thead>
+            <tr className="text-left text-slate-600">
+              <th className="py-1 pr-2">#</th>
+              <th className="py-1 pr-2">ชื่อ</th>
+              <th className="py-1 pr-2">วันเกิด / อายุ</th>
+              <th className="py-1 pr-2">โทร</th>
+              <th className="py-1 pr-2">เลขบัตร</th>
+              <th className="py-1 pr-2">ผู้ปกครอง</th>
+              {w.activities.includes('wind') && <th className="py-1">สุขภาพ (อุโมงค์ลม)</th>}
+            </tr>
+          </thead>
+          <tbody>
+            {w.participants.map((p, i) => (
+              <tr key={i} className="border-t border-teal-200 align-top">
+                <td className="py-1 pr-2">{i + 1}</td>
+                <td className="py-1 pr-2 font-extrabold">{p.fullName}</td>
+                <td className="py-1 pr-2">
+                  {thaiDate(p.birthDate)} · {ageOn(p.birthDate) ?? '-'} ปี
+                </td>
+                <td className="py-1 pr-2">{p.phone}</td>
+                <td className="py-1 pr-2 font-mono">{formatThaiId(p.idCard)}</td>
+                <td className="py-1 pr-2">{p.guardianName || '-'}</td>
+                {w.activities.includes('wind') && (
+                  <td className="py-1">{WIND_HEALTH_QUESTIONS.map((q) => (p.windHealth?.[q.id] === 'ok' ? q.ok : `⚠️ ${q.risk}`)).join(' · ')}</td>
+                )}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      {/* the filled documents (always rendered so printing works; shown on request) */}
+      <div ref={docsRef} className={preview ? 'mt-3 space-y-4 max-h-[60vh] overflow-y-auto rounded-xl bg-white p-3 border border-teal-200' : 'hidden'}>
+        {w.activities.flatMap((a) =>
+          w.participants.map((p, i) => (
+            <div key={`${a}-${i}`} className="border-b border-dashed border-slate-300 pb-4">
+              <WaiverDocument activity={a} participant={p} orderId={o.orderId} acceptedAt={w.acceptedAt[a]} />
+            </div>
+          ))
+        )}
+      </div>
     </div>
   );
 };

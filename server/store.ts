@@ -16,6 +16,7 @@ export type VerificationStatus =
 
 import type { InsuranceInfo } from '../src/data/insurance';
 import { maskThaiId, type ShootingInfo } from '../src/data/shooting';
+import type { ActivityWaiverInfo } from '../src/data/activityWaivers';
 import type { ParkingPlate } from '../src/data/vipParking';
 
 export interface StoredOrder {
@@ -57,6 +58,8 @@ export interface StoredOrder {
   parkingPlates?: ParkingPlate[];
   /** Shooting activity: every shooter's name + national ID, and when the consent was accepted */
   shooting?: ShootingInfo;
+  /** Tower / wind tunnel: participants filled into the legal waivers, and when each was accepted */
+  activityWaiver?: ActivityWaiverInfo;
   /** Optional after-run activities bought with the ticket */
   addOns?: { tower: boolean; gun: 'none' | 'standard' | 'premium'; windTunnel: boolean; people: number; pricePerPerson: number; total: number; discount?: number; label: string };
   paymentStatus: 'PAID' | 'PENDING';
@@ -486,13 +489,16 @@ export async function rateLimited(key: string, limit: number, windowMs: number):
 // ---------------------------------------------------------------------------
 /** What the runner (owner of the order) is allowed to see. */
 export function toRunnerView(o: StoredOrder) {
-  const { accessTokenHash, slipFile, slipHash, aiReview, omisePastChargeIds, omiseQrImageUrl, shooting, ...rest } = o;
+  const { accessTokenHash, slipFile, slipHash, aiReview, omisePastChargeIds, omiseQrImageUrl, shooting, activityWaiver, ...rest } = o;
   void omiseQrImageUrl;
   // National ID numbers go back to the browser masked (they are only needed by the organiser).
   const shootingView = shooting
     ? { ...shooting, shooters: shooting.shooters.map((s) => ({ fullName: s.fullName, idCard: maskThaiId(s.idCard) })) }
     : undefined;
-  return { ...rest, shooting: shootingView, hasSlip: Boolean(slipFile) };
+  const waiverView = activityWaiver
+    ? { ...activityWaiver, participants: activityWaiver.participants.map((p) => ({ ...p, idCard: maskThaiId(p.idCard) })) }
+    : undefined;
+  return { ...rest, shooting: shootingView, activityWaiver: waiverView, hasSlip: Boolean(slipFile) };
 }
 
 /** What an authenticated admin sees (no token hash). */

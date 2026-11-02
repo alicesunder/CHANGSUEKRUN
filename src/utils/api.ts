@@ -5,6 +5,7 @@
 import type { AddOnSelection } from '../data/addOns';
 import type { InsuranceInfo } from '../data/insurance';
 import type { Shooter, ShootingInfo } from '../data/shooting';
+import type { ActivityWaiverInfo, WaiverActivity, WaiverParticipant } from '../data/activityWaivers';
 import type { ParkingPlate } from '../data/vipParking';
 import type { RouteId } from '../types';
 import type { TicketOrder } from './runnerStorage';
@@ -32,6 +33,8 @@ export type ServerOrder = TicketOrder & {
   parkingPlates?: ParkingPlate[];
   /** shooters come back with masked ID numbers */
   shooting?: ShootingInfo;
+  /** tower / wind tunnel waivers (ID numbers masked in the runner's view) */
+  activityWaiver?: ActivityWaiverInfo;
   expiresAt: string;
   omiseChargeId?: string;
   omiseQrImageUrl?: string;
@@ -104,6 +107,8 @@ export interface CreateOrderInput {
   /** Shooting: one entry per person on the add-on */
   shooters?: Shooter[];
   shootingConsent?: boolean;
+  /** Tower / wind tunnel: participants for the legal waivers, and which documents the buyer accepted */
+  activityWaiver?: { participants: WaiverParticipant[]; accepted: Partial<Record<WaiverActivity, boolean>> };
   /** Sponsor code: makes the registration free (run + concert). The server re-checks it. */
   sponsorCode?: string;
   /** Optional after-run activities; the server works out the price and seat limits itself. */

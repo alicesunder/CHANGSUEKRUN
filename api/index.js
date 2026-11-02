@@ -33836,10 +33836,11 @@ async function rateLimited(key, limit, windowMs) {
   return Number(rows[0].n) > limit;
 }
 function toRunnerView(o) {
-  const { accessTokenHash, slipFile, slipHash, aiReview, omisePastChargeIds, omiseQrImageUrl, shooting, ...rest } = o;
+  const { accessTokenHash, slipFile, slipHash, aiReview, omisePastChargeIds, omiseQrImageUrl, shooting, activityWaiver, ...rest } = o;
   void omiseQrImageUrl;
   const shootingView = shooting ? { ...shooting, shooters: shooting.shooters.map((s) => ({ fullName: s.fullName, idCard: maskThaiId(s.idCard) })) } : void 0;
-  return { ...rest, shooting: shootingView, hasSlip: Boolean(slipFile) };
+  const waiverView = activityWaiver ? { ...activityWaiver, participants: activityWaiver.participants.map((p) => ({ ...p, idCard: maskThaiId(p.idCard) })) } : void 0;
+  return { ...rest, shooting: shootingView, activityWaiver: waiverView, hasSlip: Boolean(slipFile) };
 }
 function toAdminView(o) {
   const { accessTokenHash, slipFile, ...rest } = o;
@@ -33990,17 +33991,104 @@ function parseInsurance(raw, consent) {
   };
 }
 
+// src/data/activityWaivers.ts
+var WAIVER_VERSION = "2026-11-02";
+var WAIVER_ACTIVITY_DATE = "2027-01-10";
+var WAIVER_GUARDIAN_AGE = 15;
+var WIND_HEALTH_QUESTIONS = [
+  {
+    id: "medical",
+    text: "\u0E43\u0E19\u0E01\u0E23\u0E13\u0E35\u0E17\u0E35\u0E48\u0E40\u0E04\u0E22\u0E21\u0E35\u0E1B\u0E23\u0E30\u0E27\u0E31\u0E15\u0E34\u0E04\u0E27\u0E32\u0E21\u0E40\u0E08\u0E47\u0E1A\u0E1B\u0E48\u0E27\u0E22\u0E17\u0E35\u0E48\u0E40\u0E01\u0E35\u0E48\u0E22\u0E27\u0E02\u0E49\u0E2D\u0E07\u0E01\u0E31\u0E1A \u0E04\u0E2D \u0E2B\u0E25\u0E31\u0E07 \u0E44\u0E2B\u0E25\u0E48 \u0E41\u0E25\u0E30\u0E2B\u0E31\u0E27\u0E43\u0E08 \u0E44\u0E14\u0E49\u0E21\u0E35\u0E01\u0E32\u0E23\u0E1B\u0E23\u0E36\u0E01\u0E29\u0E32\u0E01\u0E31\u0E1A\u0E41\u0E1E\u0E17\u0E22\u0E4C\u0E40\u0E09\u0E1E\u0E32\u0E30\u0E17\u0E32\u0E07\u0E41\u0E25\u0E49\u0E27\u0E01\u0E48\u0E2D\u0E19\u0E17\u0E35\u0E48\u0E08\u0E30\u0E40\u0E02\u0E49\u0E32\u0E43\u0E0A\u0E49\u0E1A\u0E23\u0E34\u0E01\u0E32\u0E23\u0E2D\u0E38\u0E42\u0E21\u0E07\u0E04\u0E4C\u0E25\u0E21\u0E0A\u0E31\u0E22\u0E08\u0E34\u0E19\u0E14\u0E32",
+    ok: "\u0E1B\u0E23\u0E36\u0E01\u0E29\u0E32\u0E41\u0E25\u0E49\u0E27 / \u0E44\u0E21\u0E48\u0E40\u0E04\u0E22\u0E21\u0E35\u0E1B\u0E23\u0E30\u0E27\u0E31\u0E15\u0E34",
+    risk: "\u0E44\u0E21\u0E48\u0E44\u0E14\u0E49\u0E1B\u0E23\u0E36\u0E01\u0E29\u0E32"
+  },
+  { id: "weight", text: "\u0E1C\u0E39\u0E49\u0E43\u0E0A\u0E49\u0E1A\u0E23\u0E34\u0E01\u0E32\u0E23\u0E22\u0E37\u0E19\u0E22\u0E31\u0E19\u0E27\u0E48\u0E32\u0E19\u0E49\u0E33\u0E2B\u0E19\u0E31\u0E01\u0E44\u0E21\u0E48\u0E40\u0E01\u0E34\u0E19 100 \u0E01\u0E34\u0E42\u0E25\u0E01\u0E23\u0E31\u0E21", ok: "\u0E15\u0E48\u0E33\u0E01\u0E27\u0E48\u0E32 100 \u0E01\u0E01.", risk: "\u0E40\u0E01\u0E34\u0E19 100 \u0E01\u0E01." },
+  { id: "shoulder", text: "\u0E1C\u0E39\u0E49\u0E43\u0E0A\u0E49\u0E1A\u0E23\u0E34\u0E01\u0E32\u0E23\u0E22\u0E37\u0E19\u0E22\u0E31\u0E19\u0E27\u0E48\u0E32\u0E44\u0E21\u0E48\u0E40\u0E04\u0E22\u0E21\u0E35\u0E2D\u0E32\u0E01\u0E32\u0E23\u0E44\u0E2B\u0E25\u0E48\u0E2B\u0E25\u0E38\u0E14", ok: "\u0E44\u0E21\u0E48\u0E40\u0E04\u0E22", risk: "\u0E40\u0E04\u0E22" },
+  { id: "pregnant", text: "\u0E1C\u0E39\u0E49\u0E43\u0E0A\u0E49\u0E1A\u0E23\u0E34\u0E01\u0E32\u0E23\u0E22\u0E37\u0E19\u0E22\u0E31\u0E19\u0E27\u0E48\u0E32\u0E44\u0E21\u0E48\u0E2D\u0E22\u0E39\u0E48\u0E23\u0E30\u0E2B\u0E27\u0E48\u0E32\u0E07\u0E15\u0E31\u0E49\u0E07\u0E04\u0E23\u0E23\u0E20\u0E4C", ok: "\u0E44\u0E21\u0E48\u0E2D\u0E22\u0E39\u0E48\u0E23\u0E30\u0E2B\u0E27\u0E48\u0E32\u0E07\u0E15\u0E31\u0E49\u0E07\u0E04\u0E23\u0E23\u0E20\u0E4C", risk: "\u0E15\u0E31\u0E49\u0E07\u0E04\u0E23\u0E23\u0E20\u0E4C" },
+  { id: "cast", text: "\u0E1C\u0E39\u0E49\u0E43\u0E0A\u0E49\u0E1A\u0E23\u0E34\u0E01\u0E32\u0E23\u0E22\u0E37\u0E19\u0E22\u0E31\u0E19\u0E27\u0E48\u0E32\u0E44\u0E21\u0E48\u0E44\u0E14\u0E49\u0E40\u0E02\u0E49\u0E32\u0E40\u0E1D\u0E37\u0E2D\u0E01", ok: "\u0E44\u0E21\u0E48\u0E44\u0E14\u0E49\u0E40\u0E02\u0E49\u0E32\u0E40\u0E1D\u0E37\u0E2D\u0E01", risk: "\u0E40\u0E02\u0E49\u0E32\u0E40\u0E1D\u0E37\u0E2D\u0E01" }
+];
+function ageOn(birthDate, onDate = WAIVER_ACTIVITY_DATE) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(birthDate);
+  const d = /^(\d{4})-(\d{2})-(\d{2})$/.exec(onDate);
+  if (!m || !d) return null;
+  let age = +d[1] - +m[1];
+  if (+d[2] < +m[2] || +d[2] === +m[2] && +d[3] < +m[3]) age--;
+  return age >= 0 && age < 120 ? age : null;
+}
+function windHealthProblems(h2) {
+  return WIND_HEALTH_QUESTIONS.filter((q) => h2?.[q.id] === "risk").map((q) => q.risk);
+}
+var WAIVER_LABEL = { tower: "\u0E42\u0E14\u0E14\u0E2B\u0E2D\u0E2A\u0E39\u0E07", wind: "\u0E2D\u0E38\u0E42\u0E21\u0E07\u0E04\u0E4C\u0E25\u0E21" };
+function waiversFor(addOns) {
+  return [...addOns?.tower ? ["tower"] : [], ...addOns?.windTunnel ? ["wind"] : []];
+}
+var clip3 = (v, n) => typeof v === "string" ? v.replace(/[\u0000-\u001f<>]/g, " ").trim().slice(0, n) : "";
+function participantProblems(p, i, activities) {
+  const n = `\u0E1C\u0E39\u0E49\u0E23\u0E48\u0E27\u0E21\u0E01\u0E34\u0E08\u0E01\u0E23\u0E23\u0E21\u0E04\u0E19\u0E17\u0E35\u0E48 ${i + 1}`;
+  const errs = [];
+  if (p.fullName.length < 3) errs.push(`\u0E01\u0E23\u0E38\u0E13\u0E32\u0E01\u0E23\u0E2D\u0E01\u0E0A\u0E37\u0E48\u0E2D-\u0E19\u0E32\u0E21\u0E2A\u0E01\u0E38\u0E25${n}`);
+  const age = ageOn(p.birthDate);
+  if (age === null) errs.push(`\u0E01\u0E23\u0E38\u0E13\u0E32\u0E01\u0E23\u0E2D\u0E01\u0E27\u0E31\u0E19\u0E40\u0E01\u0E34\u0E14${n}`);
+  if (p.phone.length < 9) errs.push(`\u0E40\u0E1A\u0E2D\u0E23\u0E4C\u0E42\u0E17\u0E23\u0E28\u0E31\u0E1E\u0E17\u0E4C${n}\u0E44\u0E21\u0E48\u0E16\u0E39\u0E01\u0E15\u0E49\u0E2D\u0E07`);
+  if (!isValidThaiId(p.idCard)) errs.push(`\u0E40\u0E25\u0E02\u0E1A\u0E31\u0E15\u0E23\u0E1B\u0E23\u0E30\u0E0A\u0E32\u0E0A\u0E19${n}\u0E44\u0E21\u0E48\u0E16\u0E39\u0E01\u0E15\u0E49\u0E2D\u0E07`);
+  if (age !== null && age < WAIVER_GUARDIAN_AGE && (p.guardianName || "").length < 3) errs.push(`${n} \u0E2D\u0E32\u0E22\u0E38\u0E15\u0E48\u0E33\u0E01\u0E27\u0E48\u0E32 ${WAIVER_GUARDIAN_AGE} \u0E1B\u0E35 \u0E01\u0E23\u0E38\u0E13\u0E32\u0E01\u0E23\u0E2D\u0E01\u0E0A\u0E37\u0E48\u0E2D\u0E1C\u0E39\u0E49\u0E1B\u0E01\u0E04\u0E23\u0E2D\u0E07`);
+  if (activities.includes("wind")) {
+    const missing = WIND_HEALTH_QUESTIONS.some((q) => p.windHealth?.[q.id] !== "ok" && p.windHealth?.[q.id] !== "risk");
+    if (missing) errs.push(`\u0E01\u0E23\u0E38\u0E13\u0E32\u0E15\u0E2D\u0E1A\u0E04\u0E33\u0E16\u0E32\u0E21\u0E2A\u0E20\u0E32\u0E1E\u0E23\u0E48\u0E32\u0E07\u0E01\u0E32\u0E22 (\u0E2D\u0E38\u0E42\u0E21\u0E07\u0E04\u0E4C\u0E25\u0E21) \u0E02\u0E2D\u0E07${n}\u0E43\u0E2B\u0E49\u0E04\u0E23\u0E1A`);
+    else {
+      const bad = windHealthProblems(p.windHealth);
+      if (bad.length) errs.push(`${n} \u0E44\u0E21\u0E48\u0E2A\u0E32\u0E21\u0E32\u0E23\u0E16\u0E43\u0E0A\u0E49\u0E1A\u0E23\u0E34\u0E01\u0E32\u0E23\u0E2D\u0E38\u0E42\u0E21\u0E07\u0E04\u0E4C\u0E25\u0E21\u0E44\u0E14\u0E49\u0E15\u0E32\u0E21\u0E40\u0E07\u0E37\u0E48\u0E2D\u0E19\u0E44\u0E02\u0E04\u0E27\u0E32\u0E21\u0E1B\u0E25\u0E2D\u0E14\u0E20\u0E31\u0E22 (${bad.join(", ")})`);
+    }
+  }
+  return errs;
+}
+function parseActivityWaiver(raw, people, activities) {
+  const r = raw && typeof raw === "object" ? raw : {};
+  const list = Array.isArray(r.participants) ? r.participants.slice(0, people) : [];
+  const accepted = r.accepted && typeof r.accepted === "object" ? r.accepted : {};
+  const errors = [];
+  const participants = [];
+  for (let i = 0; i < people; i++) {
+    const x = list[i] && typeof list[i] === "object" ? list[i] : {};
+    const hRaw = x.windHealth && typeof x.windHealth === "object" ? x.windHealth : {};
+    const p = {
+      fullName: clip3(x.fullName, 120),
+      birthDate: /^\d{4}-\d{2}-\d{2}$/.test(String(x.birthDate || "")) ? String(x.birthDate) : "",
+      phone: digitsOnly(x.phone).slice(0, 15),
+      idCard: digitsOnly(x.idCard).slice(0, 13)
+    };
+    const age = ageOn(p.birthDate);
+    if (age !== null && age < WAIVER_GUARDIAN_AGE) p.guardianName = clip3(x.guardianName, 120);
+    if (activities.includes("wind")) {
+      p.windHealth = {};
+      for (const q of WIND_HEALTH_QUESTIONS) if (hRaw[q.id] === "ok" || hRaw[q.id] === "risk") p.windHealth[q.id] = hRaw[q.id];
+    }
+    errors.push(...participantProblems(p, i, activities));
+    participants.push(p);
+  }
+  const ids = participants.map((p) => p.idCard).filter(Boolean);
+  if (new Set(ids).size !== ids.length) errors.push("\u0E40\u0E25\u0E02\u0E1A\u0E31\u0E15\u0E23\u0E1B\u0E23\u0E30\u0E0A\u0E32\u0E0A\u0E19\u0E1C\u0E39\u0E49\u0E23\u0E48\u0E27\u0E21\u0E01\u0E34\u0E08\u0E01\u0E23\u0E23\u0E21\u0E0B\u0E49\u0E33\u0E01\u0E31\u0E19");
+  const now = (/* @__PURE__ */ new Date()).toISOString();
+  const acceptedAt = {};
+  for (const a of activities) {
+    if (accepted[a] !== true) errors.push(`\u0E01\u0E23\u0E38\u0E13\u0E32\u0E2D\u0E48\u0E32\u0E19\u0E41\u0E25\u0E30\u0E22\u0E2D\u0E21\u0E23\u0E31\u0E1A\u0E40\u0E2D\u0E01\u0E2A\u0E32\u0E23\u0E2A\u0E25\u0E30\u0E2A\u0E34\u0E17\u0E18\u0E34\u0E4C\u0E1F\u0E49\u0E2D\u0E07\u0E23\u0E49\u0E2D\u0E07 (${WAIVER_LABEL[a]})`);
+    else acceptedAt[a] = now;
+  }
+  if (errors.length) return { ok: false, error: errors.join(" \xB7 ") };
+  return { ok: true, value: { activities, participants, acceptedAt, version: WAIVER_VERSION } };
+}
+
 // src/data/vipParking.ts
 var VIP_PARKING_PER_TABLE = 2;
-var clip3 = (v, n) => typeof v === "string" ? v.replace(/[\u0000-\u001f<>]/g, " ").replace(/\s+/g, " ").trim().slice(0, n) : "";
+var clip4 = (v, n) => typeof v === "string" ? v.replace(/[\u0000-\u001f<>]/g, " ").replace(/\s+/g, " ").trim().slice(0, n) : "";
 function parseParkingPlates(raw, vipTables) {
   const max = vipTables * VIP_PARKING_PER_TABLE;
   const list = Array.isArray(raw) ? raw.slice(0, max) : [];
   const plates = [];
   for (const item of list) {
     const r = item && typeof item === "object" ? item : {};
-    const plate = clip3(r.plate, 16);
-    const province = clip3(r.province, 40);
+    const plate = clip4(r.plate, 16);
+    const province = clip4(r.province, 40);
     if (!plate && !province) continue;
     if (plate.length < 2 || province.length < 2) return { ok: false, error: "\u0E01\u0E23\u0E38\u0E13\u0E32\u0E01\u0E23\u0E2D\u0E01\u0E17\u0E30\u0E40\u0E1A\u0E35\u0E22\u0E19\u0E23\u0E16\u0E41\u0E25\u0E30\u0E08\u0E31\u0E07\u0E2B\u0E27\u0E31\u0E14\u0E43\u0E2B\u0E49\u0E04\u0E23\u0E1A\u0E17\u0E38\u0E01\u0E04\u0E31\u0E19\u0E17\u0E35\u0E48\u0E25\u0E07\u0E17\u0E30\u0E40\u0E1A\u0E35\u0E22\u0E19" };
     plates.push({ plate, province });
@@ -34550,8 +34638,17 @@ function createApp() {
       if (p.ok) shooting = p.value;
       else shootingError = p.error;
     }
+    let activityWaiver;
+    let waiverError = "";
+    const waiverActivities = waiversFor(addOns);
+    if (waiverActivities.length) {
+      const p = parseActivityWaiver(b.activityWaiver, addOns.people, waiverActivities);
+      if (p.ok) activityWaiver = p.value;
+      else waiverError = p.error;
+    }
     const errors = [];
     if (insuranceError) errors.push(insuranceError);
+    if (waiverError) errors.push(waiverError);
     if (parkingError) errors.push(parkingError);
     if (shootingError) errors.push(shootingError);
     if (!insuranceError && fullName.length < 2) errors.push("\u0E01\u0E23\u0E38\u0E13\u0E32\u0E01\u0E23\u0E2D\u0E01\u0E0A\u0E37\u0E48\u0E2D-\u0E19\u0E32\u0E21\u0E2A\u0E01\u0E38\u0E25");
@@ -34597,6 +34694,7 @@ function createApp() {
       vipTables: vipTables > 0 ? vipTables : void 0,
       parkingPlates,
       shooting,
+      activityWaiver,
       insurance,
       shirtSize,
       runningWithDog: isDog,
