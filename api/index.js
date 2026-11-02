@@ -33634,10 +33634,29 @@ var INSERT_ORDER_SQL = `insert into csr.orders (order_id, token_hash, route_id, 
 var orderParams = (o) => [o.orderId, o.accessTokenHash, o.routeId, o.paymentStatus, o.verificationStatus, o.bibNumber || "", o.omiseChargeId || null, o.createdAt, JSON.stringify(o)];
 var WIND_TUNNEL_USED_SQL = `select coalesce(sum((data->'addOns'->>'people')::int), 0)::text as n from csr.orders
   where data->'addOns'->>'windTunnel' = 'true'
+    and not (data ? 'cancelledAt')
     and (payment_status = 'PAID' or (data->>'expiresAt')::timestamptz > now())`;
 async function windTunnelSeatsUsed() {
   const rows = await dbQuery(WIND_TUNNEL_USED_SQL);
   return Number(rows[0]?.n ?? 0);
+}
+async function restoreOrderChecked(orderId, windTunnelLimit) {
+  return dbTx(async (q) => {
+    await q("select pg_advisory_xact_lock(727001)");
+    const rows = await q("select data from csr.orders where order_id = $1 for update", [orderId]);
+    if (!rows[0]) return { ok: false, error: "\u0E44\u0E21\u0E48\u0E1E\u0E1A\u0E04\u0E33\u0E2A\u0E31\u0E48\u0E07\u0E0B\u0E37\u0E49\u0E2D" };
+    const o = rowToOrder(rows[0]);
+    const holdsSeat = o.paymentStatus === "PAID" || new Date(o.expiresAt).getTime() > Date.now();
+    if (o.cancelledAt && o.addOns?.windTunnel && holdsSeat) {
+      const used = Number((await q(WIND_TUNNEL_USED_SQL))[0]?.n ?? 0);
+      if (used + o.addOns.people > windTunnelLimit) return { ok: false, error: `\u0E2D\u0E38\u0E42\u0E21\u0E07\u0E04\u0E4C\u0E25\u0E21\u0E40\u0E2B\u0E25\u0E37\u0E2D\u0E44\u0E21\u0E48\u0E1E\u0E2D (\u0E40\u0E2B\u0E25\u0E37\u0E2D ${Math.max(0, windTunnelLimit - used)} \u0E17\u0E35\u0E48)` };
+    }
+    delete o.cancelledAt;
+    delete o.cancelledBy;
+    delete o.cancelReason;
+    await writeOrder(q, o);
+    return { ok: true, order: o };
+  });
 }
 async function insertOrderChecked(o, windTunnelLimit) {
   return dbTx(async (q) => {
@@ -33662,8 +33681,8 @@ async function listOrders() {
   );
   return rows.map(rowToOrder);
 }
-async function deleteOrder(orderId) {
-  await dbQuery("delete from csr.orders where order_id = $1", [orderId]);
+async function rollbackNewOrder(orderId) {
+  await dbQuery("delete from csr.orders where order_id = $1 and payment_status <> 'PAID'", [orderId]);
 }
 async function updateOrder(orderId, mutator) {
   return dbTx(async (q) => {
@@ -34078,17 +34097,37 @@ function parseActivityWaiver(raw, people, activities) {
   return { ok: true, value: { activities, participants, acceptedAt, version: WAIVER_VERSION } };
 }
 
+// src/data/shirts.ts
+var SHIRT_SIZES = ["XS", "S", "M", "L", "XL", "2XL", "3XL"];
+var isSize = (v) => typeof v === "string" && SHIRT_SIZES.includes(v);
+var clip4 = (v, n) => typeof v === "string" ? v.replace(/[\u0000-\u001f<>]/g, " ").trim().slice(0, n) : "";
+var extraRunnersText = (list) => list.map((r) => `${r.name} (\u0E44\u0E0B\u0E2A\u0E4C ${r.shirtSize})`).join(", ");
+function parseExtraRunners(raw, count) {
+  const list = Array.isArray(raw) ? raw.slice(0, count) : [];
+  const out = [];
+  const errors = [];
+  for (let i = 0; i < count; i++) {
+    const r = list[i] && typeof list[i] === "object" ? list[i] : {};
+    const name = clip4(r.name, 80);
+    if (name.length < 2) errors.push(`\u0E01\u0E23\u0E38\u0E13\u0E32\u0E01\u0E23\u0E2D\u0E01\u0E0A\u0E37\u0E48\u0E2D\u0E1C\u0E39\u0E49\u0E23\u0E48\u0E27\u0E21\u0E27\u0E34\u0E48\u0E07\u0E40\u0E1E\u0E34\u0E48\u0E21\u0E04\u0E19\u0E17\u0E35\u0E48 ${i + 1}`);
+    if (!isSize(r.shirtSize)) errors.push(`\u0E01\u0E23\u0E38\u0E13\u0E32\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E44\u0E0B\u0E2A\u0E4C\u0E40\u0E2A\u0E37\u0E49\u0E2D\u0E1C\u0E39\u0E49\u0E23\u0E48\u0E27\u0E21\u0E27\u0E34\u0E48\u0E07\u0E40\u0E1E\u0E34\u0E48\u0E21\u0E04\u0E19\u0E17\u0E35\u0E48 ${i + 1}`);
+    out.push({ name, shirtSize: isSize(r.shirtSize) ? r.shirtSize : "M" });
+  }
+  if (errors.length) return { ok: false, error: errors.join(" \xB7 ") };
+  return { ok: true, value: out };
+}
+
 // src/data/vipParking.ts
 var VIP_PARKING_PER_TABLE = 2;
-var clip4 = (v, n) => typeof v === "string" ? v.replace(/[\u0000-\u001f<>]/g, " ").replace(/\s+/g, " ").trim().slice(0, n) : "";
+var clip5 = (v, n) => typeof v === "string" ? v.replace(/[\u0000-\u001f<>]/g, " ").replace(/\s+/g, " ").trim().slice(0, n) : "";
 function parseParkingPlates(raw, vipTables) {
   const max = vipTables * VIP_PARKING_PER_TABLE;
   const list = Array.isArray(raw) ? raw.slice(0, max) : [];
   const plates = [];
   for (const item of list) {
     const r = item && typeof item === "object" ? item : {};
-    const plate = clip4(r.plate, 16);
-    const province = clip4(r.province, 40);
+    const plate = clip5(r.plate, 16);
+    const province = clip5(r.province, 40);
     if (!plate && !province) continue;
     if (plate.length < 2 || province.length < 2) return { ok: false, error: "\u0E01\u0E23\u0E38\u0E13\u0E32\u0E01\u0E23\u0E2D\u0E01\u0E17\u0E30\u0E40\u0E1A\u0E35\u0E22\u0E19\u0E23\u0E16\u0E41\u0E25\u0E30\u0E08\u0E31\u0E07\u0E2B\u0E27\u0E31\u0E14\u0E43\u0E2B\u0E49\u0E04\u0E23\u0E1A\u0E17\u0E38\u0E01\u0E04\u0E31\u0E19\u0E17\u0E35\u0E48\u0E25\u0E07\u0E17\u0E30\u0E40\u0E1A\u0E35\u0E22\u0E19" };
     plates.push({ plate, province });
@@ -34451,7 +34490,7 @@ async function sendTicketEmail(o) {
 var PRIVACY_POLICY_VERSION = "2026-11-02";
 var TERMS_VERSION = "2026-11-01";
 var ROUTE_IDS = ticketCategories.map((t) => t.id);
-var SHIRT_SIZES = ["XS", "S", "M", "L", "XL", "2XL", "3XL"];
+var SHIRT_SIZES2 = ["XS", "S", "M", "L", "XL", "2XL", "3XL"];
 var MAX_EXTRA = 9;
 var SPONSOR_INVALID_MSG = "\u0E23\u0E2B\u0E31\u0E2A\u0E2A\u0E1B\u0E2D\u0E19\u0E40\u0E0B\u0E2D\u0E23\u0E4C\u0E44\u0E21\u0E48\u0E16\u0E39\u0E01\u0E15\u0E49\u0E2D\u0E07 \u0E2B\u0E23\u0E37\u0E2D\u0E16\u0E39\u0E01\u0E43\u0E0A\u0E49\u0E04\u0E23\u0E1A\u0E2A\u0E34\u0E17\u0E18\u0E34\u0E4C\u0E41\u0E25\u0E49\u0E27";
 function clean(input, max) {
@@ -34612,6 +34651,13 @@ function createApp() {
     const isDog = !noRun && isDogCategory(routeId);
     const extraPeople = isDog && !sponsorCode ? Math.min(MAX_EXTRA, Math.max(0, Math.floor(Number(b.extraPeople) || 0))) : 0;
     const extraDogs = 0;
+    let extraRunners;
+    let extraRunnersError = "";
+    if (extraPeople > 0) {
+      const p = parseExtraRunners(b.extraRunners, extraPeople);
+      if (p.ok) extraRunners = p.value;
+      else extraRunnersError = p.error;
+    }
     let insurance;
     let insuranceError = "";
     if (!noRun && needsInsurance(routeId)) {
@@ -34623,7 +34669,7 @@ function createApp() {
     const phone = clean(b.phone, 30);
     const email = clean(b.email, 120);
     const emergencyPhone = clean(b.emergencyPhone, 30);
-    const shirtSize = noRun ? "" : SHIRT_SIZES.includes(b.shirtSize) ? b.shirtSize : "";
+    const shirtSize = noRun ? "" : SHIRT_SIZES2.includes(b.shirtSize) ? b.shirtSize : "";
     let parkingPlates;
     let parkingError = "";
     if (vipTables > 0) {
@@ -34649,6 +34695,7 @@ function createApp() {
     const errors = [];
     if (insuranceError) errors.push(insuranceError);
     if (waiverError) errors.push(waiverError);
+    if (extraRunnersError) errors.push(extraRunnersError);
     if (parkingError) errors.push(parkingError);
     if (shootingError) errors.push(shootingError);
     if (!insuranceError && fullName.length < 2) errors.push("\u0E01\u0E23\u0E38\u0E13\u0E32\u0E01\u0E23\u0E2D\u0E01\u0E0A\u0E37\u0E48\u0E2D-\u0E19\u0E32\u0E21\u0E2A\u0E01\u0E38\u0E25");
@@ -34702,7 +34749,8 @@ function createApp() {
       dogBreed: isDog ? clean(b.dogBreed, 80) : void 0,
       extraPeople,
       extraDogs,
-      extraRunnerNames: extraPeople > 0 ? clean(b.extraRunnerNames, 240) : void 0,
+      extraRunners,
+      extraRunnerNames: extraRunners ? extraRunnersText(extraRunners).slice(0, 600) : void 0,
       peopleCount: isAddonOnly ? addOns.people : isConcert ? concertQty + vipTables * VIP_TABLE_SEATS : isDog ? 1 + extraPeople : 1,
       dogCount: isDog ? 1 + extraDogs : 0,
       totalPrice: total,
@@ -34751,7 +34799,7 @@ function createApp() {
           note: `\u0E43\u0E0A\u0E49\u0E23\u0E2B\u0E31\u0E2A\u0E2A\u0E1B\u0E2D\u0E19\u0E40\u0E0B\u0E2D\u0E23\u0E4C ${sponsorCode} (${sponsorName}) \u2014 \u0E27\u0E34\u0E48\u0E07 + \u0E04\u0E2D\u0E19\u0E40\u0E2A\u0E34\u0E23\u0E4C\u0E15 \u0E44\u0E21\u0E48\u0E04\u0E34\u0E14\u0E04\u0E48\u0E32\u0E2A\u0E21\u0E31\u0E04\u0E23`
         });
       } catch (err) {
-        await deleteOrder(order.orderId).catch(() => {
+        await rollbackNewOrder(order.orderId).catch(() => {
         });
         await releaseSponsorCode(sponsorCode).catch(() => {
         });
@@ -34777,7 +34825,7 @@ function createApp() {
     const order = await getOrder(String(req.params.orderId));
     const phone = String(req.body?.phone || "").replace(/\D/g, "");
     const match = order && phone.length >= 9 && order.phone.replace(/\D/g, "").slice(-9) === phone.slice(-9);
-    if (!order || !match || order.paymentStatus !== "PAID") {
+    if (!order || !match || order.paymentStatus !== "PAID" || order.cancelledAt) {
       res.status(404).json({ error: "\u0E44\u0E21\u0E48\u0E1E\u0E1A\u0E04\u0E33\u0E2A\u0E31\u0E48\u0E07\u0E0B\u0E37\u0E49\u0E2D\u0E17\u0E35\u0E48\u0E0A\u0E33\u0E23\u0E30\u0E41\u0E25\u0E49\u0E27 \u0E2B\u0E23\u0E37\u0E2D\u0E40\u0E1A\u0E2D\u0E23\u0E4C\u0E42\u0E17\u0E23\u0E44\u0E21\u0E48\u0E15\u0E23\u0E07\u0E01\u0E31\u0E1A\u0E17\u0E35\u0E48\u0E25\u0E07\u0E17\u0E30\u0E40\u0E1A\u0E35\u0E22\u0E19" });
       return;
     }
@@ -34796,7 +34844,7 @@ function createApp() {
       res.json({ order: toRunnerView(order) });
       return;
     }
-    if (order.verificationStatus === "REJECTED") {
+    if (order.verificationStatus === "REJECTED" || order.cancelledAt) {
       res.status(400).json({ error: "\u0E04\u0E33\u0E2A\u0E31\u0E48\u0E07\u0E0B\u0E37\u0E49\u0E2D\u0E19\u0E35\u0E49\u0E16\u0E39\u0E01\u0E22\u0E01\u0E40\u0E25\u0E34\u0E01\u0E42\u0E14\u0E22\u0E40\u0E08\u0E49\u0E32\u0E2B\u0E19\u0E49\u0E32\u0E17\u0E35\u0E48 \u0E01\u0E23\u0E38\u0E13\u0E32\u0E15\u0E34\u0E14\u0E15\u0E48\u0E2D\u0E1C\u0E39\u0E49\u0E08\u0E31\u0E14\u0E07\u0E32\u0E19" });
       return;
     }
@@ -34946,6 +34994,10 @@ function createApp() {
     }
     const admin = req.admin.username;
     const status = req.body?.status;
+    if (order.cancelledAt) {
+      res.status(400).json({ error: "\u0E04\u0E33\u0E2A\u0E31\u0E48\u0E07\u0E0B\u0E37\u0E49\u0E2D\u0E19\u0E35\u0E49\u0E16\u0E39\u0E01\u0E22\u0E01\u0E40\u0E25\u0E34\u0E01\u0E41\u0E25\u0E49\u0E27 \u0E01\u0E23\u0E38\u0E13\u0E32\u0E01\u0E39\u0E49\u0E04\u0E37\u0E19\u0E01\u0E48\u0E2D\u0E19\u0E40\u0E1B\u0E25\u0E35\u0E48\u0E22\u0E19\u0E2A\u0E16\u0E32\u0E19\u0E30" });
+      return;
+    }
     if (status === "ADMIN_APPROVED") {
       const ref = clean(req.body?.paymentRef, 60) || order.paymentRef || order.slipRef || `MANUAL-${order.orderId}`;
       if (ref !== order.paymentRef && await isRefUsed(ref)) {
@@ -34980,6 +35032,10 @@ function createApp() {
       res.status(404).json({ error: "\u0E44\u0E21\u0E48\u0E1E\u0E1A\u0E04\u0E33\u0E2A\u0E31\u0E48\u0E07\u0E0B\u0E37\u0E49\u0E2D" });
       return;
     }
+    if (order.cancelledAt) {
+      res.status(400).json({ error: "\u0E04\u0E33\u0E2A\u0E31\u0E48\u0E07\u0E0B\u0E37\u0E49\u0E2D\u0E19\u0E35\u0E49\u0E16\u0E39\u0E01\u0E22\u0E01\u0E40\u0E25\u0E34\u0E01\u0E41\u0E25\u0E49\u0E27 \u0E44\u0E21\u0E48\u0E2A\u0E48\u0E07\u0E15\u0E31\u0E4B\u0E27" });
+      return;
+    }
     if (order.paymentStatus !== "PAID") {
       res.status(400).json({ error: "\u0E04\u0E33\u0E2A\u0E31\u0E48\u0E07\u0E0B\u0E37\u0E49\u0E2D\u0E19\u0E35\u0E49\u0E22\u0E31\u0E07\u0E44\u0E21\u0E48\u0E44\u0E14\u0E49\u0E0A\u0E33\u0E23\u0E30\u0E40\u0E07\u0E34\u0E19" });
       return;
@@ -35012,21 +35068,46 @@ function createApp() {
       res.status(400).json({ error: "\u0E04\u0E33\u0E2A\u0E31\u0E48\u0E07\u0E0B\u0E37\u0E49\u0E2D\u0E19\u0E35\u0E49\u0E22\u0E31\u0E07\u0E44\u0E21\u0E48\u0E44\u0E14\u0E49\u0E0A\u0E33\u0E23\u0E30\u0E40\u0E07\u0E34\u0E19" });
       return;
     }
+    if (order.cancelledAt) {
+      res.status(400).json({ error: `\u0E04\u0E33\u0E2A\u0E31\u0E48\u0E07\u0E0B\u0E37\u0E49\u0E2D\u0E19\u0E35\u0E49\u0E16\u0E39\u0E01\u0E22\u0E01\u0E40\u0E25\u0E34\u0E01\u0E41\u0E25\u0E49\u0E27 (${order.cancelReason || "-"})` });
+      return;
+    }
     const updated = await updateOrder(orderId, (o) => {
       o.kitStatus = o.kitStatus === "CHECKED_IN" ? "PENDING_PICKUP" : "CHECKED_IN";
       o.registrationStatus = o.kitStatus === "CHECKED_IN" ? "CHECKED_IN" : "CONFIRMED";
     });
     res.json({ order: toAdminView(updated) });
   }));
-  app2.delete("/api/admin/orders/:orderId", requireAdmin, h(async (req, res) => {
+  app2.post("/api/admin/orders/:orderId/cancel", requireAdmin, smallJson, h(async (req, res) => {
     const id = String(req.params.orderId);
-    if (!await getOrder(id)) {
+    const reason = clean(req.body?.reason, 300);
+    if (reason.length < 3) {
+      res.status(400).json({ error: "\u0E01\u0E23\u0E38\u0E13\u0E32\u0E23\u0E30\u0E1A\u0E38\u0E40\u0E2B\u0E15\u0E38\u0E1C\u0E25\u0E17\u0E35\u0E48\u0E22\u0E01\u0E40\u0E25\u0E34\u0E01" });
+      return;
+    }
+    const admin = req.admin.username;
+    const updated = await updateOrder(id, (o) => {
+      if (o.cancelledAt) return;
+      o.cancelledAt = (/* @__PURE__ */ new Date()).toISOString();
+      o.cancelledBy = admin;
+      o.cancelReason = reason;
+    });
+    if (!updated) {
       res.status(404).json({ error: "\u0E44\u0E21\u0E48\u0E1E\u0E1A\u0E04\u0E33\u0E2A\u0E31\u0E48\u0E07\u0E0B\u0E37\u0E49\u0E2D" });
       return;
     }
-    await deleteOrder(id);
-    console.log(`[admin] ${req.admin.username} deleted ${id}`);
-    res.json({ ok: true });
+    console.log(`[admin] ${admin} cancelled ${id}`);
+    res.json({ order: toAdminView(updated) });
+  }));
+  app2.post("/api/admin/orders/:orderId/restore", requireAdmin, h(async (req, res) => {
+    const id = String(req.params.orderId);
+    const r = await restoreOrderChecked(id, WIND_TUNNEL_LIMIT);
+    if (!r.ok) {
+      res.status(400).json({ error: r.error });
+      return;
+    }
+    console.log(`[admin] ${req.admin.username} restored ${id}`);
+    res.json({ order: toAdminView(r.order) });
   }));
   app2.get("/api/admin/sponsor-codes", requireAdmin, h(async (_req, res) => {
     res.json({ codes: await listSponsorCodes() });

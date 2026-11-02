@@ -82,6 +82,7 @@ import { BLOOD_TYPES, GENDERS, PREFIXES, RELATIONSHIPS, ageFromBirthDate, needsI
 import { SHOOTING_CONSENT_LINES, digitsOnly, formatThaiId, isValidThaiId, type Shooter } from '../data/shooting';
 import { VIP_PARKING_PER_TABLE, type ParkingPlate } from '../data/vipParking';
 import { waiversFor, type WaiverActivity, type WaiverParticipant } from '../data/activityWaivers';
+import type { ExtraRunner } from '../data/shirts';
 import { ActivityWaiverForm, mergeParticipant } from './ActivityWaiverForm';
 import { ParkingPasses } from './ParkingPass';
 import { EMPTY_ADD_ONS, addOnBonusDiscount, addOnConcertRate, addOnCountRate, addOnDiscountRate, addOnLabel, addOnTotal, concertDiscountPerTicket, hasAddOns, percentOf, type AddOnSelection } from '../data/addOns';
@@ -282,7 +283,8 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
   const [shirtSize, setShirtSize] = useState('L');
   const [dogName, setDogName] = useState('');
   const [dogBreed, setDogBreed] = useState('');
-  const [extraRunnerNames, setExtraRunnerNames] = useState('');
+  // Dog Run extra runners: name + jersey size each
+  const [extraRunners, setExtraRunners] = useState<ExtraRunner[]>([]);
 
   // Server-backed order & payment state (the server decides price, payment status and BIB)
   const [publicCfg, setPublicCfg] = useState<PublicConfig | null>(null);
@@ -383,7 +385,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
     setShirtSize(o.shirtSize || 'L');
     setDogName(o.dogName || '');
     setDogBreed(o.dogBreed || '');
-    setExtraRunnerNames(o.extraRunnerNames || '');
+    setExtraRunners((o as ServerOrder).extraRunners || []);
   };
 
   // On open: reset, load public config, and resume any unfinished order from this browser.
@@ -532,7 +534,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
       // A sponsor code covers one runner (and the dog); extra people / dogs are not included.
       setExtraPeople(0);
       setExtraDogs(0);
-      setExtraRunnerNames('');
+      setExtraRunners([]);
     } catch (err) {
       setSponsor(null);
       setSponsorError(err instanceof Error ? err.message : 'ตรวจรหัสไม่สำเร็จ กรุณาลองใหม่');
@@ -588,7 +590,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
         shirtSize: noRun ? '' : shirtSize,
         dogName: isDog ? dogName.trim() : undefined,
         dogBreed: isDog ? dogBreed.trim() : undefined,
-        extraRunnerNames: extraPeople > 0 ? extraRunnerNames.trim() : undefined,
+        extraRunners: extraPeople > 0 ? Array.from({ length: extraPeople }, (_, i) => ({ name: extraRunners[i]?.name?.trim() || '', shirtSize: extraRunners[i]?.shirtSize || 'M' })) : undefined,
         privacyConsent,
         sponsorCode: wantRun ? sponsor?.code : undefined,
         addOns: hasAddOns(addOns) ? addOns : undefined,
@@ -657,12 +659,20 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
   };
 
 
-  const steps = [
-    { num: 1, title: 'เลือกระยะวิ่ง', sub: 'Package & Add-on' },
-    { num: 2, title: 'ข้อมูลนักวิ่ง', sub: 'Runner & Shirt' },
-    { num: 3, title: 'สแกนจ่าย', sub: 'PromptPay QR' },
-    { num: 4, title: 'รับเลข BIB', sub: 'Auto E-BIB' },
-  ];
+  // Step names follow what is being bought: a run ticket has a runner + BIB, the rest a buyer + e-ticket.
+  const steps = wantRun
+    ? [
+        { num: 1, title: 'เลือกระยะวิ่ง', sub: 'Package & Add-on' },
+        { num: 2, title: 'ข้อมูลนักวิ่ง', sub: 'Runner & Shirt' },
+        { num: 3, title: 'สแกนจ่าย', sub: 'PromptPay QR' },
+        { num: 4, title: 'รับเลข BIB', sub: 'Auto E-BIB' },
+      ]
+    : [
+        { num: 1, title: wantConcert ? 'เลือกบัตร' : 'เลือกกิจกรรม', sub: wantConcert ? 'Concert & VIP' : 'Activities' },
+        { num: 2, title: wantConcert ? 'ข้อมูลผู้ซื้อ' : 'ข้อมูลผู้ร่วมกิจกรรม', sub: wantConcert ? 'Buyer details' : 'Participants' },
+        { num: 3, title: 'สแกนจ่าย', sub: 'PromptPay QR' },
+        { num: 4, title: 'รับบัตร', sub: 'E-Ticket' },
+      ];
 
   const renderTicketOption = (id: RouteId) => {
     const t = ticketById(id);
@@ -1320,17 +1330,46 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                     </div>
 
                     {extraPeople > 0 && (
-                      <div className="pt-2">
-                        <label className={labelCls}>
-                          รายชื่อผู้ร่วมวิ่งเพิ่ม ({extraPeople} ท่าน) & ไซส์เสื้อ
-                        </label>
-                        <input
-                          type="text"
-                          value={extraRunnerNames}
-                          onChange={(e) => setExtraRunnerNames(e.target.value)}
-                          placeholder="เช่น นภา ใจดี (ไซส์ M), กานต์ ใจดี (ไซส์ XL)"
-                          className="w-full px-4 py-2.5 rounded-2xl border-2 border-[#2A1450]/20 bg-white text-sm font-semibold text-[#2A1450]"
-                        />
+                      <div className="pt-2 space-y-2">
+                        <p className={labelCls}>ผู้ร่วมวิ่งเพิ่ม ({extraPeople} ท่าน): ชื่อ & ไซส์เสื้อ *</p>
+                        {Array.from({ length: extraPeople }, (_, i) => (
+                          <div key={i} className="grid grid-cols-[1fr_auto] gap-2">
+                            <input
+                              type="text"
+                              required
+                              maxLength={80}
+                              aria-label={`ชื่อ-นามสกุลผู้ร่วมวิ่งเพิ่มคนที่ ${i + 1}`}
+                              value={extraRunners[i]?.name || ''}
+                              onChange={(e) =>
+                                setExtraRunners((rs) => {
+                                  const next = [...rs];
+                                  next[i] = { name: e.target.value, shirtSize: rs[i]?.shirtSize || 'M' };
+                                  return next;
+                                })
+                              }
+                              placeholder={`คนที่ ${i + 1}: ชื่อ-นามสกุล`}
+                              className="w-full min-h-[48px] px-4 rounded-2xl border-2 border-[#2A1450]/20 bg-white text-sm font-semibold text-[#2A1450]"
+                            />
+                            <select
+                              aria-label={`ไซส์เสื้อผู้ร่วมวิ่งเพิ่มคนที่ ${i + 1}`}
+                              value={extraRunners[i]?.shirtSize || 'M'}
+                              onChange={(e) =>
+                                setExtraRunners((rs) => {
+                                  const next = [...rs];
+                                  next[i] = { name: rs[i]?.name || '', shirtSize: e.target.value as ExtraRunner['shirtSize'] };
+                                  return next;
+                                })
+                              }
+                              className="min-h-[48px] px-3 rounded-2xl border-2 border-[#2A1450]/20 bg-white text-sm font-extrabold text-[#2A1450]"
+                            >
+                              {SHIRT_SIZES.map((z) => (
+                                <option key={z.size} value={z.size}>
+                                  ไซส์ {z.size} ({z.chest})
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        ))}
                       </div>
                     )}
                   </div>

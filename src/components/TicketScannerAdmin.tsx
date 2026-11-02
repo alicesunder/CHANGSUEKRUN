@@ -154,7 +154,9 @@ export const TicketScannerAdmin: React.FC = () => {
     }
   };
 
-  const paid = order?.paymentStatus === 'PAID';
+  const cancelled = Boolean(order?.cancelledAt);
+  // a cancelled ticket is treated as not valid at the gate
+  const paid = order?.paymentStatus === 'PAID' && !cancelled;
   const isConcertPass = order?.ticketType === 'CONCERT';
   const checkedIn = order?.kitStatus === 'CHECKED_IN';
 
@@ -216,7 +218,7 @@ export const TicketScannerAdmin: React.FC = () => {
           <div className="flex flex-wrap items-center justify-between gap-2">
             <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-black ${paid ? 'bg-emerald-600 text-white' : 'bg-rose-600 text-white'}`}>
               {paid ? <Check className="w-4 h-4" /> : <X className="w-4 h-4" />}
-              {paid ? 'ชำระเงินแล้ว' : 'ยังไม่ชำระเงิน'}
+              {cancelled ? `ตั๋วถูกยกเลิก: ${order?.cancelReason || '-'}` : paid ? 'ชำระเงินแล้ว' : 'ยังไม่ชำระเงิน'}
             </span>
             <span className="font-mono text-xs font-bold text-[#6F6878]">{order.orderId}</span>
           </div>

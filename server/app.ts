@@ -17,7 +17,8 @@ import crypto from 'crypto';
 import type { RouteId } from '../src/types';
 import { CONCERT_PASS_PRICE, MAX_VIP_TABLES, VIP_TABLE_PRICE, VIP_TABLE_SEATS, calcTicketTotal, isDogCategory, ticketById, ticketCategories } from '../src/data/eventData';
 import {
-  deleteOrder,
+  rollbackNewOrder,
+  restoreOrderChecked,
   getBibCounters,
   getEasySlipKey,
   getOrder,
@@ -59,6 +60,7 @@ import { WIND_TUNNEL_LIMIT, addOnBonusDiscount, addOnLabel, addOnPricePerPerson,
 import { needsInsurance, parseInsurance, type InsuranceInfo } from '../src/data/insurance';
 import { parseShooting, type ShootingInfo } from '../src/data/shooting';
 import { parseActivityWaiver, waiversFor, type ActivityWaiverInfo } from '../src/data/activityWaivers';
+import { extraRunnersText, parseExtraRunners, type ExtraRunner } from '../src/data/shirts';
 import { parseParkingPlates, type ParkingPlate } from '../src/data/vipParking';
 import { checkCredentials, issueToken, requireAdmin } from './auth';
 import { fetchVerifiedOmiseCharge, maskedAccountMatches, verifySlipWithEasySlip } from './payments';
@@ -284,6 +286,14 @@ export function createApp(): express.Express {
     const extraPeople = isDog && !sponsorCode ? Math.min(MAX_EXTRA, Math.max(0, Math.floor(Number(b.extraPeople) || 0))) : 0;
     // Extra dogs are no longer sold: a Dog Run ticket is 1 runner + 1 dog.
     const extraDogs = 0;
+    // Each extra runner gets a jersey: name + size per person.
+    let extraRunners: ExtraRunner[] | undefined;
+    let extraRunnersError = '';
+    if (extraPeople > 0) {
+      const p = parseExtraRunners(b.extraRunners, extraPeople);
+      if (p.ok) extraRunners = p.value;
+      else extraRunnersError = p.error;
+    }
 
     // Runners of every distance are insured: the insurer needs their details (the name comes from these fields)
     let insurance: InsuranceInfo | undefined;
@@ -326,6 +336,7 @@ export function createApp(): express.Express {
     const errors: string[] = [];
     if (insuranceError) errors.push(insuranceError);
     if (waiverError) errors.push(waiverError);
+    if (extraRunnersError) errors.push(extraRunnersError);
     if (parkingError) errors.push(parkingError);
     if (shootingError) errors.push(shootingError);
     if (!insuranceError && fullName.length < 2) errors.push('กรุณากรอกชื่อ-นามสกุล');
@@ -391,7 +402,8 @@ export function createApp(): express.Express {
       dogBreed: isDog ? clean(b.dogBreed, 80) : undefined,
       extraPeople,
       extraDogs,
-      extraRunnerNames: extraPeople > 0 ? clean(b.extraRunnerNames, 240) : undefined,
+      extraRunners,
+      extraRunnerNames: extraRunners ? extraRunnersText(extraRunners).slice(0, 600) : undefined,
       peopleCount: isAddonOnly ? addOns.people : isConcert ? concertQty + vipTables * VIP_TABLE_SEATS : isDog ? 1 + extraPeople : 1,
       dogCount: isDog ? 1 + extraDogs : 0,
       totalPrice: total,
@@ -445,7 +457,7 @@ export function createApp(): express.Express {
           note: `ใช้รหัสสปอนเซอร์ ${sponsorCode} (${sponsorName}) — วิ่ง + คอนเสิร์ต ไม่คิดค่าสมัคร`,
         });
       } catch (err) {
-        await deleteOrder(order.orderId).catch(() => {});
+        await rollbackNewOrder(order.orderId).catch(() => {});
         await releaseSponsorCode(sponsorCode).catch(() => {});
         throw err;
       }
@@ -476,7 +488,7 @@ export function createApp(): express.Express {
     const order = await getOrder(String(req.params.orderId));
     const phone = String(req.body?.phone || '').replace(/\D/g, '');
     const match = order && phone.length >= 9 && order.phone.replace(/\D/g, '').slice(-9) === phone.slice(-9);
-    if (!order || !match || order.paymentStatus !== 'PAID') {
+    if (!order || !match || order.paymentStatus !== 'PAID' || order.cancelledAt) {
       res.status(404).json({ error: 'ไม่พบคำสั่งซื้อที่ชำระแล้ว หรือเบอร์โทรไม่ตรงกับที่ลงทะเบียน' });
       return;
     }
@@ -498,7 +510,7 @@ export function createApp(): express.Express {
       res.json({ order: toRunnerView(order) });
       return;
     }
-    if (order.verificationStatus === 'REJECTED') {
+    if (order.verificationStatus === 'REJECTED' || order.cancelledAt) {
       res.status(400).json({ error: 'คำสั่งซื้อนี้ถูกยกเลิกโดยเจ้าหน้าที่ กรุณาติดต่อผู้จัดงาน' });
       return;
     }
@@ -667,6 +679,10 @@ export function createApp(): express.Express {
     }
     const admin = (req as any).admin.username as string;
     const status = req.body?.status;
+    if (order.cancelledAt) {
+      res.status(400).json({ error: 'คำสั่งซื้อนี้ถูกยกเลิกแล้ว กรุณากู้คืนก่อนเปลี่ยนสถานะ' });
+      return;
+    }
     if (status === 'ADMIN_APPROVED') {
       const ref = clean(req.body?.paymentRef, 60) || order.paymentRef || order.slipRef || `MANUAL-${order.orderId}`;
       if (ref !== order.paymentRef && (await isRefUsed(ref))) {
@@ -701,6 +717,10 @@ export function createApp(): express.Express {
     const order = await getOrder(String(req.params.orderId));
     if (!order) {
       res.status(404).json({ error: 'ไม่พบคำสั่งซื้อ' });
+      return;
+    }
+    if (order.cancelledAt) {
+      res.status(400).json({ error: 'คำสั่งซื้อนี้ถูกยกเลิกแล้ว ไม่ส่งตั๋ว' });
       return;
     }
     if (order.paymentStatus !== 'PAID') {
@@ -738,6 +758,10 @@ export function createApp(): express.Express {
       res.status(400).json({ error: 'คำสั่งซื้อนี้ยังไม่ได้ชำระเงิน' });
       return;
     }
+    if (order.cancelledAt) {
+      res.status(400).json({ error: `คำสั่งซื้อนี้ถูกยกเลิกแล้ว (${order.cancelReason || '-'})` });
+      return;
+    }
     const updated = await updateOrder(orderId, (o) => {
       o.kitStatus = o.kitStatus === 'CHECKED_IN' ? 'PENDING_PICKUP' : 'CHECKED_IN';
       o.registrationStatus = o.kitStatus === 'CHECKED_IN' ? 'CHECKED_IN' : 'CONFIRMED';
@@ -745,15 +769,39 @@ export function createApp(): express.Express {
     res.json({ order: toAdminView(updated!) });
   }));
 
-  app.delete('/api/admin/orders/:orderId', requireAdmin, h(async (req, res) => {
+  // Orders are never deleted. Cancelling keeps the buyer's data, frees any wind-tunnel seats and
+  // blocks payment, check-in and ticket e-mails; it can be undone.
+  app.post('/api/admin/orders/:orderId/cancel', requireAdmin, smallJson, h(async (req, res) => {
     const id = String(req.params.orderId);
-    if (!(await getOrder(id))) {
+    const reason = clean(req.body?.reason, 300);
+    if (reason.length < 3) {
+      res.status(400).json({ error: 'กรุณาระบุเหตุผลที่ยกเลิก' });
+      return;
+    }
+    const admin = (req as any).admin.username as string;
+    const updated = await updateOrder(id, (o) => {
+      if (o.cancelledAt) return;
+      o.cancelledAt = new Date().toISOString();
+      o.cancelledBy = admin;
+      o.cancelReason = reason;
+    });
+    if (!updated) {
       res.status(404).json({ error: 'ไม่พบคำสั่งซื้อ' });
       return;
     }
-    await deleteOrder(id);
-    console.log(`[admin] ${(req as any).admin.username} deleted ${id}`);
-    res.json({ ok: true });
+    console.log(`[admin] ${admin} cancelled ${id}`);
+    res.json({ order: toAdminView(updated) });
+  }));
+
+  app.post('/api/admin/orders/:orderId/restore', requireAdmin, h(async (req, res) => {
+    const id = String(req.params.orderId);
+    const r = await restoreOrderChecked(id, WIND_TUNNEL_LIMIT);
+    if (!r.ok) {
+      res.status(400).json({ error: r.error });
+      return;
+    }
+    console.log(`[admin] ${(req as any).admin.username} restored ${id}`);
+    res.json({ order: toAdminView(r.order) });
   }));
 
   // ---- Sponsor codes (admin) ----

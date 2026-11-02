@@ -15,7 +15,7 @@ import {
   QrCode,
   Eye,
   EyeOff,
-  Trash2,
+  Ban,
   Plus,
   RotateCcw,
   ShieldCheck,
@@ -52,6 +52,7 @@ import {
 import { ServerOrder, adminApi, adminLogin, clearAdminToken, getAdminToken } from '../utils/api';
 import { formatThaiId } from '../data/shooting';
 import { AdminStationRoster, OrderFullDetails } from './AdminStationRoster';
+import { countShirts } from '../data/shirts';
 import {
   formatPromptPayDisplay,
   formatThaiBankAccount,
@@ -116,6 +117,10 @@ const ROUTE_BADGE_STYLE: Record<
 
 const SHIRT_SIZE_LIST = ['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL'];
 
+/** Counts in totals: not cancelled, and paid or still inside its payment window. */
+const isLiveOrder = (o: ServerOrder) =>
+  !o.cancelledAt && (o.paymentStatus === 'PAID' || !o.expiresAt || new Date(o.expiresAt).getTime() > Date.now());
+
 export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
   isOpen,
   onClose,
@@ -165,7 +170,9 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
   // Inspect Individual BIB & Slip Modal State
   const [inspectingOrder, setInspectingOrder] = useState<TicketOrder | null>(null);
   const [inspectorViewMode, setInspectorViewMode] = useState<'details' | 'slip' | 'bib'>('details');
-  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  // Cancelling an order (never deleting): which row asks for the reason, and the reason typed
+  const [confirmCancelId, setConfirmCancelId] = useState<string | null>(null);
+  const [cancelReason, setCancelReason] = useState('');
 
   // PromptPay, Admin Credentials & Counter Settings State
   const [configForm, setConfigForm] = useState<PromptPayConfig>(DEFAULT_PROMPTPAY_CONFIG);
@@ -272,21 +279,22 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
 
   // Analytics Computations
   const analytics = useMemo(() => {
-    const validOrders = orders.filter(
+    // Cancelled orders and unpaid orders whose payment window has closed are not counted.
+    const liveOrders = orders.filter((o) => isLiveOrder(o as ServerOrder));
+    const validOrders = liveOrders.filter(
       (o) => o.verificationStatus === 'AUTO_VERIFIED' || o.verificationStatus === 'ADMIN_APPROVED'
     );
-    const totalTickets = orders.length;
-    const verifiedCount = orders.filter(
-      (o) =>
-        o.verificationStatus === 'AUTO_VERIFIED' || o.verificationStatus === 'ADMIN_APPROVED'
-    ).length;
-    const pendingReviewCount = orders.filter(
+    const totalTickets = liveOrders.length;
+    const verifiedCount = validOrders.length;
+    const pendingReviewCount = liveOrders.filter(
       (o) => o.verificationStatus === 'PENDING_REVIEW'
     ).length;
+    const cancelledCount = orders.filter((o) => (o as ServerOrder).cancelledAt).length;
+    const expiredCount = orders.length - liveOrders.length - cancelledCount;
     const totalRevenue = validOrders.reduce((sum, o) => sum + (o.totalPrice || 0), 0);
     const totalPeople = validOrders.reduce((sum, o) => sum + (o.peopleCount || 1), 0);
     const totalDogs = validOrders.reduce((sum, o) => sum + (o.dogCount || 0), 0);
-    const checkedInCount = orders.filter((o) => o.kitStatus === 'CHECKED_IN').length;
+    const checkedInCount = validOrders.filter((o) => o.kitStatus === 'CHECKED_IN').length;
 
     const byRoute = ROUTE_ORDER.map((rId) => {
       const routeOrders = validOrders.filter((o) => o.routeId === rId);
@@ -311,17 +319,15 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
       };
     });
 
-    const shirtCounts: Record<string, number> = {};
-    SHIRT_SIZE_LIST.forEach((s) => {
-      shirtCounts[s] = 0;
-    });
-    validOrders.forEach((o) => {
-      const sz = o.shirtSize || 'L';
-      shirtCounts[sz] = (shirtCounts[sz] || 0) + 1;
-    });
+    // Jerseys: main runner of each paid run order + every extra Dog Run runner (concert / add-on orders have none)
+    const shirts = countShirts(validOrders as ServerOrder[]);
+    const shirtCounts: Record<string, number> = shirts.bySize;
 
     return {
       totalTickets,
+      cancelledCount,
+      expiredCount,
+      shirts,
       verifiedCount,
       pendingReviewCount,
       totalRevenue,
@@ -461,15 +467,25 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
     }
   };
 
-  const handleDeleteOrder = async (orderId: string) => {
+  const handleCancelOrder = async (orderId: string) => {
     try {
-      await adminApi.deleteOrder(orderId);
-      setOrders((prev) => prev.filter((o) => o.orderId !== orderId));
-      setConfirmDeleteId(null);
-      if (inspectingOrder?.orderId === orderId) setInspectingOrder(null);
-      showToast(`ลบรายการ ${orderId} เรียบร้อยแล้ว`);
+      const r = await adminApi.cancelOrder(orderId, cancelReason.trim());
+      replaceOrder(r.order);
+      setConfirmCancelId(null);
+      setCancelReason('');
+      showToast(`ยกเลิกคำสั่งซื้อ ${orderId} แล้ว (ข้อมูลยังเก็บไว้ กู้คืนได้)`);
     } catch (err) {
-      showToast(err instanceof Error ? err.message : 'ลบไม่สำเร็จ');
+      showToast(err instanceof Error ? err.message : 'ยกเลิกไม่สำเร็จ');
+    }
+  };
+
+  const handleRestoreOrder = async (orderId: string) => {
+    try {
+      const r = await adminApi.restoreOrder(orderId);
+      replaceOrder(r.order);
+      showToast(`กู้คืนคำสั่งซื้อ ${orderId} แล้ว`);
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : 'กู้คืนไม่สำเร็จ');
     }
   };
 
@@ -670,7 +686,7 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
                 }`}
               >
                 <Ticket className="w-4 h-4" />
-                <span>ตรวจสลิป & เลข BIB ({orders.length})</span>
+                <span>ตรวจสลิป & เลข BIB ({analytics.totalTickets})</span>
               </button>
               <button
                 type="button"
@@ -815,6 +831,11 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
                 {analytics.totalTickets}{' '}
                 <span className="text-xs font-sans font-bold text-slate-500">ใบ</span>
               </div>
+              {(analytics.cancelledCount > 0 || analytics.expiredCount > 0) && (
+                <div className="text-[10.5px] font-bold text-slate-400">
+                  ไม่นับ: ยกเลิก {analytics.cancelledCount} · หมดเวลาชำระ {analytics.expiredCount}
+                </div>
+              )}
               <div className="text-[11px] font-bold text-emerald-600 mt-1">
                 ✓ ยืนยันโอนจริง {analytics.verifiedCount} ใบ
                 {analytics.pendingReviewCount > 0
@@ -1098,10 +1119,17 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
                           return (
                             <tr
                               key={order.orderId}
-                              className="hover:bg-slate-50/90 transition-colors"
+                              className={`hover:bg-slate-50/90 transition-colors ${isLiveOrder(order as ServerOrder) ? '' : 'opacity-55 bg-slate-50'}`}
                             >
                               {/* BIB Number Column */}
                               <td className="py-3.5 px-4 whitespace-nowrap">
+                                {(order as ServerOrder).cancelledAt ? (
+                                  <span className="mb-1 inline-block rounded-md bg-rose-600 text-white px-1.5 py-0.5 text-[10px] font-black" title={(order as ServerOrder).cancelReason}>
+                                    ยกเลิกแล้ว
+                                  </span>
+                                ) : !isLiveOrder(order as ServerOrder) ? (
+                                  <span className="mb-1 inline-block rounded-md bg-slate-400 text-white px-1.5 py-0.5 text-[10px] font-black">หมดเวลาชำระ</span>
+                                ) : null}
                                 <div className="flex items-center gap-2">
                                   <span
                                     className={`font-mono text-base font-black px-2.5 py-1 rounded-xl border ${badge.bg} ${badge.text} ${badge.border} tabular-nums`}
@@ -1281,22 +1309,49 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
                                     <span>บัตร BIB</span>
                                   </button>
 
-                                  {confirmDeleteId === order.orderId ? (
+                                  {(order as ServerOrder).cancelledAt ? (
                                     <button
                                       type="button"
-                                      onClick={() => handleDeleteOrder(order.orderId)}
-                                      className="px-2.5 py-1.5 rounded-xl bg-rose-600 text-white font-extrabold text-[11px] cursor-pointer"
+                                      onClick={() => handleRestoreOrder(order.orderId)}
+                                      title={`ยกเลิกโดย ${(order as ServerOrder).cancelledBy || '-'}: ${(order as ServerOrder).cancelReason || '-'}`}
+                                      className="px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold text-[11px] cursor-pointer"
                                     >
-                                      ยืนยันลบ
+                                      ↩ กู้คืน
                                     </button>
+                                  ) : confirmCancelId === order.orderId ? (
+                                    <span className="inline-flex items-center gap-1">
+                                      <input
+                                        autoFocus
+                                        value={cancelReason}
+                                        onChange={(e) => setCancelReason(e.target.value)}
+                                        onKeyDown={(e) => e.key === 'Enter' && cancelReason.trim().length >= 3 && handleCancelOrder(order.orderId)}
+                                        placeholder="เหตุผลที่ยกเลิก"
+                                        maxLength={300}
+                                        className="w-36 px-2 py-1.5 rounded-lg border border-rose-300 text-[11px] font-semibold"
+                                      />
+                                      <button
+                                        type="button"
+                                        disabled={cancelReason.trim().length < 3}
+                                        onClick={() => handleCancelOrder(order.orderId)}
+                                        className="px-2.5 py-1.5 rounded-xl bg-rose-600 text-white font-extrabold text-[11px] cursor-pointer disabled:opacity-40"
+                                      >
+                                        ยืนยันยกเลิก
+                                      </button>
+                                      <button type="button" onClick={() => setConfirmCancelId(null)} aria-label="ไม่ยกเลิก" className="p-1 text-slate-400 hover:text-slate-700 cursor-pointer">
+                                        <X className="w-4 h-4" />
+                                      </button>
+                                    </span>
                                   ) : (
                                     <button
                                       type="button"
-                                      onClick={() => setConfirmDeleteId(order.orderId)}
-                                      title="ลบรายการ"
+                                      onClick={() => {
+                                        setConfirmCancelId(order.orderId);
+                                        setCancelReason('');
+                                      }}
+                                      title="ยกเลิกคำสั่งซื้อ (ข้อมูลยังเก็บไว้ กู้คืนได้)"
                                       className="p-1.5 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 cursor-pointer"
                                     >
-                                      <Trash2 className="w-4 h-4" />
+                                      <Ban className="w-4 h-4" />
                                     </button>
                                   )}
                                 </div>
@@ -1396,8 +1451,14 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
                         สรุปจำนวนเสื้อวิ่งแยกตามไซส์ (Jersey Size Breakdown)
                       </h3>
                       <p className="text-xs font-semibold text-slate-500">
-                        สำหรับฝ่ายจัดซื้อและจุดแจกเสื้อ Race Pack หน้างาน
+                        สำหรับฝ่ายจัดซื้อและจุดแจกเสื้อ Race Pack หน้างาน · รวม {analytics.shirts.total} ตัว (นักวิ่งที่ชำระแล้ว + ผู้ร่วมวิ่งเพิ่ม · ไม่นับตั๋วคอนเสิร์ต/กิจกรรมเสริม)
                       </p>
+                      {(analytics.shirts.unknown > 0 || analytics.shirts.fromText > 0) && (
+                        <p className="mt-1 text-xs font-bold text-amber-700">
+                          ⚠️ คำสั่งซื้อรุ่นเก่ากรอกไซส์ผู้ร่วมวิ่งเพิ่มเป็นข้อความ: อ่านไซส์จากข้อความได้ {analytics.shirts.fromText} ตัว (นับรวมแล้ว ควรตรวจซ้ำ)
+                          {analytics.shirts.unknown > 0 ? ` · อ่านไม่ออก ${analytics.shirts.unknown} ตัว (ไม่ได้นับ ดูชื่อได้ในรายการคำสั่งซื้อ)` : ''}
+                        </p>
+                      )}
                     </div>
                   </div>
                 </div>

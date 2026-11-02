@@ -37,7 +37,10 @@ const STATIONS: Station[] = [
 ];
 
 /** A pending order still counts until its payment window closes. */
-const isLivePending = (o: ServerOrder) => o.paymentStatus !== 'PAID' && (!o.expiresAt || new Date(o.expiresAt).getTime() > Date.now());
+const isLivePending = (o: ServerOrder) =>
+  !o.cancelledAt && o.paymentStatus !== 'PAID' && (!o.expiresAt || new Date(o.expiresAt).getTime() > Date.now());
+/** Paid and not cancelled. */
+const isPaid = (o: ServerOrder) => o.paymentStatus === 'PAID' && !o.cancelledAt;
 
 const fmtDate = (iso?: string) => (iso ? new Date(iso).toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' }) : '-');
 
@@ -68,7 +71,7 @@ export const AdminStationRoster: React.FC<{
         for (const o of orders) {
           const n = s.qty(o);
           if (!n) continue;
-          if (o.paymentStatus === 'PAID') {
+          if (isPaid(o)) {
             paid += n;
             paidOrders++;
           } else if (isLivePending(o)) pending += n;
@@ -82,7 +85,7 @@ export const AdminStationRoster: React.FC<{
   const rows = useMemo(() => {
     const q = query.trim().toLowerCase();
     return orders
-      .filter((o) => active.qty(o) > 0 && (o.paymentStatus === 'PAID' || (showPending && isLivePending(o))))
+      .filter((o) => active.qty(o) > 0 && (isPaid(o) || (showPending && isLivePending(o))))
       .filter((o) => !q || [o.fullName, o.orderId, o.bibNumber, o.phone, o.email, o.dogName].some((v) => String(v ?? '').toLowerCase().includes(q)))
       .sort((a, b) => (a.paymentStatus === b.paymentStatus ? a.createdAt.localeCompare(b.createdAt) : a.paymentStatus === 'PAID' ? -1 : 1));
   }, [orders, active, showPending, query]);
@@ -291,7 +294,12 @@ export const OrderFullDetails: React.FC<{ order: ServerOrder }> = ({ order: o })
         ['โทร', o.phone],
         ['อีเมล', o.email],
         ['เบอร์ฉุกเฉิน', o.emergencyPhone],
-        ['ผู้ร่วมเพิ่มเติม', o.extraPeople ? `${o.extraPeople} คน${o.extraRunnerNames ? ` · ${o.extraRunnerNames}` : ''}` : '-'],
+        [
+          'ผู้ร่วมวิ่งเพิ่ม',
+          o.extraPeople
+            ? `${o.extraPeople} คน · ${o.extraRunners?.length ? o.extraRunners.map((r) => `${r.name} (${r.shirtSize})`).join(', ') : o.extraRunnerNames || 'ไม่ได้ระบุชื่อ'}`
+            : '-',
+        ],
       ],
     },
     {
@@ -350,6 +358,7 @@ export const OrderFullDetails: React.FC<{ order: ServerOrder }> = ({ order: o })
       items: [
         ['สั่งซื้อเมื่อ', fmtDate(o.createdAt)],
         ['สถานะรับอุปกรณ์', o.kitStatus === 'CHECKED_IN' ? 'รับแล้ว / เช็กอินแล้ว' : 'ยังไม่รับ'],
+        ['ยกเลิก', o.cancelledAt ? `ยกเลิกโดย ${o.cancelledBy || '-'} (${fmtDate(o.cancelledAt)}) · ${o.cancelReason || '-'}` : '-'],
         ['สถานะลงทะเบียน', o.registrationStatus],
       ],
     },

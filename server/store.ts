@@ -17,6 +17,7 @@ export type VerificationStatus =
 import type { InsuranceInfo } from '../src/data/insurance';
 import { maskThaiId, type ShootingInfo } from '../src/data/shooting';
 import type { ActivityWaiverInfo } from '../src/data/activityWaivers';
+import type { ExtraRunner } from '../src/data/shirts';
 import type { ParkingPlate } from '../src/data/vipParking';
 
 export interface StoredOrder {
@@ -44,6 +45,8 @@ export interface StoredOrder {
   extraPeople: number;
   extraDogs: number;
   extraRunnerNames?: string;
+  /** name + jersey size of each extra Dog Run runner (orders before Nov 2026 only have the text above) */
+  extraRunners?: ExtraRunner[];
   peopleCount: number;
   dogCount: number;
   totalPrice: number;
@@ -89,6 +92,10 @@ export interface StoredOrder {
   registrationStatus: 'REGISTERED' | 'CONFIRMED' | 'CHECKED_IN';
   createdAt: string;
   expiresAt: string;
+  /** Cancelled by an admin (orders are never deleted): when, by whom and why */
+  cancelledAt?: string;
+  cancelledBy?: string;
+  cancelReason?: string;
   paidAt?: string;
 }
 
@@ -203,11 +210,32 @@ export async function insertOrder(o: StoredOrder): Promise<void> {
 // Wind-tunnel seats are limited. An order holds seats while it is paid, or unpaid but still within its payment window.
 const WIND_TUNNEL_USED_SQL = `select coalesce(sum((data->'addOns'->>'people')::int), 0)::text as n from csr.orders
   where data->'addOns'->>'windTunnel' = 'true'
+    and not (data ? 'cancelledAt')
     and (payment_status = 'PAID' or (data->>'expiresAt')::timestamptz > now())`;
 
 export async function windTunnelSeatsUsed(): Promise<number> {
   const rows = await dbQuery<{ n: string }>(WIND_TUNNEL_USED_SQL);
   return Number(rows[0]?.n ?? 0);
+}
+
+/** Un-cancels an order; refuses when its wind-tunnel seats have been taken by others in the meantime. */
+export async function restoreOrderChecked(orderId: string, windTunnelLimit: number): Promise<{ ok: true; order: StoredOrder } | { ok: false; error: string }> {
+  return dbTx(async (q) => {
+    await q('select pg_advisory_xact_lock(727001)');
+    const rows = await q<{ data: unknown }>('select data from csr.orders where order_id = $1 for update', [orderId]);
+    if (!rows[0]) return { ok: false as const, error: 'ไม่พบคำสั่งซื้อ' };
+    const o = rowToOrder(rows[0]);
+    const holdsSeat = o.paymentStatus === 'PAID' || new Date(o.expiresAt).getTime() > Date.now();
+    if (o.cancelledAt && o.addOns?.windTunnel && holdsSeat) {
+      const used = Number((await q<{ n: string }>(WIND_TUNNEL_USED_SQL))[0]?.n ?? 0);
+      if (used + o.addOns.people > windTunnelLimit) return { ok: false as const, error: `อุโมงค์ลมเหลือไม่พอ (เหลือ ${Math.max(0, windTunnelLimit - used)} ที่)` };
+    }
+    delete o.cancelledAt;
+    delete o.cancelledBy;
+    delete o.cancelReason;
+    await writeOrder(q, o);
+    return { ok: true as const, order: o };
+  });
 }
 
 /** Inserts the order; if it takes wind-tunnel seats, checks the limit under a lock so two buyers can't both take the last seat. */
@@ -241,8 +269,13 @@ export async function listOrders(): Promise<StoredOrder[]> {
   return rows.map(rowToOrder);
 }
 
-export async function deleteOrder(orderId: string): Promise<void> {
-  await dbQuery('delete from csr.orders where order_id = $1', [orderId]);
+/**
+ * Removes an order that was created a moment ago in the SAME request and could not be completed
+ * (e.g. a free sponsor order whose confirmation failed). Customer orders are never deleted:
+ * admins cancel them instead (cancelledAt).
+ */
+export async function rollbackNewOrder(orderId: string): Promise<void> {
+  await dbQuery("delete from csr.orders where order_id = $1 and payment_status <> 'PAID'", [orderId]);
 }
 
 /** Read-modify-write under a row lock, so two requests can't overwrite each other. */

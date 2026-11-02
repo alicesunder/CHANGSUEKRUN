@@ -6,6 +6,7 @@ import type { AddOnSelection } from '../data/addOns';
 import type { InsuranceInfo } from '../data/insurance';
 import type { Shooter, ShootingInfo } from '../data/shooting';
 import type { ActivityWaiverInfo, WaiverActivity, WaiverParticipant } from '../data/activityWaivers';
+import type { ExtraRunner } from '../data/shirts';
 import type { ParkingPlate } from '../data/vipParking';
 import type { RouteId } from '../types';
 import type { TicketOrder } from './runnerStorage';
@@ -35,6 +36,11 @@ export type ServerOrder = TicketOrder & {
   shooting?: ShootingInfo;
   /** tower / wind tunnel waivers (ID numbers masked in the runner's view) */
   activityWaiver?: ActivityWaiverInfo;
+  extraRunners?: ExtraRunner[];
+  /** cancelled by an admin (orders are never deleted) */
+  cancelledAt?: string;
+  cancelledBy?: string;
+  cancelReason?: string;
   expiresAt: string;
   omiseChargeId?: string;
   omiseQrImageUrl?: string;
@@ -109,6 +115,8 @@ export interface CreateOrderInput {
   shootingConsent?: boolean;
   /** Tower / wind tunnel: participants for the legal waivers, and which documents the buyer accepted */
   activityWaiver?: { participants: WaiverParticipant[]; accepted: Partial<Record<WaiverActivity, boolean>> };
+  /** Dog Run extra runners: name + jersey size each */
+  extraRunners?: ExtraRunner[];
   /** Sponsor code: makes the registration free (run + concert). The server re-checks it. */
   sponsorCode?: string;
   /** Optional after-run activities; the server works out the price and seat limits itself. */
@@ -309,8 +317,14 @@ export const adminApi = {
     }),
   toggleKit: (orderId: string) =>
     adminFetch<{ order: ServerOrder }>(`/api/admin/orders/${encodeURIComponent(orderId)}/kit`, { method: 'POST' }),
-  deleteOrder: (orderId: string) =>
-    adminFetch<{ ok: true }>(`/api/admin/orders/${encodeURIComponent(orderId)}`, { method: 'DELETE' }),
+  cancelOrder: (orderId: string, reason: string) =>
+    adminFetch<{ order: ServerOrder }>(`/api/admin/orders/${encodeURIComponent(orderId)}/cancel`, {
+      method: 'POST',
+      headers: jsonHeaders,
+      body: JSON.stringify({ reason }),
+    }),
+  restoreOrder: (orderId: string) =>
+    adminFetch<{ order: ServerOrder }>(`/api/admin/orders/${encodeURIComponent(orderId)}/restore`, { method: 'POST' }),
   getSettings: () =>
     adminFetch<{ settings: AdminSettings; bibCounters: Record<RouteId, number> }>('/api/admin/settings'),
   saveSettings: (settings: AdminSettings, bibCounters: Record<RouteId, number>) =>
