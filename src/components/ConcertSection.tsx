@@ -9,18 +9,17 @@ const PHOTOS = [
 ];
 
 /**
- * Artists on stage at last year's festival. Names come from the band logo on the stage screen;
- * photos without a visible name stay unnamed until the organiser confirms who it is.
+ * Photos of the artists on stage at last year's festival (no names shown).
  */
 const PAST_FESTIVAL = {
   name: 'HUAHIN BEACH CROSS COUNTRY & MUSIC FESTIVAL 2026',
   date: '2 พฤษภาคม 2026',
 };
-const ARTISTS: { src: string; name?: string; tile: string; glow: string }[] = [
-  { src: '/images/concert/artists/artist-1.webp', name: 'F.HERO', tile: 'col-span-2 row-span-2', glow: '#FF4D6D' },
+const ARTISTS: { src: string; tile: string; glow: string }[] = [
+  { src: '/images/concert/artists/artist-1.webp', tile: 'col-span-2 row-span-2', glow: '#FF4D6D' },
   { src: '/images/concert/artists/artist-2.webp', tile: 'row-span-2', glow: '#22D3EE' },
-  { src: '/images/concert/artists/artist-3.webp', name: 'THE TOYS', tile: '', glow: '#60A5FA' },
-  { src: '/images/concert/artists/artist-4.webp', name: 'SCRUBB', tile: '', glow: '#F472B6' },
+  { src: '/images/concert/artists/artist-3.webp', tile: '', glow: '#60A5FA' },
+  { src: '/images/concert/artists/artist-4.webp', tile: '', glow: '#F472B6' },
   { src: '/images/concert/artists/artist-5.webp', tile: 'col-span-2', glow: '#3B82F6' },
   { src: '/images/concert/artists/artist-6.webp', tile: 'col-span-2', glow: '#FBBF24' },
 ];
@@ -79,17 +78,12 @@ export const ConcertSection: React.FC = () => (
                 >
                   <img
                     src={a.src}
-                    alt={a.name ? `${a.name} บนเวที ${PAST_FESTIVAL.name}` : `ศิลปินบนเวที ${PAST_FESTIVAL.name} ภาพที่ ${i + 1}`}
+                    alt={`ศิลปินบนเวที ${PAST_FESTIVAL.name} ภาพที่ ${i + 1}`}
                     loading="lazy"
                     decoding="async"
                     className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.06]"
                   />
                   <span aria-hidden="true" className="absolute inset-0 bg-gradient-to-t from-[#0E0620]/85 via-transparent to-transparent" />
-                  {a.name && (
-                    <span className="absolute left-2.5 bottom-2.5 rounded-lg bg-white text-[#140826] px-2.5 py-1 text-xs sm:text-sm font-black tracking-wide shadow-[0_3px_0_var(--glow)] -rotate-2">
-                      {a.name}
-                    </span>
-                  )}
                 </li>
               ))}
             </ul>
