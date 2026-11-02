@@ -11,6 +11,7 @@ import { PlayfulFX } from './components/PlayfulFX';
 import { PeekingPup } from './components/PeekingPup';
 import { FunRibbon } from './components/FunRibbon';
 import { ActivityStickerLayer } from './components/ActivitySticker';
+import { IntroSplash } from './components/IntroSplash';
 import { CustomCursor } from './components/CustomCursor';
 import { EasterEggElephant } from './components/EasterEggElephant';
 import { MobileBottomNav } from './components/MobileBottomNav';
@@ -18,7 +19,6 @@ import { Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
 import { EventObjectiveSection } from './components/EventObjectiveSection';
 import { TicketShop } from './components/TicketShop';
-import { CostumeContestSection } from './components/CostumeContestSection';
 import { DogContestSection } from './components/DogContestSection';
 import { WinnersSection } from './components/WinnersSection';
 import { EMPTY_ADD_ONS, hasAddOns, type AddOnSelection } from './data/addOns';
@@ -33,6 +33,7 @@ import { LeaderboardSection } from './components/LeaderboardSection';
 import { EventWeatherForecast } from './components/EventWeatherForecast';
 import { EssentialRunnerChecklist } from './components/EssentialRunnerChecklist';
 import { FAQSection } from './components/FAQSection';
+import { FollowFacebook } from './components/FollowFacebook';
 import { EventCtaBanner } from './components/EventCtaBanner';
 import { Footer } from './components/Footer';
 
@@ -163,6 +164,7 @@ export default function App() {
       <PlayfulFX />
       <PeekingPup />
       <ActivityStickerLayer />
+      <IntroSplash />
 
       {/* 2. Easter Egg Elephant */}
       <EasterEggElephant
@@ -218,7 +220,6 @@ export default function App() {
           }
           beforeMerch={
             <>
-              <CostumeContestSection />
               <DogContestSection />
             </>
           }
@@ -297,6 +298,7 @@ export default function App() {
         {/* 12. คำถามที่พบบ่อย (FAQ) */}
         <WinnersSection />
 
+        <FollowFacebook />
         <FAQSection />
 
         {/* 9. ผู้สนับสนุนงาน (Sponsor board) */}

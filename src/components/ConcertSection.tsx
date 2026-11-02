@@ -8,6 +8,23 @@ const PHOTOS = [
   { src: '/images/concert/crowd.webp', alt: 'ผู้ชมนั่งบนสนามหญ้าชมคอนเสิร์ตริมหาดตอนพลบค่ำ', cap: 'นั่งชิลล์ริมหาด ฟังดนตรีสดหลังจบการวิ่ง' },
 ];
 
+/**
+ * Artists on stage at last year's festival. Names come from the band logo on the stage screen;
+ * photos without a visible name stay unnamed until the organiser confirms who it is.
+ */
+const PAST_FESTIVAL = {
+  name: 'HUAHIN BEACH CROSS COUNTRY & MUSIC FESTIVAL 2026',
+  date: '2 พฤษภาคม 2026',
+};
+const ARTISTS: { src: string; name?: string; tile: string; glow: string }[] = [
+  { src: '/images/concert/artists/artist-1.webp', name: 'F.HERO', tile: 'col-span-2 row-span-2', glow: '#FF4D6D' },
+  { src: '/images/concert/artists/artist-2.webp', tile: 'row-span-2', glow: '#22D3EE' },
+  { src: '/images/concert/artists/artist-3.webp', name: 'THE TOYS', tile: '', glow: '#60A5FA' },
+  { src: '/images/concert/artists/artist-4.webp', name: 'SCRUBB', tile: '', glow: '#F472B6' },
+  { src: '/images/concert/artists/artist-5.webp', tile: 'col-span-2', glow: '#3B82F6' },
+  { src: '/images/concert/artists/artist-6.webp', tile: 'col-span-2', glow: '#FBBF24' },
+];
+
 /** Atmosphere photos of the run and the evening concert, shown below the schedule & GPS section. */
 export const ConcertSection: React.FC = () => (
   <section id="concert" aria-labelledby="concert-heading" className="py-10 sm:py-14 scroll-mt-20">
@@ -28,6 +45,56 @@ export const ConcertSection: React.FC = () => (
             </h2>
             <p className="mt-2 text-sm sm:text-base font-medium text-white/85">
               วิ่งริมหาดกับเพื่อนสี่ขา แล้วต่อด้วยดนตรีสดริมหาด ทั้งครอบครัวและน้องสุนัข
+            </p>
+          </div>
+
+          {/* Last year's line-up */}
+          <div className="mt-7 relative rounded-[26px] bg-[#0E0620] border-2 border-[#FFC928]/40 p-3 sm:p-5 overflow-clip">
+            <span aria-hidden="true" className="concert-beam left-[12%]" style={{ ['--beam' as string]: '#C084FC' }} />
+            <span aria-hidden="true" className="concert-beam left-[55%] [animation-delay:-2s]" style={{ ['--beam' as string]: '#FFC928' }} />
+            <span aria-hidden="true" className="concert-beam left-[85%] [animation-delay:-4s]" style={{ ['--beam' as string]: '#22D3EE' }} />
+            <div className="relative flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2 mb-4">
+              <div>
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 border border-white/25 px-3 py-1 text-[11px] sm:text-xs font-extrabold tracking-wide text-[#FFE28A]">
+                  <span className="w-2 h-2 rounded-full bg-[#FF4D6D] animate-pulse" aria-hidden="true" /> ย้อนบรรยากาศปีที่แล้ว
+                </span>
+                <h3 className="mt-2 font-hero text-lg sm:text-2xl font-black leading-tight text-white">
+                  ศิลปินบนเวที <span className="text-[#FFC928]">{PAST_FESTIVAL.name}</span>
+                </h3>
+              </div>
+              <span className="self-start sm:self-auto shrink-0 rounded-xl bg-[#FFC928] text-[#2A1450] text-xs sm:text-sm font-black px-3 py-1.5 border-2 border-[#140826] shadow-[0_3px_0_#140826]">
+                📅 {PAST_FESTIVAL.date}
+              </span>
+            </div>
+            <ul
+              data-reveal-stagger="pop"
+              className="relative grid grid-cols-2 md:grid-cols-4 auto-rows-[120px] sm:auto-rows-[150px] md:auto-rows-[170px] [grid-auto-flow:dense] gap-2.5 sm:gap-3"
+              aria-label={`ภาพศิลปินจากงาน ${PAST_FESTIVAL.name}`}
+            >
+              {ARTISTS.map((a, i) => (
+                <li
+                  key={a.src}
+                  className={`artist-tile group relative overflow-hidden rounded-2xl border-2 border-white/15 ${a.tile}`}
+                  style={{ ['--glow' as string]: a.glow }}
+                >
+                  <img
+                    src={a.src}
+                    alt={a.name ? `${a.name} บนเวที ${PAST_FESTIVAL.name}` : `ศิลปินบนเวที ${PAST_FESTIVAL.name} ภาพที่ ${i + 1}`}
+                    loading="lazy"
+                    decoding="async"
+                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.06]"
+                  />
+                  <span aria-hidden="true" className="absolute inset-0 bg-gradient-to-t from-[#0E0620]/85 via-transparent to-transparent" />
+                  {a.name && (
+                    <span className="absolute left-2.5 bottom-2.5 rounded-lg bg-white text-[#140826] px-2.5 py-1 text-xs sm:text-sm font-black tracking-wide shadow-[0_3px_0_var(--glow)] -rotate-2">
+                      {a.name}
+                    </span>
+                  )}
+                </li>
+              ))}
+            </ul>
+            <p className="relative mt-3 text-center text-[11px] sm:text-xs font-semibold text-white/60">
+              ภาพจากงาน {PAST_FESTIVAL.name} · {PAST_FESTIVAL.date} · ศิลปินปีนี้จะประกาศเร็วๆ นี้
             </p>
           </div>
 

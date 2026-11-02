@@ -67,7 +67,7 @@ export const Footer: React.FC<FooterProps> = ({
                 <a href="#hero" className="inline-block py-1.5 hover:text-[#FFCC00] hover:translate-x-1.5 transition-all before:content-['🐾'] before:mr-1.5 before:opacity-0 hover:before:opacity-100 before:transition-opacity">หน้าแรก</a>
               </li>
               <li>
-                <a href="#experience" className="inline-block py-1.5 hover:text-[#FFCC00] hover:translate-x-1.5 transition-all before:content-['🐾'] before:mr-1.5 before:opacity-0 hover:before:opacity-100 before:transition-opacity">รายละเอียดงาน</a>
+                <a href="#objective" className="inline-block py-1.5 hover:text-[#FFCC00] hover:translate-x-1.5 transition-all before:content-['🐾'] before:mr-1.5 before:opacity-0 hover:before:opacity-100 before:transition-opacity">รายละเอียดงาน</a>
               </li>
               <li>
                 <a href="#distances" className="inline-block py-1.5 hover:text-[#FFCC00] hover:translate-x-1.5 transition-all before:content-['🐾'] before:mr-1.5 before:opacity-0 hover:before:opacity-100 before:transition-opacity">ระยะวิ่ง (10K / 5K / Dog 3.8K / Dog 1K)</a>
@@ -112,12 +112,13 @@ export const Footer: React.FC<FooterProps> = ({
               ติดตามข่าวสาร
             </h4>
             <a
-              href={`https://${eventInfo.contactFacebook}`}
+              href={eventInfo.facebookUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 min-h-[44px] text-xs font-bold text-white/85 hover:text-[#FFCC00]"
+              className="inline-flex items-center gap-2 min-h-[44px] px-4 rounded-xl bg-[#1877F2] text-white text-sm font-extrabold hover:brightness-110"
             >
-              Facebook: {eventInfo.contactFacebook}
+              <span aria-hidden="true" className="w-5 h-5 rounded-full bg-white text-[#1877F2] flex items-center justify-center font-black text-sm leading-none">f</span>
+              เพจ Facebook {eventInfo.contactFacebook}
             </a>
             <button
               type="button"

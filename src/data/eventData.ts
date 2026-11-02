@@ -41,7 +41,9 @@ export const eventInfo = {
   contactEmail: 'contact@changsuekrun.com',
   contactPhone: '032-471-299 / 081-890-2027',
   contactLine: '@changsuekrun',
-  contactFacebook: 'facebook.com/changsuekrun',
+  contactFacebook: 'CHANGSUEK RUN',
+  /** official Facebook page for news (link from the organiser) */
+  facebookUrl: 'https://www.facebook.com/share/1CFXG1fRE9/',
 };
 
 export const venueInfo: VenueInfo = {

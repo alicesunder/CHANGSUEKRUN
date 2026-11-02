@@ -51,6 +51,7 @@ import {
 } from '../utils/runnerStorage';
 import { ServerOrder, adminApi, adminLogin, clearAdminToken, getAdminToken } from '../utils/api';
 import { formatThaiId } from '../data/shooting';
+import { AdminStationRoster, OrderFullDetails } from './AdminStationRoster';
 import {
   formatPromptPayDisplay,
   formatThaiBankAccount,
@@ -137,7 +138,7 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
   });
   const [loadError, setLoadError] = useState<string | null>(null);
 
-  const [activeTab, setActiveTab] = useState<'overview' | 'orders' | 'security' | 'settings' | 'sponsors' | 'scan' | 'winners'>(
+  const [activeTab, setActiveTab] = useState<'overview' | 'roster' | 'orders' | 'security' | 'settings' | 'sponsors' | 'scan' | 'winners'>(
     'orders'
   );
   const [orders, setOrders] = useState<TicketOrder[]>([]);
@@ -163,7 +164,7 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
 
   // Inspect Individual BIB & Slip Modal State
   const [inspectingOrder, setInspectingOrder] = useState<TicketOrder | null>(null);
-  const [inspectorViewMode, setInspectorViewMode] = useState<'slip' | 'bib'>('slip');
+  const [inspectorViewMode, setInspectorViewMode] = useState<'details' | 'slip' | 'bib'>('details');
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   // PromptPay, Admin Credentials & Counter Settings State
@@ -682,6 +683,18 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
               >
                 <TrendingUp className="w-4 h-4" />
                 <span>สรุปยอดขาย & เสื้อ</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab('roster')}
+                className={`px-3 py-2 rounded-xl text-xs font-extrabold transition-all cursor-pointer flex items-center gap-1.5 ${
+                  activeTab === 'roster'
+                    ? 'bg-[#FFC928] text-[#180B30] shadow-xs'
+                    : 'text-white/80 hover:text-white'
+                }`}
+              >
+                <span aria-hidden="true">📋</span>
+                <span>รายชื่อแต่ละฐาน</span>
               </button>
               <button
                 type="button"
@@ -1585,6 +1598,16 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
           {/* ========================================================== */}
           {/* TAB 4: PROMPTPAY, TIMER, ADMIN CREDENTIALS & BIB COUNTERS  */}
           {/* ========================================================== */}
+          {activeTab === 'roster' && (
+            <AdminStationRoster
+              orders={orders as ServerOrder[]}
+              masked={isPiiMasked}
+              onInspect={(o) => {
+                setInspectorViewMode('details');
+                setInspectingOrder(o);
+              }}
+            />
+          )}
           {activeTab === 'sponsors' && <SponsorCodesAdmin />}
           {activeTab === 'scan' && <TicketScannerAdmin />}
           {activeTab === 'winners' && <WinnersAdmin />}
@@ -1912,6 +1935,17 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
                   <div className="inline-flex p-1 rounded-xl bg-slate-100 border border-slate-200">
                     <button
                       type="button"
+                      onClick={() => setInspectorViewMode('details')}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-extrabold cursor-pointer ${
+                        inspectorViewMode === 'details'
+                          ? 'bg-[#180B30] text-[#FFC928]'
+                          : 'text-slate-600'
+                      }`}
+                    >
+                      ข้อมูลผู้สมัคร
+                    </button>
+                    <button
+                      type="button"
                       onClick={() => setInspectorViewMode('slip')}
                       className={`px-3 py-1.5 rounded-lg text-xs font-extrabold cursor-pointer ${
                         inspectorViewMode === 'slip'
@@ -1944,7 +1978,9 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
                 </div>
               </div>
 
-              {inspectorViewMode === 'slip' ? (
+              {inspectorViewMode === 'details' ? (
+                <OrderFullDetails order={inspectingOrder as ServerOrder} />
+              ) : inspectorViewMode === 'slip' ? (
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-5 items-start">
                   {/* Left 6 cols: Bank e-Slip Image */}
                   <div className="md:col-span-6 bg-slate-100 rounded-2xl p-3 border border-slate-200 text-center">

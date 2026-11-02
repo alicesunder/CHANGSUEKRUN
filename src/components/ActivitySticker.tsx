@@ -1,12 +1,18 @@
 import React, { useEffect, useRef, useState } from 'react';
 
-export type ActivityStickerId = 'tower' | 'gun' | 'wind';
+export type ActivityStickerId = 'tower' | 'gun' | 'wind' | 'mangrove' | 'resort' | 'camp' | 'statue';
 
 const STICKERS: Record<ActivityStickerId, { src: string; title: string; emoji: string; glow: string }> = {
   tower: { src: '/images/addons/sticker-tower.webp', title: 'หอสูง', emoji: '🪂', glow: '#10B981' },
   gun: { src: '/images/addons/sticker-gun.webp', title: 'ยิงปืน', emoji: '🎯', glow: '#8B5CF6' },
   wind: { src: '/images/addons/sticker-wind.webp', title: 'อุโมงค์ลม', emoji: '🌪️', glow: '#0EA5E9' },
+  // landmarks on the course map
+  mangrove: { src: '/images/map/sticker-mangrove.webp', title: 'หอดูนก · ป่าชายเลน', emoji: '🌳', glow: '#22C55E' },
+  resort: { src: '/images/map/sticker-resort.webp', title: 'Sea Sand Sun Hua Hin Resort', emoji: '🏖️', glow: '#0EA5E9' },
+  camp: { src: '/images/map/sticker-bpp-school.webp', title: 'ค่ายนเรศวร', emoji: '🐘', glow: '#8B5CF6' },
+  statue: { src: '/images/map/sticker-statue.webp', title: 'พระบรมราชานุสาวรีย์', emoji: '🙏', glow: '#F59E0B' },
 };
+const WARM: ActivityStickerId[] = ['tower', 'gun', 'wind'];
 
 const EVENT = 'changsuek:activity-sticker';
 
@@ -37,7 +43,7 @@ export const ActivityStickerLayer: React.FC = () => {
     };
     window.addEventListener(EVENT, onShow);
     // Warm the three images up once the page is idle, so the first pop is instant.
-    const warm = window.setTimeout(() => Object.values(STICKERS).forEach((s) => (new Image().src = s.src)), 4000);
+    const warm = window.setTimeout(() => WARM.forEach((id) => (new Image().src = STICKERS[id].src)), 4000);
     return () => {
       window.removeEventListener(EVENT, onShow);
       timers.current.forEach(window.clearTimeout);

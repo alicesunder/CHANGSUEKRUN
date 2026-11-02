@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { RouteId } from '../types';
+import { showActivitySticker, type ActivityStickerId } from './ActivitySticker';
 
 /**
  * Course maps (organiser's artwork). Routes are drawn as SVG so the selected distance can be
@@ -15,6 +16,21 @@ export const ROUTE_STYLE: Record<RouteId, { label: string; color: string; shine:
 };
 const LEGEND_ORDER: RouteId[] = ['10km', '5km', '3km', '1km'];
 
+/**
+ * A place marked on the map: a pin with its name, and optionally a sticker picture joined to the pin
+ * by a dotted line. Positions are in the artwork's own pixels (approximate, from the organiser's map).
+ */
+interface Landmark {
+  id: string;
+  pin: [number, number];
+  label: string;
+  sub?: string;
+  /** label goes above the pin instead of below */
+  labelAbove?: boolean;
+  color: string;
+  sticker?: { id: ActivityStickerId; src: string; x: number; y: number; w: number; h: number; rotate?: number };
+}
+
 interface MapDef {
   w: number;
   h: number;
@@ -23,6 +39,7 @@ interface MapDef {
   minW?: number;
   routes: Partial<Record<RouteId, string[]>>;
   label: string;
+  landmarks?: Landmark[];
 }
 
 const BIG: MapDef = {
@@ -31,6 +48,41 @@ const BIG: MapDef = {
   bg: '/images/route/route-map-bg.webp',
   minW: 880,
   label: 'แผนที่เส้นทางวิ่ง 5 กม. (แดง) และ 10 กม. (ม่วง)',
+  landmarks: [
+    {
+      id: 'mangrove',
+      pin: [440, 172],
+      label: 'หอดูนก · ป่าชายเลน',
+      sub: 'อุทยานสิ่งแวดล้อมนานาชาติสิรินธร',
+      color: '#16A34A',
+      sticker: { id: 'mangrove', src: '/images/map/sticker-mangrove.webp', x: 0, y: 290, w: 320, h: 320, rotate: -5 },
+    },
+    { id: 'palace', pin: [1040, 300], label: 'พระราชนิเวศน์มฤคทายวัน', labelAbove: true, color: '#B45309' },
+    {
+      id: 'resort',
+      pin: [1560, 250],
+      label: 'Sea Sand Sun Hua Hin Resort',
+      labelAbove: true,
+      color: '#0284C7',
+      sticker: { id: 'resort', src: '/images/map/sticker-resort.webp', x: 1120, y: 4, w: 390, h: 260, rotate: 4 },
+    },
+    {
+      id: 'camp',
+      pin: [1730, 470],
+      label: 'ค่ายนเรศวร',
+      sub: 'กองบัญชาการตำรวจตระเวนชายแดน',
+      color: '#7C3AED',
+      sticker: { id: 'camp', src: '/images/map/sticker-bpp-school.webp', x: 1930, y: 315, w: 300, h: 305, rotate: 5 },
+    },
+    {
+      id: 'statue',
+      pin: [2105, 748],
+      label: 'พระบรมราชานุสาวรีย์',
+      sub: 'สมเด็จพระนเรศวรมหาราช',
+      color: '#D97706',
+      sticker: { id: 'statue', src: '/images/map/sticker-statue.webp', x: 2520, y: 470, w: 290, h: 313, rotate: -4 },
+    },
+  ],
   routes: {
   "10km": [
     "M1583,357 L1612,327 L1624,313 L1631,302 L1634,294 L1635,286 L1635,247 L1637,242 L1639,240 L1643,238 L1646,238 L1749,244 L1753,244 L1755,242 L1752,238 L1673,172 L1671,169 L1671,166 L1677,164 L1733,161 L1752,161 L2120,231 L2127,234 L2130,241 L2134,293 L2137,300 L2142,304 L2430,361 L2436,363 L2442,368 L2446,372 L2460,396 L2464,407 L2466,424 L2470,501 L2469,508 L2465,518 L2453,539 L2451,546 L2449,563 L2445,570 L2440,573 L2370,592 L2362,595 L2346,605 L2309,633 L2305,638 L2301,645 L2300,650 L2296,725 L2293,731 L2289,734 L2284,735 L2228,735 L2213,740 L2196,750 L2187,754 L2177,757 L2168,758 L2158,758 L2146,755 L2141,751 L2132,742 L2124,738 L2118,737 L2087,737 L2081,738 L2076,741 L2072,748 L2057,802 L2054,806 L2047,810 L2041,810 L2032,808 L2026,804 L2017,796 L2012,794 L2007,792 L1890,791 L1876,788 L1838,772 L1830,767 L1828,762 L1828,757 L1867,638 L1867,633 L1866,630 L1864,629 L1860,628 L1585,614 L1580,612 L1577,610 L1575,603 L1575,375 L1577,367 L1583,357",
@@ -51,6 +103,17 @@ const CAMP: MapDef = {
   h: 1470,
   bg: '/images/route/route-map-camp.webp',
   label: 'แผนที่เส้นทางวิ่ง 1 กม. (ชมพู) และ 3.8 กม. (ส้ม)',
+  landmarks: [
+    {
+      id: 'camp',
+      pin: [1180, 290],
+      label: 'ค่ายนเรศวร',
+      sub: 'กองบัญชาการ ตชด.',
+      labelAbove: true,
+      color: '#7C3AED',
+      sticker: { id: 'camp', src: '/images/map/sticker-bpp-school.webp', x: 1190, y: 20, w: 270, h: 274, rotate: 5 },
+    },
+  ],
   routes: {
   "3km": [
     "M175,344 L219,418 L254,472 L257,476 L261,479 L265,482 L271,483 L398,497 L404,500 L406,504 L405,509 L392,564 L393,570 L394,574 L400,580 L438,610 L449,621 L518,728 L572,814 L572,820 L568,825 L490,871 L483,876 L473,887 L448,917 L439,927 L434,935 L432,940 L431,948 L420,1139 L421,1143 L425,1147 L429,1148 L614,1156 L789,1160 L793,1161 L797,1165 L798,1169 L792,1337 L794,1343 L797,1345 L801,1346 L915,1345 L921,1347 L926,1352 L940,1369 L948,1376 L954,1379 L980,1387 L985,1387 L990,1386 L994,1383 L1010,1353 L1014,1349 L1019,1347 L1025,1346 L1101,1344 L1108,1342 L1111,1339 L1112,1335 L1112,1181 L1114,1173 L1118,1165 L1132,1145 L1140,1136 L1148,1131 L1344,1059 L1350,1055 L1356,1050 L1371,1028 L1375,1018 L1376,1010 L1376,866 L1380,713 L1378,697 L1374,681 L1371,675 L1366,669 L1121,618 L857,567 L852,563 L850,557 L853,471 L851,465 L845,462 L179,338 L175,338 L174,339 L175,344"
@@ -59,6 +122,68 @@ const CAMP: MapDef = {
     "M144,319 L686,407"
   ]
 },
+};
+
+/** One landmark: dotted leader line, bobbing sticker (tap = big sticker pop), pin and name. */
+const MapLandmark: React.FC<{ lm: Landmark; big: boolean; index: number }> = ({ lm, big, index }) => {
+  const [px, py] = lm.pin;
+  const fs = big ? 44 : 46;
+  const st = lm.sticker;
+  const labelY = lm.labelAbove ? py - 92 : py + fs + 6;
+  const pop = () => st && showActivitySticker(st.id, lm.sub ? `${lm.label} · ${lm.sub}` : lm.label);
+  return (
+    <g className="map-landmark" style={{ ['--i' as string]: index }}>
+      {st && (
+        <>
+          <path
+            d={`M${st.x + st.w / 2},${st.y + st.h / 2} L${px},${py - 40}`}
+            stroke="#2A1450"
+            strokeWidth={5}
+            strokeDasharray="4 14"
+            strokeLinecap="round"
+            fill="none"
+            opacity={0.55}
+          />
+          <g
+            className="map-sticker"
+            role="button"
+            tabIndex={0}
+            aria-label={`ดูสติกเกอร์ ${lm.label}`}
+            onClick={pop}
+            onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), pop())}
+            transform={`rotate(${st.rotate ?? 0} ${st.x + st.w / 2} ${st.y + st.h / 2})`}
+          >
+            <image href={st.src} x={st.x} y={st.y} width={st.w} height={st.h} preserveAspectRatio="xMidYMid meet" />
+          </g>
+        </>
+      )}
+      <g className="map-pin" transform={`translate(${px} ${py})`}>
+        <ellipse cx={0} cy={2} rx={16} ry={6} fill="#000" opacity={0.25} />
+        <path d="M0,0 C-10,-18 -24,-30 -24,-50 A24,24 0 1 1 24,-50 C24,-30 10,-18 0,0 Z" fill={lm.color} stroke="#FFFFFF" strokeWidth={5} />
+        <circle cx={0} cy={-50} r={9} fill="#FFFFFF" />
+      </g>
+      <text
+        x={px}
+        y={labelY}
+        textAnchor="middle"
+        fontSize={fs}
+        fontWeight={900}
+        fill="#2A1450"
+        stroke="#FFFFFF"
+        strokeWidth={10}
+        strokeLinejoin="round"
+        paintOrder="stroke"
+        style={{ fontFamily: 'inherit' }}
+      >
+        {lm.label}
+        {lm.sub && (
+          <tspan x={px} dy={fs * 0.95} fontSize={fs * 0.72} fontWeight={800} fill={lm.color}>
+            {lm.sub}
+          </tspan>
+        )}
+      </text>
+    </g>
+  );
 };
 
 /** Horizontal centre of each route on the wide map (for auto-scrolling on narrow screens) */
@@ -123,6 +248,9 @@ export const RouteIllustratedMap: React.FC<{
               );
             })}
           </g>
+          {map.landmarks?.map((lm, i) => (
+            <MapLandmark key={lm.id} lm={lm} big={map === BIG} index={i} />
+          ))}
         </svg>
       </div>
 
