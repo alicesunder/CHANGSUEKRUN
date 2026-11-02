@@ -61,6 +61,7 @@ import { parseShooting, type ShootingInfo } from '../src/data/shooting';
 import { parseParkingPlates, type ParkingPlate } from '../src/data/vipParking';
 import { checkCredentials, issueToken, requireAdmin } from './auth';
 import { fetchVerifiedOmiseCharge, maskedAccountMatches, verifySlipWithEasySlip } from './payments';
+import { mailConfigured, maskEmail, sendTicketEmail } from './mailer';
 
 /** Must match PRIVACY_POLICY_VERSION in src/components/PrivacyNotice.tsx */
 const PRIVACY_POLICY_VERSION = '2026-11-02';
@@ -100,6 +101,13 @@ async function loadOwnedOrder(req: express.Request, res: express.Response): Prom
   return order;
 }
 
+/** E-mails the ticket when an order has just become paid (not when it was already paid). Never throws. */
+async function mailNewlyPaid(wasPaid: boolean, paid: StoredOrder | undefined): Promise<void> {
+  if (wasPaid || !paid || paid.paymentStatus !== 'PAID') return;
+  const r = await sendTicketEmail(paid);
+  console.log(`[mail] ${paid.orderId}: ${r.ok ? `ticket sent (${r.id})` : `not sent (${r.error})`}`);
+}
+
 /** Re-checks an Omise charge and marks the order paid if (and only if) Omise confirms it. */
 async function settleFromOmise(order: StoredOrder, chargeId = order.omiseChargeId): Promise<StoredOrder> {
   if (!chargeId || order.paymentStatus === 'PAID') return order;
@@ -112,14 +120,14 @@ async function settleFromOmise(order: StoredOrder, chargeId = order.omiseChargeI
     charge.currency === 'THB' &&
     charge.amountSatang === Math.round(order.totalPrice * 100)
   ) {
-    return (
-      (await markOrderPaid(order.orderId, {
-        status: 'AUTO_VERIFIED',
-        verifiedBy: 'Omise PromptPay (ยืนยันจาก Omise API)',
-        paymentRef: charge.chargeId || chargeId,
-        senderBank: 'Omise PromptPay',
-      })) || order
-    );
+    const paid = await markOrderPaid(order.orderId, {
+      status: 'AUTO_VERIFIED',
+      verifiedBy: 'Omise PromptPay (ยืนยันจาก Omise API)',
+      paymentRef: charge.chargeId || chargeId,
+      senderBank: 'Omise PromptPay',
+    });
+    await mailNewlyPaid(false, paid);
+    return paid || order;
   }
   return order;
 }
@@ -151,6 +159,8 @@ async function publicConfig() {
     nextBib,
     /** false until an EasySlip API key is configured — registration is closed until then */
     paymentReady: Boolean(key),
+    /** true when paid orders get their ticket by e-mail */
+    emailReady: mailConfigured(),
   };
 }
 
@@ -427,6 +437,7 @@ export function createApp(): express.Express {
         await releaseSponsorCode(sponsorCode).catch(() => {});
         throw err;
       }
+      await mailNewlyPaid(false, paid);
       res.json({ order: toRunnerView(paid || order), accessToken: token, config: await publicConfig() });
       return;
     }
@@ -441,6 +452,28 @@ export function createApp(): express.Express {
     if (!order) return;
     order = await settleAll(order);
     res.json({ order: toRunnerView(order) });
+  }));
+
+  // A buyer who lost their ticket asks for the e-mail again: order id + the phone number on the order.
+  // It only ever goes to the e-mail address on the order, and the answer never says which part was wrong.
+  app.post('/api/orders/:orderId/resend-ticket', smallJson, h(async (req, res) => {
+    if ((await rateLimited(`resend-ip:${clientIp(req)}`, 10, 60 * 60 * 1000)) || (await rateLimited(`resend:${String(req.params.orderId).slice(0, 40)}`, 3, 60 * 60 * 1000))) {
+      res.status(429).json({ error: 'ขอส่งอีเมลบ่อยเกินไป กรุณารอสักครู่แล้วลองใหม่' });
+      return;
+    }
+    const order = await getOrder(String(req.params.orderId));
+    const phone = String(req.body?.phone || '').replace(/\D/g, '');
+    const match = order && phone.length >= 9 && order.phone.replace(/\D/g, '').slice(-9) === phone.slice(-9);
+    if (!order || !match || order.paymentStatus !== 'PAID') {
+      res.status(404).json({ error: 'ไม่พบคำสั่งซื้อที่ชำระแล้ว หรือเบอร์โทรไม่ตรงกับที่ลงทะเบียน' });
+      return;
+    }
+    const r = await sendTicketEmail(order);
+    if (!r.ok) {
+      res.status(503).json({ error: 'ส่งอีเมลไม่สำเร็จในขณะนี้ กรุณาติดต่อผู้จัดงาน' });
+      return;
+    }
+    res.json({ ok: true, to: maskEmail(order.email) });
   }));
 
   // Slip upload. EasySlip reads the transfer from the bank; we check amount, receiver, time and reuse.
@@ -520,6 +553,7 @@ export function createApp(): express.Express {
           exclusiveRef: true,
         });
         console.log(`[slip] ${order.orderId} paid by slip ${slip.transRef}`);
+        await mailNewlyPaid(false, paid);
         res.json({ order: toRunnerView(paid!) });
         return;
       } catch (err) {
@@ -627,12 +661,13 @@ export function createApp(): express.Express {
         res.status(400).json({ error: `เลขที่รายการ ${ref} ถูกใช้กับคำสั่งซื้ออื่นแล้ว` });
         return;
       }
-      await markOrderPaid(orderId, {
+      const paid = await markOrderPaid(orderId, {
         status: 'ADMIN_APPROVED',
         verifiedBy: admin,
         paymentRef: ref,
         senderBank: clean(req.body?.senderBank, 80) || order.senderBank,
       });
+      await mailNewlyPaid(order.paymentStatus === 'PAID', paid);
     } else if (status === 'REJECTED' || status === 'PENDING_REVIEW') {
       await updateOrder(orderId, (o) => {
         o.verificationStatus = status;
@@ -647,6 +682,26 @@ export function createApp(): express.Express {
     }
     console.log(`[admin] ${admin} set ${orderId} -> ${status}`);
     res.json({ order: toAdminView((await getOrder(orderId))!) });
+  }));
+
+  // Send the ticket e-mail again (to the address on the order).
+  app.post('/api/admin/orders/:orderId/email', requireAdmin, h(async (req, res) => {
+    const order = await getOrder(String(req.params.orderId));
+    if (!order) {
+      res.status(404).json({ error: 'ไม่พบคำสั่งซื้อ' });
+      return;
+    }
+    if (order.paymentStatus !== 'PAID') {
+      res.status(400).json({ error: 'คำสั่งซื้อนี้ยังไม่ได้ชำระเงิน' });
+      return;
+    }
+    const r = await sendTicketEmail(order);
+    console.log(`[mail] ${(req as any).admin.username} resent ${order.orderId}: ${r.ok ? 'sent' : r.error}`);
+    if (!r.ok) {
+      res.status(r.error === 'MAIL_NOT_CONFIGURED' ? 503 : 502).json({ error: r.error === 'MAIL_NOT_CONFIGURED' ? 'ยังไม่ได้ตั้งค่าระบบส่งอีเมล (RESEND_API_KEY)' : `ส่งอีเมลไม่สำเร็จ: ${r.error}` });
+      return;
+    }
+    res.json({ ok: true, to: maskEmail(order.email) });
   }));
 
   // The slip image the runner uploaded (kept out of the order list to keep it small).

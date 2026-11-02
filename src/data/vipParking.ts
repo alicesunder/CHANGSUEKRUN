@@ -28,3 +28,8 @@ export function parseParkingPlates(raw: unknown, vipTables: number): { ok: true;
   if (new Set(keys).size !== keys.length) return { ok: false, error: 'ทะเบียนรถซ้ำกัน' };
   return { ok: true, value: plates };
 }
+
+/** What staff scan at the car park gate: the order id (the scanner looks it up) and the plate. */
+export function parkingQrPayload(orderId: string, p: ParkingPlate): string {
+  return JSON.stringify({ orderId, type: 'VIP_PARKING', plate: `${p.plate} ${p.province}`.trim() });
+}

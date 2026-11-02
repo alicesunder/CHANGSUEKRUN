@@ -1890,6 +1890,22 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
                       {' '}· ยอมรับใบยินยอม {(inspectingOrder as ServerOrder).shooting!.consentAt?.slice(0, 10)}
                     </p>
                   )}
+                  {inspectingOrder.paymentStatus === 'PAID' && (
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        try {
+                          const r = await adminApi.resendTicketEmail(inspectingOrder.orderId);
+                          showToast(`ส่งอีเมลตั๋วไปที่ ${r.to} แล้ว`);
+                        } catch (err) {
+                          showToast(err instanceof Error ? err.message : 'ส่งอีเมลไม่สำเร็จ');
+                        }
+                      }}
+                      className="mt-1.5 inline-flex items-center gap-1.5 rounded-lg bg-[#2A1450] text-[#FFC928] px-3 py-1.5 text-xs font-extrabold cursor-pointer"
+                    >
+                      📧 ส่งอีเมลตั๋วอีกครั้ง
+                    </button>
+                  )}
                 </div>
 
                 <div className="flex items-center gap-2">

@@ -2,12 +2,8 @@ import React, { useEffect, useState } from 'react';
 import QRCode from 'qrcode';
 import { Car, Download } from 'lucide-react';
 
-import type { ParkingPlate } from '../data/vipParking';
+import { parkingQrPayload, type ParkingPlate } from '../data/vipParking';
 
-/** What staff scan at the car park gate: the order id (the scanner looks it up) and the plate. */
-export function parkingQrPayload(orderId: string, p: ParkingPlate): string {
-  return JSON.stringify({ orderId, type: 'VIP_PARKING', plate: `${p.plate} ${p.province}`.trim() });
-}
 
 /** Draws a pass as a PNG (same layout as the card) so it can be saved to the phone's photos. */
 async function downloadPass(orderId: string, p: ParkingPlate, qr: string, n: number) {

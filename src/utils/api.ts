@@ -21,6 +21,8 @@ export interface PublicConfig {
   windTunnelRemaining?: number;
   /** false until the organiser configures EasySlip — registration is closed until then */
   paymentReady: boolean;
+  /** true when paid orders get their ticket by e-mail */
+  emailReady?: boolean;
 }
 
 export type ServerOrder = TicketOrder & {
@@ -152,6 +154,15 @@ export async function checkSponsorCode(code: string): Promise<{ valid: true; spo
     method: 'POST',
     headers: jsonHeaders,
     body: JSON.stringify({ code }),
+  });
+}
+
+/** Asks the server to e-mail the ticket again (to the address on the order); needs the phone used to register. */
+export async function resendTicketEmail(orderId: string, phone: string): Promise<{ ok: true; to: string }> {
+  return request<{ ok: true; to: string }>(`/api/orders/${encodeURIComponent(orderId)}/resend-ticket`, {
+    method: 'POST',
+    headers: jsonHeaders,
+    body: JSON.stringify({ phone }),
   });
 }
 
@@ -303,6 +314,8 @@ export const adminApi = {
       headers: jsonHeaders,
       body: JSON.stringify({ settings, bibCounters }),
     }),
+  resendTicketEmail: (orderId: string) =>
+    adminFetch<{ ok: true; to: string }>(`/api/admin/orders/${encodeURIComponent(orderId)}/email`, { method: 'POST' }),
   getSlip: (orderId: string) =>
     adminFetch<{ image: string }>(`/api/admin/orders/${encodeURIComponent(orderId)}/slip`),
   gatewayStatus: () =>

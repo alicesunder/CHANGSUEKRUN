@@ -73,8 +73,6 @@ import {
 } from '../data/eventData';
 import {
   PrintFormatOption,
-  EmailDeliveryLog,
-  dispatchAutomatedTicketEmail,
   generateTicketCheckInQrDataUrl,
   downloadOfficialBibAsPng,
 } from '../utils/ticketEmailAndPrint';
@@ -307,7 +305,6 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
 
   // Step 4 Email & Print States
   const [ticketCheckInQrUrl, setTicketCheckInQrUrl] = useState<string>('');
-  const [emailLog, setEmailLog] = useState<EmailDeliveryLog | null>(null);
   const [isResendingEmail, setIsResendingEmail] = useState<boolean>(false);
   const [printModalOpen, setPrintModalOpen] = useState<boolean>(false);
   const [printModalTab, setPrintModalTab] = useState<'print' | 'email'>('print');
@@ -347,12 +344,9 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
     savePendingOrderRef(null);
     setPendingRef(null);
     saveRunnerProfile(order);
-    const [qrCheckIn, sentLog] = await Promise.all([
-      generateTicketCheckInQrDataUrl(order),
-      dispatchAutomatedTicketEmail(order),
-    ]);
+    // The server e-mails the ticket itself when the payment is confirmed (see server/mailer.ts).
+    const qrCheckIn = await generateTicketCheckInQrDataUrl(order);
     setTicketCheckInQrUrl(qrCheckIn);
-    setEmailLog(sentLog);
     setCreatedOrder(order);
     setCelebrationKey((prev) => prev + 1);
     playVictoryCelebrationSound(true);
@@ -395,7 +389,6 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
     setSponsorInput('');
     setSponsorError(null);
     setCreatedOrder(null);
-    setEmailLog(null);
     setTicketCheckInQrUrl('');
 
     getPublicConfig(true)
@@ -2181,7 +2174,10 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                       ชำระเงินสำเร็จ! {noRun ? 'เลขบัตรของคุณคือ' : 'เลข BIB ของคุณคือ'} #{createdOrder.bibNumber}
                     </div>
                     <p className="text-xs font-bold text-emerald-800 mt-0.5">
-                      กรุณาดาวน์โหลดหรือพิมพ์บัตรเก็บไว้ และจดเลขคำสั่งซื้อ{' '}
+                      {publicCfg?.emailReady
+                        ? <>ส่งตั๋วไปที่อีเมล <strong>{createdOrder.email}</strong> แล้ว (ไม่เห็นให้ดูในโฟลเดอร์สแปม) · </>
+                        : null}
+                      กรุณาบันทึกรูปบัตรเก็บไว้ และจดเลขคำสั่งซื้อ{' '}
                       <strong className="font-mono">{createdOrder.orderId}</strong> ไว้ใช้ตอนรับอุปกรณ์
                     </p>
                   </div>

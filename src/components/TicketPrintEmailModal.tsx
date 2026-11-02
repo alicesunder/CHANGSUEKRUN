@@ -22,11 +22,11 @@ import { RunnerProfile } from '../utils/runnerStorage';
 import {
   PrintFormatOption,
   generateTicketCheckInQrDataUrl,
-  dispatchAutomatedTicketEmail,
   downloadOfficialBibAsPng,
   getRoutePrintMeta,
 } from '../utils/ticketEmailAndPrint';
 import { formatBaht } from '../data/eventData';
+import { resendTicketEmail } from '../utils/api';
 import { PawIcon } from './brand/DogDecor';
 
 interface TicketPrintEmailModalProps {
@@ -49,7 +49,7 @@ export const TicketPrintEmailModal: React.FC<TicketPrintEmailModalProps> = ({
   const [checkInQrUrl, setCheckInQrUrl] = useState<string>('');
   const [emailInput, setEmailInput] = useState<string>(profile.email || 'runner@changsuekrun.com');
   const [isSendingEmail, setIsSendingEmail] = useState(false);
-  const [emailToast, setEmailToast] = useState<string | null>(null);
+  const [emailToast, setEmailToast] = useState<{ ok: boolean; text: string } | null>(null);
   const [isDownloadingPng, setIsDownloadingPng] = useState(false);
 
   const meta = getRoutePrintMeta(profile.routeId);
@@ -82,16 +82,17 @@ export const TicketPrintEmailModal: React.FC<TicketPrintEmailModalProps> = ({
 
   const handleResendEmail = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!emailInput.trim()) return;
     setIsSendingEmail(true);
     setEmailToast(null);
-    await new Promise((r) => setTimeout(r, 650));
-    const log = await dispatchAutomatedTicketEmail(profile, emailInput.trim());
-    setIsSendingEmail(false);
-    setEmailToast(
-      `จัดส่งบัตรวิ่ง E-Ticket และป้าย BIB #${profile.bibNumber} ไปยัง ${log.recipientEmail} เรียบร้อยแล้ว!`
-    );
-    setTimeout(() => setEmailToast(null), 4000);
+    try {
+      // The server sends it, and only ever to the e-mail address on the order.
+      const r = await resendTicketEmail(profile.orderId || '', profile.phone || '');
+      setEmailToast({ ok: true, text: `ส่งตั๋วไปที่ ${r.to} แล้ว (ไม่เห็นให้ดูในโฟลเดอร์สแปม)` });
+    } catch (err) {
+      setEmailToast({ ok: false, text: err instanceof Error ? err.message : 'ส่งอีเมลไม่สำเร็จ' });
+    } finally {
+      setIsSendingEmail(false);
+    }
   };
 
   const handleOpenMailClient = () => {
@@ -278,26 +279,21 @@ export const TicketPrintEmailModal: React.FC<TicketPrintEmailModalProps> = ({
               <div className="flex items-center gap-2 text-xs font-extrabold text-emerald-800 bg-emerald-50 border border-emerald-300 px-3 py-2 rounded-xl">
                 <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
                 <span>
-                  ระบบส่งบัตร E-Ticket & BIB #{profile.bibNumber} เข้าอีเมลอัตโนมัติทันทีที่เงินเข้าเรียบร้อยแล้ว
+                  ตั๋ว & BIB #{profile.bibNumber} ถูกส่งไปที่อีเมลที่ลงทะเบียนไว้ตอนชำระเงิน · ไม่ได้รับ กดส่งอีกครั้งได้
                 </span>
               </div>
 
               <div className="flex items-center gap-2">
-                <input
-                  type="email"
-                  required
-                  value={emailInput}
-                  onChange={(e) => setEmailInput(e.target.value)}
-                  placeholder="ระบุอีเมลผู้รับ..."
-                  className="px-3 py-2 rounded-xl border-2 border-[#2A1450]/25 text-xs font-bold text-[#2A1450] bg-white min-w-[210px]"
-                />
+                <span className="px-3 py-2 rounded-xl border-2 border-[#2A1450]/15 text-xs font-bold text-[#2A1450] bg-slate-50 min-w-[180px] truncate" title="ส่งได้เฉพาะอีเมลที่ลงทะเบียน">
+                  {profile.email || 'อีเมลที่ลงทะเบียน'}
+                </span>
                 <button
                   type="submit"
                   disabled={isSendingEmail}
                   className="px-3.5 py-2 rounded-xl bg-[#6D28D9] hover:bg-[#5B21B6] text-white text-xs font-extrabold flex items-center gap-1.5 shrink-0 cursor-pointer"
                 >
                   <Send className="w-3.5 h-3.5" />
-                  <span>{isSendingEmail ? 'กำลังส่ง...' : 'ส่งเข้าอีเมลซ้ำ'}</span>
+                  <span>{isSendingEmail ? 'กำลังส่ง...' : 'ส่งตั๋วเข้าอีเมลอีกครั้ง'}</span>
                 </button>
                 <button
                   type="button"
@@ -311,9 +307,9 @@ export const TicketPrintEmailModal: React.FC<TicketPrintEmailModalProps> = ({
             </form>
 
             {emailToast && (
-              <div className="p-2.5 rounded-xl bg-emerald-600 text-white text-xs font-extrabold flex items-center gap-2">
-                <Check className="w-4 h-4" />
-                <span>{emailToast}</span>
+              <div role={emailToast.ok ? 'status' : 'alert'} className={`p-2.5 rounded-xl text-white text-xs font-extrabold flex items-center gap-2 ${emailToast.ok ? 'bg-emerald-600' : 'bg-rose-600'}`}>
+                {emailToast.ok ? <Check className="w-4 h-4" /> : <X className="w-4 h-4" />}
+                <span>{emailToast.text}</span>
               </div>
             )}
           </div>
