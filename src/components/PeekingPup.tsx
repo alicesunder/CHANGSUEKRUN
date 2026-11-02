@@ -50,9 +50,17 @@ export const PeekingPup: React.FC = () => {
         }
       }
     };
+    // Measure at most every 200 ms while scrolling (it reads several section positions).
+    let t = 0;
+    const onScrollThrottled = () => {
+      if (!t) t = window.setTimeout(() => ((t = 0), onScroll()), 200);
+    };
     onScroll();
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
+    window.addEventListener('scroll', onScrollThrottled, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', onScrollThrottled);
+      window.clearTimeout(t);
+    };
   }, []);
 
   // The bubble only pops up for a few seconds (new line, or a pat), so it never sits on top of

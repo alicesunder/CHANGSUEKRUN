@@ -9,6 +9,9 @@ type ScanOrder = ServerOrder & {
   dogName?: string;
   concertQty?: number;
   addOns?: { label: string; people: number; total: number };
+  vipTables?: number;
+  parkingPlates?: { plate: string; province: string }[];
+  shooting?: { shooters: { fullName: string; idCard: string }[] };
 };
 
 /** Pulls an order id / BIB out of whatever a QR code holds (our JSON payload or a plain code). */
@@ -21,6 +24,16 @@ function codeFromQr(text: string): string {
     /* not JSON: use the raw text */
   }
   return t;
+}
+
+/** The plate printed on a VIP parking pass QR, if this QR is one. */
+function parkingPlateFromQr(text: string): string {
+  try {
+    const j = JSON.parse(text.trim());
+    return j && j.type === 'VIP_PARKING' ? String(j.plate || '') : '';
+  } catch {
+    return '';
+  }
 }
 
 function beep(ok: boolean) {
@@ -54,6 +67,8 @@ export const TicketScannerAdmin: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [toggling, setToggling] = useState(false);
+  /** set when the last scan was a VIP parking pass */
+  const [scannedPlate, setScannedPlate] = useState('');
 
   const stopCamera = useCallback(() => {
     cancelAnimationFrame(rafRef.current);
@@ -67,6 +82,7 @@ export const TicketScannerAdmin: React.FC = () => {
   const lookup = useCallback(async (raw: string) => {
     const code = codeFromQr(raw);
     if (!code) return;
+    setScannedPlate(parkingPlateFromQr(raw));
     setLoading(true);
     setError(null);
     try {
@@ -231,6 +247,37 @@ export const TicketScannerAdmin: React.FC = () => {
               <div className="rounded-2xl bg-white border-2 border-[#2A1450]/15 p-3">
                 <span className="block text-[11px] font-extrabold text-[#6F6878]">น้องสุนัข</span>
                 <span className="block font-extrabold text-[#2A1450] break-words">{order.dogName}</span>
+              </div>
+            )}
+            {scannedPlate && (
+              <div className="col-span-2 rounded-2xl bg-[#FFC928] border-2 border-[#2A1450] p-3">
+                <span className="block text-[11px] font-extrabold text-[#2A1450]">🚗 สแกนบัตรจอดรถ VIP</span>
+                <span className="block text-xl font-black text-[#2A1450]">{scannedPlate}</span>
+                <span className="block text-xs font-bold text-[#2A1450]">
+                  {order.parkingPlates?.some((p) => `${p.plate} ${p.province}`.trim() === scannedPlate)
+                    ? '✓ ทะเบียนนี้ลงทะเบียนไว้กับคำสั่งซื้อนี้'
+                    : '✕ ไม่พบทะเบียนนี้ในคำสั่งซื้อ — ตรวจสอบกับเจ้าของรถ'}
+                </span>
+              </div>
+            )}
+            {order.parkingPlates && order.parkingPlates.length > 0 && (
+              <div className="col-span-2 rounded-2xl bg-white border-2 border-[#2A1450]/15 p-3">
+                <span className="block text-[11px] font-extrabold text-[#6F6878]">ทะเบียนรถ VIP ({order.parkingPlates.length} คัน)</span>
+                <span className="block font-extrabold text-[#2A1450] break-words">
+                  {order.parkingPlates.map((p) => `${p.plate} ${p.province}`).join(' · ')}
+                </span>
+              </div>
+            )}
+            {order.shooting && (
+              <div className="col-span-2 rounded-2xl bg-white border-2 border-[#2A1450]/15 p-3">
+                <span className="block text-[11px] font-extrabold text-[#6F6878]">ผู้ยิงปืน (ตรวจบัตรประชาชนตัวจริง)</span>
+                <ul className="mt-0.5 space-y-0.5">
+                  {order.shooting.shooters.map((s, i) => (
+                    <li key={i} className="font-extrabold text-[#2A1450] break-words">
+                      {i + 1}. {s.fullName} <span className="font-mono text-xs text-[#6F6878]">{s.idCard}</span>
+                    </li>
+                  ))}
+                </ul>
               </div>
             )}
             {order.addOns && (

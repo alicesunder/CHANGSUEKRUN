@@ -81,6 +81,9 @@ import {
 import { TicketPrintEmailModal } from './TicketPrintEmailModal';
 import { AddOnPicker } from './AddOnPicker';
 import { BLOOD_TYPES, GENDERS, PREFIXES, RELATIONSHIPS, ageFromBirthDate, needsInsurance } from '../data/insurance';
+import { SHOOTING_CONSENT_LINES, digitsOnly, formatThaiId, isValidThaiId, type Shooter } from '../data/shooting';
+import { VIP_PARKING_PER_TABLE, type ParkingPlate } from '../data/vipParking';
+import { ParkingPasses } from './ParkingPass';
 import { EMPTY_ADD_ONS, addOnBonusDiscount, addOnConcertRate, addOnCountRate, addOnDiscountRate, addOnLabel, addOnTotal, concertDiscountPerTicket, hasAddOns, percentOf, type AddOnSelection } from '../data/addOns';
 
 interface RegistrationModalProps {
@@ -267,6 +270,11 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
   const [insEmName, setInsEmName] = useState('');
   const [insRel, setInsRel] = useState('');
   const [insConsent, setInsConsent] = useState(false);
+  // VIP parking: up to 2 cars per table
+  const [plates, setPlates] = useState<ParkingPlate[]>([]);
+  // Shooting: name + national ID for each person, plus one consent
+  const [shooters, setShooters] = useState<Shooter[]>([]);
+  const [shootingConsent, setShootingConsent] = useState(false);
   const [shirtSize, setShirtSize] = useState('L');
   const [dogName, setDogName] = useState('');
   const [dogBreed, setDogBreed] = useState('');
@@ -308,7 +316,8 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const ticket = ticketById(selectedRoute);
-  const theme = ROUTE_THEME[selectedRoute];
+  // Concert / add-on orders carry routeId 'concert' / 'addon', which have no run theme.
+  const theme = ROUTE_THEME[selectedRoute] ?? ROUTE_THEME['5km'];
   const isDog = !noRun && isDogCategory(selectedRoute);
   const insured = !noRun && needsInsurance(selectedRoute);
   const insAge = ageFromBirthDate(insBirth);
@@ -322,6 +331,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
   const addOnSum = addOnTotal(addOns, discountCtx);
   const addOnOff = addOnBonusDiscount(addOns, discountCtx);
   const concertMissing = wantConcert && gaQty === 0 && vipTables === 0;
+  const hasGun = wantAddons && addOns.gun !== 'none';
   const total = ticketTotal + addOnSum;
   // With a sponsor code the run is free; add-on activities are always paid.
   const chargeTotal = (sponsorOn ? 0 : ticketTotal) + addOnSum;
@@ -351,7 +361,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
 
   /** Restore form fields from a server order (used when resuming an unfinished payment). */
   const restoreFromOrder = (o: ServerOrder) => {
-    setSelectedRoute(o.routeId);
+    if (ROUTE_THEME[o.routeId]) setSelectedRoute(o.routeId);
     setExtraPeople(o.extraPeople || 0);
     setExtraDogs(o.extraDogs || 0);
     setFullName(o.fullName || '');
@@ -555,6 +565,9 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
             }
           : undefined,
         insuranceConsent: insured ? insConsent : undefined,
+        parkingPlates: vipTables > 0 ? plates.slice(0, vipTables * VIP_PARKING_PER_TABLE).filter((p) => p.plate.trim() || p.province.trim()) : undefined,
+        shooters: hasGun ? Array.from({ length: addOns.people }, (_, i) => ({ fullName: shooters[i]?.fullName?.trim() || '', idCard: digitsOnly(shooters[i]?.idCard || '') })) : undefined,
+        shootingConsent: hasGun ? shootingConsent : undefined,
         phone: phone.trim(),
         email: email.trim(),
         emergencyPhone: emergencyPhone.trim(),
@@ -738,9 +751,10 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                 />
               </div>
               <div>
-                <div className="inline-flex items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-[0.18em] text-[#FFE268]">
-                  <Sparkles className="w-3 h-3" />
-                  <span>CHANGSUEK RUN 2026 · SMART E-TICKET & AUTO-BIB</span>
+                {/* one short line on phones: the long version wrapped onto 3 lines and ran into the title */}
+                <div className="flex items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-[0.12em] sm:tracking-[0.18em] text-[#FFE268] leading-none whitespace-nowrap mb-1">
+                  <Sparkles className="w-3 h-3 shrink-0" />
+                  <span>CHANGSUEK RUN 2026<span className="hidden sm:inline"> · SMART E-TICKET & AUTO-BIB</span></span>
                 </div>
                 <h2 className="text-lg sm:text-2xl font-black tracking-tight text-white leading-tight">
                   {isAddonOnly ? 'ซื้อกิจกรรมเสริม' : isConcert ? 'ซื้อตั๋วคอนเสิร์ต / เข้างาน' : 'สมัครวิ่ง & รับบัตรวิ่ง E-BIB'}
@@ -1370,6 +1384,138 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                           <input type="checkbox" required checked={insConsent} onChange={(e) => setInsConsent(e.target.checked)} className="mt-1 w-5 h-5 accent-[#7C3AED] shrink-0" />
                           <span className="text-xs sm:text-sm font-semibold text-[#2A1450] leading-snug">
                             ข้าพเจ้ายินยอมให้ผู้จัดงานส่งข้อมูลส่วนบุคคลและข้อมูลสุขภาพข้างต้นให้บริษัทประกันภัย เพื่อใช้ทำประกันอุบัติเหตุสำหรับกิจกรรมนี้เท่านั้น *
+                          </span>
+                        </label>
+                      </div>
+                    )}
+
+                    {/* VIP TABLE: register the cars that get a parking pass */}
+                    {vipTables > 0 && (
+                      <div className="rounded-3xl border-2 border-[#F59E0B] bg-[#FFFBEB] p-4 sm:p-5 space-y-3">
+                        <div className="flex items-center gap-2.5">
+                          <span className="w-10 h-10 rounded-2xl bg-[#FFC928] border-2 border-[#2A1450] flex items-center justify-center text-lg shrink-0" aria-hidden="true">🚗</span>
+                          <div>
+                            <h3 className="text-base font-black text-[#2A1450] leading-tight">ทะเบียนรถสำหรับบัตรจอดรถ VIP</h3>
+                            <p className="text-xs font-bold text-[#6B5A85]">
+                              VIP TABLE ได้ที่จอด {VIP_PARKING_PER_TABLE} คันต่อโต๊ะ (รวม {vipTables * VIP_PARKING_PER_TABLE} คัน) · กรอกอย่างน้อย 1 คัน · ได้บัตรจอดรถพร้อม QR หลังชำระเงิน
+                            </p>
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          {Array.from({ length: vipTables * VIP_PARKING_PER_TABLE }, (_, i) => (
+                            <div key={i} className="rounded-2xl bg-white border-2 border-[#2A1450]/15 p-3 space-y-2">
+                              <span className="block text-xs font-extrabold text-[#2A1450]">
+                                รถคันที่ {i + 1} {i === 0 ? '*' : '(ไม่บังคับ)'}
+                              </span>
+                              <input
+                                type="text"
+                                required={i === 0}
+                                value={plates[i]?.plate || ''}
+                                maxLength={16}
+                                onChange={(e) =>
+                                  setPlates((ps) => {
+                                    const next = [...ps];
+                                    next[i] = { plate: e.target.value, province: ps[i]?.province || '' };
+                                    return next;
+                                  })
+                                }
+                                placeholder="ทะเบียน เช่น กก 1111"
+                                className="w-full min-h-[48px] px-3 rounded-xl border-2 border-[#2A1450]/20 bg-white text-sm font-semibold text-[#2A1450]"
+                              />
+                              <input
+                                type="text"
+                                required={i === 0 || Boolean(plates[i]?.plate?.trim())}
+                                value={plates[i]?.province || ''}
+                                maxLength={40}
+                                onChange={(e) =>
+                                  setPlates((ps) => {
+                                    const next = [...ps];
+                                    next[i] = { plate: ps[i]?.plate || '', province: e.target.value };
+                                    return next;
+                                  })
+                                }
+                                placeholder="จังหวัด เช่น กรุงเทพมหานคร"
+                                className="w-full min-h-[48px] px-3 rounded-xl border-2 border-[#2A1450]/20 bg-white text-sm font-semibold text-[#2A1450]"
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* SHOOTING: each shooter's name + national ID, and the consent */}
+                    {hasGun && (
+                      <div className="rounded-3xl border-2 border-[#8B5CF6] bg-[#F5F3FF] p-4 sm:p-5 space-y-3">
+                        <div className="flex items-center gap-2.5">
+                          <span className="w-10 h-10 rounded-2xl bg-white border-2 border-[#2A1450] flex items-center justify-center text-lg shrink-0" aria-hidden="true">🎯</span>
+                          <div>
+                            <h3 className="text-base font-black text-[#2A1450] leading-tight">ข้อมูลผู้เข้าร่วมกิจกรรมยิงปืน</h3>
+                            <p className="text-xs font-bold text-[#6B5A85]">
+                              สนามยิงปืนต้องใช้ชื่อและเลขบัตรประชาชนของผู้ยิงทุกคน ({addOns.people} คน) · ใช้เพื่อลงทะเบียนกับสนามเท่านั้น
+                            </p>
+                          </div>
+                        </div>
+                        <div className="space-y-3">
+                          {Array.from({ length: addOns.people }, (_, i) => {
+                            const id = digitsOnly(shooters[i]?.idCard || '');
+                            const idBad = id.length === 13 && !isValidThaiId(id);
+                            return (
+                              <div key={i} className="rounded-2xl bg-white border-2 border-[#2A1450]/15 p-3 grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                                <div>
+                                  <label className={labelCls}>ผู้ยิงคนที่ {i + 1}: ชื่อ-นามสกุล (ตามบัตรประชาชน) *</label>
+                                  <input
+                                    type="text"
+                                    required
+                                    value={shooters[i]?.fullName || ''}
+                                    maxLength={120}
+                                    onChange={(e) =>
+                                      setShooters((ss) => {
+                                        const next = [...ss];
+                                        next[i] = { fullName: e.target.value, idCard: ss[i]?.idCard || '' };
+                                        return next;
+                                      })
+                                    }
+                                    className="w-full min-h-[48px] px-3 rounded-xl border-2 border-[#2A1450]/20 bg-white text-sm font-semibold text-[#2A1450]"
+                                  />
+                                </div>
+                                <div>
+                                  <label className={labelCls}>เลขบัตรประจำตัวประชาชน 13 หลัก *</label>
+                                  <input
+                                    type="text"
+                                    inputMode="numeric"
+                                    autoComplete="off"
+                                    required
+                                    value={formatThaiId(shooters[i]?.idCard || '')}
+                                    maxLength={17}
+                                    onChange={(e) =>
+                                      setShooters((ss) => {
+                                        const next = [...ss];
+                                        next[i] = { fullName: ss[i]?.fullName || '', idCard: digitsOnly(e.target.value).slice(0, 13) };
+                                        return next;
+                                      })
+                                    }
+                                    placeholder="x-xxxx-xxxxx-xx-x"
+                                    aria-invalid={idBad}
+                                    className={`w-full min-h-[48px] px-3 rounded-xl border-2 bg-white text-sm font-semibold font-mono text-[#2A1450] ${idBad ? 'border-rose-500' : 'border-[#2A1450]/20'}`}
+                                  />
+                                  {idBad && <p className="mt-1 text-xs font-bold text-rose-600">เลขบัตรไม่ถูกต้อง กรุณาตรวจอีกครั้ง</p>}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                        <div className="rounded-2xl bg-white border-2 border-[#2A1450]/15 p-3">
+                          <p className="text-xs sm:text-sm font-extrabold text-[#2A1450] mb-1.5">ใบยินยอมเข้าร่วมกิจกรรมยิงปืน</p>
+                          <ol className="list-decimal pl-5 space-y-1 text-xs sm:text-sm font-semibold text-[#4B2D78]">
+                            {SHOOTING_CONSENT_LINES.map((l) => (
+                              <li key={l}>{l}</li>
+                            ))}
+                          </ol>
+                        </div>
+                        <label className="flex items-start gap-2.5 rounded-2xl bg-white border-2 border-[#2A1450]/20 p-3 cursor-pointer">
+                          <input type="checkbox" required checked={shootingConsent} onChange={(e) => setShootingConsent(e.target.checked)} className="mt-1 w-5 h-5 accent-[#7C3AED] shrink-0" />
+                          <span className="text-xs sm:text-sm font-semibold text-[#2A1450] leading-snug">
+                            ข้าพเจ้าอ่านและยอมรับใบยินยอมข้างต้นแทนผู้ยิงทุกคนในคำสั่งซื้อนี้
                           </span>
                         </label>
                       </div>
@@ -2188,6 +2334,13 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                   )}
                 </div>
               </motion.div>
+
+              <ParkingPasses
+                orderId={createdOrder.orderId}
+                vipTables={(createdOrder as ServerOrder).vipTables}
+                plates={(createdOrder as ServerOrder).parkingPlates}
+                paid={createdOrder.paymentStatus === 'PAID'}
+              />
 
               {/* ====================================================== */}
               {/* SELECTABLE PRINT FORMATS PANEL (มีให้เลือกแบบ Print)    */}

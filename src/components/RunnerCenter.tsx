@@ -18,6 +18,8 @@ import {
   clearStoredRunnerProfile,
 } from '../utils/runnerStorage';
 import { RunnerBibCard } from './RunnerBibCard';
+import { ParkingPasses } from './ParkingPass';
+import type { ParkingPlate } from '../data/vipParking';
 import { RunnerChecklist } from './RunnerChecklist';
 import { RunnerQuickActions } from './RunnerQuickActions';
 
@@ -141,6 +143,14 @@ export const RunnerCenter: React.FC<RunnerCenterProps> = ({
                   </button>
                 </div>
               </div>
+
+              {/* VIP table orders: parking passes with QR */}
+              <ParkingPasses
+                orderId={(profile as { orderId?: string }).orderId || ''}
+                vipTables={(profile as { vipTables?: number }).vipTables}
+                plates={(profile as { parkingPlates?: ParkingPlate[] }).parkingPlates}
+                paid={(profile as { paymentStatus?: string }).paymentStatus === 'PAID'}
+              />
 
               {/* 2-Column Responsive Layout */}
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">

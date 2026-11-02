@@ -93,7 +93,6 @@ export const HotelExplorer: React.FC<HotelExplorerProps> = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [distanceFilter, setDistanceFilter] = useState<'all' | 'under3' | '3to5' | 'above5'>('all');
   const [priceFilter, setPriceFilter] = useState<'all' | 'budget' | 'mid' | 'premium'>('all');
-  const [roomFilter, setRoomFilter] = useState<'all' | 'available' | 'immediate'>('all');
   const [typeFilter, setTypeFilter] = useState<
     'all' | 'Resort' | 'Hotel' | 'Villa' | 'Guest House'
   >('all');
@@ -183,24 +182,13 @@ export const HotelExplorer: React.FC<HotelExplorerProps> = () => {
           return false;
         if (priceFilter === 'premium' && hotel.priceMin <= 3000) return false;
 
-        if (
-          roomFilter === 'available' &&
-          (!hotel.availableRoomsCount || hotel.availableRoomsCount <= 0)
-        )
-          return false;
-        if (
-          roomFilter === 'immediate' &&
-          (!hotel.availableRoomsCount || hotel.availableRoomsCount < 10)
-        )
-          return false;
-
         if (typeFilter !== 'all' && !hotel.type.toLowerCase().includes(typeFilter.toLowerCase()))
           return false;
 
         return true;
       })
       .sort((a, b) => (a.rank ?? 999) - (b.rank ?? 999));
-  }, [searchQuery, distanceFilter, priceFilter, roomFilter, typeFilter]);
+  }, [searchQuery, distanceFilter, priceFilter, typeFilter]);
 
   const displayedHotels = useMemo(() => {
     if (showAllHotels || viewMode === 'table') {
@@ -210,12 +198,7 @@ export const HotelExplorer: React.FC<HotelExplorerProps> = () => {
   }, [filteredHotels, showAllHotels, viewMode]);
 
   const totalHotelsCount = hotelsData.length;
-  const availableHotelsCount = hotelsData.filter(
-    (h) =>
-      h.availableRoomsCount !== null &&
-      h.availableRoomsCount !== undefined &&
-      h.availableRoomsCount > 0
-  ).length;
+  const petFriendlyCount = hotelsData.filter((h) => h.petFriendly).length;
   const lowestPrice = Math.min(...hotelsData.map((h) => h.priceMin || 9999));
 
   return (
@@ -247,6 +230,9 @@ export const HotelExplorer: React.FC<HotelExplorerProps> = () => {
                 </h2>
                 <p className="text-xs sm:text-sm text-[#6B5A85] font-bold mt-0.5">
                   แนะนำที่พักยอดนิยม ใกล้หาดชะอำ • ต้อนรับนักวิ่งและสัตว์เลี้ยง
+                </p>
+                <p className="mt-1 inline-flex items-center gap-1.5 rounded-full bg-amber-50 border border-amber-300 px-2.5 py-0.5 text-[11px] font-bold text-[#8A5A00]">
+                  หมายเหตุ: ภาพโรงแรมในเว็บเป็นเพียงภาพจำลองเท่านั้น กรุณาติดต่อที่พักโดยตรงเพื่อสอบถามห้องและราคา
                 </p>
               </div>
             </div>
@@ -287,7 +273,7 @@ export const HotelExplorer: React.FC<HotelExplorerProps> = () => {
                       Pet Friendly
                     </span>
                     <span className="absolute bottom-2 right-2 rounded-md bg-black/55 text-white text-[10px] font-semibold px-1.5 py-0.5">
-                      ภาพประกอบ
+                      ภาพจำลอง
                     </span>
                   </div>
 
@@ -330,7 +316,7 @@ export const HotelExplorer: React.FC<HotelExplorerProps> = () => {
                   <span>ฐานข้อมูลที่พัก Pet-Friendly ทั้งหมด {totalHotelsCount} แห่ง</span>
                 </div>
                 <h3 className="text-lg sm:text-xl font-black text-[#261042]">
-                  ค้นหาเปรียบเทียบราคา ระยะทาง และห้องว่าง
+                  ค้นหาเปรียบเทียบราคาและระยะทาง
                 </h3>
               </div>
 
@@ -379,9 +365,9 @@ export const HotelExplorer: React.FC<HotelExplorerProps> = () => {
               </div>
               <div className="bg-[#FAF8FD] border border-purple-100 rounded-xl px-3.5 py-2 flex items-center justify-between">
                 <div>
-                  <div className="text-[10px] text-slate-500 font-semibold uppercase">มีห้องว่าง</div>
+                  <div className="text-[10px] text-slate-500 font-semibold uppercase">รับสัตว์เลี้ยง</div>
                   <div className="text-base font-black text-emerald-600">
-                    {availableHotelsCount} แห่ง
+                    {petFriendlyCount} แห่ง
                   </div>
                 </div>
                 <CheckCircle2 className="w-4 h-4 text-emerald-600" />
@@ -440,15 +426,6 @@ export const HotelExplorer: React.FC<HotelExplorerProps> = () => {
                 <option value="premium">พรีเมียม (&gt; ฿3,000)</option>
               </select>
 
-              <select
-                value={roomFilter}
-                onChange={(e) => setRoomFilter(e.target.value as any)}
-                className="bg-white border border-purple-100 rounded-lg px-2.5 py-1.5 text-xs text-slate-700 font-semibold cursor-pointer"
-              >
-                <option value="all">ห้องว่าง ทั้งหมด</option>
-                <option value="available">มีห้องว่างแน่นอน</option>
-                <option value="immediate">ว่าง 10+ ห้อง</option>
-              </select>
 
               <select
                 value={typeFilter}
@@ -466,10 +443,6 @@ export const HotelExplorer: React.FC<HotelExplorerProps> = () => {
             {viewMode === 'cards' && (
               <div className="space-y-2.5">
                 {displayedHotels.map((hotel) => {
-                  const hasRooms =
-                    hotel.availableRoomsCount !== null &&
-                    hotel.availableRoomsCount !== undefined &&
-                    hotel.availableRoomsCount > 0;
                   const isFav = !!favorites[hotel.id];
                   const hotelImage = getHotelImage(hotel);
 
@@ -516,11 +489,6 @@ export const HotelExplorer: React.FC<HotelExplorerProps> = () => {
 
                       <div className="flex sm:flex-col items-center sm:items-end justify-between gap-2 shrink-0">
                         <div className="text-left sm:text-right">
-                          {hasRooms && (
-                            <div className="inline-flex items-center gap-1 text-[9px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full mb-0.5">
-                              <span>ว่าง {hotel.availableRooms}</span>
-                            </div>
-                          )}
                           <div>
                             <span className="text-base font-black text-[#5B20A8]">
                               {hotel.priceStart || `฿${hotel.priceMin.toLocaleString()}`}
@@ -586,7 +554,6 @@ export const HotelExplorer: React.FC<HotelExplorerProps> = () => {
                         <th className="py-3 px-3.5">#</th>
                         <th className="py-3 px-3.5">ชื่อที่พัก</th>
                         <th className="py-3 px-3.5 text-center">ระยะทาง</th>
-                        <th className="py-3 px-3.5 text-center">ห้องว่าง</th>
                         <th className="py-3 px-3.5 text-right">ราคาเริ่มต้น</th>
                         <th className="py-3 px-3.5">สัตว์เลี้ยง</th>
                       </tr>
@@ -601,7 +568,6 @@ export const HotelExplorer: React.FC<HotelExplorerProps> = () => {
                           <td className="py-2.5 px-3.5 font-bold text-[#5B20A8]">#{hotel.rank}</td>
                           <td className="py-2.5 px-3.5 font-bold text-[#261042]">{hotel.name}</td>
                           <td className="py-2.5 px-3.5 text-center">{hotel.distanceKm} กม.</td>
-                          <td className="py-2.5 px-3.5 text-center">{hotel.availableRooms || '-'}</td>
                           <td className="py-2.5 px-3.5 text-right font-black text-[#5B20A8]">
                             {hotel.priceStart || `฿${hotel.priceMin.toLocaleString()}`}
                           </td>
@@ -651,7 +617,7 @@ export const HotelExplorer: React.FC<HotelExplorerProps> = () => {
                 </span>
               </div>
               <span className="absolute bottom-3 right-3 rounded-md bg-black/55 text-white text-[11px] font-semibold px-2 py-0.5">
-                ภาพประกอบ
+                ภาพจำลอง
               </span>
             </div>
 
@@ -659,12 +625,9 @@ export const HotelExplorer: React.FC<HotelExplorerProps> = () => {
               {selectedHotelModal.name}
             </h3>
 
-            <div className="my-3 p-3 rounded-xl bg-purple-50/70 border border-purple-100 flex items-center justify-between">
-              <span className="text-xs text-slate-600 font-medium">สถานะห้องว่าง:</span>
-              <span className="text-xs font-black text-emerald-700 bg-emerald-100/80 border border-emerald-300 px-2.5 py-0.5 rounded-full">
-                {selectedHotelModal.availableRooms || 'สอบถามที่พัก'}
-              </span>
-            </div>
+            <p className="my-3 p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-[11px] font-bold text-[#8A5A00]">
+              ภาพเป็นเพียงภาพจำลอง · สอบถามห้องว่างและราคาล่าสุดกับที่พักโดยตรง
+            </p>
 
             <div className="mb-3.5 p-3 rounded-xl bg-amber-50/60 border border-amber-200/80 text-xs">
               <div className="font-bold text-[#8A5A00] mb-1 flex items-center gap-1.5">

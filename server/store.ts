@@ -15,6 +15,8 @@ export type VerificationStatus =
   | 'REJECTED';
 
 import type { InsuranceInfo } from '../src/data/insurance';
+import { maskThaiId, type ShootingInfo } from '../src/data/shooting';
+import type { ParkingPlate } from '../src/data/vipParking';
 
 export interface StoredOrder {
   orderId: string;
@@ -51,6 +53,10 @@ export interface StoredOrder {
   sponsorName?: string;
   /** Accident-insurance details (5 KM / 10 KM runners only) */
   insurance?: InsuranceInfo;
+  /** VIP tables: registered cars for the parking passes */
+  parkingPlates?: ParkingPlate[];
+  /** Shooting activity: every shooter's name + national ID, and when the consent was accepted */
+  shooting?: ShootingInfo;
   /** Optional after-run activities bought with the ticket */
   addOns?: { tower: boolean; gun: 'none' | 'standard' | 'premium'; windTunnel: boolean; people: number; pricePerPerson: number; total: number; discount?: number; label: string };
   paymentStatus: 'PAID' | 'PENDING';
@@ -480,9 +486,13 @@ export async function rateLimited(key: string, limit: number, windowMs: number):
 // ---------------------------------------------------------------------------
 /** What the runner (owner of the order) is allowed to see. */
 export function toRunnerView(o: StoredOrder) {
-  const { accessTokenHash, slipFile, slipHash, aiReview, omisePastChargeIds, omiseQrImageUrl, ...rest } = o;
+  const { accessTokenHash, slipFile, slipHash, aiReview, omisePastChargeIds, omiseQrImageUrl, shooting, ...rest } = o;
   void omiseQrImageUrl;
-  return { ...rest, hasSlip: Boolean(slipFile) };
+  // National ID numbers go back to the browser masked (they are only needed by the organiser).
+  const shootingView = shooting
+    ? { ...shooting, shooters: shooting.shooters.map((s) => ({ fullName: s.fullName, idCard: maskThaiId(s.idCard) })) }
+    : undefined;
+  return { ...rest, shooting: shootingView, hasSlip: Boolean(slipFile) };
 }
 
 /** What an authenticated admin sees (no token hash). */

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Check, Crosshair, ExternalLink, MapPin, Minus, Plus, Sparkles, Star, TowerControl, Wind } from 'lucide-react';
 import { ACTIVITY_LOCATIONS, type ActivityLocation } from '../data/activityLocations';
+import { showActivitySticker } from './ActivitySticker';
 import {
   AddOnSelection,
   DiscountContext,
@@ -222,7 +223,10 @@ export const AddOnPicker: React.FC<AddOnPickerProps> = ({ value, onChange, windT
           sub="มีครูฝึกดูแล · ได้ใบประกาศ/ปีก"
           price={350}
           active={value.tower}
-          onToggle={() => set({ tower: !value.tower })}
+          onToggle={() => {
+            if (!value.tower) showActivitySticker('tower');
+            set({ tower: !value.tower });
+          }}
           icon={<TowerControl className="w-5 h-5 text-[#047857]" aria-hidden="true" />}
         />
         <PinLink id="tower" />
@@ -258,7 +262,10 @@ export const AddOnPicker: React.FC<AddOnPickerProps> = ({ value, onChange, windT
                   role="radio"
                   aria-checked={on}
                   aria-label={on ? `ยิงปืน ${o.label} (แตะอีกครั้งเพื่อยกเลิก)` : `ยิงปืน ${o.label}`}
-                  onClick={() => set({ gun: on ? 'none' : o.id })}
+                  onClick={() => {
+                    if (!on) showActivitySticker('gun', `ยิงปืน ${o.label} · เลือกแล้ว!`);
+                    set({ gun: on ? 'none' : o.id });
+                  }}
                   className={`min-h-[46px] px-1.5 py-1 rounded-xl text-center leading-tight transition-all border-2 focus:outline-none focus-visible:ring-4 focus-visible:ring-[#7B3FC6]/50 cursor-pointer ${
                     on
                       ? 'bg-white text-[#2A1450] border-white shadow-[0_8px_14px_-6px_rgba(0,0,0,0.4)]'
@@ -288,7 +295,10 @@ export const AddOnPicker: React.FC<AddOnPickerProps> = ({ value, onChange, windT
           price={990}
           active={value.windTunnel && !windFull}
           disabled={windFull}
-          onToggle={() => set({ windTunnel: !value.windTunnel })}
+          onToggle={() => {
+            if (!value.windTunnel) showActivitySticker('wind');
+            set({ windTunnel: !value.windTunnel });
+          }}
           icon={<Wind className="w-5 h-5 text-[#0369A1]" aria-hidden="true" />}
           note={
             <span

@@ -28426,6 +28426,39 @@ async function dbTx(fn) {
   return (await getDriver()).tx(fn);
 }
 
+// src/data/shooting.ts
+var SHOOTING_CONSENT_VERSION = "2026-11-02";
+function isValidThaiId(id) {
+  if (!/^\d{13}$/.test(id)) return false;
+  let sum = 0;
+  for (let i = 0; i < 12; i++) sum += Number(id[i]) * (13 - i);
+  return (11 - sum % 11) % 10 === Number(id[12]);
+}
+var digitsOnly = (v) => typeof v === "string" ? v.replace(/\D/g, "") : "";
+function maskThaiId(id) {
+  const d = digitsOnly(id);
+  return d.length === 13 ? `x-xxxx-xxxxx-${d.slice(10, 12)}-${d[12]}` : "";
+}
+var clip = (v, n) => typeof v === "string" ? v.replace(/[\u0000-\u001f<>]/g, " ").trim().slice(0, n) : "";
+function parseShooting(raw, people, consent) {
+  const list = Array.isArray(raw) ? raw.slice(0, people) : [];
+  const errors = [];
+  const shooters = [];
+  for (let i = 0; i < people; i++) {
+    const r = list[i] && typeof list[i] === "object" ? list[i] : {};
+    const fullName = clip(r.fullName, 120);
+    const idCard = digitsOnly(r.idCard);
+    if (fullName.length < 3) errors.push(`\u0E01\u0E23\u0E38\u0E13\u0E32\u0E01\u0E23\u0E2D\u0E01\u0E0A\u0E37\u0E48\u0E2D-\u0E19\u0E32\u0E21\u0E2A\u0E01\u0E38\u0E25\u0E1C\u0E39\u0E49\u0E22\u0E34\u0E07\u0E1B\u0E37\u0E19\u0E04\u0E19\u0E17\u0E35\u0E48 ${i + 1}`);
+    if (!isValidThaiId(idCard)) errors.push(`\u0E40\u0E25\u0E02\u0E1A\u0E31\u0E15\u0E23\u0E1B\u0E23\u0E30\u0E0A\u0E32\u0E0A\u0E19\u0E1C\u0E39\u0E49\u0E22\u0E34\u0E07\u0E1B\u0E37\u0E19\u0E04\u0E19\u0E17\u0E35\u0E48 ${i + 1} \u0E44\u0E21\u0E48\u0E16\u0E39\u0E01\u0E15\u0E49\u0E2D\u0E07`);
+    shooters.push({ fullName, idCard });
+  }
+  const ids = shooters.map((s) => s.idCard).filter(Boolean);
+  if (new Set(ids).size !== ids.length) errors.push("\u0E40\u0E25\u0E02\u0E1A\u0E31\u0E15\u0E23\u0E1B\u0E23\u0E30\u0E0A\u0E32\u0E0A\u0E19\u0E1C\u0E39\u0E49\u0E22\u0E34\u0E07\u0E1B\u0E37\u0E19\u0E0B\u0E49\u0E33\u0E01\u0E31\u0E19");
+  if (consent !== true) errors.push("\u0E01\u0E23\u0E38\u0E13\u0E32\u0E22\u0E2D\u0E21\u0E23\u0E31\u0E1A\u0E43\u0E1A\u0E22\u0E34\u0E19\u0E22\u0E2D\u0E21\u0E40\u0E02\u0E49\u0E32\u0E23\u0E48\u0E27\u0E21\u0E01\u0E34\u0E08\u0E01\u0E23\u0E23\u0E21\u0E22\u0E34\u0E07\u0E1B\u0E37\u0E19");
+  if (errors.length) return { ok: false, error: errors.join(" \xB7 ") };
+  return { ok: true, value: { shooters, consentAt: (/* @__PURE__ */ new Date()).toISOString(), consentVersion: SHOOTING_CONSENT_VERSION } };
+}
+
 // server/store.ts
 var ROUTES = ["10km", "5km", "3km", "1km"];
 var DEFAULT_SETTINGS = {
@@ -28692,9 +28725,10 @@ async function rateLimited(key, limit, windowMs) {
   return Number(rows[0].n) > limit;
 }
 function toRunnerView(o) {
-  const { accessTokenHash, slipFile, slipHash, aiReview, omisePastChargeIds, omiseQrImageUrl, ...rest } = o;
+  const { accessTokenHash, slipFile, slipHash, aiReview, omisePastChargeIds, omiseQrImageUrl, shooting, ...rest } = o;
   void omiseQrImageUrl;
-  return { ...rest, hasSlip: Boolean(slipFile) };
+  const shootingView = shooting ? { ...shooting, shooters: shooting.shooters.map((s) => ({ fullName: s.fullName, idCard: maskThaiId(s.idCard) })) } : void 0;
+  return { ...rest, shooting: shootingView, hasSlip: Boolean(slipFile) };
 }
 function toAdminView(o) {
   const { accessTokenHash, slipFile, ...rest } = o;
@@ -28814,19 +28848,19 @@ function ageFromBirthDate(birthDate, today = /* @__PURE__ */ new Date()) {
   if (today.getMonth() + 1 < mo || today.getMonth() + 1 === mo && today.getDate() < d) age -= 1;
   return age;
 }
-var clip = (v, n) => typeof v === "string" ? v.replace(/[\u0000-\u001f<>]/g, " ").trim().slice(0, n) : "";
+var clip2 = (v, n) => typeof v === "string" ? v.replace(/[\u0000-\u001f<>]/g, " ").trim().slice(0, n) : "";
 var oneOf = (v, list) => typeof v === "string" && list.includes(v) ? v : "";
 function parseInsurance(raw, consent) {
   const r = raw && typeof raw === "object" ? raw : {};
   const prefix = oneOf(r.prefix, PREFIXES);
-  const firstName = clip(r.firstName, 60);
-  const lastName = clip(r.lastName, 60);
+  const firstName = clip2(r.firstName, 60);
+  const lastName = clip2(r.lastName, 60);
   const gender = oneOf(r.gender, GENDERS);
   const birthDate = typeof r.birthDate === "string" ? r.birthDate : "";
   const age = ageFromBirthDate(birthDate);
   const bloodType = oneOf(r.bloodType, BLOOD_TYPES);
-  const medicalConditions = clip(r.medicalConditions, 200) || "\u0E44\u0E21\u0E48\u0E21\u0E35";
-  const emergencyName = clip(r.emergencyName, 80);
+  const medicalConditions = clip2(r.medicalConditions, 200) || "\u0E44\u0E21\u0E48\u0E21\u0E35";
+  const emergencyName = clip2(r.emergencyName, 80);
   const relationship = oneOf(r.relationship, RELATIONSHIPS);
   const errors = [];
   if (!prefix) errors.push("\u0E01\u0E23\u0E38\u0E13\u0E32\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E04\u0E33\u0E19\u0E33\u0E2B\u0E19\u0E49\u0E32");
@@ -28843,6 +28877,27 @@ function parseInsurance(raw, consent) {
     ok: true,
     value: { prefix, firstName, lastName, gender, birthDate, age, bloodType, medicalConditions, emergencyName, relationship }
   };
+}
+
+// src/data/vipParking.ts
+var VIP_PARKING_PER_TABLE = 2;
+var clip3 = (v, n) => typeof v === "string" ? v.replace(/[\u0000-\u001f<>]/g, " ").replace(/\s+/g, " ").trim().slice(0, n) : "";
+function parseParkingPlates(raw, vipTables) {
+  const max = vipTables * VIP_PARKING_PER_TABLE;
+  const list = Array.isArray(raw) ? raw.slice(0, max) : [];
+  const plates = [];
+  for (const item of list) {
+    const r = item && typeof item === "object" ? item : {};
+    const plate = clip3(r.plate, 16);
+    const province = clip3(r.province, 40);
+    if (!plate && !province) continue;
+    if (plate.length < 2 || province.length < 2) return { ok: false, error: "\u0E01\u0E23\u0E38\u0E13\u0E32\u0E01\u0E23\u0E2D\u0E01\u0E17\u0E30\u0E40\u0E1A\u0E35\u0E22\u0E19\u0E23\u0E16\u0E41\u0E25\u0E30\u0E08\u0E31\u0E07\u0E2B\u0E27\u0E31\u0E14\u0E43\u0E2B\u0E49\u0E04\u0E23\u0E1A\u0E17\u0E38\u0E01\u0E04\u0E31\u0E19\u0E17\u0E35\u0E48\u0E25\u0E07\u0E17\u0E30\u0E40\u0E1A\u0E35\u0E22\u0E19" };
+    plates.push({ plate, province });
+  }
+  if (!plates.length) return { ok: false, error: "\u0E01\u0E23\u0E38\u0E13\u0E32\u0E01\u0E23\u0E2D\u0E01\u0E17\u0E30\u0E40\u0E1A\u0E35\u0E22\u0E19\u0E23\u0E16\u0E2D\u0E22\u0E48\u0E32\u0E07\u0E19\u0E49\u0E2D\u0E22 1 \u0E04\u0E31\u0E19 \u0E2A\u0E33\u0E2B\u0E23\u0E31\u0E1A\u0E1A\u0E31\u0E15\u0E23\u0E08\u0E2D\u0E14\u0E23\u0E16 VIP" };
+  const keys = plates.map((p) => `${p.plate}|${p.province}`.replace(/\s/g, ""));
+  if (new Set(keys).size !== keys.length) return { ok: false, error: "\u0E17\u0E30\u0E40\u0E1A\u0E35\u0E22\u0E19\u0E23\u0E16\u0E0B\u0E49\u0E33\u0E01\u0E31\u0E19" };
+  return { ok: true, value: plates };
 }
 
 // server/auth.ts
@@ -29024,7 +29079,7 @@ async function fetchVerifiedOmiseCharge(chargeId) {
 }
 
 // server/app.ts
-var PRIVACY_POLICY_VERSION = "2026-11-01";
+var PRIVACY_POLICY_VERSION = "2026-11-02";
 var TERMS_VERSION = "2026-11-01";
 var ROUTE_IDS = ticketCategories.map((t) => t.id);
 var SHIRT_SIZES = ["XS", "S", "M", "L", "XL", "2XL", "3XL"];
@@ -29191,8 +29246,24 @@ function createApp() {
     const email = clean(b.email, 120);
     const emergencyPhone = clean(b.emergencyPhone, 30);
     const shirtSize = noRun ? "" : SHIRT_SIZES.includes(b.shirtSize) ? b.shirtSize : "";
+    let parkingPlates;
+    let parkingError = "";
+    if (vipTables > 0) {
+      const p = parseParkingPlates(b.parkingPlates, vipTables);
+      if (p.ok) parkingPlates = p.value;
+      else parkingError = p.error;
+    }
+    let shooting;
+    let shootingError = "";
+    if (addOns.gun !== "none") {
+      const p = parseShooting(b.shooters, addOns.people, b.shootingConsent);
+      if (p.ok) shooting = p.value;
+      else shootingError = p.error;
+    }
     const errors = [];
     if (insuranceError) errors.push(insuranceError);
+    if (parkingError) errors.push(parkingError);
+    if (shootingError) errors.push(shootingError);
     if (!insuranceError && fullName.length < 2) errors.push("\u0E01\u0E23\u0E38\u0E13\u0E32\u0E01\u0E23\u0E2D\u0E01\u0E0A\u0E37\u0E48\u0E2D-\u0E19\u0E32\u0E21\u0E2A\u0E01\u0E38\u0E25");
     if (phone.replace(/\D/g, "").length < 9) errors.push("\u0E40\u0E1A\u0E2D\u0E23\u0E4C\u0E42\u0E17\u0E23\u0E28\u0E31\u0E1E\u0E17\u0E4C\u0E44\u0E21\u0E48\u0E16\u0E39\u0E01\u0E15\u0E49\u0E2D\u0E07");
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errors.push("\u0E2D\u0E35\u0E40\u0E21\u0E25\u0E44\u0E21\u0E48\u0E16\u0E39\u0E01\u0E15\u0E49\u0E2D\u0E07");
@@ -29234,6 +29305,8 @@ function createApp() {
       concertQty: concertQty > 0 ? concertQty : void 0,
       concertDiscount: concertDiscount > 0 ? concertDiscount : void 0,
       vipTables: vipTables > 0 ? vipTables : void 0,
+      parkingPlates,
+      shooting,
       insurance,
       shirtSize,
       runningWithDog: isDog,

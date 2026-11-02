@@ -2,8 +2,6 @@ import React from 'react';
 import { Mail, Phone, MapPin, ArrowUp, ShieldCheck } from 'lucide-react';
 import { eventInfo } from '../data/eventData';
 import { openPrivacyNotice } from './PrivacyNotice';
-import { PawIcon } from './brand/DogDecor';
-import { LABRADOR_SVG_PATH } from './brand/LabradorMascot';
 
 interface FooterProps {
   onOpenArtworkModal: () => void;
@@ -22,8 +20,8 @@ export const Footer: React.FC<FooterProps> = ({
   };
 
   return (
-    <footer id="footer" className="bg-[#17092B] text-white pt-24 pb-10 relative overflow-hidden">
-      {/* Scalloped top edge + a pup trotting along it */}
+    <footer id="footer" className="bg-[#17092B] text-white pt-20 pb-10 relative overflow-hidden">
+      {/* Scalloped top edge */}
       <svg
         viewBox="0 0 1440 48"
         preserveAspectRatio="none"
@@ -32,16 +30,6 @@ export const Footer: React.FC<FooterProps> = ({
       >
         <path d="M0 0 H1440 V18 Q1380 46 1320 18 T1200 18 T1080 18 T960 18 T840 18 T720 18 T600 18 T480 18 T360 18 T240 18 T120 18 T0 18 Z" fill="currentColor" />
       </svg>
-      <div aria-hidden="true" className="pointer-events-none absolute left-0 top-9 sm:top-12 w-full h-12">
-        <div className="footer-stroll absolute left-0 top-0 flex items-end gap-2">
-          <img src={LABRADOR_SVG_PATH} alt="" className="w-11 h-12 object-contain scale-x-[-1]" loading="lazy" decoding="async" />
-          <span className="mb-1 flex gap-1.5 opacity-70">
-            <PawIcon size={12} color="#FFC928" style={{ rotate: '80deg' }} />
-            <PawIcon size={12} color="#C4A1FF" style={{ rotate: '100deg', marginTop: 6 }} />
-            <PawIcon size={12} color="#FFC928" style={{ rotate: '80deg' }} />
-          </span>
-        </div>
-      </div>
       <div aria-hidden="true" className="pointer-events-none absolute -bottom-24 -left-16 w-72 h-72 rounded-full bg-[#7B3FC6]/25 blur-3xl" />
       <div aria-hidden="true" className="pointer-events-none absolute -top-10 right-0 w-64 h-64 rounded-full bg-[#FFC928]/10 blur-3xl" />
       <div className="relative max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">

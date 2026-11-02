@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import type { Map as LeafletMap } from 'leaflet';
 import { ExternalLink, MapPin, Navigation } from 'lucide-react';
 import { ACTIVITY_LOCATIONS } from '../data/activityLocations';
+import { showActivitySticker } from './ActivitySticker';
 
 /** Real map with a pin for each add-on activity (tower, shooting range, wind tunnel). */
 export const ActivityMap: React.FC<{ className?: string }> = ({ className = '' }) => {
@@ -42,7 +43,10 @@ export const ActivityMap: React.FC<{ className?: string }> = ({ className = '' }
           link.style.cssText = 'display:inline-block;margin-top:4px;font-weight:800;font-size:12px;color:#5B20A8;text-decoration:underline';
           link.textContent = 'นำทางด้วย Google Maps';
           popup.append(title, link);
-          L.marker([a.lat, a.lng], { icon, title: a.name }).addTo(map).bindPopup(popup);
+          L.marker([a.lat, a.lng], { icon, title: a.name })
+            .addTo(map)
+            .bindPopup(popup)
+            .on('click', () => showActivitySticker(a.id, `สถานีที่ ${a.station} · ${a.name}`));
           bounds.extend([a.lat, a.lng]);
         }
         map.fitBounds(bounds, { padding: [40, 40], maxZoom: 16 });
@@ -84,7 +88,10 @@ export const ActivityMap: React.FC<{ className?: string }> = ({ className = '' }
           <div key={a.id} className="rounded-2xl border-2 border-[#2A1450]/15 bg-white p-2.5 flex items-center gap-2.5">
             <button
               type="button"
-              onClick={() => focus(a.lat, a.lng)}
+              onClick={() => {
+                focus(a.lat, a.lng);
+                showActivitySticker(a.id, `สถานีที่ ${a.station} · ${a.name}`);
+              }}
               aria-label={`ซูมไปที่${a.name}`}
               className="w-9 h-9 shrink-0 rounded-full text-white text-sm font-black cursor-pointer"
               style={{ background: a.color }}

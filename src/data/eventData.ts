@@ -37,7 +37,7 @@ export const eventInfo = {
   registrationStatus: 'เตรียมเปิดรับสมัครเร็ว ๆ นี้',
   raceStatus: 'อยู่ระหว่างสำรวจ GPS Track รับรองมาตรฐาน',
   routeStatus: 'เส้นทางตัวอย่างสำหรับวางแผนการเดินทาง',
-  hotelCountNotice: '41 ที่พัก Pet-Friendly และข้อมูลห้องว่างล่าสุด',
+  hotelCountNotice: '41 ที่พัก Pet-Friendly (ภาพเป็นเพียงภาพจำลอง)',
   contactEmail: 'contact@changsuekrun.com',
   contactPhone: '032-471-299 / 081-890-2027',
   contactLine: '@changsuekrun',

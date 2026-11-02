@@ -50,6 +50,7 @@ import {
   formatBibNumber,
 } from '../utils/runnerStorage';
 import { ServerOrder, adminApi, adminLogin, clearAdminToken, getAdminToken } from '../utils/api';
+import { formatThaiId } from '../data/shooting';
 import {
   formatPromptPayDisplay,
   formatThaiBankAccount,
@@ -1876,6 +1877,17 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
                   {inspectingOrder.insurance && (
                     <p className="mt-1 text-xs font-bold text-sky-800 bg-sky-50 border border-sky-200 rounded-lg px-2.5 py-1.5">
                       🛡️ ประกัน: {inspectingOrder.insurance.prefix}{inspectingOrder.insurance.firstName} {inspectingOrder.insurance.lastName} · {inspectingOrder.insurance.gender} · อายุ {inspectingOrder.insurance.age} ปี (เกิด {inspectingOrder.insurance.birthDate}) · เลือด {inspectingOrder.insurance.bloodType} · โรคประจำตัว: {inspectingOrder.insurance.medicalConditions} · ติดต่อฉุกเฉิน: {inspectingOrder.insurance.emergencyName} ({inspectingOrder.insurance.relationship}) {inspectingOrder.emergencyPhone}
+                    </p>
+                  )}
+                  {(inspectingOrder as ServerOrder).parkingPlates?.length ? (
+                    <p className="mt-1 text-xs font-bold text-amber-900 bg-amber-50 border border-amber-200 rounded-lg px-2.5 py-1.5">
+                      🚗 จอดรถ VIP: {(inspectingOrder as ServerOrder).parkingPlates!.map((p) => `${p.plate} ${p.province}`).join(' · ')}
+                    </p>
+                  ) : null}
+                  {(inspectingOrder as ServerOrder).shooting && (
+                    <p className="mt-1 text-xs font-bold text-violet-900 bg-violet-50 border border-violet-200 rounded-lg px-2.5 py-1.5">
+                      🎯 ผู้ยิงปืน: {(inspectingOrder as ServerOrder).shooting!.shooters.map((x) => `${x.fullName} (${formatThaiId(x.idCard)})`).join(' · ')}
+                      {' '}· ยอมรับใบยินยอม {(inspectingOrder as ServerOrder).shooting!.consentAt?.slice(0, 10)}
                     </p>
                   )}
                 </div>

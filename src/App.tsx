@@ -10,6 +10,7 @@ import { ScrollFX } from './components/ScrollFX';
 import { PlayfulFX } from './components/PlayfulFX';
 import { PeekingPup } from './components/PeekingPup';
 import { FunRibbon } from './components/FunRibbon';
+import { ActivityStickerLayer } from './components/ActivitySticker';
 import { CustomCursor } from './components/CustomCursor';
 import { EasterEggElephant } from './components/EasterEggElephant';
 import { MobileBottomNav } from './components/MobileBottomNav';
@@ -18,6 +19,7 @@ import { Hero } from './components/Hero';
 import { EventObjectiveSection } from './components/EventObjectiveSection';
 import { TicketShop } from './components/TicketShop';
 import { CostumeContestSection } from './components/CostumeContestSection';
+import { DogContestSection } from './components/DogContestSection';
 import { WinnersSection } from './components/WinnersSection';
 import { EMPTY_ADD_ONS, hasAddOns, type AddOnSelection } from './data/addOns';
 import { RaceDistances } from './components/RaceDistances';
@@ -160,6 +162,7 @@ export default function App() {
       <ScrollFX />
       <PlayfulFX />
       <PeekingPup />
+      <ActivityStickerLayer />
 
       {/* 2. Easter Egg Elephant */}
       <EasterEggElephant
@@ -213,7 +216,12 @@ export default function App() {
               onShowMap={handleScrollToMap}
             />
           }
-          beforeMerch={<CostumeContestSection />}
+          beforeMerch={
+            <>
+              <CostumeContestSection />
+              <DogContestSection />
+            </>
+          }
         />
 
         {/* 6. 2-Column Side-by-Side: กำหนดการวันแข่งขัน (Left) & เส้นทางวิ่ง GPS Survey (Right) */}

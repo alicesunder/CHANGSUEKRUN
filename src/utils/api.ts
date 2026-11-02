@@ -4,6 +4,8 @@
  */
 import type { AddOnSelection } from '../data/addOns';
 import type { InsuranceInfo } from '../data/insurance';
+import type { Shooter, ShootingInfo } from '../data/shooting';
+import type { ParkingPlate } from '../data/vipParking';
 import type { RouteId } from '../types';
 import type { TicketOrder } from './runnerStorage';
 
@@ -25,6 +27,9 @@ export type ServerOrder = TicketOrder & {
   ticketType?: 'RUN' | 'CONCERT' | 'ADDON';
   concertQty?: number;
   vipTables?: number;
+  parkingPlates?: ParkingPlate[];
+  /** shooters come back with masked ID numbers */
+  shooting?: ShootingInfo;
   expiresAt: string;
   omiseChargeId?: string;
   omiseQrImageUrl?: string;
@@ -92,6 +97,11 @@ export interface CreateOrderInput {
   /** Insurance details: required for 5 KM / 10 KM runners */
   insurance?: InsuranceInfo;
   insuranceConsent?: boolean;
+  /** VIP tables: cars for the parking passes (2 per table) */
+  parkingPlates?: ParkingPlate[];
+  /** Shooting: one entry per person on the add-on */
+  shooters?: Shooter[];
+  shootingConsent?: boolean;
   /** Sponsor code: makes the registration free (run + concert). The server re-checks it. */
   sponsorCode?: string;
   /** Optional after-run activities; the server works out the price and seat limits itself. */

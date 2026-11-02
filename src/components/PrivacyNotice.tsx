@@ -6,7 +6,7 @@ import { eventInfo } from '../data/eventData';
  * ประกาศความเป็นส่วนตัว (PDPA) — DRAFT for the organiser's review before launch.
  * Items marked [ยืนยัน] in comments are proposals the organiser must confirm.
  */
-export const PRIVACY_POLICY_VERSION = '2026-11-01';
+export const PRIVACY_POLICY_VERSION = '2026-11-02';
 export const OPEN_PRIVACY_EVENT = 'changsuek_open_privacy';
 
 export function openPrivacyNotice() {
@@ -81,10 +81,14 @@ export const PrivacyNotice: React.FC = () => {
                 ยอดเงิน วันเวลา และเลขที่รายการ
               </li>
               <li>สถานะการชำระเงินและผลการตรวจสลิป</li>
+              <li>ข้อมูลสำหรับทำประกันอุบัติเหตุของนักวิ่งทุกระยะ: คำนำหน้า ชื่อ เพศ วันเกิด กรุ๊ปเลือด โรคประจำตัว และผู้ติดต่อฉุกเฉิน</li>
+              <li>ผู้ซื้อกิจกรรมยิงปืน: ชื่อ-นามสกุลและเลขบัตรประจำตัวประชาชนของผู้ยิงทุกคน และเวลาที่ยอมรับใบยินยอม</li>
+              <li>ผู้ซื้อ VIP TABLE: ทะเบียนรถและจังหวัด สำหรับออกบัตรจอดรถ</li>
             </ul>
             <p className="mt-1">
               เราใช้รูปสลิปเพื่อยืนยันการชำระเงินเท่านั้น โดยส่งรูปสลิปให้ EasySlip (ผู้ให้บริการตรวจสอบสลิป)
-              ตรวจกับข้อมูลของธนาคาร เราไม่เก็บเลขบัตรประชาชน เลขหนังสือเดินทาง ข้อมูลบัตร หรือเลขบัญชีธนาคารเต็มของคุณ
+              ตรวจกับข้อมูลของธนาคาร เลขบัตรประชาชนเก็บเฉพาะผู้ร่วมกิจกรรมยิงปืน เพื่อลงทะเบียนกับสนามยิงปืนเท่านั้น และแสดงให้เฉพาะเจ้าหน้าที่
+              เราไม่เก็บเลขหนังสือเดินทาง ข้อมูลบัตร หรือเลขบัญชีธนาคารเต็มของคุณ
             </p>
           </section>
 
@@ -119,7 +123,7 @@ export const PrivacyNotice: React.FC = () => {
             </p>
           </section>
 
-          <p className="text-xs text-[#6B5A85]">ฉบับวันที่ 1 พฤศจิกายน 2569</p>
+          <p className="text-xs text-[#6B5A85]">ฉบับวันที่ 2 พฤศจิกายน 2569</p>
         </div>
       </div>
     </div>

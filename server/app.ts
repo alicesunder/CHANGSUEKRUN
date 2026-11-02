@@ -57,11 +57,13 @@ import {
 } from './store';
 import { WIND_TUNNEL_LIMIT, addOnBonusDiscount, addOnLabel, addOnPricePerPerson, addOnTotal, concertDiscountPerTicket, hasAddOns, normalizeAddOns } from '../src/data/addOns';
 import { needsInsurance, parseInsurance, type InsuranceInfo } from '../src/data/insurance';
+import { parseShooting, type ShootingInfo } from '../src/data/shooting';
+import { parseParkingPlates, type ParkingPlate } from '../src/data/vipParking';
 import { checkCredentials, issueToken, requireAdmin } from './auth';
 import { fetchVerifiedOmiseCharge, maskedAccountMatches, verifySlipWithEasySlip } from './payments';
 
 /** Must match PRIVACY_POLICY_VERSION in src/components/PrivacyNotice.tsx */
-const PRIVACY_POLICY_VERSION = '2026-11-01';
+const PRIVACY_POLICY_VERSION = '2026-11-02';
 /** Must match TERMS_VERSION in src/data/terms.ts */
 const TERMS_VERSION = '2026-11-01';
 
@@ -285,8 +287,26 @@ export function createApp(): express.Express {
     const email = clean(b.email, 120);
     const emergencyPhone = clean(b.emergencyPhone, 30);
     const shirtSize = noRun ? '' : SHIRT_SIZES.includes(b.shirtSize) ? b.shirtSize : '';
+    // VIP tables come with parking for 2 cars each: the buyer registers the plates.
+    let parkingPlates: ParkingPlate[] | undefined;
+    let parkingError = '';
+    if (vipTables > 0) {
+      const p = parseParkingPlates(b.parkingPlates, vipTables);
+      if (p.ok) parkingPlates = p.value;
+      else parkingError = p.error;
+    }
+    // Shooting needs every shooter's name + national ID and the buyer's consent.
+    let shooting: ShootingInfo | undefined;
+    let shootingError = '';
+    if (addOns.gun !== 'none') {
+      const p = parseShooting(b.shooters, addOns.people, b.shootingConsent);
+      if (p.ok) shooting = p.value;
+      else shootingError = p.error;
+    }
     const errors: string[] = [];
     if (insuranceError) errors.push(insuranceError);
+    if (parkingError) errors.push(parkingError);
+    if (shootingError) errors.push(shootingError);
     if (!insuranceError && fullName.length < 2) errors.push('กรุณากรอกชื่อ-นามสกุล');
     if (phone.replace(/\D/g, '').length < 9) errors.push('เบอร์โทรศัพท์ไม่ถูกต้อง');
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errors.push('อีเมลไม่ถูกต้อง');
@@ -340,6 +360,8 @@ export function createApp(): express.Express {
       concertQty: concertQty > 0 ? concertQty : undefined,
       concertDiscount: concertDiscount > 0 ? concertDiscount : undefined,
       vipTables: vipTables > 0 ? vipTables : undefined,
+      parkingPlates,
+      shooting,
       insurance,
       shirtSize,
       runningWithDog: isDog,
