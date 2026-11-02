@@ -21,6 +21,12 @@ interface Contest {
   image?: { src: string; alt: string };
 }
 
+/** One picture for all three contests (organiser's artwork). */
+const DOG_SQUAD = {
+  src: '/images/costume/dog-squad.webp',
+  alt: 'น้องสุนัข 8 ตัวแต่งชุดธีมม่วงทอง มีทั้งมงกุฎ หมวกพ่อมด เกราะอัศวิน และแว่นนักบิน',
+};
+
 /**
  * Three dog contests on run day (Sat 9 Jan 2570, judging 09.00–14.00, awards 15.00–17.00),
  * shown together in one card with tabs. The rules are a first draft for the organiser to confirm.
@@ -47,10 +53,7 @@ const CONTESTS: Contest[] = [
       'ถ้าน้องหมาเครียด ถอดชุดและพักได้ทันที',
     ],
     props: ['👑', '🎩', '✨'],
-    image: {
-      src: '/images/costume/dog-squad.webp',
-      alt: 'น้องสุนัข 8 ตัวแต่งชุดธีมม่วงทอง มีทั้งมงกุฎ หมวกพ่อมด เกราะอัศวิน และแว่นนักบิน',
-    },
+    image: DOG_SQUAD,
   },
   {
     id: 'healthy',
@@ -75,6 +78,7 @@ const CONTESTS: Contest[] = [
       'กรรมการขอจับตัวน้องหมาได้ เจ้าของต้องอยู่ข้างน้องตลอดเวลา',
     ],
     props: ['🩺', '🦴', '💚'],
+    image: DOG_SQUAD,
   },
   {
     id: 'obedience',
@@ -99,6 +103,7 @@ const CONTESTS: Contest[] = [
       'คะแนนเท่ากัน น้องที่ใช้เวลาน้อยกว่าชนะ',
     ],
     props: ['🎓', '🐾', '⭐'],
+    image: DOG_SQUAD,
   },
 ];
 
