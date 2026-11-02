@@ -148,28 +148,32 @@ export const Hero: React.FC<HeroProps> = ({
         </motion.div>
 
         {/* ============================================================= */}
-        {/* PHONE HERO (< 640px): full-bleed portrait artwork              */}
+        {/* PHONE & TABLET HERO (< 1024px): full-bleed artwork             */}
+        {/* (portrait screens get the tall artwork, landscape the wide one) */}
         {/* ============================================================= */}
         <div
-          className="sm:hidden relative w-full overflow-hidden"
-          style={{ height: 'clamp(600px, calc(100svh - 56px), 780px)' }}
+          className="lg:hidden relative w-full overflow-hidden"
+          style={{ height: 'clamp(600px, calc(100svh - 56px), 860px)' }}
         >
-          <motion.img
-            src="/images/hero/hero-mobile.webp"
-            alt="ช้างศึกสีม่วง นักวิ่ง และน้องสุนัขโกลเด้น วิ่งริมชายหาดใต้แสงแดด"
-            className="absolute inset-0 w-full h-full object-cover object-[50%_46%]"
-            fetchPriority="high"
-            loading="eager"
-            decoding="async"
-            initial={reduceMotion ? false : { scale: 1.08 }}
-            animate={{ scale: 1 }}
-            transition={{ duration: 1.8, ease: 'easeOut' }}
-          />
+          <picture>
+            <source media="(min-width: 640px) and (orientation: landscape)" srcSet={BEACH} />
+            <motion.img
+              src="/images/hero/hero-mobile.webp"
+              alt="ช้างศึกสีม่วง นักวิ่ง และน้องสุนัขโกลเด้น วิ่งริมชายหาดใต้แสงแดด"
+              className="absolute inset-0 w-full h-full object-cover object-[50%_46%] [@media(orientation:landscape)]:object-[62%_60%]"
+              fetchPriority="high"
+              loading="eager"
+              decoding="async"
+              initial={reduceMotion ? false : { scale: 1.08 }}
+              animate={{ scale: 1 }}
+              transition={{ duration: 1.8, ease: 'easeOut' }}
+            />
+          </picture>
           {/* scrims: keep the sky text readable, and give the buttons a calm dark base */}
           <div className="absolute inset-x-0 top-0 h-[48%] bg-gradient-to-b from-[#2A1060]/60 via-[#2A1060]/22 to-transparent pointer-events-none" />
           <div className="absolute inset-x-0 bottom-0 h-[46%] bg-gradient-to-t from-[#1B0838] via-[#1B0838]/82 to-transparent pointer-events-none" />
 
-          <div className="absolute inset-0 flex flex-col px-4 pt-[66px] pb-10">
+          <div className="absolute inset-0 flex flex-col px-4 pt-[66px] sm:pt-[92px] pb-10 sm:pb-14 w-full max-w-[560px] mx-auto left-0 right-0">
             {/* TOP: badge + logo + headline (over the sky) */}
             <motion.div
               initial={reduceMotion ? false : { opacity: 0, y: 16 }}
@@ -183,11 +187,11 @@ export const Hero: React.FC<HeroProps> = ({
               <img
                 src="/images/brand/changsuek-run-logo.webp"
                 alt="CHANGSUEK RUN - เห็นช้างวิ่ง วิ่งตามช้าง"
-                className="mt-2 h-[58px] w-auto object-contain"
+                className="mt-2 h-[58px] sm:h-[84px] w-auto object-contain"
                 style={{ filter: 'drop-shadow(0 0 2px #fff) drop-shadow(0 0 8px rgba(255,255,255,.85)) drop-shadow(0 4px 10px rgba(30,10,70,.35))' }}
               />
               <p role="presentation"
-                className="mt-1 font-hero text-[34px] font-bold leading-[1.38] text-white"
+                className="mt-1 font-hero text-[34px] sm:text-[48px] font-bold leading-[1.38] text-white"
                 style={{ textShadow: '0 2px 0 #2A1450, 0 5px 16px rgba(25,10,60,.55)' }}
               >
                 <span className="block">วิ่งสนุกไปกับ</span>
@@ -204,7 +208,7 @@ export const Hero: React.FC<HeroProps> = ({
               transition={{ duration: 0.6, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
               className="text-center"
             >
-              <p className="text-[12px] font-semibold leading-relaxed text-white/92 max-w-[340px] mx-auto [@media(max-height:700px)]:hidden">
+              <p className="text-[12px] sm:text-sm font-semibold leading-relaxed text-white/92 max-w-[340px] sm:max-w-[460px] mx-auto [@media(max-height:700px)]:hidden">
                 งานวิ่งการกุศลรักษ์ช้างและพัฒนาศูนย์ฝึกสุนัขตำรวจ{' '}
                 <span className="whitespace-nowrap">ค่ายนเรศวร</span> ริมชายหาด
                 <span className="whitespace-nowrap">ชะอำ-หัวหิน</span>
@@ -258,21 +262,13 @@ export const Hero: React.FC<HeroProps> = ({
           </div>
         </div>
 
-        <div className="hidden sm:block relative z-10 max-w-[1360px] mx-auto px-4 sm:px-8 pt-20 sm:pt-24 lg:pt-28 pb-12 sm:pb-16 lg:pb-28 lg:min-h-[700px]">
+        <div className="hidden lg:block relative z-10 max-w-[1360px] mx-auto px-4 sm:px-8 pt-20 sm:pt-24 lg:pt-28 pb-12 sm:pb-16 lg:pb-28 lg:min-h-[700px]">
           <motion.div
             initial={{ opacity: 0, y: 18 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
             className="max-w-[580px] text-center lg:text-left mx-auto lg:mx-0"
           >
-            {/* Mobile-First Top Glass Event Pill */}
-            <div className="lg:hidden inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/85 backdrop-blur-md border border-white shadow-[0_8px_20px_-6px_rgba(42,20,80,0.18)] text-[11px] font-extrabold text-[#3B1870] mb-3">
-              <Sparkles className="w-3.5 h-3.5 text-[#B45309] shrink-0" />
-              <span>9 ม.ค. 2570</span>
-              <span className="text-[#7B3FC6]/40">·</span>
-              <span>หาดชะอำ (ค่ายนเรศวร)</span>
-            </div>
-
             {/* Brand Logo Lockup */}
             <div className="flex flex-col items-center lg:items-start">
               <img
@@ -318,82 +314,6 @@ export const Hero: React.FC<HeroProps> = ({
               <br className="hidden sm:inline" /> ริมชายหาด
               <span className="whitespace-nowrap">ชะอำ-หัวหิน</span> บรรยากาศอบอุ่นสำหรับทุกครอบครัว
             </p>
-
-            {/* ============================================================= */}
-            {/* REDESIGNED MOBILE-ONLY HERO SHOWCASE CARD WITH LABRADOR       */}
-            {/* ============================================================= */}
-            <div className="lg:hidden mt-4 mb-5 relative mx-auto max-w-[430px]">
-              {/* Main Glassmorphic Hero Frame */}
-              <div className="relative rounded-[30px] p-2 bg-white/75 backdrop-blur-xl border-2 border-white shadow-[0_24px_48px_-12px_rgba(42,20,80,0.32),0_6px_16px_-4px_rgba(42,20,80,0.14)]">
-                <div
-                  onClick={onOpenArtworkModal}
-                  className="group relative rounded-[22px] overflow-hidden bg-[#BCE9FC] cursor-pointer"
-                >
-                  <img
-                    src={BEACH}
-                    alt="ช้างศึก นักวิ่ง และน้องสุนัขโกลเด้น วิ่งริมชายหาด"
-                    className="w-full h-56 sm:h-64 object-cover object-[66%_center] block transition-transform duration-700 group-hover:scale-105"
-                    referrerPolicy="no-referrer"
-                  />
-
-                  {/* Luminous Sunset Vignette Scrim */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#1E0B38]/85 via-[#1E0B38]/20 to-transparent pointer-events-none" />
-
-                  {/* Top-Left Live Badge */}
-                  <div className="absolute top-3 left-3 inline-flex items-center gap-1.5 rounded-full bg-white/95 backdrop-blur-md px-3 py-1 text-[10px] font-extrabold text-[#2A1450] shadow-md">
-                    <Sparkles className="w-3 h-3 text-[#B45309]" />
-                    <span>เปิดรับสมัครออนไลน์แล้ว</span>
-                  </div>
-
-                  {/* Bottom Left Headline & Venue inside Mobile Artwork */}
-                  <div className="absolute bottom-3 left-3.5 right-28 text-left pointer-events-none">
-                    <span className="inline-block font-display italic font-black text-xs text-[#FFE28A] drop-shadow">
-                      Run with Your Best Friend
-                    </span>
-                    <div className="text-white font-extrabold text-sm sm:text-base leading-tight drop-shadow-md">
-                      ชายหาดค่ายนเรศวร ชะอำ-หัวหิน
-                    </div>
-                    <div className="flex items-center gap-1.5 text-[11px] font-bold text-white/90 mt-0.5">
-                      <MapPin className="w-3 h-3 text-[#FFC928] shrink-0" />
-                      <span className="truncate">จ.เพชรบุรี · แตะเพื่อดูภาพเต็ม</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Floating Animated Labrador Mascot on Mobile Hero Card */}
-                <div className="absolute -bottom-3 right-2.5 z-20">
-                  <LabradorMascot
-                    size={86}
-                    speechText="มาวิ่งกันนะ!"
-                    interactive={true}
-                    glowColor="rgba(255, 201, 40, 0.65)"
-                  />
-                </div>
-
-                {/* Interactive 4-Distance Quick Tap Strip inside Mobile Hero */}
-                <div className="mt-2.5 pt-1 pr-20 grid grid-cols-4 gap-1.5">
-                  {mobileDistancePills.map((d) => (
-                    <button
-                      key={d.id}
-                      type="button"
-                      onClick={() => onSelectDistance(d.id)}
-                      style={{ backgroundColor: d.bg }}
-                      className="rounded-2xl py-1.5 px-1 border border-[#2A1450]/10 shadow-2xs flex flex-col items-center justify-center active:scale-95 transition-transform cursor-pointer"
-                    >
-                      <span
-                        className="font-display text-xs font-black leading-none"
-                        style={{ color: d.color }}
-                      >
-                        {d.label}
-                      </span>
-                      <span className="text-[9px] font-bold text-[#4B2D78] mt-0.5 truncate max-w-full">
-                        {d.tag}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
 
             {/* Desktop Date & Venue Glass Pills */}
             <div className="hidden lg:flex mt-6 flex-wrap gap-2.5 justify-start text-xs sm:text-[13px] font-bold text-[#2A1450]">

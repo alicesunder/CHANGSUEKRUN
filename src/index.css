@@ -893,11 +893,11 @@ main button:active:not(:disabled), .btn-paw:active { scale: .96; }
 .deal-coupon.is-on .deal-perf { border-color: #2A1450; background: var(--deal); color: #FFFFFF; }
 /* the two half-circle notches of a tear-off coupon */
 .deal-coupon::before, .deal-coupon::after {
-  content: ""; position: absolute; bottom: 26px; width: 12px; height: 12px; border-radius: 999px;
+  content: ""; position: absolute; bottom: 19px; width: 10px; height: 10px; border-radius: 999px;
   background: #FFF4EA; border: 2px solid currentColor; color: rgba(42,20,80,.15);
 }
-.deal-coupon::before { left: -7px; }
-.deal-coupon::after { right: -7px; }
+.deal-coupon::before { left: -6px; }
+.deal-coupon::after { right: -6px; }
 .deal-coupon.is-on::before, .deal-coupon.is-on::after { color: #2A1450; }
 
 /* ================= Opening intro (IntroSplash) ================= */

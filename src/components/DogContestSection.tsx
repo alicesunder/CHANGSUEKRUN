@@ -17,6 +17,8 @@ interface Contest {
   rules: string[];
   /** big floating emojis on the picture side */
   props: string[];
+  /** contest artwork; without one, a framed placeholder is shown until the organiser sends a picture */
+  image?: { src: string; alt: string };
 }
 
 /**
@@ -45,6 +47,10 @@ const CONTESTS: Contest[] = [
       'ถ้าน้องหมาเครียด ถอดชุดและพักได้ทันที',
     ],
     props: ['👑', '🎩', '✨'],
+    image: {
+      src: '/images/costume/dog-squad.webp',
+      alt: 'น้องสุนัข 8 ตัวแต่งชุดธีมม่วงทอง มีทั้งมงกุฎ หมวกพ่อมด เกราะอัศวิน และแว่นนักบิน',
+    },
   },
   {
     id: 'healthy',
@@ -168,29 +174,23 @@ export const DogContestSection: React.FC = () => {
           >
             {/* picture side */}
             <div className="md:col-span-5 relative mx-auto w-full max-w-[400px]">
-              {c.id === 'costume' ? (
-                <div className="rounded-[24px] bg-white border-[3px] border-[var(--ink)] shadow-[5px_6px_0_var(--ink)] p-2.5 -rotate-2">
-                  <img
-                    src="/images/costume/dog-squad.webp"
-                    alt="น้องสุนัข 8 ตัวแต่งชุดธีมม่วงทอง มีทั้งมงกุฎ หมวกพ่อมด เกราะอัศวิน และแว่นนักบิน"
-                    loading="lazy"
-                    decoding="async"
-                    className="block w-full h-auto"
-                  />
-                </div>
-              ) : (
-                <div
-                  className="relative aspect-[4/3] rounded-[24px] border-[3px] border-[var(--ink)] shadow-[5px_6px_0_var(--ink)] flex items-center justify-center overflow-hidden rotate-1"
-                  style={{ background: `radial-gradient(circle at 50% 45%, #FFFFFF 0%, ${c.tint} 55%, ${c.accent}33 100%)` }}
-                >
-                  <span aria-hidden="true" className="text-[96px] sm:text-[120px] leading-none drop-shadow-[0_6px_0_rgba(42,20,80,0.2)]">
-                    🐕
-                  </span>
-                  <span className="absolute bottom-3 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-white border-2 border-[var(--ink)] px-3 py-1 text-xs font-black" style={{ color: c.accent }}>
-                    เต็ม 100 คะแนน
-                  </span>
-                </div>
-              )}
+              <div className={`rounded-[24px] bg-white border-[3px] border-[var(--ink)] shadow-[5px_6px_0_var(--ink)] p-2.5 ${c.id === 'healthy' ? 'rotate-1' : '-rotate-2'}`}>
+                {c.image ? (
+                  <img src={c.image.src} alt={c.image.alt} loading="lazy" decoding="async" className="block w-full h-auto rounded-[14px]" />
+                ) : (
+                  <div
+                    className="relative aspect-[4/3] rounded-[14px] flex items-center justify-center overflow-hidden"
+                    style={{ background: `radial-gradient(circle at 50% 45%, #FFFFFF 0%, ${c.tint} 55%, ${c.accent}33 100%)` }}
+                  >
+                    <span aria-hidden="true" className="text-[96px] sm:text-[120px] leading-none drop-shadow-[0_6px_0_rgba(42,20,80,0.2)]">
+                      🐕
+                    </span>
+                    <span className="absolute bottom-3 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-white border-2 border-[var(--ink)] px-3 py-1 text-xs font-black" style={{ color: c.accent }}>
+                      เต็ม 100 คะแนน
+                    </span>
+                  </div>
+                )}
+              </div>
               {c.props.map((p, i) => (
                 <motion.span
                   key={p}

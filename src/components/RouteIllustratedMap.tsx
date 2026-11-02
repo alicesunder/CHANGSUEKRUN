@@ -55,7 +55,7 @@ const BIG: MapDef = {
       label: 'หอดูนก · ป่าชายเลน',
       sub: 'อุทยานสิ่งแวดล้อมนานาชาติสิรินธร',
       color: '#16A34A',
-      sticker: { id: 'mangrove', src: '/images/map/sticker-mangrove.webp', x: 0, y: 290, w: 320, h: 320, rotate: -5 },
+      sticker: { id: 'mangrove', src: '/images/map/sticker-mangrove.webp', x: 6, y: 280, w: 320, h: 320, rotate: -5 },
     },
     { id: 'palace', pin: [1040, 300], label: 'พระราชนิเวศน์มฤคทายวัน', labelAbove: true, color: '#B45309' },
     {
@@ -64,7 +64,7 @@ const BIG: MapDef = {
       label: 'Sea Sand Sun Hua Hin Resort',
       labelAbove: true,
       color: '#0284C7',
-      sticker: { id: 'resort', src: '/images/map/sticker-resort.webp', x: 1120, y: 4, w: 390, h: 260, rotate: 4 },
+      sticker: { id: 'resort', src: '/images/map/sticker-resort.webp', x: 1110, y: -95, w: 400, h: 267, rotate: 4 },
     },
     {
       id: 'camp',
@@ -111,7 +111,7 @@ const CAMP: MapDef = {
       sub: 'กองบัญชาการ ตชด.',
       labelAbove: true,
       color: '#7C3AED',
-      sticker: { id: 'camp', src: '/images/map/sticker-bpp-school.webp', x: 1190, y: 20, w: 270, h: 274, rotate: 5 },
+      sticker: { id: 'camp', src: '/images/map/sticker-bpp-school.webp', x: 1180, y: -55, w: 280, h: 284, rotate: 5 },
     },
   ],
   routes: {
@@ -214,11 +214,13 @@ export const RouteIllustratedMap: React.FC<{
         tabIndex={0}
         role="region"
         aria-label={`${map.label} เลื่อนซ้ายขวาเพื่อดูได้`}
-        className="overflow-x-auto rounded-2xl border-[2.5px] border-[#2A1450] bg-[#7FCDEB]"
+        className="overflow-x-auto overflow-y-hidden pt-10"
       >
+        {/* stickers may stick out above the frame, into the padding of the scroller */}
+        <div className={`relative rounded-2xl border-[2.5px] border-[#2A1450] bg-[#7FCDEB] ${map.minW ? 'min-w-[880px] lg:min-w-0' : ''}`}>
         <svg
           viewBox={`0 0 ${map.w} ${map.h}`}
-          className={`block w-full h-auto ${map.minW ? 'min-w-[880px] lg:min-w-0' : ''}`}
+          className="block w-full h-auto overflow-visible"
           role="img"
           aria-label={map.label}
         >
@@ -226,7 +228,11 @@ export const RouteIllustratedMap: React.FC<{
             <filter id="route-shadow" x="-5%" y="-5%" width="110%" height="115%">
               <feDropShadow dx="4" dy="7" stdDeviation="6" floodColor="#283c28" floodOpacity="0.45" />
             </filter>
+            <clipPath id={`map-clip-${map === BIG ? 'big' : 'camp'}`}>
+              <rect width={map.w} height={map.h} rx={36} />
+            </clipPath>
           </defs>
+          <g clipPath={`url(#map-clip-${map === BIG ? 'big' : 'camp'})`}>
           <image href={map.bg} width={map.w} height={map.h} preserveAspectRatio="none" />
           <g fill="none" strokeLinecap="round" strokeLinejoin="round" filter="url(#route-shadow)">
             {ids.map((r) => {
@@ -248,10 +254,12 @@ export const RouteIllustratedMap: React.FC<{
               );
             })}
           </g>
+          </g>
           {map.landmarks?.map((lm, i) => (
             <MapLandmark key={lm.id} lm={lm} big={map === BIG} index={i} />
           ))}
         </svg>
+        </div>
       </div>
 
       {/* Legend doubles as a route selector */}

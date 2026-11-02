@@ -151,39 +151,39 @@ export const DealStrip: React.FC<DealStripProps> = ({ hasRun, hasGaConcert, hasC
   const unlocked = deals.filter((d) => d.on).length;
 
   return (
-    <div className="relative rounded-[22px] border-[2.5px] border-[#2A1450] bg-gradient-to-br from-[#FFF7DA] via-[#FFF0F7] to-[#EFE6FF] p-3 sm:p-4 shadow-[0_5px_0_#2A1450] overflow-hidden">
-      <span aria-hidden="true" className="pointer-events-none absolute -right-3 -top-4 text-6xl opacity-20 rotate-12 select-none">🎁</span>
-      <div className="relative flex flex-wrap items-center justify-between gap-2 pb-3">
-        <p className="text-sm sm:text-base font-black text-[#2A1450] leading-tight">
+    <div className="relative rounded-[18px] border-2 border-[#2A1450] bg-gradient-to-br from-[#FFF7DA] via-[#FFF0F7] to-[#EFE6FF] p-2.5 sm:p-3 shadow-[0_3px_0_#2A1450] overflow-hidden">
+      <span aria-hidden="true" className="pointer-events-none absolute -right-2 -top-3 text-4xl opacity-20 rotate-12 select-none">🎁</span>
+      <div className="relative flex flex-wrap items-center justify-between gap-2 pb-2">
+        <p className="text-xs sm:text-sm font-black text-[#2A1450] leading-tight">
           🎁 ยิ่งซื้อคู่ ยิ่งลด!
-          <span className="block sm:inline sm:ml-2 text-xs font-bold text-[#6B5A85]">ส่วนลดกิจกรรมรวมสูงสุด {percentOf(ADDON_MAX_RATE)}%</span>
+          <span className="block sm:inline sm:ml-2 text-[11px] font-bold text-[#6B5A85]">ส่วนลดกิจกรรมรวมสูงสุด {percentOf(ADDON_MAX_RATE)}%</span>
         </p>
         <div className="flex items-center gap-2" aria-label={`ปลดล็อกแล้ว ${unlocked} จาก ${deals.length} ดีล`}>
           <span className="flex gap-1" aria-hidden="true">
             {deals.map((d) => (
-              <span key={d.key} className="w-5 h-2.5 rounded-full border border-[#2A1450]/30 transition-colors duration-300" style={{ background: d.on ? d.color : '#FFFFFF' }} />
+              <span key={d.key} className="w-4 h-2 rounded-full border border-[#2A1450]/30 transition-colors duration-300" style={{ background: d.on ? d.color : '#FFFFFF' }} />
             ))}
           </span>
           <span className="text-xs font-black text-[#2A1450] tabular-nums">{unlocked}/{deals.length}</span>
         </div>
       </div>
-      <ul data-reveal-stagger="pop" className="relative grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3" aria-label="โปรโมชั่นส่วนลด">
+      <ul data-reveal-stagger="pop" className="relative grid grid-cols-2 sm:grid-cols-4 gap-2" aria-label="โปรโมชั่นส่วนลด">
         {deals.map((d) => (
           <motion.li
             key={d.key}
             animate={d.on ? { scale: [1, 1.08, 1], rotate: [0, -2, 0] } : { scale: 1, rotate: 0 }}
             transition={{ duration: 0.5 }}
-            className={`deal-coupon relative flex flex-col rounded-2xl border-2 text-center leading-tight overflow-hidden ${d.on ? 'is-on border-[#2A1450] shadow-[0_4px_0_#2A1450]' : 'border-[#2A1450]/15 bg-white'}`}
+            className={`deal-coupon relative flex flex-col rounded-xl border-2 text-center leading-tight overflow-hidden ${d.on ? 'is-on border-[#2A1450] shadow-[0_3px_0_#2A1450]' : 'border-[#2A1450]/15 bg-white'}`}
             style={{ ['--deal' as string]: d.color }}
           >
-            <span className="block px-2 pt-2.5 text-[11px] sm:text-xs font-extrabold text-[#2A1450]">
+            <span className="block px-1.5 pt-1.5 text-[10.5px] sm:text-[11px] font-extrabold text-[#2A1450]">
               <span aria-hidden="true" className="mr-1">{d.icon}</span>
               {d.label}
             </span>
-            <span className="block px-2 pb-2 text-2xl sm:text-[28px] font-black tracking-tight" style={{ color: d.on ? '#2A1450' : d.color }}>
+            <span className="block px-1.5 pb-1 text-lg sm:text-xl font-black tracking-tight leading-tight" style={{ color: d.on ? '#2A1450' : d.color }}>
               {d.big}
             </span>
-            <span className="deal-perf mt-auto block border-t-2 border-dashed px-2 py-1.5 text-[10.5px] sm:text-[11px] font-bold">
+            <span className="deal-perf mt-auto block border-t-2 border-dashed px-1.5 py-1 text-[10px] font-bold">
               {d.on ? '✓ ได้ส่วนลดนี้แล้ว!' : d.note}
             </span>
             <span className="sr-only">{d.on ? 'ได้ส่วนลดนี้แล้ว' : `เงื่อนไข: ${d.how}`}</span>
@@ -195,7 +195,7 @@ export const DealStrip: React.FC<DealStripProps> = ({ hasRun, hasGaConcert, hasC
                   animate={{ scale: 1, opacity: 1, rotate: -14 }}
                   exit={{ scale: 0.6, opacity: 0 }}
                   transition={{ type: 'spring', stiffness: 380, damping: 16 }}
-                  className="absolute -right-1 top-1 rounded-md border-2 border-[#B91C1C] bg-white/90 px-1.5 py-0.5 text-[10px] font-black text-[#B91C1C]"
+                  className="absolute -right-1 top-1 rounded-md border-2 border-[#B91C1C] bg-white/90 px-1 py-px text-[9px] font-black text-[#B91C1C]"
                 >
                   ได้แล้ว!
                 </motion.span>
@@ -205,7 +205,7 @@ export const DealStrip: React.FC<DealStripProps> = ({ hasRun, hasGaConcert, hasC
         ))}
       </ul>
       {unlocked === 0 && (
-        <p className="relative mt-2.5 text-center text-[11px] sm:text-xs font-bold text-[#6B5A85]">
+        <p className="relative mt-1.5 text-center text-[10.5px] sm:text-[11px] font-bold text-[#6B5A85]">
           เคล็ดลับ: เพิ่มตั๋วคอนเสิร์ตหรือกิจกรรมเสริมคู่กับตั๋ววิ่ง ส่วนลดจะเด้งขึ้นเองอัตโนมัติ ✨
         </p>
       )}
