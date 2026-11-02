@@ -970,7 +970,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                   <div className="flex items-center gap-2.5 mb-3">
                     <span className="w-10 h-10 rounded-2xl flex items-center justify-center text-lg shadow-[0_8px_14px_-6px_rgba(245,158,11,0.6)]" style={{ background: 'linear-gradient(135deg, #FDE68A 0%, #FBBF24 55%, #FB923C 100%)' }} aria-hidden="true">🎉</span>
                     <div>
-                      <h3 className="text-base font-black text-[#2A1450] leading-tight">เพิ่มความสนุกหลังวิ่ง · กิจกรรมเสริม</h3>
+                      <h3 className="text-base font-black text-[#2A1450] leading-tight">เพิ่มความสนุก · กิจกรรมเสริม (วันอาทิตย์ที่ 10 ม.ค. 2570)</h3>
                       <p className="text-[11px] font-bold text-[#6F6878]">ไม่บังคับ · เลือกหลายอย่างได้ ยิ่งเลือกยิ่งคุ้ม</p>
                     </div>
                   </div>
@@ -1033,7 +1033,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                   <div className="p-4 space-y-3">
                     <div className="flex flex-wrap gap-1.5">
                       <span className="inline-flex items-center gap-1 text-xs font-extrabold px-2.5 py-1 rounded-full bg-[#F3E8FF] text-[#4B2D78]">
-                        <Calendar className="w-3.5 h-3.5" /> 10 ธ.ค. 2569
+                        <Calendar className="w-3.5 h-3.5" /> 9 ม.ค. 2570
                       </span>
                       <span className="inline-flex items-center gap-1 text-xs font-extrabold px-2.5 py-1 rounded-full bg-[#FEF3C7] text-[#92400E]">
                         <Clock className="w-3.5 h-3.5" /> ปล่อยตัว {theme.startTime}
@@ -2150,7 +2150,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                         เวลาปล่อยตัว
                       </span>
                       <span className="text-sm font-black text-[#2A1450] block">
-                        {theme.startTime} (10 ธ.ค. 69)
+                        {theme.startTime} (9 ม.ค. 70)
                       </span>
                     </div>
                     <div className="p-3 rounded-2xl bg-emerald-50 border-2 border-emerald-500/40">

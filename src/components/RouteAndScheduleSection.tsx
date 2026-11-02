@@ -2,10 +2,11 @@ import React, { useState, useEffect, useRef } from 'react';
 import { RouteId } from '../types';
 import { RouteIllustratedMap } from './RouteIllustratedMap';
 import { ActivityMap } from './ActivityMap';
-import { routesData } from '../data/eventData';
+import { eventInfo, routesData } from '../data/eventData';
 import {
   ArrowRight,
   Award,
+  Calendar,
   Clock,
   Crosshair,
   Droplets,
@@ -47,42 +48,6 @@ export const RouteAndScheduleSection: React.FC<RouteAndScheduleProps> = ({
       iconBg: '#FCE7F3',
       iconColor: '#BE185D',
       Icon: Trophy,
-      routeId: undefined as RouteId | undefined,
-      isGoldDot: false,
-    },
-    {
-      id: 'station-1',
-      time: '09.00–11.00 น.',
-      title: 'กิจกรรมสถานีที่ 1 กิจกรรมยิงปืน',
-      desc: '',
-      badge: 'STATION 1',
-      iconBg: '#E0F2FE',
-      iconColor: '#0369A1',
-      Icon: Crosshair,
-      routeId: undefined as RouteId | undefined,
-      isGoldDot: false,
-    },
-    {
-      id: 'station-2',
-      time: '10.00–12.00 น.',
-      title: 'กิจกรรมสถานีที่ 2 กิจกรรมหอสูง',
-      desc: '',
-      badge: 'STATION 2',
-      iconBg: '#E0E7FF',
-      iconColor: '#4F46E5',
-      Icon: Mountain,
-      routeId: undefined as RouteId | undefined,
-      isGoldDot: false,
-    },
-    {
-      id: 'station-3',
-      time: '13.00–15.00 น.',
-      title: 'กิจกรรมสถานีที่ 3 กิจกรรมอุโมงค์ลม',
-      desc: '',
-      badge: 'STATION 3',
-      iconBg: '#CCFBF1',
-      iconColor: '#0F766E',
-      Icon: Wind,
       routeId: undefined as RouteId | undefined,
       isGoldDot: false,
     },
@@ -158,7 +123,48 @@ export const RouteAndScheduleSection: React.FC<RouteAndScheduleProps> = ({
       routeId: undefined as RouteId | undefined,
       isGoldDot: false,
     },
+    {
+      id: 'station-1',
+      time: '09.00–11.00 น.',
+      title: 'กิจกรรมสถานีที่ 1 กิจกรรมยิงปืน',
+      desc: '',
+      badge: 'STATION 1',
+      iconBg: '#E0F2FE',
+      iconColor: '#0369A1',
+      Icon: Crosshair,
+      routeId: undefined as RouteId | undefined,
+      isGoldDot: false,
+    },
+    {
+      id: 'station-2',
+      time: '10.00–12.00 น.',
+      title: 'กิจกรรมสถานีที่ 2 กิจกรรมหอสูง',
+      desc: '',
+      badge: 'STATION 2',
+      iconBg: '#E0E7FF',
+      iconColor: '#4F46E5',
+      Icon: Mountain,
+      routeId: undefined as RouteId | undefined,
+      isGoldDot: false,
+    },
+    {
+      id: 'station-3',
+      time: '13.00–15.00 น.',
+      title: 'กิจกรรมสถานีที่ 3 กิจกรรมอุโมงค์ลม',
+      desc: '',
+      badge: 'STATION 3',
+      iconBg: '#CCFBF1',
+      iconColor: '#0F766E',
+      Icon: Wind,
+      routeId: undefined as RouteId | undefined,
+      isGoldDot: false,
+    },
   ];
+
+  /** The add-on activities (stations) are the day after the run. */
+  const dayOf = (id: string) => (id.startsWith('station-') ? 'activity' : 'run');
+  const dayHeading = (day: string) =>
+    day === 'run' ? `วัน${eventInfo.dateNotice.replace('วัน', '')} · วันวิ่ง & คอนเสิร์ต` : `${eventInfo.activityDateNotice} · กิจกรรมเสริม (หอสูง · ยิงปืน · อุโมงค์ลม)`;
 
   const routePills: {
     id: RouteId;
@@ -234,7 +240,7 @@ export const RouteAndScheduleSection: React.FC<RouteAndScheduleProps> = ({
           <div>
             <span className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white border-2 border-[#2A1450] text-[#5B20A8] text-xs font-extrabold uppercase shadow-[0_3px_0_#2A1450] mb-2">
               <Sparkles className="w-3.5 h-3.5 text-[#B45309]" />
-              <span>วันงาน 10 ธ.ค. 2569</span>
+              <span>วันวิ่ง 9 ม.ค. 2570 · กิจกรรมเสริม 10 ม.ค. 2570</span>
             </span>
             <h2 className="squiggle text-2xl sm:text-4xl font-extrabold text-[#2A1450]">
               กำหนดการ & <span className="whitespace-nowrap">เส้นทางวิ่ง</span>มาตรฐาน GPS
@@ -295,12 +301,21 @@ export const RouteAndScheduleSection: React.FC<RouteAndScheduleProps> = ({
                     className="absolute left-[13px] top-4 bottom-4 w-[3px] bg-gradient-to-b from-[#7B3FC6] via-[#FFC928] to-[#16A34A] rounded-full"
                   />
 
-                  {timelineRows.map((row) => {
+                  {timelineRows.map((row, idx) => {
                     const Icon = row.Icon;
                     const isSelectedRouteRow = row.routeId && row.routeId === selectedRoute;
+                    const day = dayOf(row.id);
+                    const newDay = idx === 0 || day !== dayOf(timelineRows[idx - 1].id);
                     return (
+                      <React.Fragment key={row.id}>
+                      {newDay && (
+                        <div className="relative z-10 flex items-center gap-2 pt-1 pl-1">
+                          <span className={`inline-flex items-center gap-1.5 rounded-full border-2 border-[#2A1450] px-3 py-1 text-[11px] sm:text-xs font-extrabold shadow-[0_3px_0_#2A1450] ${day === 'run' ? 'bg-[#FFC928] text-[#2A1450]' : 'bg-[#7B3FC6] text-white'}`}>
+                            <Calendar className="w-3.5 h-3.5" /> {dayHeading(day)}
+                          </span>
+                        </div>
+                      )}
                       <div
-                        key={row.id}
                         onClick={() => {
                           if (row.routeId && onSelectRoute) {
                             onSelectRoute(row.routeId);
@@ -368,6 +383,7 @@ export const RouteAndScheduleSection: React.FC<RouteAndScheduleProps> = ({
                           )}
                         </div>
                       </div>
+                      </React.Fragment>
                     );
                   })}
                 </div>
@@ -530,7 +546,7 @@ export const RouteAndScheduleSection: React.FC<RouteAndScheduleProps> = ({
                     กำหนดการ (PDF)
                   </h3>
                   <p className="text-xs text-gray-500 font-medium">
-                    CHANGSUEK RUN 2026 • 10 ธันวาคม 2569 ณ หาดชะอำ ค่ายนเรศวร
+                    CHANGSUEK RUN 2026 • วิ่ง 9 มกราคม 2570 · กิจกรรมเสริม 10 มกราคม 2570 ณ หาดชะอำ ค่ายนเรศวร
                   </p>
                 </div>
               </div>
@@ -544,9 +560,12 @@ export const RouteAndScheduleSection: React.FC<RouteAndScheduleProps> = ({
             </div>
 
             <div className="p-6 sm:p-8 overflow-y-auto flex-1 printable-schedule-sheet text-[#111827] space-y-2.5">
-              {timelineRows.map((item) => (
+              {timelineRows.map((item, idx) => (
+                <React.Fragment key={item.id}>
+                {(idx === 0 || dayOf(item.id) !== dayOf(timelineRows[idx - 1].id)) && (
+                  <div className="pt-2 text-sm font-black text-[#5B20A8]">{dayHeading(dayOf(item.id))}</div>
+                )}
                 <div
-                  key={item.id}
                   className="flex items-start gap-4 p-3.5 rounded-xl border border-purple-100 bg-[#FAF7FF]/50"
                 >
                   <div className="w-32 font-mono font-black text-xs sm:text-sm text-[#5B20A8] shrink-0">
@@ -559,6 +578,7 @@ export const RouteAndScheduleSection: React.FC<RouteAndScheduleProps> = ({
                     )}
                   </div>
                 </div>
+                </React.Fragment>
               ))}
             </div>
 

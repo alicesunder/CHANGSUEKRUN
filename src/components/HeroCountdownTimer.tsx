@@ -8,7 +8,7 @@ interface CountdownTimerProps {
 }
 
 export const HeroCountdownTimer: React.FC<CountdownTimerProps> = ({
-  targetDate = '2026-12-10T16:30:00+07:00',
+  targetDate = '2027-01-09T16:30:00+07:00',
   className = '',
 }) => {
   // Start from the real remaining time so no stale number flashes on first paint

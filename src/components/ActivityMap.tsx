@@ -3,7 +3,7 @@ import type { Map as LeafletMap } from 'leaflet';
 import { ExternalLink, MapPin, Navigation } from 'lucide-react';
 import { ACTIVITY_LOCATIONS } from '../data/activityLocations';
 
-/** Real map with a pin for each after-run activity (tower, shooting range, wind tunnel). */
+/** Real map with a pin for each add-on activity (tower, shooting range, wind tunnel). */
 export const ActivityMap: React.FC<{ className?: string }> = ({ className = '' }) => {
   const elRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<LeafletMap | null>(null);
@@ -65,7 +65,7 @@ export const ActivityMap: React.FC<{ className?: string }> = ({ className = '' }
     <div className={className}>
       <div className="flex items-center gap-2 mb-2">
         <MapPin className="w-4 h-4 text-[#7B3FC6]" />
-        <h4 className="text-sm font-black text-[#2A1450]">ตำแหน่งกิจกรรมหลังวิ่ง</h4>
+        <h4 className="text-sm font-black text-[#2A1450]">ตำแหน่งกิจกรรมเสริม · 10 ม.ค. 2570</h4>
       </div>
       {failed ? (
         <p role="alert" className="rounded-2xl border-2 border-[#2A1450]/15 bg-[#FAF7FF] p-4 text-xs font-bold text-[#6B5A85]">

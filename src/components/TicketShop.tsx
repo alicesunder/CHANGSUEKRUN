@@ -39,7 +39,7 @@ const BRAND_HEADER = 'linear-gradient(135deg, #2A1450 0%, #4C1D95 55%, #6D28D9 1
 const STATIONS = {
   run: { n: 1, emoji: '🏃', title: 'ตั๋ววิ่ง', hint: 'เลือก 1 ระยะ (ไม่วิ่งก็ข้ามได้)', grad: BRAND_HEADER },
   concert: { n: 2, emoji: '🎶', title: 'ตั๋วคอนเสิร์ต', hint: 'ริมหาด หลัง 17.30 น. · GA หรือ VIP TABLE · ซื้อแยกได้', grad: BRAND_HEADER },
-  addon: { n: 3, emoji: '🎢', title: 'กิจกรรมเสริม', hint: '2 อย่างขึ้นไปลด 10% · มีคอนเสิร์ตลดเพิ่ม 10% (สูงสุด 20%)', grad: BRAND_HEADER },
+  addon: { n: 3, emoji: '🎢', title: 'กิจกรรมเสริม', hint: 'วันอาทิตย์ที่ 10 ม.ค. 2570 · 2 อย่างขึ้นไปลด 10% · มีคอนเสิร์ตลดเพิ่ม 10% (สูงสุด 20%)', grad: BRAND_HEADER },
 } as const;
 type StationKey = keyof typeof STATIONS;
 

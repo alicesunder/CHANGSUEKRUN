@@ -349,7 +349,7 @@ export const DEFAULT_CHECKLIST_ITEMS: RunnerChecklistItem[] = [
   { id: 'c4', label: 'ตรวจสอบจุดจอดรถและเส้นทางเดินทาง', description: 'ลานจอดรถค่ายนเรศวร 800+ คัน', completed: false, category: 'prep' },
   { id: 'c5', label: 'จำลองเส้นทางวิ่งเสมือนจริง (Start Simulation)', description: 'ศึกษาจุดบริการน้ำดื่มและทางเลี้ยวสำคัญ', completed: false, category: 'prep' },
   { id: 'c6', label: 'ตรวจสอบสภาพอากาศและทิศทางลมชายหาด', description: 'เตรียมความพร้อมก่อนปล่อยตัวช่วงเย็น 16.30 - 17.30 น.', completed: false, category: 'prep' },
-  { id: 'c7', label: 'ทบทวนกำหนดการวันแข่งขัน (09.00 – 17.30+ น.)', description: 'ประกวดน้องสุนัข กิจกรรมสถานี ปล่อยตัววิ่ง และคอนเสิร์ต', completed: false, category: 'race_day' },
+  { id: 'c7', label: 'ทบทวนกำหนดการวันแข่งขัน 9 ม.ค. (09.00 – 17.30+ น.)', description: 'ประกวดน้องสุนัข ปล่อยตัววิ่ง และคอนเสิร์ต · กิจกรรมสถานี (หอสูง ยิงปืน อุโมงค์ลม) จัดวันที่ 10 ม.ค.', completed: false, category: 'race_day' },
   { id: 'c8', label: 'ตรวจสอบเบอร์ติดต่อฉุกเฉินและหน่วยแพทย์', description: 'เบอร์ศูนย์อำนวยการและกู้ชีพค่ายนเรศวร', completed: false, category: 'race_day' },
   { id: 'c9', label: 'เตรียมสายจูงและสมุดวัคซีนสำหรับสัตว์เลี้ยง (กรณีมีน้องสุนัข)', description: 'สายจูง ชามน้ำพับได้ ถุงเก็บมูล', completed: false, category: 'kit' },
   { id: 'c10', label: 'พร้อมวิ่งด้วยใจ เพื่อพัฒนาสุนัขตำรวจ!', description: 'พักผ่อนให้เพียงพอก่อนวันงาน', completed: false, category: 'race_day' },
