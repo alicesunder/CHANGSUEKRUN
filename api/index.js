@@ -28244,8 +28244,8 @@ var ticketCategories = [
 ];
 var ticketById = (id) => ticketCategories.find((t) => t.id === id) ?? ticketCategories[0];
 var isDogCategory = (id) => ticketById(id).group === "dog";
-var CONCERT_PASS_PRICE = 990;
-var VIP_TABLE_PRICE = 15900;
+var CONCERT_PASS_PRICE = 890;
+var VIP_TABLE_PRICE = 13990;
 var VIP_TABLE_SEATS = 6;
 var MAX_VIP_TABLES = 3;
 var calcTicketTotal = (id, extraPeople = 0, _extraDogs = 0) => {
@@ -28796,7 +28796,7 @@ function normalizeAddOns(raw) {
 }
 
 // src/data/insurance.ts
-var INSURANCE_ROUTES = ["5km", "10km"];
+var INSURANCE_ROUTES = ["1km", "3km", "5km", "10km"];
 var needsInsurance = (routeId) => INSURANCE_ROUTES.includes(routeId);
 var PREFIXES = ["\u0E19\u0E32\u0E22", "\u0E19\u0E32\u0E07", "\u0E19\u0E32\u0E07\u0E2A\u0E32\u0E27", "\u0E40\u0E14\u0E47\u0E01\u0E0A\u0E32\u0E22", "\u0E40\u0E14\u0E47\u0E01\u0E2B\u0E0D\u0E34\u0E07", "\u0E2D\u0E37\u0E48\u0E19\u0E46"];
 var GENDERS = ["\u0E0A\u0E32\u0E22", "\u0E2B\u0E0D\u0E34\u0E07", "\u0E44\u0E21\u0E48\u0E23\u0E30\u0E1A\u0E38"];

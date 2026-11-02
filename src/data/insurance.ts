@@ -1,7 +1,7 @@
-// Personal data collected for the event's accident insurance (5 KM and 10 KM runners).
+// Personal data collected for the event's accident insurance (every running distance).
 // Shared by the website (form) and the server (the server is the one that checks it).
 
-export const INSURANCE_ROUTES = ['5km', '10km'] as const;
+export const INSURANCE_ROUTES = ['1km', '3km', '5km', '10km'] as const;
 export const needsInsurance = (routeId: string): boolean => (INSURANCE_ROUTES as readonly string[]).includes(routeId);
 
 export const PREFIXES = ['นาย', 'นาง', 'นางสาว', 'เด็กชาย', 'เด็กหญิง', 'อื่นๆ'] as const;

@@ -256,7 +256,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [emergencyPhone, setEmergencyPhone] = useState('');
-  // Insurance details (5 KM / 10 KM runners)
+  // Insurance details (every running distance)
   const [insPrefix, setInsPrefix] = useState('');
   const [insFirst, setInsFirst] = useState('');
   const [insLast, setInsLast] = useState('');

@@ -272,7 +272,7 @@ export function createApp(): express.Express {
     // Extra dogs are no longer sold: a Dog Run ticket is 1 runner + 1 dog.
     const extraDogs = 0;
 
-    // 5 KM / 10 KM runners are insured: the insurer needs their details (the name comes from these fields)
+    // Runners of every distance are insured: the insurer needs their details (the name comes from these fields)
     let insurance: InsuranceInfo | undefined;
     let insuranceError = '';
     if (!noRun && needsInsurance(routeId)) {

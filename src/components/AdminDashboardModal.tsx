@@ -936,7 +936,7 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
                       className="px-3.5 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-700 text-white text-xs font-extrabold flex items-center gap-1.5 shadow-xs cursor-pointer"
                     >
                       <span aria-hidden="true">🛡️</span>
-                      <span>CSV ทำประกัน (5K/10K)</span>
+                      <span>CSV ทำประกัน (ทุกระยะ)</span>
                     </button>
 
                     {/* Export Full CSV */}

@@ -742,15 +742,15 @@ h1, h2, h3, h4, h5, h6 {
 .squiggle::after {
   content: '';
   display: block;
-  width: min(150px, 60%);
-  height: 14px;
+  width: min(160px, 62%);
+  height: 22px;
   margin-top: 4px;
-  background: no-repeat center / 100% 100% url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 150 14'%3E%3Cpath d='M3 9 C 15 1, 25 1, 36 8 S 58 15, 70 7 S 93 0, 105 8 S 128 14, 147 5' fill='none' stroke='%23FFC928' stroke-width='5' stroke-linecap='round'/%3E%3C/svg%3E");
+  background: no-repeat center / 100% 100% url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 160 22'%3E%3Cpath d='M8 12 C 20 3, 30 3, 41 11 S 63 19, 75 10 S 98 2, 110 11 S 133 19, 152 8' fill='none' stroke='%23FFC928' stroke-width='5' stroke-linecap='round'/%3E%3C/svg%3E");
   clip-path: inset(0 100% 0 0);
   transition: clip-path .9s cubic-bezier(.6,0,.2,1) .25s;
 }
 .squiggle-center::after { margin-inline: auto; }
-.squiggle-pink::after { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 150 14'%3E%3Cpath d='M3 9 C 15 1, 25 1, 36 8 S 58 15, 70 7 S 93 0, 105 8 S 128 14, 147 5' fill='none' stroke='%23FF6FA8' stroke-width='5' stroke-linecap='round'/%3E%3C/svg%3E"); }
+.squiggle-pink::after { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 160 22'%3E%3Cpath d='M8 12 C 20 3, 30 3, 41 11 S 63 19, 75 10 S 98 2, 110 11 S 133 19, 152 8' fill='none' stroke='%23FF6FA8' stroke-width='5' stroke-linecap='round'/%3E%3C/svg%3E"); }
 .squiggle.rv-in::after, .squiggle:not(.rv-init)::after { clip-path: inset(0 0 0 0); }
 .squiggle.rv-init::after { clip-path: inset(0 100% 0 0); }
 
