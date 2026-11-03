@@ -128,18 +128,21 @@ const Chip: React.FC<ChipProps> = ({ theme, title, sub, price, icon, active, dis
       <Shimmer />
       {active && <Gloss />}
       <TickDot on={active} ink={t.ink} />
-      <span className="relative flex items-center gap-3 p-3 pr-10">
-        <IconBubble>{icon}</IconBubble>
-        <span className="min-w-0 flex-1">
-          <span className={`block text-base font-extrabold leading-tight ${active ? 'text-white drop-shadow-[0_2px_6px_rgba(0,0,0,0.2)]' : 'text-[#2A1450]'}`}>{title}</span>
-          <span className={`block text-[11.5px] font-semibold leading-snug ${active ? 'text-white/90' : 'text-[#4B2D78]/85'}`}>{sub}</span>
-          {note}
+      {/* stacked, so the text never has to share a row with the price (the cards can be narrow) */}
+      <span className="relative flex flex-col gap-2 p-3">
+        <span className="flex items-center gap-2.5 pr-8">
+          <IconBubble>{icon}</IconBubble>
+          <span className={`min-w-0 text-base font-extrabold leading-tight ${active ? 'text-white drop-shadow-[0_2px_6px_rgba(0,0,0,0.2)]' : 'text-[#2A1450]'}`}>{title}</span>
         </span>
-        <span className="text-right shrink-0">
-          <span className={`block text-xl font-extrabold tabular-nums leading-none ${active ? 'text-white drop-shadow-[0_2px_6px_rgba(0,0,0,0.2)]' : ''}`} style={active ? undefined : { color: t.ink }}>
-            {formatBaht(price)}
+        <span className={`block text-[11.5px] font-semibold leading-snug ${active ? 'text-white/90' : 'text-[#4B2D78]/85'}`}>{sub}</span>
+        <span className="flex flex-wrap items-end justify-between gap-x-2 gap-y-1.5 mt-auto">
+          <span className="min-w-0">{note}</span>
+          <span className="ml-auto text-right shrink-0">
+            <span className={`block text-xl font-extrabold tabular-nums leading-none ${active ? 'text-white drop-shadow-[0_2px_6px_rgba(0,0,0,0.2)]' : ''}`} style={active ? undefined : { color: t.ink }}>
+              {formatBaht(price)}
+            </span>
+            <span className={`block text-[10px] font-bold ${active ? 'text-white/85' : 'text-[#6B5A85]'}`}>บาท / คน</span>
           </span>
-          <span className={`block text-[10px] font-bold ${active ? 'text-white/85' : 'text-[#6B5A85]'}`}>บาท / คน</span>
         </span>
       </span>
     </button>
@@ -214,8 +217,9 @@ export const AddOnPicker: React.FC<AddOnPickerProps> = ({ value, onChange, windT
   const windLow = windTunnelRemaining !== null && windTunnelRemaining > 0 && windTunnelRemaining <= 10;
 
   return (
-    <div className="space-y-3">
-      <div className={layout === 'rows' ? 'grid grid-cols-1 gap-2.5' : 'grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4'}>
+    <div className="space-y-3 @container">
+      {/* three columns only when the box itself is wide enough (the box is narrow inside the booking window) */}
+      <div className={layout === 'rows' ? 'grid grid-cols-1 gap-2.5' : 'grid grid-cols-1 @[620px]:grid-cols-3 gap-3 sm:gap-4'}>
         <div className="flex flex-col gap-1">
         <Chip
           theme="tower"
@@ -243,14 +247,14 @@ export const AddOnPicker: React.FC<AddOnPickerProps> = ({ value, onChange, windT
           <Shimmer />
           {gunOn && <Gloss />}
           <TickDot on={gunOn} ink={gun.ink} />
-          <div className="relative flex items-center gap-3 p-3 pb-2 pr-10">
-            <IconBubble>
-              <Crosshair className="w-5 h-5" style={{ color: gun.ink }} aria-hidden="true" />
-            </IconBubble>
-            <span className="min-w-0 flex-1">
-              <span className={`block text-base font-extrabold leading-tight ${gunOn ? 'text-white drop-shadow-[0_2px_6px_rgba(0,0,0,0.2)]' : 'text-[#2A1450]'}`}>ยิงปืน</span>
-              <span className={`block text-[11.5px] font-semibold leading-snug ${gunOn ? 'text-white/90' : 'text-[#4B2D78]/85'}`}>ครูฝึกส่วนตัวดูแลใกล้ชิด · 10 นัด</span>
+          <div className="relative flex flex-col gap-2 p-3 pb-2">
+            <span className="flex items-center gap-2.5 pr-8">
+              <IconBubble>
+                <Crosshair className="w-5 h-5" style={{ color: gun.ink }} aria-hidden="true" />
+              </IconBubble>
+              <span className={`min-w-0 text-base font-extrabold leading-tight ${gunOn ? 'text-white drop-shadow-[0_2px_6px_rgba(0,0,0,0.2)]' : 'text-[#2A1450]'}`}>ยิงปืน</span>
             </span>
+            <span className={`block text-[11.5px] font-semibold leading-snug ${gunOn ? 'text-white/90' : 'text-[#4B2D78]/85'}`}>ครูฝึกส่วนตัวดูแลใกล้ชิด · 10 นัด</span>
           </div>
           <div className="relative grid grid-cols-2 gap-1.5 px-3 pb-3">
             {GUN_SEGMENTS.map((o) => {
