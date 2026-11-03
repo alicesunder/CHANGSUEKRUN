@@ -33,6 +33,9 @@ import {
 } from '../utils/ticketEmailAndPrint';
 import { TicketPrintEmailModal } from './TicketPrintEmailModal';
 import { PawIcon } from './brand/DogDecor';
+import { RaceBib } from './RaceBib';
+import { eventInfo } from '../data/eventData';
+import type { InsuranceInfo } from '../data/insurance';
 
 interface RunnerBibCardProps {
   profile: RunnerProfile;
@@ -104,6 +107,7 @@ export const RunnerBibCard: React.FC<RunnerBibCardProps> = ({
   const [printFormatChoice, setPrintFormatChoice] = useState<PrintFormatOption>('full_a4_receipt');
 
   const theme = routeTheme[profile.routeId] || routeTheme['5km'];
+  const insurance = (profile as RunnerProfile & { insurance?: InsuranceInfo }).insurance;
 
   // Interactive 3D tilt
   const mouseX = useMotionValue(0);
@@ -138,11 +142,11 @@ export const RunnerBibCard: React.FC<RunnerBibCardProps> = ({
   };
 
   const handleShare = async () => {
-    const text = `ฉันสมัคร CHANGSUEK RUN 2026 เรียบร้อยแล้ว! หมายเลข BIB #${profile.bibNumber} ระยะ ${profile.routeName} ร่วมวิ่งด้วยกันนะ! #เห็นช้างวิ่งวิ่งตามช้าง`;
+    const text = `ฉันสมัคร CHANGSUEK RUN 2027 เรียบร้อยแล้ว! หมายเลข BIB #${profile.bibNumber} ระยะ ${profile.routeName} ร่วมวิ่งด้วยกันนะ! #เห็นช้างวิ่งวิ่งตามช้าง`;
     if (navigator.share) {
       try {
         await navigator.share({
-          title: 'CHANGSUEK RUN 2026 BIB',
+          title: 'CHANGSUEK RUN 2027 BIB',
           text,
           url: window.location.href,
         });
@@ -190,82 +194,29 @@ export const RunnerBibCard: React.FC<RunnerBibCardProps> = ({
               <div className="absolute -inset-y-12 w-32 bg-gradient-to-r from-transparent via-white/50 to-transparent animate-ticket-shimmer" />
             </div>
 
-            {/* 4 Corner Metallic Safety-Pin Eyelets */}
-            <div className="absolute top-3.5 left-3.5 z-30 w-4 h-4 rounded-full bg-white border-[2.5px] border-[#2A1450] shadow-inner" />
-            <div className="absolute top-3.5 right-3.5 z-30 w-4 h-4 rounded-full bg-white border-[2.5px] border-[#2A1450] shadow-inner" />
-            <div className="absolute bottom-3.5 left-3.5 z-30 w-4 h-4 rounded-full bg-white border-[2.5px] border-[#2A1450] shadow-inner" />
-            <div className="absolute bottom-3.5 right-3.5 z-30 w-4 h-4 rounded-full bg-white border-[2.5px] border-[#2A1450] shadow-inner" />
-
-            {/* Top Color-Coded Wave Banner */}
-            <div
-              className="relative px-7 pt-5 pb-4 text-white border-b-[3px] border-[#2A1450] flex items-center justify-between gap-3"
-              style={{ background: theme.headerGrad }}
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-11 h-11 rounded-2xl bg-white/15 backdrop-blur-xs border border-white/35 flex items-center justify-center shrink-0">
-                  {profile.runningWithDog ? (
-                    <PawIcon size={22} color="#FFC928" />
-                  ) : (
-                    <Ticket className="w-5 h-5 text-[#FFC928]" />
-                  )}
-                </div>
-                <div>
-                  <span className="block text-[10px] font-mono font-extrabold tracking-[0.22em] text-[#FFC928] uppercase">
-                    CHANGSUEK RUN 2026 · OFFICIAL BIB
-                  </span>
-                  <span className="block text-sm sm:text-base font-extrabold text-white leading-tight">
-                    เห็นช้างวิ่ง วิ่งตามช้าง • ค่ายนเรศวร
-                  </span>
-                  <span className="block text-[10px] font-bold text-white/80 mt-0.5">
-                    {theme.wave} · ปล่อยตัว {theme.startTime}
-                  </span>
-                </div>
-              </div>
-
-              <div className="text-right shrink-0 flex flex-col items-end gap-1.5">
-                <span className="inline-block px-3.5 py-1 rounded-full text-xs sm:text-sm font-black bg-[#FFC928] text-[#2A1450] border-2 border-[#2A1450] shadow-[2px_2px_0_#2A1450]">
-                  {profile.routeId.toUpperCase()}
-                </span>
+            {/* The race BIB in the organiser's design (number, name and QR filled in) */}
+            <div className="p-3 sm:p-4 pb-0">
+              <RaceBib
+                bib={profile.bibNumber}
+                routeId={profile.routeId}
+                name={profile.fullName}
+                orderId={profile.orderId}
+                gender={insurance?.gender}
+                age={insurance?.age}
+                dogName={profile.runningWithDog ? profile.dogName : undefined}
+              />
+              <div className="mt-2 flex justify-end">
                 <button
                   type="button"
                   onClick={() => setIsFlipped(true)}
-                  className="inline-flex items-center gap-1 text-[10px] font-bold bg-black/30 hover:bg-black/45 text-white px-2.5 py-0.5 rounded-full border border-white/25 transition-colors cursor-pointer"
+                  className="inline-flex items-center gap-1 text-[11px] font-bold bg-[#2A1450] hover:bg-[#3D1D70] text-white px-3 py-1 rounded-full cursor-pointer"
                 >
-                  <RotateCw className="w-2.5 h-2.5" />
+                  <RotateCw className="w-3 h-3" />
                   <span>พลิกด้านหลัง BIB</span>
                 </button>
               </div>
             </div>
-
-            {/* Main BIB Number Plate */}
-            <div className="px-6 py-5">
-              <div className="relative text-center py-4 px-4 bg-white/90 backdrop-blur-xs rounded-2xl border-[2.5px] border-[#2A1450] shadow-[4px_5px_0_#2A1450] overflow-hidden">
-                {/* Subtle Watermark Paw/Track */}
-                <div className="text-[10px] font-extrabold uppercase tracking-[0.28em] text-[#6B5A85]">
-                  RACE NUMBER / หมายเลขประจำตัวนักวิ่ง
-                </div>
-
-                <motion.div
-                  initial={{ scale: 0.9, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  transition={{ type: 'spring', stiffness: 260, damping: 18 }}
-                  className="font-display text-5xl sm:text-6xl font-black tracking-wider text-[#2A1450] my-1.5 tabular-nums drop-shadow-[0_3px_0_rgba(255,201,40,0.65)]"
-                >
-                  {profile.bibNumber}
-                </motion.div>
-
-                <div className="flex flex-wrap items-center justify-center gap-1.5">
-                  <div className="inline-flex items-center justify-center gap-1.5 text-[11px] text-emerald-800 bg-emerald-100/90 border border-emerald-300 px-3 py-0.5 rounded-full font-extrabold">
-                    <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
-                    <span>VERIFIED RUNNER · ลงทะเบียนสำเร็จ</span>
-                  </div>
-                  <div className="inline-flex items-center justify-center gap-1 text-[10px] text-purple-900 bg-purple-100/90 border border-purple-300 px-2.5 py-0.5 rounded-full font-extrabold">
-                    <Lock className="w-3 h-3 text-purple-700" />
-                    <span>PDPA PROTECTED</span>
-                  </div>
-                </div>
-              </div>
-
+            <div className="px-6 pb-5 pt-3">
               {/* Runner Metadata Grid */}
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 mt-4 text-xs">
                 <div className="p-2.5 rounded-xl bg-white/80 border border-[#2A1450]/15">
@@ -321,7 +272,7 @@ export const RunnerBibCard: React.FC<RunnerBibCardProps> = ({
               <div className="mt-4 pt-3 border-t-2 border-dashed border-[#2A1450]/25 flex items-center justify-between text-[10px] text-[#4B2D78] font-mono">
                 <div>
                   <span className="font-extrabold block text-[#2A1450]">
-                    CSR-2026-{profile.routeId.toUpperCase()}-{profile.bibNumber}
+                    CSR-2027-{profile.routeId.toUpperCase()}-{profile.bibNumber}
                   </span>
                   <span className="text-[9px] font-sans font-bold text-[#6B5A85]">
                     RFID TIMING CHIP EMBEDDED · แสดงบัตรนี้ในวันรับ Race Pack
@@ -413,23 +364,25 @@ export const RunnerBibCard: React.FC<RunnerBibCardProps> = ({
                 </div>
                 <div className="font-bold text-white mt-0.5 tabular-nums">
                   {maskPii
-                    ? maskPhoneNumber(profile.emergencyPhone || profile.phone || '081-890-2027')
-                    : profile.emergencyPhone || profile.phone || '081-890-2027'}
+                    ? maskPhoneNumber(profile.emergencyPhone || profile.phone || eventInfo.contactPhones[0])
+                    : profile.emergencyPhone || profile.phone || eventInfo.contactPhones[0]}
                 </div>
               </div>
               <div className="p-3 rounded-xl bg-white/10 border border-white/15">
                 <div className="text-[10px] text-white/60 font-bold uppercase flex items-center gap-1">
                   <ShieldCheck className="w-3 h-3 text-emerald-400" />
-                  <span>หน่วยแพทย์กู้ชีพค่ายนเรศวร</span>
+                  <span>ติดต่อผู้จัดงาน (ฉุกเฉิน)</span>
                 </div>
-                <div className="font-bold text-emerald-300 mt-0.5 tabular-nums">
-                  032-471-299 (24 ชม.)
+                <div className="font-bold text-emerald-300 mt-0.5 tabular-nums leading-snug">
+                  {eventInfo.contactPhones.map((p) => (
+                    <span key={p} className="block">{p}</span>
+                  ))}
                 </div>
               </div>
             </div>
 
             <div className="text-center text-[11px] text-white/65 pt-2 border-t border-white/10">
-              แตะที่การ์ดเพื่อพลิกกลับด้านหน้า • CHANGSUEK RUN 2026
+              แตะที่การ์ดเพื่อพลิกกลับด้านหน้า • CHANGSUEK RUN 2027
             </div>
           </div>
         </motion.div>

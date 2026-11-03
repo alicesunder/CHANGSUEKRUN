@@ -546,7 +546,7 @@ export const RouteAndScheduleSection: React.FC<RouteAndScheduleProps> = ({
                     กำหนดการ (PDF)
                   </h3>
                   <p className="text-xs text-gray-500 font-medium">
-                    CHANGSUEK RUN 2026 • วิ่ง 9 มกราคม 2570 · กิจกรรมเสริม 10 มกราคม 2570 ณ หาดชะอำ ค่ายนเรศวร
+                    CHANGSUEK RUN 2027 • วิ่ง 9 มกราคม 2570 · กิจกรรมเสริม 10 มกราคม 2570 ณ หาดชะอำ ค่ายนเรศวร
                   </p>
                 </div>
               </div>

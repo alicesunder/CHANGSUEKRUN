@@ -1,5 +1,5 @@
 /**
- * CHANG SUEK RUN 2026 — API (Express app, no listener).
+ * CHANG SUEK RUN 2027 — API (Express app, no listener).
  * Used by server.ts (local / any Node host) and by the Vercel function (api/index.js).
  *
  * Money rules (all enforced here, never in the browser):
@@ -55,6 +55,11 @@ import {
   type Winner,
   ROUTES,
   type StoredOrder,
+  getSalesStatus,
+  setSalesOpen,
+  isVisitorId,
+  recordVisit,
+  visitStats,
 } from './store';
 import { WIND_TUNNEL_LIMIT, addOnBonusDiscount, addOnLabel, addOnPricePerPerson, addOnTotal, concertDiscountPerTicket, hasAddOns, normalizeAddOns } from '../src/data/addOns';
 import { needsInsurance, parseInsurance, type InsuranceInfo } from '../src/data/insurance';
@@ -150,8 +155,10 @@ async function nextBibPreview() {
 }
 
 async function publicConfig() {
-  const [s, nextBib, key, windUsed] = await Promise.all([getSettings(), nextBibPreview(), getEasySlipKey(), windTunnelSeatsUsed()]);
+  const [s, nextBib, key, windUsed, sales] = await Promise.all([getSettings(), nextBibPreview(), getEasySlipKey(), windTunnelSeatsUsed(), getSalesStatus()]);
   return {
+    /** the admin's open / close switch for ticket sales */
+    salesOpen: sales.open,
     windTunnelLimit: WIND_TUNNEL_LIMIT,
     windTunnelRemaining: Math.max(0, WIND_TUNNEL_LIMIT - windUsed),
     promptPayId: s.promptPayId,
@@ -225,6 +232,21 @@ export function createApp(): express.Express {
   }));
 
   // Is this sponsor code usable? (Does not use it up.) Heavily rate limited against guessing.
+  // Visitor counter: one anonymous page load. Rate limited so one script cannot inflate it.
+  app.post('/api/visit', smallJson, h(async (req, res) => {
+    const vid = req.body?.vid;
+    if (!isVisitorId(vid)) {
+      res.status(400).json({ error: 'invalid visitor id' });
+      return;
+    }
+    if (await rateLimited(`visit:${clientIp(req)}`, 60, 10 * 60 * 1000)) {
+      res.status(204).end();
+      return;
+    }
+    await recordVisit(vid);
+    res.status(204).end();
+  }));
+
   app.post('/api/sponsor-code/check', smallJson, h(async (req, res) => {
     if (await rateLimited(`sponsor-check:${clientIp(req)}`, 12, 10 * 60 * 1000)) {
       res.status(429).json({ error: 'ตรวจรหัสบ่อยเกินไป กรุณารอสักครู่แล้วลองใหม่' });
@@ -243,6 +265,10 @@ export function createApp(): express.Express {
   app.post('/api/orders', smallJson, h(async (req, res) => {
     if (await rateLimited(`order:${clientIp(req)}`, 15, 10 * 60 * 1000)) {
       res.status(429).json({ error: 'สร้างคำสั่งซื้อบ่อยเกินไป กรุณารอสักครู่แล้วลองใหม่' });
+      return;
+    }
+    if (!(await getSalesStatus()).open) {
+      res.status(403).json({ error: 'ขณะนี้ปิดการขายบัตรชั่วคราว กรุณาติดตามประกาศจากผู้จัดงาน' });
       return;
     }
     const b = req.body || {};
@@ -286,11 +312,11 @@ export function createApp(): express.Express {
     const extraPeople = isDog && !sponsorCode ? Math.min(MAX_EXTRA, Math.max(0, Math.floor(Number(b.extraPeople) || 0))) : 0;
     // Extra dogs are no longer sold: a Dog Run ticket is 1 runner + 1 dog.
     const extraDogs = 0;
-    // Each extra runner gets a jersey: name + size per person.
+    // Each extra runner gets a jersey (size per person) and, like runner 1, the insurance details.
     let extraRunners: ExtraRunner[] | undefined;
     let extraRunnersError = '';
     if (extraPeople > 0) {
-      const p = parseExtraRunners(b.extraRunners, extraPeople);
+      const p = parseExtraRunners(b.extraRunners, extraPeople, needsInsurance(routeId));
       if (p.ok) extraRunners = p.value;
       else extraRunnersError = p.error;
     }
@@ -316,11 +342,11 @@ export function createApp(): express.Express {
       if (p.ok) parkingPlates = p.value;
       else parkingError = p.error;
     }
-    // Shooting needs every shooter's name + national ID and the buyer's consent.
+    // Shooting needs every shooter's name + national ID (the range registers them).
     let shooting: ShootingInfo | undefined;
     let shootingError = '';
     if (addOns.gun !== 'none') {
-      const p = parseShooting(b.shooters, addOns.people, b.shootingConsent);
+      const p = parseShooting(b.shooters, addOns.people);
       if (p.ok) shooting = p.value;
       else shootingError = p.error;
     }
@@ -875,6 +901,22 @@ export function createApp(): express.Express {
       return;
     }
     res.json({ ok: true });
+  }));
+
+  app.get('/api/admin/visits', requireAdmin, h(async (_req, res) => {
+    res.json(await visitStats());
+  }));
+
+  app.get('/api/admin/sales', requireAdmin, h(async (_req, res) => {
+    res.json(await getSalesStatus());
+  }));
+
+  app.put('/api/admin/sales', requireAdmin, smallJson, h(async (req, res) => {
+    if (typeof req.body?.open !== 'boolean') {
+      res.status(400).json({ error: 'open must be true or false' });
+      return;
+    }
+    res.json(await setSalesOpen(req.body.open));
   }));
 
   app.get('/api/admin/settings', requireAdmin, h(async (_req, res) => {

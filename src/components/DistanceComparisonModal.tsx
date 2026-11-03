@@ -59,7 +59,7 @@ export const DistanceComparisonModal: React.FC<DistanceComparisonModalProps> = (
     {
       label: 'เวลาคัทออฟ (Cut-off)',
       icon: Clock,
-      v: ['45 นาที', '1 ชม. 15 นาที', '1 ชม. 30 นาที', '2 ชม. 15 นาที'],
+      v: ['30 นาที', '1 ชม.', '1 ชม. 15 นาที', '2 ชม.'],
     },
     {
       label: 'สภาพพื้นผิววิ่ง',

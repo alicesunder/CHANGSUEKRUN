@@ -32726,9 +32726,9 @@ import crypto3 from "crypto";
 var eventInfo = {
   name: "\u0E40\u0E2B\u0E47\u0E19\u0E0A\u0E49\u0E32\u0E07\u0E27\u0E34\u0E48\u0E07 \u0E27\u0E34\u0E48\u0E07\u0E15\u0E32\u0E21\u0E0A\u0E49\u0E32\u0E07",
   englishName: "CHANG SUEK RUN",
-  officialName: "CHANGSUEK RUN 2026",
-  year: 2026,
-  edition: "2026",
+  officialName: "CHANGSUEK RUN 2027",
+  year: 2027,
+  edition: "2027",
   tagline: "RUN TOGETHER",
   subSlogan: "\u0E27\u0E34\u0E48\u0E07\u0E2A\u0E19\u0E38\u0E01...\u0E44\u0E1B\u0E14\u0E49\u0E27\u0E22\u0E01\u0E31\u0E19 \u0E2A\u0E33\u0E2B\u0E23\u0E31\u0E1A\u0E17\u0E38\u0E01\u0E04\u0E19\u0E43\u0E19\u0E04\u0E23\u0E2D\u0E1A\u0E04\u0E23\u0E31\u0E27",
   subSloganEn: "RUN WITH YOUR BEST FRIEND",
@@ -32749,7 +32749,9 @@ var eventInfo = {
   routeStatus: "\u0E40\u0E2A\u0E49\u0E19\u0E17\u0E32\u0E07\u0E15\u0E31\u0E27\u0E2D\u0E22\u0E48\u0E32\u0E07\u0E2A\u0E33\u0E2B\u0E23\u0E31\u0E1A\u0E27\u0E32\u0E07\u0E41\u0E1C\u0E19\u0E01\u0E32\u0E23\u0E40\u0E14\u0E34\u0E19\u0E17\u0E32\u0E07",
   hotelCountNotice: "41 \u0E17\u0E35\u0E48\u0E1E\u0E31\u0E01 Pet-Friendly (\u0E20\u0E32\u0E1E\u0E40\u0E1B\u0E47\u0E19\u0E40\u0E1E\u0E35\u0E22\u0E07\u0E20\u0E32\u0E1E\u0E08\u0E33\u0E25\u0E2D\u0E07)",
   contactEmail: "contact@changsuekrun.com",
-  contactPhone: "032-471-299 / 081-890-2027",
+  contactPhone: "084-789-4651 / 097-145-1945 / 095-449-9741",
+  /** Organiser numbers shown on the site, on the BIB (emergency contact) and in the e-mails */
+  contactPhones: ["084-789-4651", "097-145-1945", "095-449-9741"],
   contactLine: "@changsuekrun",
   contactFacebook: "CHANGSUEK RUN",
   /** official Facebook page for news (link from the organiser) */
@@ -32769,7 +32771,7 @@ var routesData = {
     difficulty: "\u0E07\u0E48\u0E32\u0E22 (Easy)",
     durationEstimate: "10 - 20 \u0E19\u0E32\u0E17\u0E35",
     startTime: "17.30 \u0E19.",
-    cutoffTime: "18.15 \u0E19. (45 \u0E19\u0E32\u0E17\u0E35)",
+    cutoffTime: "18.00 \u0E19. (30 \u0E19\u0E32\u0E17\u0E35)",
     description: "\u0E40\u0E2A\u0E49\u0E19\u0E17\u0E32\u0E07\u0E2A\u0E31\u0E49\u0E19\u0E2A\u0E33\u0E2B\u0E23\u0E31\u0E1A\u0E04\u0E39\u0E48\u0E27\u0E34\u0E48\u0E07\u0E2A\u0E35\u0E48\u0E02\u0E32\u0E17\u0E35\u0E48\u0E2D\u0E22\u0E32\u0E01\u0E40\u0E23\u0E34\u0E48\u0E21\u0E15\u0E49\u0E19\u0E41\u0E1A\u0E1A\u0E2A\u0E1A\u0E32\u0E22 \u0E46 \u0E1B\u0E25\u0E48\u0E2D\u0E22\u0E15\u0E31\u0E27\u0E08\u0E32\u0E01\u0E0A\u0E32\u0E22\u0E2B\u0E32\u0E14\u0E2B\u0E19\u0E49\u0E32\u0E42\u0E23\u0E07\u0E41\u0E23\u0E21 Sea Sand Sun \u0E27\u0E34\u0E48\u0E07\u0E40\u0E25\u0E35\u0E22\u0E1A\u0E2B\u0E32\u0E14\u0E44\u0E1B\u0E08\u0E38\u0E14\u0E01\u0E25\u0E31\u0E1A\u0E15\u0E31\u0E27\u0E41\u0E25\u0E49\u0E27\u0E27\u0E34\u0E48\u0E07\u0E01\u0E25\u0E31\u0E1A\u0E21\u0E32\u0E40\u0E02\u0E49\u0E32\u0E40\u0E2A\u0E49\u0E19\u0E0A\u0E31\u0E22\u0E17\u0E35\u0E48\u0E40\u0E14\u0E34\u0E21 \u0E44\u0E21\u0E48\u0E21\u0E35\u0E40\u0E19\u0E34\u0E19\u0E0A\u0E31\u0E19 \u0E21\u0E35\u0E23\u0E48\u0E21\u0E40\u0E07\u0E32\u0E15\u0E49\u0E19\u0E2A\u0E19\u0E1A\u0E32\u0E07\u0E0A\u0E48\u0E27\u0E07",
     terrainType: "\u0E17\u0E32\u0E07\u0E40\u0E25\u0E35\u0E22\u0E1A\u0E2B\u0E32\u0E14\u0E04\u0E48\u0E32\u0E22\u0E19\u0E40\u0E23\u0E28\u0E27\u0E23 \u0E1E\u0E37\u0E49\u0E19\u0E40\u0E23\u0E35\u0E22\u0E1A \u0E44\u0E21\u0E48\u0E21\u0E35\u0E40\u0E19\u0E34\u0E19\u0E0A\u0E31\u0E19",
     roadCondition: "\u0E17\u0E32\u0E07\u0E40\u0E23\u0E35\u0E22\u0E1A 100% \u0E1B\u0E34\u0E14\u0E01\u0E32\u0E23\u0E08\u0E23\u0E32\u0E08\u0E23 \u0E21\u0E35\u0E40\u0E08\u0E49\u0E32\u0E2B\u0E19\u0E49\u0E32\u0E17\u0E35\u0E48\u0E14\u0E39\u0E41\u0E25\u0E17\u0E35\u0E48\u0E08\u0E38\u0E14\u0E01\u0E25\u0E31\u0E1A\u0E15\u0E31\u0E27",
@@ -32981,9 +32983,9 @@ var routesData = {
     terrainType: "\u0E16\u0E19\u0E19\u0E04\u0E2D\u0E19\u0E01\u0E23\u0E35\u0E15\u0E41\u0E25\u0E30\u0E25\u0E32\u0E14\u0E22\u0E32\u0E07\u0E2A\u0E25\u0E31\u0E1A\u0E17\u0E32\u0E07\u0E40\u0E23\u0E35\u0E22\u0E1A\u0E40\u0E25\u0E35\u0E22\u0E1A\u0E2A\u0E23\u0E30\u0E19\u0E49\u0E33 \u0E21\u0E35\u0E04\u0E27\u0E32\u0E21\u0E23\u0E48\u0E21\u0E23\u0E37\u0E48\u0E19\u0E41\u0E25\u0E30\u0E1B\u0E25\u0E2D\u0E14\u0E20\u0E31\u0E22",
     roadCondition: "\u0E17\u0E32\u0E07\u0E25\u0E32\u0E14\u0E22\u0E32\u0E07\u0E41\u0E25\u0E30\u0E04\u0E2D\u0E19\u0E01\u0E23\u0E35\u0E15 85% \u0E17\u0E32\u0E07\u0E40\u0E23\u0E35\u0E22\u0E1A\u0E40\u0E25\u0E35\u0E22\u0E1A\u0E2A\u0E23\u0E30\u0E19\u0E49\u0E33 15% \u0E21\u0E35\u0E40\u0E08\u0E49\u0E32\u0E2B\u0E19\u0E49\u0E32\u0E17\u0E35\u0E48\u0E1B\u0E23\u0E30\u0E08\u0E33\u0E08\u0E38\u0E14\u0E1B\u0E25\u0E2D\u0E14\u0E20\u0E31\u0E22\u0E15\u0E25\u0E2D\u0E14\u0E40\u0E2A\u0E49\u0E19\u0E17\u0E32\u0E07",
     recommendedFor: "\u0E19\u0E31\u0E01\u0E27\u0E34\u0E48\u0E07\u0E21\u0E34\u0E19\u0E34\u0E21\u0E32\u0E23\u0E32\u0E18\u0E2D\u0E19\u0E17\u0E35\u0E48\u0E15\u0E49\u0E2D\u0E07\u0E01\u0E32\u0E23\u0E0B\u0E49\u0E2D\u0E21\u0E04\u0E27\u0E32\u0E21\u0E40\u0E23\u0E47\u0E27 \u0E2B\u0E23\u0E37\u0E2D\u0E1C\u0E39\u0E49\u0E17\u0E35\u0E48\u0E15\u0E49\u0E2D\u0E07\u0E01\u0E32\u0E23\u0E2A\u0E31\u0E21\u0E1C\u0E31\u0E2A\u0E1E\u0E37\u0E49\u0E19\u0E17\u0E35\u0E48\u0E2A\u0E33\u0E04\u0E31\u0E0D\u0E17\u0E31\u0E48\u0E27\u0E04\u0E48\u0E32\u0E22\u0E19\u0E40\u0E23\u0E28\u0E27\u0E23",
-    waterStationCount: 3,
+    waterStationCount: 2,
     medicalStationCount: 2,
-    safetyNotes: "\u0E21\u0E35\u0E08\u0E38\u0E14\u0E1A\u0E23\u0E34\u0E01\u0E32\u0E23\u0E19\u0E49\u0E33\u0E14\u0E37\u0E48\u0E21 3 \u0E08\u0E38\u0E14 (\u0E01\u0E21. 1.5, \u0E01\u0E21. 2.7 \u0E41\u0E25\u0E30 \u0E01\u0E21. 4.2) \u0E1E\u0E23\u0E49\u0E2D\u0E21\u0E17\u0E35\u0E21\u0E41\u0E1E\u0E17\u0E22\u0E4C\u0E01\u0E39\u0E49\u0E0A\u0E35\u0E1E\u0E1B\u0E23\u0E30\u0E08\u0E33\u0E01\u0E32\u0E23",
+    safetyNotes: "\u0E21\u0E35\u0E08\u0E38\u0E14\u0E1A\u0E23\u0E34\u0E01\u0E32\u0E23\u0E19\u0E49\u0E33\u0E14\u0E37\u0E48\u0E21 2 \u0E08\u0E38\u0E14 (\u0E01\u0E21. 1.5 \u0E41\u0E25\u0E30 \u0E01\u0E21. 4.6) \u0E1E\u0E23\u0E49\u0E2D\u0E21\u0E17\u0E35\u0E21\u0E41\u0E1E\u0E17\u0E22\u0E4C\u0E01\u0E39\u0E49\u0E0A\u0E35\u0E1E\u0E1B\u0E23\u0E30\u0E08\u0E33\u0E01\u0E32\u0E23",
     coordinates: [
       [12.6966, 99.9638],
       // Start: Sea Sand Sun Beach
@@ -33450,6 +33452,15 @@ create table if not exists csr.sponsor_codes (
   created_at   timestamptz not null default now()
 );
 
+-- Anonymous visitor counting: one row per random browser id per day (Thailand time). No personal data.
+create table if not exists csr.visits (
+  day      date not null,
+  vid      text not null,
+  views    integer not null default 1,
+  first_at timestamptz not null default now(),
+  primary key (day, vid)
+);
+
 alter table csr.orders          enable row level security;
 alter table csr.bib_counters    enable row level security;
 alter table csr.used_refs       enable row level security;
@@ -33457,6 +33468,7 @@ alter table csr.settings        enable row level security;
 alter table csr.rate_hits       enable row level security;
 alter table csr.login_failures  enable row level security;
 alter table csr.sponsor_codes   enable row level security;
+alter table csr.visits          enable row level security;
 
 do $$
 begin
@@ -33538,7 +33550,6 @@ async function dbTx(fn) {
 }
 
 // src/data/shooting.ts
-var SHOOTING_CONSENT_VERSION = "2026-11-02";
 function isValidThaiId(id) {
   if (!/^\d{13}$/.test(id)) return false;
   let sum = 0;
@@ -33551,7 +33562,7 @@ function maskThaiId(id) {
   return d.length === 13 ? `x-xxxx-xxxxx-${d.slice(10, 12)}-${d[12]}` : "";
 }
 var clip = (v, n) => typeof v === "string" ? v.replace(/[\u0000-\u001f<>]/g, " ").trim().slice(0, n) : "";
-function parseShooting(raw, people, consent) {
+function parseShooting(raw, people) {
   const list = Array.isArray(raw) ? raw.slice(0, people) : [];
   const errors = [];
   const shooters = [];
@@ -33565,9 +33576,8 @@ function parseShooting(raw, people, consent) {
   }
   const ids = shooters.map((s) => s.idCard).filter(Boolean);
   if (new Set(ids).size !== ids.length) errors.push("\u0E40\u0E25\u0E02\u0E1A\u0E31\u0E15\u0E23\u0E1B\u0E23\u0E30\u0E0A\u0E32\u0E0A\u0E19\u0E1C\u0E39\u0E49\u0E22\u0E34\u0E07\u0E1B\u0E37\u0E19\u0E0B\u0E49\u0E33\u0E01\u0E31\u0E19");
-  if (consent !== true) errors.push("\u0E01\u0E23\u0E38\u0E13\u0E32\u0E22\u0E2D\u0E21\u0E23\u0E31\u0E1A\u0E43\u0E1A\u0E22\u0E34\u0E19\u0E22\u0E2D\u0E21\u0E40\u0E02\u0E49\u0E32\u0E23\u0E48\u0E27\u0E21\u0E01\u0E34\u0E08\u0E01\u0E23\u0E23\u0E21\u0E22\u0E34\u0E07\u0E1B\u0E37\u0E19");
   if (errors.length) return { ok: false, error: errors.join(" \xB7 ") };
-  return { ok: true, value: { shooters, consentAt: (/* @__PURE__ */ new Date()).toISOString(), consentVersion: SHOOTING_CONSENT_VERSION } };
+  return { ok: true, value: { shooters } };
 }
 
 // server/store.ts
@@ -33590,6 +33600,20 @@ async function saveSettings(s) {
      on conflict (key) do update set value = excluded.value, updated_at = now()`,
     [JSON.stringify(s)]
   );
+}
+async function getSalesStatus() {
+  const rows = await dbQuery("select value from csr.settings where key = 'sales'");
+  const v = rows[0] ? asObj(rows[0].value) : {};
+  return { open: v.open !== false, updatedAt: v.updatedAt };
+}
+async function setSalesOpen(open) {
+  const value = { open, updatedAt: (/* @__PURE__ */ new Date()).toISOString() };
+  await dbQuery(
+    `insert into csr.settings (key, value) values ('sales', $1::jsonb)
+     on conflict (key) do update set value = excluded.value, updated_at = now()`,
+    [JSON.stringify(value)]
+  );
+  return value;
 }
 async function getOmiseKey() {
   const rows = await dbQuery("select value from csr.settings where key = 'gateway'");
@@ -33885,6 +33909,42 @@ async function findOrderByCode(code) {
   );
   return rows[0] ? rowToOrder(rows[0]) : void 0;
 }
+var BKK_DAY = "(now() at time zone 'Asia/Bangkok')::date";
+var isVisitorId = (v) => typeof v === "string" && /^[A-Za-z0-9-]{8,64}$/.test(v);
+async function recordVisit(vid) {
+  await dbQuery(
+    `insert into csr.visits (day, vid) values (${BKK_DAY}, $1)
+     on conflict (day, vid) do update set views = csr.visits.views + 1`,
+    [vid]
+  );
+}
+async function visitStats() {
+  const [sum] = await dbQuery(
+    `select
+       (select count(*) from csr.visits where day = ${BKK_DAY})::int as today_visitors,
+       (select coalesce(sum(views), 0) from csr.visits where day = ${BKK_DAY})::int as today_views,
+       (select count(distinct vid) from csr.visits)::int as total_visitors,
+       (select coalesce(sum(views), 0) from csr.visits)::int as total_views`
+  );
+  const rows = await dbQuery(
+    `select to_char(day, 'YYYY-MM-DD') as day, count(*)::int as visitors, sum(views)::int as views
+     from csr.visits where day > ${BKK_DAY} - 14 group by day`
+  );
+  const byDay = new Map(rows.map((r) => [r.day, r]));
+  const today = new Date(Date.now() + 7 * 36e5).toISOString().slice(0, 10);
+  const end = (/* @__PURE__ */ new Date(`${today}T00:00:00Z`)).getTime();
+  const days = [];
+  for (let i = 13; i >= 0; i--) {
+    const day = new Date(end - i * 864e5).toISOString().slice(0, 10);
+    const r = byDay.get(day);
+    days.push({ day, visitors: Number(r?.visitors ?? 0), views: Number(r?.views ?? 0) });
+  }
+  return {
+    today: { visitors: Number(sum.today_visitors), views: Number(sum.today_views) },
+    total: { visitors: Number(sum.total_visitors), views: Number(sum.total_views) },
+    days
+  };
+}
 
 // src/data/addOns.ts
 var EMPTY_ADD_ONS = { tower: false, gun: "none", windTunnel: false, people: 1 };
@@ -34102,16 +34162,22 @@ var SHIRT_SIZES = ["XS", "S", "M", "L", "XL", "2XL", "3XL"];
 var isSize = (v) => typeof v === "string" && SHIRT_SIZES.includes(v);
 var clip4 = (v, n) => typeof v === "string" ? v.replace(/[\u0000-\u001f<>]/g, " ").trim().slice(0, n) : "";
 var extraRunnersText = (list) => list.map((r) => `${r.name} (\u0E44\u0E0B\u0E2A\u0E4C ${r.shirtSize})`).join(", ");
-function parseExtraRunners(raw, count) {
+function parseExtraRunners(raw, count, withInsurance = false) {
   const list = Array.isArray(raw) ? raw.slice(0, count) : [];
   const out = [];
   const errors = [];
   for (let i = 0; i < count; i++) {
     const r = list[i] && typeof list[i] === "object" ? list[i] : {};
-    const name = clip4(r.name, 80);
-    if (name.length < 2) errors.push(`\u0E01\u0E23\u0E38\u0E13\u0E32\u0E01\u0E23\u0E2D\u0E01\u0E0A\u0E37\u0E48\u0E2D\u0E1C\u0E39\u0E49\u0E23\u0E48\u0E27\u0E21\u0E27\u0E34\u0E48\u0E07\u0E40\u0E1E\u0E34\u0E48\u0E21\u0E04\u0E19\u0E17\u0E35\u0E48 ${i + 1}`);
-    if (!isSize(r.shirtSize)) errors.push(`\u0E01\u0E23\u0E38\u0E13\u0E32\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E44\u0E0B\u0E2A\u0E4C\u0E40\u0E2A\u0E37\u0E49\u0E2D\u0E1C\u0E39\u0E49\u0E23\u0E48\u0E27\u0E21\u0E27\u0E34\u0E48\u0E07\u0E40\u0E1E\u0E34\u0E48\u0E21\u0E04\u0E19\u0E17\u0E35\u0E48 ${i + 1}`);
-    out.push({ name, shirtSize: isSize(r.shirtSize) ? r.shirtSize : "M" });
+    let insurance;
+    if (withInsurance) {
+      const p = parseInsurance(r.insurance, true);
+      if (p.ok) insurance = p.value;
+      else errors.push(`\u0E1C\u0E39\u0E49\u0E23\u0E48\u0E27\u0E21\u0E27\u0E34\u0E48\u0E07\u0E04\u0E19\u0E17\u0E35\u0E48 ${i + 2}: ${p.error}`);
+    }
+    const name = insurance ? `${insurance.firstName} ${insurance.lastName}`.slice(0, 80) : clip4(r.name, 80);
+    if (!withInsurance && name.length < 2) errors.push(`\u0E01\u0E23\u0E38\u0E13\u0E32\u0E01\u0E23\u0E2D\u0E01\u0E0A\u0E37\u0E48\u0E2D\u0E1C\u0E39\u0E49\u0E23\u0E48\u0E27\u0E21\u0E27\u0E34\u0E48\u0E07\u0E40\u0E1E\u0E34\u0E48\u0E21\u0E04\u0E19\u0E17\u0E35\u0E48 ${i + 1}`);
+    if (!isSize(r.shirtSize)) errors.push(`\u0E01\u0E23\u0E38\u0E13\u0E32\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E44\u0E0B\u0E2A\u0E4C\u0E40\u0E2A\u0E37\u0E49\u0E2D\u0E1C\u0E39\u0E49\u0E23\u0E48\u0E27\u0E21\u0E27\u0E34\u0E48\u0E07\u0E04\u0E19\u0E17\u0E35\u0E48 ${i + 2}`);
+    out.push({ name, shirtSize: isSize(r.shirtSize) ? r.shirtSize : "M", insurance });
   }
   if (errors.length) return { ok: false, error: errors.join(" \xB7 ") };
   return { ok: true, value: out };
@@ -34406,7 +34472,7 @@ async function buildTicketEmail(o) {
       <div style="background:#ffffff;border-radius:20px;display:inline-block;padding:8px 16px">
         <img src="cid:event-logo" width="220" height="110" alt="CHANGSUEK RUN \u0E40\u0E2B\u0E47\u0E19\u0E0A\u0E49\u0E32\u0E07\u0E27\u0E34\u0E48\u0E07 \u0E27\u0E34\u0E48\u0E07\u0E15\u0E32\u0E21\u0E0A\u0E49\u0E32\u0E07" style="display:block;border:0" />
       </div>
-      <div style="color:#FFC928;font-weight:900;font-size:12px;letter-spacing:2px;margin-top:14px">CHANGSUEK RUN 2026 \xB7 RUN TOGETHER</div>
+      <div style="color:#FFC928;font-weight:900;font-size:12px;letter-spacing:2px;margin-top:14px">CHANGSUEK RUN 2027 \xB7 RUN TOGETHER</div>
       <div style="color:#ffffff;font-weight:900;font-size:24px;margin-top:4px">\u0E0A\u0E33\u0E23\u0E30\u0E40\u0E07\u0E34\u0E19\u0E2A\u0E33\u0E40\u0E23\u0E47\u0E08 \u{1F389} \u0E15\u0E31\u0E4B\u0E27\u0E21\u0E32\u0E41\u0E25\u0E49\u0E27!</div>
     </td></tr>
     <tr><td style="height:10px;background:#FFC928;background-image:repeating-linear-gradient(135deg,#FFC928 0 12px,#2A1450 12px 24px);font-size:0;line-height:0">&nbsp;</td></tr>
@@ -34545,8 +34611,10 @@ async function nextBibPreview() {
   return Object.fromEntries(ROUTE_IDS.map((r) => [r, formatBib(r, (counters[r] || 0) + 1)]));
 }
 async function publicConfig() {
-  const [s, nextBib, key, windUsed] = await Promise.all([getSettings(), nextBibPreview(), getEasySlipKey(), windTunnelSeatsUsed()]);
+  const [s, nextBib, key, windUsed, sales] = await Promise.all([getSettings(), nextBibPreview(), getEasySlipKey(), windTunnelSeatsUsed(), getSalesStatus()]);
   return {
+    /** the admin's open / close switch for ticket sales */
+    salesOpen: sales.open,
     windTunnelLimit: WIND_TUNNEL_LIMIT,
     windTunnelRemaining: Math.max(0, WIND_TUNNEL_LIMIT - windUsed),
     promptPayId: s.promptPayId,
@@ -34601,6 +34669,19 @@ function createApp() {
     res.setHeader("Cache-Control", "public, max-age=60");
     res.json({ winners: await getWinners() });
   }));
+  app2.post("/api/visit", smallJson, h(async (req, res) => {
+    const vid = req.body?.vid;
+    if (!isVisitorId(vid)) {
+      res.status(400).json({ error: "invalid visitor id" });
+      return;
+    }
+    if (await rateLimited(`visit:${clientIp(req)}`, 60, 10 * 60 * 1e3)) {
+      res.status(204).end();
+      return;
+    }
+    await recordVisit(vid);
+    res.status(204).end();
+  }));
   app2.post("/api/sponsor-code/check", smallJson, h(async (req, res) => {
     if (await rateLimited(`sponsor-check:${clientIp(req)}`, 12, 10 * 60 * 1e3)) {
       res.status(429).json({ error: "\u0E15\u0E23\u0E27\u0E08\u0E23\u0E2B\u0E31\u0E2A\u0E1A\u0E48\u0E2D\u0E22\u0E40\u0E01\u0E34\u0E19\u0E44\u0E1B \u0E01\u0E23\u0E38\u0E13\u0E32\u0E23\u0E2D\u0E2A\u0E31\u0E01\u0E04\u0E23\u0E39\u0E48\u0E41\u0E25\u0E49\u0E27\u0E25\u0E2D\u0E07\u0E43\u0E2B\u0E21\u0E48" });
@@ -34617,6 +34698,10 @@ function createApp() {
   app2.post("/api/orders", smallJson, h(async (req, res) => {
     if (await rateLimited(`order:${clientIp(req)}`, 15, 10 * 60 * 1e3)) {
       res.status(429).json({ error: "\u0E2A\u0E23\u0E49\u0E32\u0E07\u0E04\u0E33\u0E2A\u0E31\u0E48\u0E07\u0E0B\u0E37\u0E49\u0E2D\u0E1A\u0E48\u0E2D\u0E22\u0E40\u0E01\u0E34\u0E19\u0E44\u0E1B \u0E01\u0E23\u0E38\u0E13\u0E32\u0E23\u0E2D\u0E2A\u0E31\u0E01\u0E04\u0E23\u0E39\u0E48\u0E41\u0E25\u0E49\u0E27\u0E25\u0E2D\u0E07\u0E43\u0E2B\u0E21\u0E48" });
+      return;
+    }
+    if (!(await getSalesStatus()).open) {
+      res.status(403).json({ error: "\u0E02\u0E13\u0E30\u0E19\u0E35\u0E49\u0E1B\u0E34\u0E14\u0E01\u0E32\u0E23\u0E02\u0E32\u0E22\u0E1A\u0E31\u0E15\u0E23\u0E0A\u0E31\u0E48\u0E27\u0E04\u0E23\u0E32\u0E27 \u0E01\u0E23\u0E38\u0E13\u0E32\u0E15\u0E34\u0E14\u0E15\u0E32\u0E21\u0E1B\u0E23\u0E30\u0E01\u0E32\u0E28\u0E08\u0E32\u0E01\u0E1C\u0E39\u0E49\u0E08\u0E31\u0E14\u0E07\u0E32\u0E19" });
       return;
     }
     const b = req.body || {};
@@ -34654,7 +34739,7 @@ function createApp() {
     let extraRunners;
     let extraRunnersError = "";
     if (extraPeople > 0) {
-      const p = parseExtraRunners(b.extraRunners, extraPeople);
+      const p = parseExtraRunners(b.extraRunners, extraPeople, needsInsurance(routeId));
       if (p.ok) extraRunners = p.value;
       else extraRunnersError = p.error;
     }
@@ -34680,7 +34765,7 @@ function createApp() {
     let shooting;
     let shootingError = "";
     if (addOns.gun !== "none") {
-      const p = parseShooting(b.shooters, addOns.people, b.shootingConsent);
+      const p = parseShooting(b.shooters, addOns.people);
       if (p.ok) shooting = p.value;
       else shootingError = p.error;
     }
@@ -35176,6 +35261,19 @@ function createApp() {
       return;
     }
     res.json({ ok: true });
+  }));
+  app2.get("/api/admin/visits", requireAdmin, h(async (_req, res) => {
+    res.json(await visitStats());
+  }));
+  app2.get("/api/admin/sales", requireAdmin, h(async (_req, res) => {
+    res.json(await getSalesStatus());
+  }));
+  app2.put("/api/admin/sales", requireAdmin, smallJson, h(async (req, res) => {
+    if (typeof req.body?.open !== "boolean") {
+      res.status(400).json({ error: "open must be true or false" });
+      return;
+    }
+    res.json(await setSalesOpen(req.body.open));
   }));
   app2.get("/api/admin/settings", requireAdmin, h(async (_req, res) => {
     res.json({ settings: await getSettings(), bibCounters: await getBibCounters() });

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { ArrowRight, Check, ChevronDown, Clock, Crown, Droplets, Flame, Medal, Minus, Plus, Shirt, ShoppingBasket, Sparkles, Ticket, Zap } from 'lucide-react';
 import type { RouteId } from '../types';
-import { CONCERT_PASS_PRICE, MAX_VIP_TABLES, VIP_TABLE_PERKS, VIP_TABLE_PRICE, VIP_TABLE_SEATS, calcTicketTotal, isDogCategory, ticketById } from '../data/eventData';
+import { CONCERT_PASS_PRICE, MAX_VIP_TABLES, VIP_TABLE_PERKS, VIP_TABLE_PRICE, VIP_TABLE_SEATS, calcTicketTotal, isDogCategory, routesData, ticketById } from '../data/eventData';
 import {
   AddOnSelection,
   EMPTY_ADD_ONS,
@@ -62,7 +62,6 @@ interface TicketLook {
   startTime: string;
   cutoff: string;
   elevationText: string;
-  waterCount: number;
   sub: string;
 }
 
@@ -83,9 +82,8 @@ const LOOK: Record<RouteId, TicketLook> = {
     serialCode: 'CSR27-DOG-01K',
     bibPrefix: '01-XXXX',
     startTime: '17.30 น.',
-    cutoff: '45 นาที',
+    cutoff: '30 นาที',
     elevationText: 'เลียบหาดทราย 100%',
-    waterCount: 2,
     sub: 'เดิน-วิ่งชิลล์ริมหาดกับน้องสุนัขตัวโปรด',
   },
   '3km': {
@@ -106,7 +104,6 @@ const LOOK: Record<RouteId, TicketLook> = {
     startTime: '17.15 น.',
     cutoff: '60 นาที',
     elevationText: 'เลียบหาด + ทิวสนร่มรื่น',
-    waterCount: 3,
     sub: 'วิ่งสนุกกำลังดี ไปด้วยกันทั้งคนและน้องสุนัข',
   },
   '5km': {
@@ -127,7 +124,6 @@ const LOOK: Record<RouteId, TicketLook> = {
     startTime: '17.00 น.',
     cutoff: '75 นาที',
     elevationText: 'ทางเรียบ + ชายหาด',
-    waterCount: 3,
     sub: 'สำหรับผู้เริ่มต้น สายสุขภาพ และครอบครัว',
   },
   '10km': {
@@ -148,7 +144,6 @@ const LOOK: Record<RouteId, TicketLook> = {
     startTime: '16.30 น.',
     cutoff: '120 นาที',
     elevationText: 'รอบค่ายนเรศวรครบวง',
-    waterCount: 5,
     sub: 'ท้าทายสถิติใหม่บนเส้นทางชายหาดประวัติศาสตร์',
   },
 };
@@ -266,7 +261,7 @@ const RunTicket: React.FC<{ id: RouteId; on: boolean; onPick: () => void }> = ({
         <div className="relative z-10 mt-3 pt-2 border-t border-white/25 flex items-center justify-between gap-1 text-xs font-bold text-white/95">
           <span className="inline-flex items-center gap-1"><Clock className="w-3.5 h-3.5 text-[#FFE28A]" />{l.startTime}</span>
           <span className="inline-flex items-center gap-1"><Flame className="w-3.5 h-3.5 text-[#FFE28A]" />{l.cutoff}</span>
-          <span className="inline-flex items-center gap-1"><Droplets className="w-3.5 h-3.5 text-[#FFE28A]" />น้ำ {l.waterCount} จุด</span>
+          <span className="inline-flex items-center gap-1"><Droplets className="w-3.5 h-3.5 text-[#FFE28A]" />น้ำ {routesData[id].waterStationCount} จุด</span>
         </div>
       </div>
 
@@ -437,10 +432,16 @@ export const TicketShop: React.FC<TicketShopProps> = ({
   onShowMap,
 }) => {
   const [windRemaining, setWindRemaining] = useState<number | null>(null);
+  // the admin's open / close switch (see SalesSwitchCard)
+  const [salesClosed, setSalesClosed] = useState(false);
   useEffect(() => {
     let alive = true;
     getPublicConfig()
-      .then((c) => alive && setWindRemaining(typeof c.windTunnelRemaining === 'number' ? c.windTunnelRemaining : null))
+      .then((c) => {
+        if (!alive) return;
+        setWindRemaining(typeof c.windTunnelRemaining === 'number' ? c.windTunnelRemaining : null);
+        setSalesClosed(c.salesOpen === false);
+      })
       .catch(() => {});
     return () => {
       alive = false;
@@ -539,7 +540,7 @@ export const TicketShop: React.FC<TicketShopProps> = ({
         <div className="relative mb-5 sm:mb-6 space-y-3">
           <div className="text-center">
             <h2 className="squiggle squiggle-center font-hero text-4xl sm:text-6xl font-extrabold leading-[1.4]">
-              <span className="inline-block bg-gradient-to-r from-[#4C1D95] via-[#7C3AED] to-[#EC4899] bg-clip-text px-1 pt-2 pb-1 text-transparent">ซื้อบัตรงานวิ่ง</span>
+              <span className="inline-block px-1 pt-2 pb-1 text-[#1E0B3D] [text-shadow:0_4px_0_#FFC928,0_8px_18px_rgba(42,20,80,0.25)]">ซื้อบัตรงานวิ่ง</span>
             </h2>
             <p className="mt-2 text-sm font-bold text-[#4B2D78]">
               เลือกได้ 1, 2 หรือครบ 3 อย่าง <span className="text-[#7C3AED]">แล้วจ่ายทีเดียวจบ</span>
@@ -547,6 +548,12 @@ export const TicketShop: React.FC<TicketShopProps> = ({
           </div>
           <DealStrip hasRun={eligible} hasGaConcert={concertQty > 0} hasConcert={hasConcert} activities={activityCount} />
         </div>
+        {salesClosed && (
+          <div role="status" className="mx-auto mt-5 max-w-2xl rounded-2xl border-[3px] border-[#2A1450] bg-[#FFE4E6] px-4 py-3 text-center shadow-[0_5px_0_#2A1450]">
+            <p className="text-base sm:text-lg font-black text-[#9F1239]">⏸️ ขณะนี้ปิดการขายบัตรชั่วคราว</p>
+            <p className="text-xs sm:text-sm font-bold text-[#4B2D78]">ดูรายละเอียดบัตรได้ตามปกติ · ติดตามประกาศเปิดขายจากผู้จัดงาน</p>
+          </div>
+        )}
 
         <div className="relative grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-7 items-start">
           {/* ---------- The three parts ---------- */}

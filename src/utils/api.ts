@@ -25,6 +25,14 @@ export interface PublicConfig {
   paymentReady: boolean;
   /** true when paid orders get their ticket by e-mail */
   emailReady?: boolean;
+  /** the admin's open / close switch for ticket sales (missing = open) */
+  salesOpen?: boolean;
+}
+
+export interface VisitStats {
+  today: { visitors: number; views: number };
+  total: { visitors: number; views: number };
+  days: { day: string; visitors: number; views: number }[];
 }
 
 export type ServerOrder = TicketOrder & {
@@ -112,7 +120,6 @@ export interface CreateOrderInput {
   parkingPlates?: ParkingPlate[];
   /** Shooting: one entry per person on the add-on */
   shooters?: Shooter[];
-  shootingConsent?: boolean;
   /** Tower / wind tunnel: participants for the legal waivers, and which documents the buyer accepted */
   activityWaiver?: { participants: WaiverParticipant[]; accepted: Partial<Record<WaiverActivity, boolean>> };
   /** Dog Run extra runners: name + jersey size each */
@@ -282,6 +289,10 @@ export async function getWinners(): Promise<Winner[]> {
 }
 
 export const adminApi = {
+  visits: () => adminFetch<VisitStats>('/api/admin/visits'),
+  getSales: () => adminFetch<{ open: boolean; updatedAt?: string }>('/api/admin/sales'),
+  setSales: (open: boolean) =>
+    adminFetch<{ open: boolean; updatedAt?: string }>('/api/admin/sales', { method: 'PUT', headers: jsonHeaders, body: JSON.stringify({ open }) }),
   lookup: (q: string) => adminFetch<{ order: ServerOrder }>(`/api/admin/lookup?q=${encodeURIComponent(q)}`),
   getWinners: () => adminFetch<{ winners: Winner[] }>('/api/admin/winners'),
   saveWinners: (winners: Winner[]) =>

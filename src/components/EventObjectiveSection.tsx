@@ -80,7 +80,7 @@ export const EventObjectiveSection: React.FC = () => {
                   <p>
                     การจัดกิจกรรม{' '}
                     <strong className="text-[#FFE28A] font-extrabold">
-                      ช้างศึก รัน เห็นช้างวิ่ง วิ่งตามช้าง (CHANGSUEK RUN 2026)
+                      ช้างศึก รัน เห็นช้างวิ่ง วิ่งตามช้าง (CHANGSUEK RUN 2027)
                     </strong>{' '}
                     มีวัตถุประสงค์เพื่อนำ{' '}
                     <span className="underline decoration-[#FFC928]/80 decoration-2 underline-offset-4 font-bold text-white">

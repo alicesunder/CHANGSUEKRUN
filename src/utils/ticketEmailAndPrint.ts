@@ -120,7 +120,7 @@ export async function dispatchAutomatedTicketEmail(
     bibNumber: profile.bibNumber,
     recipientEmail: targetEmail,
     recipientName: profile.fullName || 'นักวิ่งช้างศึกรัน',
-    subject: `[ชำระเงินสำเร็จ] บัตรวิ่ง E-Ticket และหมายเลข BIB #${profile.bibNumber} งาน CHANGSUEK RUN 2026`,
+    subject: `[ชำระเงินสำเร็จ] บัตรวิ่ง E-Ticket และหมายเลข BIB #${profile.bibNumber} งาน CHANGSUEK RUN 2027`,
     sentAt: new Date().toISOString(),
     status: isResend ? 'RESENT' : 'DELIVERED',
     paymentRef: profile.paymentRef || 'PROMPTPAY-AUTO',
@@ -185,7 +185,7 @@ export async function downloadOfficialBibAsPng(profile: RunnerProfile): Promise<
   // Header Texts
   ctx.fillStyle = '#FFC928';
   ctx.font = '900 24px "Plus Jakarta Sans", "Prompt", sans-serif';
-  ctx.fillText('CHANGSUEK RUN 2026 · OFFICIAL VERIFIED E-BIB & RACE PASS', 110, 88);
+  ctx.fillText('CHANGSUEK RUN 2027 · OFFICIAL VERIFIED E-BIB & RACE PASS', 110, 88);
 
   ctx.fillStyle = '#FFFFFF';
   ctx.font = '900 44px "Prompt", "Plus Jakarta Sans", sans-serif';
@@ -302,7 +302,7 @@ export async function downloadOfficialBibAsPng(profile: RunnerProfile): Promise<
   const dataUrl = canvas.toDataURL('image/png');
   const link = document.createElement('a');
   link.href = dataUrl;
-  link.download = `CHANGSUEK_RUN_2026_BIB_${profile.bibNumber}.png`;
+  link.download = `CHANGSUEK_RUN_2027_BIB_${profile.bibNumber}.png`;
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);

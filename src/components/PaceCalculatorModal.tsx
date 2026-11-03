@@ -20,7 +20,7 @@ export const PaceCalculatorModal: React.FC<PaceCalculatorModalProps> = ({
   if (!isOpen) return null;
 
   const distanceKm = selectedRoute === '1km' ? 1.0 : selectedRoute === '3km' ? 3.8 : selectedRoute === '5km' ? 5.0 : 10.0;
-  const cutOffMinutes = selectedRoute === '1km' ? 45 : selectedRoute === '3km' ? 75 : selectedRoute === '5km' ? 90 : 135;
+  const cutOffMinutes = selectedRoute === '1km' ? 30 : selectedRoute === '3km' ? 60 : selectedRoute === '5km' ? 75 : 120;
 
   const totalPaceSeconds = paceMinutes * 60 + paceSeconds;
   const totalFinishSeconds = Math.round(totalPaceSeconds * distanceKm);

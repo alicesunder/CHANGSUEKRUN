@@ -3,11 +3,12 @@
  * Google Maps links (about 14 m accuracy); `mapsUrl` is the organiser's own link for navigation.
  */
 export interface ActivityLocation {
-  id: 'gun' | 'tower' | 'wind';
-  station: number;
+  id: 'gun' | 'tower' | 'wind' | 'resort';
+  /** activity station number; the resort (start & concert area) has none */
+  station?: number;
   name: string;
   /** Plus Code shown in Google Maps */
-  plusCode: string;
+  plusCode?: string;
   lat: number;
   lng: number;
   color: string;
@@ -45,4 +46,15 @@ export const ACTIVITY_LOCATIONS: ActivityLocation[] = [
     color: '#0F766E',
     mapsUrl: 'https://maps.app.goo.gl/1q9d2EVSFzD4HTYv5',
   },
+  {
+    id: 'resort',
+    name: 'Sea Sand Sun Hua Hin Resort',
+    lat: 12.6966,
+    lng: 99.9638,
+    color: '#E11D48',
+    mapsUrl: 'https://www.google.com/maps/search/?api=1&query=Sea+Sand+Sun+Hua+Hin+Resort',
+  },
 ];
+
+/** "สถานีที่ 1 · สนามยิงปืน", or just the name for a place that is not a station */
+export const locationTitle = (a: ActivityLocation) => (a.station ? `สถานีที่ ${a.station} · ${a.name}` : a.name);

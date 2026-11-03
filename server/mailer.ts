@@ -121,7 +121,7 @@ export async function buildTicketEmail(o: StoredOrder) {
       <div style="background:#ffffff;border-radius:20px;display:inline-block;padding:8px 16px">
         <img src="cid:event-logo" width="220" height="110" alt="CHANGSUEK RUN เห็นช้างวิ่ง วิ่งตามช้าง" style="display:block;border:0" />
       </div>
-      <div style="color:#FFC928;font-weight:900;font-size:12px;letter-spacing:2px;margin-top:14px">CHANGSUEK RUN 2026 · RUN TOGETHER</div>
+      <div style="color:#FFC928;font-weight:900;font-size:12px;letter-spacing:2px;margin-top:14px">CHANGSUEK RUN 2027 · RUN TOGETHER</div>
       <div style="color:#ffffff;font-weight:900;font-size:24px;margin-top:4px">ชำระเงินสำเร็จ 🎉 ตั๋วมาแล้ว!</div>
     </td></tr>
     <tr><td style="height:10px;background:#FFC928;background-image:repeating-linear-gradient(135deg,#FFC928 0 12px,#2A1450 12px 24px);font-size:0;line-height:0">&nbsp;</td></tr>

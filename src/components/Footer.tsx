@@ -87,16 +87,20 @@ export const Footer: React.FC<FooterProps> = ({
           {/* Column 3: ติดต่อเรา (2.5 cols) */}
           <div className="lg:col-span-2">
             <h4 className="text-sm font-black text-white uppercase mb-4">
-              ติดต่อเรา
+              กองบัญชาการตำรวจตระเวนชายแดน
             </h4>
             <div className="space-y-3 text-xs text-white/70">
               <div className="flex items-start gap-2">
                 <MapPin className="w-4 h-4 text-[#FFCC00] flex-shrink-0 mt-0.5" />
                 <span>หาดชะอำ (ค่ายนเรศวร) อ.ชะอำ จ.เพชรบุรี</span>
               </div>
-              <div className="flex items-center gap-2">
-                <Phone className="w-4 h-4 text-[#FFCC00] flex-shrink-0" />
-                <a href={`tel:${eventInfo.contactPhone.split('/')[0].replace(/[^0-9]/g, '')}`} className="inline-block py-1 hover:text-[#FFCC00]">{eventInfo.contactPhone}</a>
+              <div className="flex items-start gap-2">
+                <Phone className="w-4 h-4 text-[#FFCC00] flex-shrink-0 mt-2" />
+                <div className="flex flex-col">
+                  {eventInfo.contactPhones.map((p) => (
+                    <a key={p} href={`tel:${p.replace(/[^0-9]/g, '')}`} className="inline-block py-1 hover:text-[#FFCC00]">{p}</a>
+                  ))}
+                </div>
               </div>
               <div className="flex items-center gap-2">
                 <Mail className="w-4 h-4 text-[#FFCC00] flex-shrink-0" />
@@ -144,7 +148,7 @@ export const Footer: React.FC<FooterProps> = ({
         <div className="pt-6 flex flex-col sm:flex-row items-center justify-between text-xs text-white/50 gap-4">
           <div className="flex flex-wrap items-center gap-3">
             <span>
-              © 2026 CHANGSUEK RUN. All rights reserved. |{' '}
+              © 2027 CHANGSUEK RUN. All rights reserved. |{' '}
               <span className="text-white/70">เห็นช้างวิ่ง วิ่งตามช้าง</span>
             </span>
             {onOpenAdminModal && (

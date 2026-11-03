@@ -78,11 +78,13 @@ import {
 } from '../utils/ticketEmailAndPrint';
 import { TicketPrintEmailModal } from './TicketPrintEmailModal';
 import { AddOnPicker } from './AddOnPicker';
-import { BLOOD_TYPES, GENDERS, PREFIXES, RELATIONSHIPS, ageFromBirthDate, needsInsurance } from '../data/insurance';
-import { SHOOTING_CONSENT_LINES, digitsOnly, formatThaiId, isValidThaiId, type Shooter } from '../data/shooting';
+import { needsInsurance } from '../data/insurance';
+import { digitsOnly, formatThaiId, isValidThaiId, type Shooter } from '../data/shooting';
+import { PaymentWow } from './PaymentWow';
+import { RaceBib, runnerBib } from './RaceBib';
+import { FormSection, RunnerDetailsForm, emptyRunner, runnerFromSaved, runnerName, runnerProblems, toInsurance, type RunnerEntry } from './RunnerDetailsForm';
 import { VIP_PARKING_PER_TABLE, type ParkingPlate } from '../data/vipParking';
 import { waiversFor, type WaiverActivity, type WaiverParticipant } from '../data/activityWaivers';
-import type { ExtraRunner } from '../data/shirts';
 import { ActivityWaiverForm, mergeParticipant } from './ActivityWaiverForm';
 import { ParkingPasses } from './ParkingPass';
 import { EMPTY_ADD_ONS, addOnBonusDiscount, addOnConcertRate, addOnCountRate, addOnDiscountRate, addOnLabel, addOnTotal, concertDiscountPerTicket, hasAddOns, percentOf, type AddOnSelection } from '../data/addOns';
@@ -158,16 +160,6 @@ const TICKET_ICONS: Record<RouteId, { src: string; alt: string }> = {
   '3km': { src: '/images/distances/icon-3k.webp', alt: 'นักวิ่งกับน้องสุนัขระยะ 3.8 กม. ริมหาด' },
   '1km': { src: '/images/distances/icon-1k.webp', alt: 'น้องสุนัขวิ่งระยะ 1 กม.' },
 };
-
-const SHIRT_SIZES = [
-  { size: 'XS', chest: '34"' },
-  { size: 'S', chest: '36"' },
-  { size: 'M', chest: '38"' },
-  { size: 'L', chest: '40"' },
-  { size: 'XL', chest: '42"' },
-  { size: '2XL', chest: '44"' },
-  { size: '3XL', chest: '46"' },
-];
 
 const inputCls =
   'w-full pl-10 pr-4 py-2.5 rounded-2xl border-2 border-[#2A1450]/20 bg-white text-sm font-semibold text-[#2A1450] placeholder-[#6B5A85]/50 focus:outline-none focus:border-[#6D28D9] focus:ring-4 focus:ring-[#6D28D9]/15 transition-all';
@@ -260,31 +252,21 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [emergencyPhone, setEmergencyPhone] = useState('');
-  // Insurance details (every running distance)
-  const [insPrefix, setInsPrefix] = useState('');
-  const [insFirst, setInsFirst] = useState('');
-  const [insLast, setInsLast] = useState('');
-  const [insGender, setInsGender] = useState('');
-  const [insBirth, setInsBirth] = useState('');
-  const [insBlood, setInsBlood] = useState('');
-  const [insMedical, setInsMedical] = useState('');
-  const [insEmName, setInsEmName] = useState('');
-  const [insRel, setInsRel] = useState('');
+  // Runners: runner 1 is the main applicant; Dog Run extra runners fill the same card (insurance included)
+  const [runnersState, setRunnersState] = useState<RunnerEntry[]>([emptyRunner(0)]);
+  const [activeRunner, setActiveRunner] = useState(0);
+  const [showRunnerErrors, setShowRunnerErrors] = useState(false);
   const [insConsent, setInsConsent] = useState(false);
   // VIP parking: up to 2 cars per table
   const [plates, setPlates] = useState<ParkingPlate[]>([]);
-  // Shooting: name + national ID for each person, plus one consent
-  const [shooters, setShooters] = useState<Shooter[]>([]);
-  const [shootingConsent, setShootingConsent] = useState(false);
+  // Shooting: name + national ID for each person (names start from the runners' names)
+  const [shooters, setShooters] = useState<Partial<Shooter>[]>([]);
   // Tower / wind tunnel: the buyer's edits to each participant, and which waivers were accepted
   // (stored as the details they were accepted for, so changing a detail asks again)
   const [waiverEdits, setWaiverEdits] = useState<Partial<WaiverParticipant>[]>([]);
   const [waiverAccepted, setWaiverAccepted] = useState<Partial<Record<WaiverActivity, string>>>({});
-  const [shirtSize, setShirtSize] = useState('L');
   const [dogName, setDogName] = useState('');
   const [dogBreed, setDogBreed] = useState('');
-  // Dog Run extra runners: name + jersey size each
-  const [extraRunners, setExtraRunners] = useState<ExtraRunner[]>([]);
 
   // Server-backed order & payment state (the server decides price, payment status and BIB)
   const [publicCfg, setPublicCfg] = useState<PublicConfig | null>(null);
@@ -310,6 +292,8 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
   const [createdOrder, setCreatedOrder] = useState<TicketOrder | null>(null);
 
   const [celebrationKey, setCelebrationKey] = useState<number>(1);
+  // full-screen celebration the moment a payment goes through
+  const [wow, setWow] = useState(false);
 
   // Step 4 Email & Print States
   const [ticketCheckInQrUrl, setTicketCheckInQrUrl] = useState<string>('');
@@ -325,8 +309,14 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
   const theme = ROUTE_THEME[selectedRoute] ?? ROUTE_THEME['5km'];
   const isDog = !noRun && isDogCategory(selectedRoute);
   const insured = !noRun && needsInsurance(selectedRoute);
-  const insAge = ageFromBirthDate(insBirth);
-  const todayIso = new Date().toISOString().slice(0, 10);
+  const runners: RunnerEntry[] = Array.from({ length: noRun ? 0 : 1 + extraPeople }, (_, i) => runnersState[i] || emptyRunner(i));
+  const updateRunner = (i: number, patch: Partial<RunnerEntry>) =>
+    setRunnersState((rs) => {
+      const next = [...rs];
+      next[i] = { ...(rs[i] || emptyRunner(i)), ...patch };
+      return next;
+    });
+  const shirtSize = runners[0]?.shirtSize || 'L';
   // Bundle discounts never stack with a sponsor code (rules in data/addOns.ts; the server decides the real price).
   const sponsorOn = Boolean(sponsor) && wantRun;
   const discountCtx = { hasRun: wantRun, hasConcert: gaQty > 0 || vipTables > 0, sponsor: sponsorOn };
@@ -338,12 +328,21 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
   const concertMissing = wantConcert && gaQty === 0 && vipTables === 0;
   const hasGun = wantAddons && addOns.gun !== 'none';
   const waiverActivities = waiversFor(addOns);
-  const buyerName = insured ? `${insFirst.trim()} ${insLast.trim()}`.trim() : fullName.trim();
+  const buyerName = noRun ? fullName.trim() : runnerName(runners[0]);
+  // Names typed once in the runner cards fill the shooting list and the waivers (each can still be edited there).
+  const autoName = (i: number) => (i === 0 ? buyerName : runnerName(runners[i]));
+  const shooterList: Shooter[] = Array.from({ length: hasGun ? addOns.people : 0 }, (_, i) => ({
+    fullName: shooters[i]?.fullName ?? autoName(i),
+    idCard: shooters[i]?.idCard ?? '',
+  }));
   const waiverPeople: WaiverParticipant[] = Array.from({ length: waiverActivities.length ? addOns.people : 0 }, (_, i) =>
     mergeParticipant(
-      i === 0
-        ? { fullName: buyerName, phone: digitsOnly(phone), birthDate: insured ? insBirth : '', idCard: hasGun ? shooters[0]?.idCard : '' }
-        : { fullName: hasGun ? shooters[i]?.fullName : '', idCard: hasGun ? shooters[i]?.idCard : '' },
+      {
+        fullName: shooterList[i]?.fullName || autoName(i),
+        phone: i === 0 ? digitsOnly(phone) : '',
+        birthDate: runners[i]?.birthDate || '',
+        idCard: shooterList[i]?.idCard || '',
+      },
       waiverEdits[i]
     )
   );
@@ -358,6 +357,8 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
   // Amount to pay always comes from the server order once it exists.
   const payAmount = serverOrder?.totalPrice ?? total;
   const nextBibPreview = publicCfg?.nextBib?.[selectedRoute] ?? '—';
+  // the admin closed ticket sales (orders already created can still be paid)
+  const salesClosed = publicCfg?.salesOpen === false;
 
   /** Payment confirmed by the server -> show the ticket. */
   const finalizePaidOrder = async (order: ServerOrder) => {
@@ -369,6 +370,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
     setTicketCheckInQrUrl(qrCheckIn);
     setCreatedOrder(order);
     setCelebrationKey((prev) => prev + 1);
+    setWow(true);
     playVictoryCelebrationSound(true);
     setStep(4);
   };
@@ -382,10 +384,12 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
     setPhone(o.phone || '');
     setEmail(o.email || '');
     setEmergencyPhone(o.emergencyPhone || '');
-    setShirtSize(o.shirtSize || 'L');
     setDogName(o.dogName || '');
     setDogBreed(o.dogBreed || '');
-    setExtraRunners((o as ServerOrder).extraRunners || []);
+    setRunnersState([
+      runnerFromSaved(0, o.fullName || '', o.shirtSize, (o as ServerOrder).insurance),
+      ...((o as ServerOrder).extraRunners || []).map((r, k) => runnerFromSaved(k + 1, r.name, r.shirtSize, r.insurance)),
+    ]);
   };
 
   // On open: reset, load public config, and resume any unfinished order from this browser.
@@ -534,7 +538,8 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
       // A sponsor code covers one runner (and the dog); extra people / dogs are not included.
       setExtraPeople(0);
       setExtraDogs(0);
-      setExtraRunners([]);
+      setRunnersState((rs) => rs.slice(0, 1));
+      setActiveRunner(0);
     } catch (err) {
       setSponsor(null);
       setSponsorError(err instanceof Error ? err.message : 'ตรวจรหัสไม่สำเร็จ กรุณาลองใหม่');
@@ -553,6 +558,15 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
     e.preventDefault();
     if (isCreatingOrder) return;
     setFormError(null);
+    // Only the open runner tab is on screen, so the runner cards are checked here instead of by the browser.
+    const firstBad = runners.findIndex((r, i) => runnerProblems(r, i, insured).length > 0);
+    if (firstBad >= 0) {
+      setShowRunnerErrors(true);
+      setActiveRunner(firstBad);
+      setFormError(`กรุณากรอกข้อมูลนักวิ่งคนที่ ${firstBad + 1} ให้ครบ (ช่องสีแดง)`);
+      document.getElementById('runner-details')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      return;
+    }
     setIsCreatingOrder(true);
     try {
       const res = await createOrder({
@@ -562,25 +576,11 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
         vipTables: vipTables > 0 ? vipTables : undefined,
         extraPeople,
         extraDogs,
-        fullName: insured ? `${insFirst.trim()} ${insLast.trim()}` : fullName.trim(),
-        insurance: insured
-          ? {
-              prefix: insPrefix,
-              firstName: insFirst.trim(),
-              lastName: insLast.trim(),
-              gender: insGender,
-              birthDate: insBirth,
-              age: insAge ?? 0,
-              bloodType: insBlood,
-              medicalConditions: insMedical.trim() || 'ไม่มี',
-              emergencyName: insEmName.trim(),
-              relationship: insRel,
-            }
-          : undefined,
+        fullName: buyerName,
+        insurance: insured ? toInsurance(runners[0], runners[0]) : undefined,
         insuranceConsent: insured ? insConsent : undefined,
         parkingPlates: vipTables > 0 ? plates.slice(0, vipTables * VIP_PARKING_PER_TABLE).filter((p) => p.plate.trim() || p.province.trim()) : undefined,
-        shooters: hasGun ? Array.from({ length: addOns.people }, (_, i) => ({ fullName: shooters[i]?.fullName?.trim() || '', idCard: digitsOnly(shooters[i]?.idCard || '') })) : undefined,
-        shootingConsent: hasGun ? shootingConsent : undefined,
+        shooters: hasGun ? shooterList.map((x) => ({ fullName: x.fullName.trim(), idCard: digitsOnly(x.idCard) })) : undefined,
         activityWaiver: waiverActivities.length
           ? { participants: waiverPeople, accepted: Object.fromEntries(waiverActivities.map((a) => [a, waiverAccepted[a] === waiverKey])) }
           : undefined,
@@ -590,7 +590,10 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
         shirtSize: noRun ? '' : shirtSize,
         dogName: isDog ? dogName.trim() : undefined,
         dogBreed: isDog ? dogBreed.trim() : undefined,
-        extraRunners: extraPeople > 0 ? Array.from({ length: extraPeople }, (_, i) => ({ name: extraRunners[i]?.name?.trim() || '', shirtSize: extraRunners[i]?.shirtSize || 'M' })) : undefined,
+        extraRunners:
+          extraPeople > 0
+            ? runners.slice(1).map((r) => ({ name: runnerName(r), shirtSize: r.shirtSize, insurance: insured ? toInsurance(r, runners[0]) : undefined }))
+            : undefined,
         privacyConsent,
         sponsorCode: wantRun ? sponsor?.code : undefined,
         addOns: hasAddOns(addOns) ? addOns : undefined,
@@ -767,7 +770,17 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
 
           <div className="relative z-10 flex items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <div className="w-13 h-13 rounded-2xl bg-white/95 border-2 border-[#FFE268] shadow-[0_8px_20px_-4px_rgba(0,0,0,0.35)] flex items-center justify-center shrink-0 overflow-hidden">
+              {step === 2 && (
+                <button
+                  type="button"
+                  onClick={() => setStep(1)}
+                  className="inline-flex items-center gap-1.5 min-h-[46px] px-3.5 rounded-2xl bg-[#FFE268] hover:bg-[#FFD43B] text-[#261247] text-sm font-black border-2 border-white shadow-[0_4px_0_rgba(0,0,0,0.35)] cursor-pointer shrink-0 active:translate-y-0.5"
+                >
+                  <ArrowLeft className="w-5 h-5 stroke-[3]" />
+                  <span>ย้อนกลับ</span>
+                </button>
+              )}
+              <div className={`w-13 h-13 rounded-2xl ${step === 2 ? 'hidden sm:flex' : 'flex'} bg-white/95 border-2 border-[#FFE268] shadow-[0_8px_20px_-4px_rgba(0,0,0,0.35)] items-center justify-center shrink-0 overflow-hidden`}>
                 <img loading="lazy" decoding="async"
                   src={LABRADOR_SVG_PATH}
                   alt="น้องสุนัขลาบราดอร์ต้อนรับ"
@@ -778,7 +791,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                 {/* one short line on phones: the long version wrapped onto 3 lines and ran into the title */}
                 <div className="flex items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-[0.12em] sm:tracking-[0.18em] text-[#FFE268] leading-none whitespace-nowrap mb-1">
                   <Sparkles className="w-3 h-3 shrink-0" />
-                  <span>CHANGSUEK RUN 2026<span className="hidden sm:inline"> · SMART E-TICKET & AUTO-BIB</span></span>
+                  <span>CHANGSUEK RUN 2027<span className="hidden sm:inline"> · SMART E-TICKET & AUTO-BIB</span></span>
                 </div>
                 <h2 className="text-lg sm:text-2xl font-black tracking-tight text-white leading-tight">
                   {isAddonOnly ? 'ซื้อกิจกรรมเสริม' : isConcert ? 'ซื้อตั๋วคอนเสิร์ต / เข้างาน' : 'สมัครวิ่ง & รับบัตรวิ่ง E-BIB'}
@@ -1169,10 +1182,10 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                     <button
                       type="button"
                       onClick={() => setStep(2)}
-                      disabled={addonMissing || concertMissing}
+                      disabled={addonMissing || concertMissing || salesClosed}
                       className="disabled:opacity-50 disabled:cursor-not-allowed w-full py-3.5 px-5 rounded-2xl bg-gradient-to-r from-[#FFE268] via-[#FFC928] to-[#F59E0B] hover:brightness-105 text-[#261247] font-black text-base border-2 border-[#261247] luminous-pill-btn active:translate-y-0.5 transition-all flex items-center justify-center gap-2 cursor-pointer"
                     >
-                      <span>{addonMissing ? 'เลือกอย่างน้อย 1 อย่างก่อน (วิ่ง / คอนเสิร์ต / กิจกรรม)' : concertMissing ? 'เลือกตั๋ว GA หรือ VIP TABLE ก่อน' : 'ดำเนินการต่อ · กรอกข้อมูลผู้สมัคร'}</span>
+                      <span>{salesClosed ? 'ขณะนี้ปิดการขายบัตรชั่วคราว' : addonMissing ? 'เลือกอย่างน้อย 1 อย่างก่อน (วิ่ง / คอนเสิร์ต / กิจกรรม)' : concertMissing ? 'เลือกตั๋ว GA หรือ VIP TABLE ก่อน' : 'ดำเนินการต่อ · กรอกข้อมูลผู้สมัคร'}</span>
                       <ArrowRight className="w-5 h-5 stroke-[2.5]" />
                     </button>
                   </div>
@@ -1228,462 +1241,215 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 relative z-10">
-                  {/* Runner Personal Info (7 cols) */}
-                  <div className="lg:col-span-7 bg-[#FAF7FF] rounded-3xl border-2 border-[#2A1450]/20 p-4 sm:p-5 space-y-4">
-                    <div className="flex items-center justify-between gap-2 pb-2 border-b-2 border-dashed border-[#2A1450]/15">
-                      <div className="flex items-center gap-2">
-                        <User className="w-4 h-4 text-[#6D28D9]" />
-                        <h3 className="text-sm font-black text-[#2A1450] uppercase tracking-wider">
-                          ส่วนที่ 1: ข้อมูลผู้สมัครหลัก (พิมพ์ลงป้าย BIB)
-                        </h3>
+                <div className="relative z-10 space-y-7">
+                  {wantRun ? (
+                    <FormSection
+                      n={1}
+                      icon="🏃"
+                      color="#C4B5FD"
+                      title={runners.length > 1 ? `ข้อมูลนักวิ่ง ${runners.length} คน` : 'ข้อมูลนักวิ่ง'}
+                      sub={runners.length > 1 ? 'แตะชื่อด้านบนเพื่อสลับคน · ทุกคนกรอกเหมือนกันและได้ประกันเท่ากัน' : 'กรอกครั้งเดียว ระบบเติมให้ทั้ง BIB ประกัน และเอกสารกิจกรรม'}
+                    >
+                      <div id="runner-details" className="scroll-mt-4">
+                        <RunnerDetailsForm
+                          runners={runners}
+                          onChange={updateRunner}
+                          active={activeRunner}
+                          onActive={setActiveRunner}
+                          insured={insured}
+                          showErrors={showRunnerErrors}
+                          bibPreview={String(nextBibPreview)}
+                          distanceLabel={ticket.distanceLabel}
+                        />
                       </div>
-                      <span className="text-[10px] font-mono font-extrabold text-[#6D28D9] bg-[#F3E8FF] px-2 py-0.5 rounded">
-                        BIB #{nextBibPreview}
-                      </span>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                      {insured ? (
-                        <>
-                          <div>
-                            <label className={labelCls}>คำนำหน้า *</label>
-                            <select required value={insPrefix} onChange={(e) => setInsPrefix(e.target.value)} className="w-full min-h-[48px] px-3 rounded-xl border-2 border-[#2A1450]/20 bg-white text-sm font-semibold text-[#2A1450] focus:border-[#7C3AED] outline-none">
-                              <option value="">เลือก</option>
-                              {PREFIXES.map((p) => (
-                                <option key={p} value={p}>{p}</option>
-                              ))}
-                            </select>
-                          </div>
-                          <div className="hidden sm:block" aria-hidden="true" />
-                          <div>
-                            <label className={labelCls}>ชื่อ *</label>
-                            <input type="text" required value={insFirst} onChange={(e) => setInsFirst(e.target.value)} placeholder="เช่น สมชาย" className="w-full min-h-[48px] px-3.5 rounded-xl border-2 border-[#2A1450]/20 bg-white text-sm font-semibold outline-none focus:border-[#7C3AED]" autoComplete="given-name" />
-                          </div>
-                          <div>
-                            <label className={labelCls}>นามสกุล *</label>
-                            <input type="text" required value={insLast} onChange={(e) => setInsLast(e.target.value)} placeholder="เช่น ใจดี" className="w-full min-h-[48px] px-3.5 rounded-xl border-2 border-[#2A1450]/20 bg-white text-sm font-semibold outline-none focus:border-[#7C3AED]" autoComplete="family-name" />
-                          </div>
-                        </>
-                      ) : (
-                      <div className="sm:col-span-2">
-                        <label className={labelCls}>ชื่อ - นามสกุล (Full Name) *</label>
-                        <div className="relative">
-                          <User className="w-4 h-4 text-[#6B5A85] absolute left-3.5 top-1/2 -translate-y-1/2" />
-                          <input
-                            type="text"
-                            required
-                            value={fullName}
-                            onChange={(e) => setFullName(e.target.value)}
-                            placeholder="เช่น สมชาย ใจดี"
-                            className={inputCls}
-                          />
-                        </div>
-                      </div>
-
-                      )}
-
-                      <div>
-                        <label className={labelCls}>เบอร์โทรศัพท์ติดต่อ *</label>
-                        <div className="relative">
-                          <Phone className="w-4 h-4 text-[#6B5A85] absolute left-3.5 top-1/2 -translate-y-1/2" />
-                          <input
-                            type="tel"
-                            required
-                            value={phone}
-                            onChange={(e) => setPhone(e.target.value)}
-                            placeholder="08x-xxx-xxxx"
-                            className={inputCls}
-                          />
-                        </div>
-                      </div>
-
-                      <div>
-                        <label className={labelCls}>เบอร์ติดต่อฉุกเฉิน *</label>
-                        <div className="relative">
-                          <ShieldAlert className="w-4 h-4 text-rose-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                          <input
-                            type="tel"
-                            required
-                            value={emergencyPhone}
-                            onChange={(e) => setEmergencyPhone(e.target.value)}
-                            placeholder="08x-xxx-xxxx (ญาติ/คนใกล้ชิด)"
-                            className={inputCls}
-                          />
-                        </div>
-                      </div>
-
-                      <div className="sm:col-span-2">
-                        <label className={labelCls}>อีเมลรับใบเสร็จ & E-BIB *</label>
-                        <div className="relative">
-                          <Mail className="w-4 h-4 text-[#6B5A85] absolute left-3.5 top-1/2 -translate-y-1/2" />
-                          <input
-                            type="email"
-                            required
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            placeholder="you@example.com"
-                            className={inputCls}
-                          />
-                        </div>
-                      </div>
-                    </div>
-
-                    {extraPeople > 0 && (
-                      <div className="pt-2 space-y-2">
-                        <p className={labelCls}>ผู้ร่วมวิ่งเพิ่ม ({extraPeople} ท่าน): ชื่อ & ไซส์เสื้อ *</p>
-                        {Array.from({ length: extraPeople }, (_, i) => (
-                          <div key={i} className="grid grid-cols-[1fr_auto] gap-2">
-                            <input
-                              type="text"
-                              required
-                              maxLength={80}
-                              aria-label={`ชื่อ-นามสกุลผู้ร่วมวิ่งเพิ่มคนที่ ${i + 1}`}
-                              value={extraRunners[i]?.name || ''}
-                              onChange={(e) =>
-                                setExtraRunners((rs) => {
-                                  const next = [...rs];
-                                  next[i] = { name: e.target.value, shirtSize: rs[i]?.shirtSize || 'M' };
-                                  return next;
-                                })
-                              }
-                              placeholder={`คนที่ ${i + 1}: ชื่อ-นามสกุล`}
-                              className="w-full min-h-[48px] px-4 rounded-2xl border-2 border-[#2A1450]/20 bg-white text-sm font-semibold text-[#2A1450]"
-                            />
-                            <select
-                              aria-label={`ไซส์เสื้อผู้ร่วมวิ่งเพิ่มคนที่ ${i + 1}`}
-                              value={extraRunners[i]?.shirtSize || 'M'}
-                              onChange={(e) =>
-                                setExtraRunners((rs) => {
-                                  const next = [...rs];
-                                  next[i] = { name: rs[i]?.name || '', shirtSize: e.target.value as ExtraRunner['shirtSize'] };
-                                  return next;
-                                })
-                              }
-                              className="min-h-[48px] px-3 rounded-2xl border-2 border-[#2A1450]/20 bg-white text-sm font-extrabold text-[#2A1450]"
-                            >
-                              {SHIRT_SIZES.map((z) => (
-                                <option key={z.size} value={z.size}>
-                                  ไซส์ {z.size} ({z.chest})
-                                </option>
-                              ))}
-                            </select>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Right 5 cols: Shirt Size Visual Selector + Dog Info */}
-                  <div className="lg:col-span-5 space-y-4">
-                    {insured && (
-                      <div className="rounded-3xl border-[3px] border-[var(--ink)] bg-gradient-to-br from-[#E0F7FA] via-white to-[#ECFDF5] p-4 sm:p-5 space-y-3.5 shadow-[0_6px_0_var(--ink)]">
-                        <div className="flex items-start gap-3">
-                          <span className="w-11 h-11 shrink-0 rounded-2xl bg-[#0EA5E9] border-[3px] border-[var(--ink)] flex items-center justify-center text-xl" aria-hidden="true">🛡️</span>
-                          <div>
-                            <h3 className="text-base font-black text-[#2A1450] leading-tight">ข้อมูลสำหรับทำประกัน</h3>
-                            <p className="text-xs font-semibold text-[#4B2D78]">นักวิ่ง 5 KM / 10 KM ทุกคนได้รับความคุ้มครอง กรุณากรอกข้อมูลให้ตรงตามบัตรประชาชน</p>
-                          </div>
-                        </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                          <div>
-                            <label className={labelCls}>เพศ *</label>
-                            <select required value={insGender} onChange={(e) => setInsGender(e.target.value)} className="w-full min-h-[48px] px-3 rounded-xl border-2 border-[#2A1450]/20 bg-white text-sm font-semibold text-[#2A1450] focus:border-[#7C3AED] outline-none">
-                              <option value="">เลือก</option>
-                              {GENDERS.map((g) => (
-                                <option key={g} value={g}>{g}</option>
-                              ))}
-                            </select>
-                          </div>
-                          <div>
-                            <label className={labelCls}>กรุ๊ปเลือด *</label>
-                            <select required value={insBlood} onChange={(e) => setInsBlood(e.target.value)} className="w-full min-h-[48px] px-3 rounded-xl border-2 border-[#2A1450]/20 bg-white text-sm font-semibold text-[#2A1450] focus:border-[#7C3AED] outline-none">
-                              <option value="">เลือก</option>
-                              {BLOOD_TYPES.map((g) => (
-                                <option key={g} value={g}>{g}</option>
-                              ))}
-                            </select>
-                          </div>
-                          <div>
-                            <label className={labelCls}>วัน/เดือน/ปีเกิด (ค.ศ.) *</label>
-                            <input type="date" required value={insBirth} max={todayIso} min="1900-01-01" onChange={(e) => setInsBirth(e.target.value)} className="w-full min-h-[48px] px-3.5 rounded-xl border-2 border-[#2A1450]/20 bg-white text-sm font-semibold outline-none focus:border-[#7C3AED]" autoComplete="bday" />
-                          </div>
-                          <div>
-                            <label className={labelCls}>อายุ (คำนวณให้อัตโนมัติ)</label>
-                            <div className="min-h-[48px] px-3.5 rounded-xl border-2 border-dashed border-[#2A1450]/25 bg-white/70 flex items-center text-sm font-extrabold text-[#2A1450]" aria-live="polite">
-                              {insAge !== null && insAge >= 0 && insAge <= 110 ? `${insAge} ปี` : '—'}
-                            </div>
-                          </div>
-                          <div className="sm:col-span-2">
-                            <label className={labelCls}>โรคประจำตัว (ถ้าไม่มี เว้นว่างได้)</label>
-                            <input type="text" value={insMedical} maxLength={200} onChange={(e) => setInsMedical(e.target.value)} placeholder="เช่น หอบหืด, เบาหวาน, แพ้ยาเพนิซิลลิน" className="w-full min-h-[48px] px-3.5 rounded-xl border-2 border-[#2A1450]/20 bg-white text-sm font-semibold outline-none focus:border-[#7C3AED]" />
-                          </div>
-                          <div>
-                            <label className={labelCls}>ชื่อผู้ติดต่อกรณีฉุกเฉิน *</label>
-                            <input type="text" required value={insEmName} maxLength={80} onChange={(e) => setInsEmName(e.target.value)} placeholder="ชื่อ-นามสกุล" className="w-full min-h-[48px] px-3.5 rounded-xl border-2 border-[#2A1450]/20 bg-white text-sm font-semibold outline-none focus:border-[#7C3AED]" />
-                          </div>
-                          <div>
-                            <label className={labelCls}>ความสัมพันธ์ *</label>
-                            <select required value={insRel} onChange={(e) => setInsRel(e.target.value)} className="w-full min-h-[48px] px-3 rounded-xl border-2 border-[#2A1450]/20 bg-white text-sm font-semibold text-[#2A1450] focus:border-[#7C3AED] outline-none">
-                              <option value="">เลือก</option>
-                              {RELATIONSHIPS.map((g) => (
-                                <option key={g} value={g}>{g}</option>
-                              ))}
-                            </select>
-                          </div>
-                        </div>
-                        <p className="text-xs font-bold text-[#6B5A85]">เบอร์โทรผู้ติดต่อฉุกเฉินใช้เบอร์ที่กรอกด้านบน · ระยะวิ่ง {ticket.distanceLabel} · ไซส์เสื้อเลือกด้านล่าง</p>
-                        <label className="flex items-start gap-2.5 rounded-2xl bg-white border-2 border-[#2A1450]/20 p-3 cursor-pointer">
-                          <input type="checkbox" required checked={insConsent} onChange={(e) => setInsConsent(e.target.checked)} className="mt-1 w-5 h-5 accent-[#7C3AED] shrink-0" />
+                      {insured && (
+                        <label className="flex items-start gap-2.5 rounded-2xl bg-[#E9FBF6] border-2 border-[#0F766E]/40 p-3.5 cursor-pointer">
+                          <input type="checkbox" required checked={insConsent} onChange={(e) => setInsConsent(e.target.checked)} className="mt-0.5 w-5 h-5 accent-[#0F766E] shrink-0" />
                           <span className="text-xs sm:text-sm font-semibold text-[#2A1450] leading-snug">
-                            ข้าพเจ้ายินยอมให้ผู้จัดงานส่งข้อมูลส่วนบุคคลและข้อมูลสุขภาพข้างต้นให้บริษัทประกันภัย เพื่อใช้ทำประกันอุบัติเหตุสำหรับกิจกรรมนี้เท่านั้น *
+                            🛡️ ข้าพเจ้ายินยอมให้ผู้จัดงานส่งข้อมูลส่วนบุคคลและข้อมูลสุขภาพข้างต้น{runners.length > 1 ? 'ของนักวิ่งทุกคนในคำสั่งซื้อนี้' : ''}ให้บริษัทประกันภัย เพื่อทำประกันอุบัติเหตุสำหรับกิจกรรมนี้เท่านั้น *
                           </span>
                         </label>
-                      </div>
-                    )}
-
-                    {/* VIP TABLE: register the cars that get a parking pass */}
-                    {vipTables > 0 && (
-                      <div className="rounded-3xl border-2 border-[#F59E0B] bg-[#FFFBEB] p-4 sm:p-5 space-y-3">
-                        <div className="flex items-center gap-2.5">
-                          <span className="w-10 h-10 rounded-2xl bg-[#FFC928] border-2 border-[#2A1450] flex items-center justify-center text-lg shrink-0" aria-hidden="true">🚗</span>
-                          <div>
-                            <h3 className="text-base font-black text-[#2A1450] leading-tight">ทะเบียนรถสำหรับบัตรจอดรถ VIP</h3>
-                            <p className="text-xs font-bold text-[#6B5A85]">
-                              VIP TABLE ได้ที่จอด {VIP_PARKING_PER_TABLE} คันต่อโต๊ะ (รวม {vipTables * VIP_PARKING_PER_TABLE} คัน) · กรอกอย่างน้อย 1 คัน · ได้บัตรจอดรถพร้อม QR หลังชำระเงิน
-                            </p>
-                          </div>
+                      )}
+                    </FormSection>
+                  ) : (
+                    <FormSection n={1} icon="👤" color="#C4B5FD" title={isAddonOnly ? 'ข้อมูลผู้ซื้อกิจกรรมเสริม' : 'ข้อมูลผู้ซื้อตั๋ว'}>
+                      <div className="rounded-3xl border-[3px] border-[#2A1450] bg-gradient-to-br from-[#F5F0FF] via-white to-[#FFF7DB] p-4 sm:p-5 shadow-[0_6px_0_#2A1450]">
+                        <label className={labelCls} htmlFor="buyer-name">ชื่อ - นามสกุล *</label>
+                        <div className="relative">
+                          <User className="w-4 h-4 text-[#6B5A85] absolute left-3.5 top-1/2 -translate-y-1/2" />
+                          <input id="buyer-name" type="text" required value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="เช่น สมชาย ใจดี" className={inputCls} />
                         </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                          {Array.from({ length: vipTables * VIP_PARKING_PER_TABLE }, (_, i) => (
-                            <div key={i} className="rounded-2xl bg-white border-2 border-[#2A1450]/15 p-3 space-y-2">
-                              <span className="block text-xs font-extrabold text-[#2A1450]">
-                                รถคันที่ {i + 1} {i === 0 ? '*' : '(ไม่บังคับ)'}
-                              </span>
-                              <input
-                                type="text"
-                                required={i === 0}
-                                value={plates[i]?.plate || ''}
-                                maxLength={16}
-                                onChange={(e) =>
-                                  setPlates((ps) => {
-                                    const next = [...ps];
-                                    next[i] = { plate: e.target.value, province: ps[i]?.province || '' };
-                                    return next;
-                                  })
-                                }
-                                placeholder="ทะเบียน เช่น กก 1111"
-                                className="w-full min-h-[48px] px-3 rounded-xl border-2 border-[#2A1450]/20 bg-white text-sm font-semibold text-[#2A1450]"
-                              />
-                              <input
-                                type="text"
-                                required={i === 0 || Boolean(plates[i]?.plate?.trim())}
-                                value={plates[i]?.province || ''}
-                                maxLength={40}
-                                onChange={(e) =>
-                                  setPlates((ps) => {
-                                    const next = [...ps];
-                                    next[i] = { plate: ps[i]?.plate || '', province: e.target.value };
-                                    return next;
-                                  })
-                                }
-                                placeholder="จังหวัด เช่น กรุงเทพมหานคร"
-                                className="w-full min-h-[48px] px-3 rounded-xl border-2 border-[#2A1450]/20 bg-white text-sm font-semibold text-[#2A1450]"
-                              />
+                      </div>
+                    </FormSection>
+                  )}
+
+                  <FormSection n={2} icon="📞" color="#7DD3FC" title="ช่องทางติดต่อ & รับบัตร" sub="ระบบส่งบัตร BIB / ตั๋ว และใบเสร็จไปที่อีเมลนี้ให้อัตโนมัติหลังชำระเงิน">
+                    <div className="rounded-3xl border-[3px] border-[#2A1450] bg-gradient-to-br from-[#E0F2FE] via-white to-[#F5F0FF] p-4 sm:p-5 shadow-[0_6px_0_#2A1450] grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                      <div>
+                        <label className={labelCls} htmlFor="buyer-phone">เบอร์โทรศัพท์ *</label>
+                        <div className="relative">
+                          <Phone className="w-4 h-4 text-[#0284C7] absolute left-3.5 top-1/2 -translate-y-1/2" />
+                          <input id="buyer-phone" type="tel" required value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="08x-xxx-xxxx" autoComplete="tel" className={inputCls} />
+                        </div>
+                      </div>
+                      <div>
+                        <label className={labelCls} htmlFor="buyer-emphone">เบอร์โทรผู้ติดต่อฉุกเฉิน *</label>
+                        <div className="relative">
+                          <ShieldAlert className="w-4 h-4 text-rose-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                          <input id="buyer-emphone" type="tel" required value={emergencyPhone} onChange={(e) => setEmergencyPhone(e.target.value)} placeholder="08x-xxx-xxxx (ญาติ/คนใกล้ชิด)" className={inputCls} />
+                        </div>
+                      </div>
+                      <div className="sm:col-span-2">
+                        <label className={labelCls} htmlFor="buyer-email">อีเมลรับบัตรและใบเสร็จ *</label>
+                        <div className="relative">
+                          <Mail className="w-4 h-4 text-[#7C3AED] absolute left-3.5 top-1/2 -translate-y-1/2" />
+                          <input id="buyer-email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" autoComplete="email" className={inputCls} />
+                        </div>
+                      </div>
+                    </div>
+                  </FormSection>
+
+                  {isDog && (
+                    <FormSection n={3} icon="🐶" color="#86EFAC" title={`ข้อมูลน้องสุนัขคู่ใจ (${dogCount} ตัว)`} sub="ชื่อน้องจะพิมพ์ลงบนป้าย Dog Pass">
+                      <div className="rounded-3xl border-[3px] border-[#2A1450] bg-gradient-to-br from-emerald-50 via-white to-teal-50 p-4 sm:p-5 shadow-[0_6px_0_#2A1450] grid grid-cols-1 sm:grid-cols-[1fr_1fr_auto] gap-3.5 items-end">
+                        <div>
+                          <label className={labelCls} htmlFor="dog-name">ชื่อน้องสุนัข {dogCount > 1 ? `(ระบุ ${dogCount} ตัว)` : '*'}</label>
+                          <input id="dog-name" type="text" required value={dogName} onChange={(e) => setDogName(e.target.value)} placeholder={dogCount > 1 ? 'เช่น ลัคกี้, ถุงทอง' : 'เช่น ลัคกี้'} className="w-full min-h-[48px] px-3.5 rounded-xl border-2 border-emerald-300 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/15 bg-white text-sm font-semibold text-[#14532D] outline-none" />
+                        </div>
+                        <div>
+                          <label className={labelCls} htmlFor="dog-breed">สายพันธุ์ *</label>
+                          <input id="dog-breed" type="text" required value={dogBreed} onChange={(e) => setDogBreed(e.target.value)} placeholder="เช่น โกลเด้น, ชิบะ, พันธุ์ทาง" className="w-full min-h-[48px] px-3.5 rounded-xl border-2 border-emerald-300 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/15 bg-white text-sm font-semibold text-[#14532D] outline-none" />
+                        </div>
+                        <img loading="lazy" decoding="async" src={LABRADOR_SVG_PATH} alt="" className="hidden sm:block w-14 h-14 object-contain" />
+                      </div>
+                    </FormSection>
+                  )}
+
+                  {(vipTables > 0 || hasGun || waiverActivities.length > 0) && (
+                    <FormSection n={isDog ? 4 : 3} icon="🎟️" color="#FDE68A" title="ข้อมูลเพิ่มเติมของบัตรที่เลือก" sub="ชื่อนักวิ่งเติมให้แล้ว ตรวจแล้วกรอกส่วนที่เหลือ">
+                      <div className="space-y-4">
+                        {/* VIP TABLE: register the cars that get a parking pass */}
+                        {vipTables > 0 && (
+                          <div className="rounded-3xl border-2 border-[#F59E0B] bg-[#FFFBEB] p-4 sm:p-5 space-y-3">
+                            <div className="flex items-center gap-2.5">
+                              <span className="w-10 h-10 rounded-2xl bg-[#FFC928] border-2 border-[#2A1450] flex items-center justify-center text-lg shrink-0" aria-hidden="true">🚗</span>
+                              <div>
+                                <h3 className="text-base font-black text-[#2A1450] leading-tight">ทะเบียนรถสำหรับบัตรจอดรถ VIP</h3>
+                                <p className="text-xs font-bold text-[#6B5A85]">
+                                  VIP TABLE ได้ที่จอด {VIP_PARKING_PER_TABLE} คันต่อโต๊ะ (รวม {vipTables * VIP_PARKING_PER_TABLE} คัน) · กรอกอย่างน้อย 1 คัน · ได้บัตรจอดรถพร้อม QR หลังชำระเงิน
+                                </p>
+                              </div>
                             </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* SHOOTING: each shooter's name + national ID, and the consent */}
-                    {hasGun && (
-                      <div className="rounded-3xl border-2 border-[#8B5CF6] bg-[#F5F3FF] p-4 sm:p-5 space-y-3">
-                        <div className="flex items-center gap-2.5">
-                          <span className="w-10 h-10 rounded-2xl bg-white border-2 border-[#2A1450] flex items-center justify-center text-lg shrink-0" aria-hidden="true">🎯</span>
-                          <div>
-                            <h3 className="text-base font-black text-[#2A1450] leading-tight">ข้อมูลผู้เข้าร่วมกิจกรรมยิงปืน</h3>
-                            <p className="text-xs font-bold text-[#6B5A85]">
-                              สนามยิงปืนต้องใช้ชื่อและเลขบัตรประชาชนของผู้ยิงทุกคน ({addOns.people} คน) · ใช้เพื่อลงทะเบียนกับสนามเท่านั้น
-                            </p>
-                          </div>
-                        </div>
-                        <div className="space-y-3">
-                          {Array.from({ length: addOns.people }, (_, i) => {
-                            const id = digitsOnly(shooters[i]?.idCard || '');
-                            const idBad = id.length === 13 && !isValidThaiId(id);
-                            return (
-                              <div key={i} className="rounded-2xl bg-white border-2 border-[#2A1450]/15 p-3 grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                                <div>
-                                  <label className={labelCls}>ผู้ยิงคนที่ {i + 1}: ชื่อ-นามสกุล (ตามบัตรประชาชน) *</label>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                              {Array.from({ length: vipTables * VIP_PARKING_PER_TABLE }, (_, i) => (
+                                <div key={i} className="rounded-2xl bg-white border-2 border-[#2A1450]/15 p-3 space-y-2">
+                                  <span className="block text-xs font-extrabold text-[#2A1450]">
+                                    รถคันที่ {i + 1} {i === 0 ? '*' : '(ไม่บังคับ)'}
+                                  </span>
                                   <input
                                     type="text"
-                                    required
-                                    value={shooters[i]?.fullName || ''}
-                                    maxLength={120}
+                                    required={i === 0}
+                                    value={plates[i]?.plate || ''}
+                                    maxLength={16}
                                     onChange={(e) =>
-                                      setShooters((ss) => {
-                                        const next = [...ss];
-                                        next[i] = { fullName: e.target.value, idCard: ss[i]?.idCard || '' };
+                                      setPlates((ps) => {
+                                        const next = [...ps];
+                                        next[i] = { plate: e.target.value, province: ps[i]?.province || '' };
                                         return next;
                                       })
                                     }
+                                    placeholder="ทะเบียน เช่น กก 1111"
+                                    className="w-full min-h-[48px] px-3 rounded-xl border-2 border-[#2A1450]/20 bg-white text-sm font-semibold text-[#2A1450]"
+                                  />
+                                  <input
+                                    type="text"
+                                    required={i === 0 || Boolean(plates[i]?.plate?.trim())}
+                                    value={plates[i]?.province || ''}
+                                    maxLength={40}
+                                    onChange={(e) =>
+                                      setPlates((ps) => {
+                                        const next = [...ps];
+                                        next[i] = { plate: ps[i]?.plate || '', province: e.target.value };
+                                        return next;
+                                      })
+                                    }
+                                    placeholder="จังหวัด เช่น กรุงเทพมหานคร"
                                     className="w-full min-h-[48px] px-3 rounded-xl border-2 border-[#2A1450]/20 bg-white text-sm font-semibold text-[#2A1450]"
                                   />
                                 </div>
-                                <div>
-                                  <label className={labelCls}>เลขบัตรประจำตัวประชาชน 13 หลัก *</label>
-                                  <input
-                                    type="text"
-                                    inputMode="numeric"
-                                    autoComplete="off"
-                                    required
-                                    value={formatThaiId(shooters[i]?.idCard || '')}
-                                    maxLength={17}
-                                    onChange={(e) =>
-                                      setShooters((ss) => {
-                                        const next = [...ss];
-                                        next[i] = { fullName: ss[i]?.fullName || '', idCard: digitsOnly(e.target.value).slice(0, 13) };
-                                        return next;
-                                      })
-                                    }
-                                    placeholder="x-xxxx-xxxxx-xx-x"
-                                    aria-invalid={idBad}
-                                    className={`w-full min-h-[48px] px-3 rounded-xl border-2 bg-white text-sm font-semibold font-mono text-[#2A1450] ${idBad ? 'border-rose-500' : 'border-[#2A1450]/20'}`}
-                                  />
-                                  {idBad && <p className="mt-1 text-xs font-bold text-rose-600">เลขบัตรไม่ถูกต้อง กรุณาตรวจอีกครั้ง</p>}
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                        <div className="rounded-2xl bg-white border-2 border-[#2A1450]/15 p-3">
-                          <p className="text-xs sm:text-sm font-extrabold text-[#2A1450] mb-1.5">ใบยินยอมเข้าร่วมกิจกรรมยิงปืน</p>
-                          <ol className="list-decimal pl-5 space-y-1 text-xs sm:text-sm font-semibold text-[#4B2D78]">
-                            {SHOOTING_CONSENT_LINES.map((l) => (
-                              <li key={l}>{l}</li>
-                            ))}
-                          </ol>
-                        </div>
-                        <label className="flex items-start gap-2.5 rounded-2xl bg-white border-2 border-[#2A1450]/20 p-3 cursor-pointer">
-                          <input type="checkbox" required checked={shootingConsent} onChange={(e) => setShootingConsent(e.target.checked)} className="mt-1 w-5 h-5 accent-[#7C3AED] shrink-0" />
-                          <span className="text-xs sm:text-sm font-semibold text-[#2A1450] leading-snug">
-                            ข้าพเจ้าอ่านและยอมรับใบยินยอมข้างต้นแทนผู้ยิงทุกคนในคำสั่งซื้อนี้
-                          </span>
-                        </label>
-                      </div>
-                    )}
-
-                    {/* TOWER / WIND TUNNEL: participant details filled into the legal waivers, read + accept before paying */}
-                    {waiverActivities.length > 0 && (
-                      <ActivityWaiverForm
-                        activities={waiverActivities}
-                        people={waiverPeople}
-                        onEdit={(i, patch) =>
-                          setWaiverEdits((ws) => {
-                            const next = [...ws];
-                            const prev = ws[i] || {};
-                            next[i] = { ...prev, ...patch, windHealth: patch.windHealth ? { ...(prev.windHealth || {}), ...patch.windHealth } : prev.windHealth };
-                            return next;
-                          })
-                        }
-                        accepted={Object.fromEntries(waiverActivities.map((a) => [a, waiverAccepted[a] === waiverKey]))}
-                        onAccept={(a) => setWaiverAccepted((w) => ({ ...w, [a]: waiverKey }))}
-                      />
-                    )}
-
-                    {/* Interactive Shirt Size Grid */}
-                    {!noRun && (
-                    <div className="bg-white/95 rounded-3xl border-2 border-[#2A1450]/25 p-4 sm:p-5 shadow-xs">
-                      <div className="flex items-center justify-between mb-3">
-                        <span className="text-xs font-black uppercase tracking-wider text-[#2A1450] flex items-center gap-1.5">
-                          <Shirt className="w-4 h-4 text-[#6D28D9]" />
-                          <span>เลือกไซส์เสื้อวิ่ง (Jersey Size)</span>
-                        </span>
-                        <span className="text-[11px] font-bold text-[#6D28D9]">
-                          เลือกแล้ว: ไซส์ {shirtSize}
-                        </span>
-                      </div>
-
-                      <div className="grid grid-cols-4 gap-2">
-                        {SHIRT_SIZES.map((s) => {
-                          const active = shirtSize === s.size;
-                          return (
-                            <button
-                              key={s.size}
-                              type="button"
-                              onClick={() => setShirtSize(s.size)}
-                              className={`py-2 px-2 rounded-2xl border-2 text-center transition-all cursor-pointer ${
-                                active
-                                  ? 'bg-[#2A1450] text-[#FFC928] border-[#2A1450] shadow-[0_3px_0_#6D28D9] -translate-y-0.5'
-                                  : 'bg-[#FAF7FF] text-[#2A1450] border-[#2A1450]/15 hover:border-[#2A1450]'
-                              }`}
-                            >
-                              <div className="font-display text-sm font-black">{s.size}</div>
-                              <div
-                                className={`text-[10px] font-bold ${
-                                  active ? 'text-white/80' : 'text-[#6B5A85]'
-                                }`}
-                              >
-                                อก {s.chest}
-                              </div>
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-                    )}
-
-                    {/* Dog Buddy Details (if 1K / 3.8K) */}
-                    {isDog && (
-                      <div className="bg-gradient-to-br from-emerald-50/90 via-teal-50/70 to-white rounded-3xl border border-emerald-200 p-4 sm:p-5 space-y-3 shadow-[0_8px_24px_-6px_rgba(16,185,129,0.14)] relative overflow-hidden">
-                        <div className="flex items-center justify-between gap-2 text-[#14532D]">
-                          <div className="flex items-center gap-2">
-                            <span className="w-8 h-8 rounded-xl bg-emerald-100 border border-emerald-300 flex items-center justify-center">
-                              <PawIcon size={15} color="#059669" />
-                            </span>
-                            <div>
-                              <h4 className="text-xs font-black uppercase tracking-wider text-emerald-950">
-                                ข้อมูลน้องสุนัขคู่ใจ ({dogCount} ตัว)
-                              </h4>
-                              <span className="text-[10px] font-bold text-emerald-700 block">
-                                พิมพ์ชื่อน้องสุนัขลงบนป้าย Dog Pass
-                              </span>
+                              ))}
                             </div>
                           </div>
-                          <img loading="lazy" decoding="async"
-                            src={LABRADOR_SVG_PATH}
-                            alt="Labrador Mascot"
-                            className="w-12 h-12 object-contain drop-shadow-sm shrink-0"
+                        )}
+
+                        {/* SHOOTING: each shooter's name (from the runner cards) + national ID */}
+                        {hasGun && (
+                          <div className="rounded-3xl border-2 border-[#8B5CF6] bg-[#F5F3FF] p-4 sm:p-5 space-y-3">
+                            <div className="flex items-center gap-2.5">
+                              <span className="w-10 h-10 rounded-2xl bg-white border-2 border-[#2A1450] flex items-center justify-center text-lg shrink-0" aria-hidden="true">🎯</span>
+                              <div>
+                                <h3 className="text-base font-black text-[#2A1450] leading-tight">ข้อมูลผู้ยิงปืน ({addOns.people} คน)</h3>
+                                <p className="text-xs font-bold text-[#6B5A85]">สนามยิงปืนลงทะเบียนด้วยชื่อและเลขบัตรประชาชน · ใช้กับสนามเท่านั้น · นำบัตรตัวจริงมาแสดงที่สนาม</p>
+                              </div>
+                            </div>
+                            <div className="space-y-3">
+                              {shooterList.map((sh, i) => {
+                                const idBad = sh.idCard.length === 13 && !isValidThaiId(sh.idCard);
+                                const setSh = (patch: Partial<Shooter>) =>
+                                  setShooters((ss) => {
+                                    const next = [...ss];
+                                    next[i] = { ...ss[i], ...patch };
+                                    return next;
+                                  });
+                                return (
+                                  <div key={i} className="rounded-2xl bg-white border-2 border-[#2A1450]/15 p-3 grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                                    <div>
+                                      <label className={labelCls}>ผู้ยิงคนที่ {i + 1}: ชื่อ-นามสกุล *</label>
+                                      <input type="text" required value={sh.fullName} maxLength={120} onChange={(e) => setSh({ fullName: e.target.value })} className="w-full min-h-[48px] px-3 rounded-xl border-2 border-[#2A1450]/20 bg-white text-sm font-semibold text-[#2A1450]" />
+                                    </div>
+                                    <div>
+                                      <label className={labelCls}>เลขบัตรประจำตัวประชาชน 13 หลัก *</label>
+                                      <input
+                                        type="text"
+                                        inputMode="numeric"
+                                        autoComplete="off"
+                                        required
+                                        value={formatThaiId(sh.idCard)}
+                                        maxLength={17}
+                                        onChange={(e) => setSh({ idCard: digitsOnly(e.target.value).slice(0, 13) })}
+                                        placeholder="x-xxxx-xxxxx-xx-x"
+                                        aria-invalid={idBad}
+                                        className={`w-full min-h-[48px] px-3 rounded-xl border-2 bg-white text-sm font-semibold font-mono text-[#2A1450] ${idBad ? 'border-rose-500' : 'border-[#2A1450]/20'}`}
+                                      />
+                                      {idBad && <p className="mt-1 text-xs font-bold text-rose-600">เลขบัตรไม่ถูกต้อง กรุณาตรวจอีกครั้ง</p>}
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* TOWER / WIND TUNNEL: participant details filled into the legal waivers, read + accept before paying */}
+                        {waiverActivities.length > 0 && (
+                          <ActivityWaiverForm
+                            activities={waiverActivities}
+                            people={waiverPeople}
+                            onEdit={(i, patch) =>
+                              setWaiverEdits((ws) => {
+                                const next = [...ws];
+                                const prev = ws[i] || {};
+                                next[i] = { ...prev, ...patch, windHealth: patch.windHealth ? { ...(prev.windHealth || {}), ...patch.windHealth } : prev.windHealth };
+                                return next;
+                              })
+                            }
+                            accepted={Object.fromEntries(waiverActivities.map((a) => [a, waiverAccepted[a] === waiverKey]))}
+                            onAccept={(a) => setWaiverAccepted((w) => ({ ...w, [a]: waiverKey }))}
                           />
-                        </div>
-                        <div>
-                          <label className={labelCls}>
-                            ชื่อน้องสุนัข {dogCount > 1 ? `(ระบุ ${dogCount} ตัว)` : '*'}
-                          </label>
-                          <input
-                            type="text"
-                            required
-                            value={dogName}
-                            onChange={(e) => setDogName(e.target.value)}
-                            placeholder={dogCount > 1 ? 'เช่น ลัคกี้, ถุงทอง' : 'เช่น ลัคกี้'}
-                            className="w-full px-3.5 py-2.5 rounded-xl border border-emerald-300 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/15 bg-white text-sm font-semibold text-[#14532D] outline-none transition-all"
-                          />
-                        </div>
-                        <div>
-                          <label className={labelCls}>สายพันธุ์ (Breed) *</label>
-                          <input
-                            type="text"
-                            required
-                            value={dogBreed}
-                            onChange={(e) => setDogBreed(e.target.value)}
-                            placeholder="เช่น โกลเด้น, ลาบราดอร์, คอร์กี้, ชิบะ, พันธุ์ทาง"
-                            className="w-full px-3.5 py-2.5 rounded-xl border border-emerald-300 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/15 bg-white text-sm font-semibold text-[#14532D] outline-none transition-all"
-                          />
-                        </div>
+                        )}
                       </div>
-                    )}
-                  </div>
+                    </FormSection>
+                  )}
                 </div>
 
                 {/* Sponsor code */}
@@ -1839,15 +1605,15 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                   <button
                     type="button"
                     onClick={() => setStep(1)}
-                    className="w-full sm:w-auto px-5 py-3 rounded-2xl bg-white hover:bg-purple-50 text-[#2A1450] font-extrabold text-sm border border-purple-200 shadow-xs flex items-center justify-center gap-2 cursor-pointer transition-all"
+                    className="w-full sm:w-auto min-h-[54px] px-6 rounded-2xl bg-[#2A1450] hover:bg-[#3D1D70] text-white font-black text-base border-[3px] border-[#2A1450] shadow-[0_5px_0_#7C3AED] flex items-center justify-center gap-2 cursor-pointer active:translate-y-0.5 transition-all"
                   >
-                    <ArrowLeft className="w-4 h-4" />
-                    <span>ย้อนกลับไปเลือกบัตร</span>
+                    <ArrowLeft className="w-5 h-5 stroke-[3]" />
+                    <span>ย้อนกลับ ไปเลือกบัตร</span>
                   </button>
 
                   <button
                     type="submit"
-                    disabled={isCreatingOrder || !privacyConsent || !waiversDone || (!isFreeOrder && publicCfg !== null && !publicCfg.paymentReady)}
+                    disabled={isCreatingOrder || salesClosed || !privacyConsent || !waiversDone || (!isFreeOrder && publicCfg !== null && !publicCfg.paymentReady)}
                     className="w-full sm:w-auto disabled:opacity-60 disabled:cursor-wait px-8 py-3.5 rounded-2xl bg-gradient-to-r from-[#FFDF5A] via-[#FFC928] to-[#FFAE19] hover:brightness-105 text-[#1E0F38] font-black text-base border border-amber-300 shadow-[0_10px_25px_-6px_rgba(245,158,11,0.5)] active:translate-y-0.5 transition-all flex items-center justify-center gap-2 cursor-pointer"
                   >
                     {isFreeOrder ? <Gift className="w-5 h-5" /> : <QrCode className="w-5 h-5" />}
@@ -2042,9 +1808,9 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                       <button
                         type="button"
                         onClick={handleCancelPendingOrder}
-                        className="inline-flex items-center gap-1.5 text-xs font-extrabold text-[#4B2D78] hover:text-[#2A1450] cursor-pointer"
+                        className="inline-flex items-center gap-2 min-h-[46px] px-4 rounded-2xl bg-white border-[2.5px] border-[#2A1450] shadow-[0_3px_0_#2A1450] text-sm font-black text-[#2A1450] hover:bg-[#F3E8FF] cursor-pointer active:translate-y-0.5"
                       >
-                        <ArrowLeft className="w-3.5 h-3.5" />
+                        <ArrowLeft className="w-4 h-4 stroke-[3]" />
                         <span>ยกเลิกและเริ่มสมัครใหม่</span>
                       </button>
                     </div>
@@ -2057,6 +1823,13 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
           {/* ---------------------------------------------------------- */}
           {/* STEP 4: GRAND CONGRATULATIONS CELEBRATION & E-BIB PASS     */}
           {/* ---------------------------------------------------------- */}
+          {wow && createdOrder && (
+            <PaymentWow
+              title={createdOrder.paymentMethod === 'SPONSOR_CODE' ? 'ลงทะเบียนสำเร็จ!' : 'เย้! ชำระเงินสำเร็จ'}
+              line={createdOrder.bibNumber && /^\d/.test(String(createdOrder.bibNumber)) ? `BIB #${createdOrder.bibNumber} พร้อมแล้ว · ระบบส่งบัตรเข้าอีเมลของคุณ` : 'บัตรของคุณพร้อมแล้ว · ระบบส่งบัตรเข้าอีเมลของคุณ'}
+              onDone={() => setWow(false)}
+            />
+          )}
           {step === 4 && createdOrder && (
             <div
               key={`celebration-${celebrationKey}`}
@@ -2296,7 +2069,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                 >
                   <div>
                     <span className="text-[10px] font-mono font-extrabold uppercase tracking-[0.2em] text-[#FFC928] block">
-                      CHANGSUEK RUN 2026 · VERIFIED OFFICIAL E-TICKET & BIB PASS
+                      CHANGSUEK RUN 2027 · VERIFIED OFFICIAL E-TICKET & BIB PASS
                     </span>
                     <span className="text-lg font-black">{createdOrder.routeName}</span>
                   </div>
@@ -2415,6 +2188,34 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                   )}
                 </div>
               </motion.div>
+
+              {/* The race BIB in the organiser's design, one per runner, filled in automatically */}
+              {['1km', '3km', '5km', '10km'].includes(createdOrder.routeId) && createdOrder.bibNumber && (
+                <div className="rounded-[28px] border-[3px] border-[#2A1450] bg-gradient-to-br from-[#F5F0FF] via-white to-[#FFF7DB] p-4 sm:p-5 shadow-[0_8px_0_#2A1450] space-y-4">
+                  <div className="flex items-center gap-2.5">
+                    <span className="w-10 h-10 rounded-2xl bg-[#FFC928] border-2 border-[#2A1450] flex items-center justify-center text-lg" aria-hidden="true">🏃</span>
+                    <div>
+                      <h3 className="text-base sm:text-lg font-black text-[#2A1450] leading-tight">ป้าย BIB ของคุณ</h3>
+                      <p className="text-xs font-bold text-[#6B5A85]">เลข ชื่อ และ QR เติมให้อัตโนมัติ · ไฟล์ A4 สำหรับพิมพ์ส่งเข้าอีเมลแล้ว</p>
+                    </div>
+                  </div>
+                  {[
+                    { name: createdOrder.fullName, ins: (createdOrder as ServerOrder).insurance, shirt: createdOrder.shirtSize },
+                    ...((createdOrder as ServerOrder).extraRunners || []).map((r) => ({ name: r.name, ins: r.insurance, shirt: r.shirtSize })),
+                  ].map((r, i, all) => (
+                    <RaceBib
+                      key={i}
+                      bib={runnerBib(createdOrder.bibNumber, i)}
+                      routeId={createdOrder.routeId}
+                      name={r.name}
+                      orderId={createdOrder.orderId}
+                      gender={r.ins?.gender}
+                      age={r.ins?.age}
+                      dogName={createdOrder.runningWithDog ? createdOrder.dogName : undefined}
+                    />
+                  ))}
+                </div>
+              )}
 
               <ParkingPasses
                 orderId={createdOrder.orderId}

@@ -86,6 +86,27 @@ export default function App() {
   const [adminModalOpen, setAdminModalOpen] = useState(false);
   const [easterEggActive, setEasterEggActive] = useState(false);
 
+  // Count this visit (anonymous random id kept in this browser; the admin sees the totals). Skipped for /#admin.
+  useEffect(() => {
+    if (window.location.hash === '#admin' || navigator.webdriver) return;
+    let vid = '';
+    try {
+      vid = localStorage.getItem('csr_vid') || '';
+      if (!/^[A-Za-z0-9-]{8,64}$/.test(vid)) {
+        vid = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `v-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+        localStorage.setItem('csr_vid', vid);
+      }
+    } catch {
+      vid = `v-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+    }
+    fetch('/api/visit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ vid }),
+      keepalive: true,
+    }).catch(() => {});
+  }, []);
+
   // Admin is not linked anywhere public: open it with /#admin
   useEffect(() => {
     const check = () => {
@@ -263,14 +284,16 @@ export default function App() {
             </summary>
             <div className="pb-10">
           <div className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 mb-7">
-              <div>
+            <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-3 mb-7">
+              <div className="min-w-0">
                 <span className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white border-2 border-[#2A1450] text-[#5B20A8] text-xs font-extrabold uppercase tracking-wider shadow-[0_3px_0_#2A1450] mb-2">
                   <Sparkles className="w-3.5 h-3.5 text-[#B45309]" />
                   <span>WEATHER & RUNNER READINESS</span>
                 </span>
-                <h2 className="text-2xl sm:text-4xl font-extrabold text-[#2A1450] tracking-tight">
-                  สภาพอากาศชายหาด & เช็กลิสต์เตรียมความพร้อม
+                {/* whole phrases per line: on tablets the heading used to break in the middle of a word */}
+                <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#2A1450] tracking-tight leading-snug">
+                  <span className="inline-block whitespace-nowrap">สภาพอากาศชายหาด</span>{' '}
+                  <span className="inline-block whitespace-nowrap">&amp; เช็กลิสต์เตรียมความพร้อม</span>
                 </h2>
               </div>
               <p className="text-xs sm:text-sm font-bold text-[#4B2D78]">

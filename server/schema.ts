@@ -67,6 +67,15 @@ create table if not exists csr.sponsor_codes (
   created_at   timestamptz not null default now()
 );
 
+-- Anonymous visitor counting: one row per random browser id per day (Thailand time). No personal data.
+create table if not exists csr.visits (
+  day      date not null,
+  vid      text not null,
+  views    integer not null default 1,
+  first_at timestamptz not null default now(),
+  primary key (day, vid)
+);
+
 alter table csr.orders          enable row level security;
 alter table csr.bib_counters    enable row level security;
 alter table csr.used_refs       enable row level security;
@@ -74,6 +83,7 @@ alter table csr.settings        enable row level security;
 alter table csr.rate_hits       enable row level security;
 alter table csr.login_failures  enable row level security;
 alter table csr.sponsor_codes   enable row level security;
+alter table csr.visits          enable row level security;
 
 do $$
 begin

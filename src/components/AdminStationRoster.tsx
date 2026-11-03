@@ -321,7 +321,7 @@ export const OrderFullDetails: React.FC<{ order: ServerOrder }> = ({ order: o })
             <span>
               {o.shooting.shooters.map((x) => `${x.fullName} (${formatThaiId(x.idCard)})`).join(' · ')}
               <br />
-              <span className="text-slate-500">ยอมรับใบยินยอม {fmtDate(o.shooting.consentAt)}</span>
+              {o.shooting.consentAt && <span className="text-slate-500">ยอมรับใบยินยอม {fmtDate(o.shooting.consentAt)}</span>}
             </span>
           ) : (
             '-'

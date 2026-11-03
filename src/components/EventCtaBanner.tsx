@@ -33,7 +33,7 @@ export const EventCtaBanner: React.FC<EventCtaBannerProps> = ({ onOpenRegisterMo
                 <span>พร้อมออกวิ่งไปกับเพื่อนสี่ขาหรือยัง?</span>
               </span>
               <h2 className="squiggle squiggle-center sm:after:ml-0 text-2xl sm:text-4xl font-extrabold text-white">
-                มาร่วมเป็นส่วนหนึ่งของ <span className="text-[#FFE268]">CHANGSUEK RUN 2026</span>
+                มาร่วมเป็นส่วนหนึ่งของ <span className="text-[#FFE268]">CHANGSUEK RUN 2027</span>
               </h2>
               <p className="text-xs sm:text-sm text-purple-100 font-medium mt-2">
                 ก้าวไปด้วยกัน เพื่อสุขภาพ ครอบครัว ชุมชน และเพื่อนสี่ขา · วันที่ 9 มกราคม 2570 ณ หาดชะอำ (ค่ายนเรศวร) จ.เพชรบุรี

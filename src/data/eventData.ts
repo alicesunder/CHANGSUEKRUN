@@ -16,9 +16,9 @@ import {
 export const eventInfo = {
   name: 'เห็นช้างวิ่ง วิ่งตามช้าง',
   englishName: 'CHANG SUEK RUN',
-  officialName: 'CHANGSUEK RUN 2026',
-  year: 2026,
-  edition: '2026',
+  officialName: 'CHANGSUEK RUN 2027',
+  year: 2027,
+  edition: '2027',
   tagline: 'RUN TOGETHER',
   subSlogan: 'วิ่งสนุก...ไปด้วยกัน สำหรับทุกคนในครอบครัว',
   subSloganEn: 'RUN WITH YOUR BEST FRIEND',
@@ -39,7 +39,9 @@ export const eventInfo = {
   routeStatus: 'เส้นทางตัวอย่างสำหรับวางแผนการเดินทาง',
   hotelCountNotice: '41 ที่พัก Pet-Friendly (ภาพเป็นเพียงภาพจำลอง)',
   contactEmail: 'contact@changsuekrun.com',
-  contactPhone: '032-471-299 / 081-890-2027',
+  contactPhone: '084-789-4651 / 097-145-1945 / 095-449-9741',
+  /** Organiser numbers shown on the site, on the BIB (emergency contact) and in the e-mails */
+  contactPhones: ['084-789-4651', '097-145-1945', '095-449-9741'],
   contactLine: '@changsuekrun',
   contactFacebook: 'CHANGSUEK RUN',
   /** official Facebook page for news (link from the organiser) */
@@ -71,12 +73,12 @@ export const safetyContacts: SafetyContact[] = [
   {
     title: 'ศูนย์อำนวยการแข่งขัน (Race Center)',
     role: 'ฝ่ายประสานงานกลาง & ข้อมูลทั่วไป',
-    phone: '081-890-2027',
+    phone: '084-789-4651 / 097-145-1945 / 095-449-9741',
   },
   {
     title: 'หน่วยแพทย์กู้ชีพค่ายนเรศวร',
     role: 'การแพทย์และพยาบาลฉุกเฉินประจำงาน',
-    phone: '032-471-299',
+    phone: '084-789-4651 / 097-145-1945 / 095-449-9741',
   },
   {
     title: 'โรงพยาบาลหัวหิน (Hua Hin Hospital)',
@@ -110,7 +112,7 @@ export const routesData: Record<RouteId, RouteData> = {
     difficulty: 'ง่าย (Easy)',
     durationEstimate: '10 - 20 นาที',
     startTime: '17.30 น.',
-    cutoffTime: '18.15 น. (45 นาที)',
+    cutoffTime: '18.00 น. (30 นาที)',
     description:
       'เส้นทางสั้นสำหรับคู่วิ่งสี่ขาที่อยากเริ่มต้นแบบสบาย ๆ ปล่อยตัวจากชายหาดหน้าโรงแรม Sea Sand Sun วิ่งเลียบหาดไปจุดกลับตัวแล้ววิ่งกลับมาเข้าเส้นชัยที่เดิม ไม่มีเนินชัน มีร่มเงาต้นสนบางช่วง',
     terrainType: 'ทางเลียบหาดค่ายนเรศวร พื้นเรียบ ไม่มีเนินชัน',
@@ -314,9 +316,9 @@ export const routesData: Record<RouteId, RouteData> = {
     terrainType: 'ถนนคอนกรีตและลาดยางสลับทางเรียบเลียบสระน้ำ มีความร่มรื่นและปลอดภัย',
     roadCondition: 'ทางลาดยางและคอนกรีต 85% ทางเรียบเลียบสระน้ำ 15% มีเจ้าหน้าที่ประจำจุดปลอดภัยตลอดเส้นทาง',
     recommendedFor: 'นักวิ่งมินิมาราธอนที่ต้องการซ้อมความเร็ว หรือผู้ที่ต้องการสัมผัสพื้นที่สำคัญทั่วค่ายนเรศวร',
-    waterStationCount: 3,
+    waterStationCount: 2,
     medicalStationCount: 2,
-    safetyNotes: 'มีจุดบริการน้ำดื่ม 3 จุด (กม. 1.5, กม. 2.7 และ กม. 4.2) พร้อมทีมแพทย์กู้ชีพประจำการ',
+    safetyNotes: 'มีจุดบริการน้ำดื่ม 2 จุด (กม. 1.5 และ กม. 4.6) พร้อมทีมแพทย์กู้ชีพประจำการ',
     coordinates: [
       [12.6966, 99.9638], // Start: Sea Sand Sun Beach
       [12.6967, 99.9646],
@@ -619,6 +621,14 @@ export const routesData: Record<RouteId, RouteData> = {
 // Accommodations near Naresuan Camp (Merged from Agoda, Booking.com, Traveloka, Expedia, Trip)
 export { hotelsData } from "./hotelsData";
 
+/** This year's concert, 9 Jan 2570 on the beach (organiser's line-up; the closing act is still to be announced). */
+export const CONCERT_LINEUP: { time: string; artist: string; tba?: boolean; color: string }[] = [
+  { time: '19.00–20.00 น.', artist: 'ดาเอนโดฟิน', color: '#F43F5E' },
+  { time: '20.00–21.00 น.', artist: 'LomoSonic', color: '#22D3EE' },
+  { time: '21.00–22.00 น.', artist: 'จ่ะ อาร์สยาม', color: '#A855F7' },
+  { time: '22.00–23.00 น.', artist: 'วงปิด · ศิลปินรับเชิญพิเศษ', tba: true, color: '#FFC928' },
+];
+
 // Schedule Data
 export const scheduleData: ScheduleDay[] = [
   {
@@ -639,7 +649,7 @@ export const scheduleData: ScheduleDay[] = [
         day: 'day_before',
         time: '10:00 - 19:00',
         title: 'เปิดงานแสดงสินค้าวิ่งและของดีเมืองเพชรบุรี (Running Expo)',
-        description: 'บูทอุปกรณ์วิ่ง อาหารพื้นเมืองเพชรบุรี และสินค้าที่ระลึก CHANG SUEK RUN 2026',
+        description: 'บูทอุปกรณ์วิ่ง อาหารพื้นเมืองเพชรบุรี และสินค้าที่ระลึก CHANG SUEK RUN 2027',
         iconName: 'ShoppingBag',
       },
       {
@@ -761,6 +771,39 @@ export const scheduleData: ScheduleDay[] = [
         iconName: 'Sparkles',
         highlight: true,
       },
+      {
+        id: 's-16',
+        day: 'race_day',
+        time: '19.00–20.00 น.',
+        title: 'คอนเสิร์ต: ดาเอนโดฟิน',
+        description: 'คอนเสิร์ตริมหาด',
+        iconName: 'Sparkles',
+      },
+      {
+        id: 's-17',
+        day: 'race_day',
+        time: '20.00–21.00 น.',
+        title: 'คอนเสิร์ต: LomoSonic',
+        description: 'คอนเสิร์ตริมหาด',
+        iconName: 'Sparkles',
+      },
+      {
+        id: 's-18',
+        day: 'race_day',
+        time: '21.00–22.00 น.',
+        title: 'คอนเสิร์ต: จ่ะ อาร์สยาม',
+        description: 'คอนเสิร์ตริมหาด',
+        iconName: 'Sparkles',
+      },
+      {
+        id: 's-19',
+        day: 'race_day',
+        time: '22.00–23.00 น.',
+        title: 'คอนเสิร์ตวงปิด',
+        description: 'ศิลปินรับเชิญพิเศษ (รอประกาศ)',
+        iconName: 'Sparkles',
+        highlight: true,
+      },
     ],
   },
 ];
@@ -859,7 +902,7 @@ export const facilitiesData: FacilityItem[] = [
     iconName: 'Camera',
     operatingHours: '05:45 - 09:00 น.',
     location: 'ริมหาด และหน้าพระราชนิเวศน์มฤคทายวัน',
-    description: 'ซุ้มถ่ายภาพสัญลักษณ์ CHANG SUEK RUN 2026 ช่างภาพมืออาชีพบันทึกภาพฟรีตลอดเส้นทาง',
+    description: 'ซุ้มถ่ายภาพสัญลักษณ์ CHANG SUEK RUN 2027 ช่างภาพมืออาชีพบันทึกภาพฟรีตลอดเส้นทาง',
     locationNote: 'ริมหาด และหน้าพระราชนิเวศน์มฤคทายวัน',
     notes: 'ค้นหาภาพถ่ายฟรีได้จากระบบ Face Recognition หลังจบงาน',
   },
@@ -994,7 +1037,7 @@ export const faqData: FAQItem[] = [
   {
     id: 'faq-1',
     category: 'general',
-    question: 'งานวิ่ง CHANG SUEK RUN 2026 จัดขึ้นที่ไหน?',
+    question: 'งานวิ่ง CHANG SUEK RUN 2027 จัดขึ้นที่ไหน?',
     answer:
       'จัดขึ้น ณ ค่ายนเรศวร กองบัญชาการตำรวจตระเวนชายแดน บริเวณหน้าหาดโรงแรม Sea Sand Sun อำเภอชะอำ จังหวัดเพชรบุรี (รอยต่อชะอำ-หัวหิน ถนนเพชรเกษม กม. 219)',
   },
@@ -1055,7 +1098,7 @@ export const announcementsData: Announcement[] = [
     id: 'ann-1',
     date: 'อัปเดตล่าสุด',
     category: 'กำหนดการ',
-    title: 'เตรียมพบกับการเปิดรับสมัคร CHANG SUEK RUN 2026 อย่างเป็นทางการเร็ว ๆ นี้',
+    title: 'เตรียมพบกับการเปิดรับสมัคร CHANG SUEK RUN 2027 อย่างเป็นทางการเร็ว ๆ นี้',
     summary:
       'คณะกรรมการกำลังสรุปรายละเอียดระบบรับสมัครออนไลน์และแพ็กเกจเสื้อที่ระลึก พร้อมโปรโมชั่น Early Bird สุดพิเศษ โปรดติดตามประกาศผ่านช่องทางทางการ',
     content:
@@ -1066,7 +1109,7 @@ export const announcementsData: Announcement[] = [
     id: 'ann-2',
     date: 'อัปเดตล่าสุด',
     category: 'เส้นทาง',
-    title: 'เปิดตัวผังเส้นทางวิ่ง 3.8 KM, 5 KM, 10 KM WAR DOG TRAIL ประจำปี 2026',
+    title: 'เปิดตัวผังเส้นทางวิ่ง 3.8 KM, 5 KM, 10 KM WAR DOG TRAIL ประจำปี 2027',
     summary:
       'ชวนชมแผนที่เส้นทางวิ่งตัวอย่างที่ผสมผสานระหว่างชายหาดค่ายนเรศวร ป่าสน และสนามฝึกน้องสุนัขสงคราม ออกแบบให้วิ่งสนุกและปลอดภัยสำหรับทุกคน',
     content:
@@ -1110,6 +1153,7 @@ export const raceRules = [
       'ระยะ 10 KM ตัดตัวที่เวลา 2 ชั่วโมง (18:30 น.)',
       'ระยะ 5 KM ตัดตัวที่เวลา 1 ชั่วโมง 15 นาที (18:15 น.)',
       'ระยะ 3.8 KM ตัดตัวที่เวลา 1 ชั่วโมง (18:15 น.)',
+      'ระยะ 1 KM ตัดตัวที่เวลา 30 นาที (18:00 น.)',
       'นักวิ่งที่ไม่ผ่านจุดตัดตัวตามเวลาที่กำหนด ต้องขึ้นรถพยาบาลหรือรถรับส่งนักวิ่ง (Sweeper Car) เพื่อความปลอดภัย',
     ],
   },

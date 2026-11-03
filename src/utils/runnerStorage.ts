@@ -51,10 +51,13 @@ export interface RunnerProfile {
 }
 
 import type { InsuranceInfo } from '../data/insurance';
+import type { ExtraRunner } from '../data/shirts';
 
 export interface TicketOrder extends RunnerProfile {
-  /** Accident-insurance details (5 KM / 10 KM runners) */
+  /** Accident-insurance details (runner 1; every running distance) */
   insurance?: InsuranceInfo;
+  /** Dog Run extra runners: name + size, and their own insurance details on newer orders */
+  extraRunners?: ExtraRunner[];
   orderId: string;
   totalPrice: number;
   peopleCount: number;
@@ -691,7 +694,7 @@ export function exportTicketOrdersToCsv(
   const link = document.createElement('a');
   link.href = url;
   const suffix = maskPii ? 'PDPA_MASKED' : 'FULL_AUTHORIZED';
-  link.download = `CHANGSUEK_RUN_2026_BIB_ORDERS_${suffix}_${new Date()
+  link.download = `CHANGSUEK_RUN_2027_BIB_ORDERS_${suffix}_${new Date()
     .toISOString()
     .slice(0, 10)}.csv`;
   document.body.appendChild(link);
@@ -734,8 +737,13 @@ export function exportInsuranceCsv(orders: TicketOrder[], actor = 'admin'): numb
     'ระยะวิ่ง',
     'เลข BIB',
   ];
-  const rows = insured.map((o, i) => {
-    const n = o.insurance!;
+  const DIST: Record<string, string> = { '1km': '1 km', '3km': '3.8 km', '5km': '5 km', '10km': '10 km' };
+  // runner 1 of each order, then the extra runners who came with their own insurance details
+  const people = insured.flatMap((o) => [
+    { o, n: o.insurance!, shirt: o.shirtSize },
+    ...(o.extraRunners || []).filter((r) => r.insurance).map((r) => ({ o, n: r.insurance!, shirt: r.shirtSize })),
+  ]);
+  const rows = people.map(({ o, n, shirt }, i) => {
     return [
       i + 1,
       n.prefix,
@@ -751,8 +759,8 @@ export function exportInsuranceCsv(orders: TicketOrder[], actor = 'admin'): numb
       n.emergencyName,
       n.relationship,
       o.emergencyPhone,
-      o.shirtSize,
-      o.routeId === '10km' ? '10 km' : '5 km',
+      shirt,
+      DIST[o.routeId] || o.routeId,
       o.bibNumber,
     ];
   });
@@ -761,7 +769,7 @@ export function exportInsuranceCsv(orders: TicketOrder[], actor = 'admin'): numb
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
-  link.download = `CHANGSUEK_RUN_2026_INSURANCE_${new Date().toISOString().slice(0, 10)}.csv`;
+  link.download = `CHANGSUEK_RUN_2027_INSURANCE_${new Date().toISOString().slice(0, 10)}.csv`;
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
@@ -770,9 +778,9 @@ export function exportInsuranceCsv(orders: TicketOrder[], actor = 'admin'): numb
     action: 'CSV_EXPORTED_FULL',
     severity: 'WARNING',
     actor,
-    detail: `ส่งออกรายชื่อสำหรับทำประกัน (ข้อมูลสุขภาพ) จำนวน ${insured.length} รายการ`,
+    detail: `ส่งออกรายชื่อสำหรับทำประกัน (ข้อมูลสุขภาพ) จำนวน ${people.length} คน`,
   });
-  return insured.length;
+  return people.length;
 }
 
 export function getStoredRunnerProfile(): RunnerProfile | null {

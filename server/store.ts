@@ -140,6 +140,23 @@ export async function saveSettings(s: PublicSettings): Promise<void> {
   );
 }
 
+/** Ticket sales switch (admin): when closed, no new orders; orders already made can still be paid. */
+export async function getSalesStatus(): Promise<{ open: boolean; updatedAt?: string }> {
+  const rows = await dbQuery<{ value: unknown }>("select value from csr.settings where key = 'sales'");
+  const v = rows[0] ? asObj<{ open?: boolean; updatedAt?: string }>(rows[0].value) : {};
+  return { open: v.open !== false, updatedAt: v.updatedAt };
+}
+
+export async function setSalesOpen(open: boolean): Promise<{ open: boolean; updatedAt: string }> {
+  const value = { open, updatedAt: new Date().toISOString() };
+  await dbQuery(
+    `insert into csr.settings (key, value) values ('sales', $1::jsonb)
+     on conflict (key) do update set value = excluded.value, updated_at = now()`,
+    [JSON.stringify(value)]
+  );
+  return value;
+}
+
 /** Omise secret key: a key saved from the admin page wins; otherwise the OMISE_SECRET_KEY env var. */
 export async function getOmiseKey(): Promise<string> {
   const rows = await dbQuery<{ value: unknown }>("select value from csr.settings where key = 'gateway'");
@@ -575,4 +592,54 @@ export async function findOrderByCode(code: string): Promise<StoredOrder | undef
     [c]
   );
   return rows[0] ? rowToOrder(rows[0]) : undefined;
+}
+
+// ---------------------------------------------------------------------------
+// Visitor counting (anonymous random id per browser; no personal data)
+// ---------------------------------------------------------------------------
+const BKK_DAY = "(now() at time zone 'Asia/Bangkok')::date";
+
+export const isVisitorId = (v: unknown): v is string => typeof v === 'string' && /^[A-Za-z0-9-]{8,64}$/.test(v);
+
+export async function recordVisit(vid: string): Promise<void> {
+  await dbQuery(
+    `insert into csr.visits (day, vid) values (${BKK_DAY}, $1)
+     on conflict (day, vid) do update set views = csr.visits.views + 1`,
+    [vid]
+  );
+}
+
+export interface VisitStats {
+  today: { visitors: number; views: number };
+  total: { visitors: number; views: number };
+  /** The last 14 days, oldest first, including days without visits */
+  days: { day: string; visitors: number; views: number }[];
+}
+
+export async function visitStats(): Promise<VisitStats> {
+  const [sum] = await dbQuery<Record<string, number>>(
+    `select
+       (select count(*) from csr.visits where day = ${BKK_DAY})::int as today_visitors,
+       (select coalesce(sum(views), 0) from csr.visits where day = ${BKK_DAY})::int as today_views,
+       (select count(distinct vid) from csr.visits)::int as total_visitors,
+       (select coalesce(sum(views), 0) from csr.visits)::int as total_views`
+  );
+  const rows = await dbQuery<{ day: string; visitors: number; views: number }>(
+    `select to_char(day, 'YYYY-MM-DD') as day, count(*)::int as visitors, sum(views)::int as views
+     from csr.visits where day > ${BKK_DAY} - 14 group by day`
+  );
+  const byDay = new Map(rows.map((r) => [r.day, r]));
+  const today = new Date(Date.now() + 7 * 3600_000).toISOString().slice(0, 10);
+  const end = new Date(`${today}T00:00:00Z`).getTime();
+  const days: VisitStats['days'] = [];
+  for (let i = 13; i >= 0; i--) {
+    const day = new Date(end - i * 86_400_000).toISOString().slice(0, 10);
+    const r = byDay.get(day);
+    days.push({ day, visitors: Number(r?.visitors ?? 0), views: Number(r?.views ?? 0) });
+  }
+  return {
+    today: { visitors: Number(sum.today_visitors), views: Number(sum.today_views) },
+    total: { visitors: Number(sum.total_visitors), views: Number(sum.total_views) },
+    days,
+  };
 }

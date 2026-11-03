@@ -69,6 +69,8 @@ import {
 } from '../utils/securityShield';
 import { formatBaht, ticketById } from '../data/eventData';
 import { RunnerBibCard } from './RunnerBibCard';
+import { SalesSwitchCard } from './SalesSwitchCard';
+import { VisitStatsCard } from './VisitStatsCard';
 import { PawIcon } from './brand/DogDecor';
 import { EasySlipSettingsCard } from './EasySlipSettingsCard';
 import { AdminSlipView } from './AdminSlipView';
@@ -656,7 +658,7 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
             <div>
               <div className="flex flex-wrap items-center gap-2">
                 <span className="text-[10px] font-mono font-extrabold uppercase tracking-[0.2em] text-[#FFC928]">
-                  CHANGSUEK RUN 2026 · SECURE ADMIN CONSOLE
+                  CHANGSUEK RUN 2027 · SECURE ADMIN CONSOLE
                 </span>
                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 text-[10px] font-bold">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
@@ -1372,6 +1374,9 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
           {/* ========================================================== */}
           {activeTab === 'overview' && (
             <div className="space-y-6">
+              <SalesSwitchCard />
+              <VisitStatsCard />
+
               {/* Distance Breakdown Table */}
               <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
                 <div className="px-5 py-4 border-b border-slate-200 flex items-center justify-between">

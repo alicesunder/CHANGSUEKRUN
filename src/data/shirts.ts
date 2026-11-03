@@ -1,5 +1,6 @@
-// Jersey sizes, the extra Dog Run runners (name + size each), and the shirt count for the admin.
+// Jersey sizes, the extra Dog Run runners (name + size + insurance each), and the shirt count for the admin.
 // Shared by the form, the server and the admin console.
+import { parseInsurance, type InsuranceInfo } from './insurance';
 
 export const SHIRT_SIZES = ['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL'] as const;
 export type ShirtSize = (typeof SHIRT_SIZES)[number];
@@ -7,6 +8,8 @@ export type ShirtSize = (typeof SHIRT_SIZES)[number];
 export interface ExtraRunner {
   name: string;
   shirtSize: ShirtSize;
+  /** same details as runner 1 (orders before Nov 2026 have none) */
+  insurance?: InsuranceInfo;
 }
 
 const isSize = (v: unknown): v is ShirtSize => typeof v === 'string' && (SHIRT_SIZES as readonly string[]).includes(v);
@@ -15,17 +18,30 @@ const clip = (v: unknown, n: number) => (typeof v === 'string' ? v.replace(/[\u0
 /** "นภา ใจดี (ไซส์ M), กานต์ ใจดี (ไซส์ XL)": the readable text kept on the order. */
 export const extraRunnersText = (list: ExtraRunner[]) => list.map((r) => `${r.name} (ไซส์ ${r.shirtSize})`).join(', ');
 
-/** Cleans what the browser sent: one name + size per extra runner. */
-export function parseExtraRunners(raw: unknown, count: number): { ok: true; value: ExtraRunner[] } | { ok: false; error: string } {
+/**
+ * Cleans what the browser sent: name + size per extra runner, and (insured distances) the same
+ * insurance details as runner 1. The name then comes from the insurance first + last name.
+ */
+export function parseExtraRunners(
+  raw: unknown,
+  count: number,
+  withInsurance = false
+): { ok: true; value: ExtraRunner[] } | { ok: false; error: string } {
   const list = Array.isArray(raw) ? raw.slice(0, count) : [];
   const out: ExtraRunner[] = [];
   const errors: string[] = [];
   for (let i = 0; i < count; i++) {
     const r = (list[i] && typeof list[i] === 'object' ? list[i] : {}) as Record<string, unknown>;
-    const name = clip(r.name, 80);
-    if (name.length < 2) errors.push(`กรุณากรอกชื่อผู้ร่วมวิ่งเพิ่มคนที่ ${i + 1}`);
-    if (!isSize(r.shirtSize)) errors.push(`กรุณาเลือกไซส์เสื้อผู้ร่วมวิ่งเพิ่มคนที่ ${i + 1}`);
-    out.push({ name, shirtSize: isSize(r.shirtSize) ? r.shirtSize : 'M' });
+    let insurance: InsuranceInfo | undefined;
+    if (withInsurance) {
+      const p = parseInsurance(r.insurance, true);
+      if (p.ok) insurance = p.value;
+      else errors.push(`ผู้ร่วมวิ่งคนที่ ${i + 2}: ${p.error}`);
+    }
+    const name = insurance ? `${insurance.firstName} ${insurance.lastName}`.slice(0, 80) : clip(r.name, 80);
+    if (!withInsurance && name.length < 2) errors.push(`กรุณากรอกชื่อผู้ร่วมวิ่งเพิ่มคนที่ ${i + 1}`);
+    if (!isSize(r.shirtSize)) errors.push(`กรุณาเลือกไซส์เสื้อผู้ร่วมวิ่งคนที่ ${i + 2}`);
+    out.push({ name, shirtSize: isSize(r.shirtSize) ? r.shirtSize : 'M', insurance });
   }
   if (errors.length) return { ok: false, error: errors.join(' · ') };
   return { ok: true, value: out };

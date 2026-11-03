@@ -263,7 +263,7 @@ export const AddOnPicker: React.FC<AddOnPickerProps> = ({ value, onChange, windT
                   aria-checked={on}
                   aria-label={on ? `ยิงปืน ${o.label} (แตะอีกครั้งเพื่อยกเลิก)` : `ยิงปืน ${o.label}`}
                   onClick={() => {
-                    if (!on) showActivitySticker('gun', `ยิงปืน ${o.label} · เลือกแล้ว!`);
+                    if (!on) showActivitySticker(o.id === 'premium' ? 'gunPremium' : 'gun', `ยิงปืน ${o.label} · เลือกแล้ว!`);
                     set({ gun: on ? 'none' : o.id });
                   }}
                   className={`min-h-[46px] px-1.5 py-1 rounded-xl text-center leading-tight transition-all border-2 focus:outline-none focus-visible:ring-4 focus-visible:ring-[#7B3FC6]/50 cursor-pointer ${

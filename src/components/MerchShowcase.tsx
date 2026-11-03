@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ArrowRight, Images, PawPrint, Sparkles, X, ZoomIn } from 'lucide-react';
+import { ArrowRight, PawPrint, Sparkles, X, ZoomIn } from 'lucide-react';
 
 interface MerchShowcaseProps {
   onOpenRegister?: () => void;
@@ -85,14 +85,6 @@ const KIT: KitItem[] = [
     group: 'dog',
   },
 ];
-
-const COLLAGE: KitItem = {
-  id: 'collage',
-  name: 'ภาพรวมของที่ระลึกทั้งชุด',
-  desc: '',
-  image: '/images/merch/kit-collage.webp',
-  group: 'all',
-};
 
 const SIZES = [
   { size: 'XS', chest: '34"' },
@@ -200,13 +192,6 @@ export const MerchShowcase: React.FC<MerchShowcaseProps> = ({ onOpenRegister, cl
           <p className="mt-2 text-sm sm:text-base font-medium text-white/85">
             ออกแบบพิเศษเฉพาะงานนี้ ในธีมม่วง-ทองของช้างศึก
           </p>
-          <button
-            type="button"
-            onClick={() => setZoom(COLLAGE)}
-            className="mt-4 inline-flex items-center gap-1.5 rounded-full border-2 border-white/30 px-4 py-1.5 text-xs sm:text-sm font-bold text-white hover:border-[#FFC928] hover:text-[#FFC928] transition cursor-pointer"
-          >
-            <Images className="w-4 h-4" /> ดูภาพรวมทั้งชุด
-          </button>
         </div>
 
         {/* Every runner */}

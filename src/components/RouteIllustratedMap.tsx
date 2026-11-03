@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { RouteId } from '../types';
 import { showActivitySticker, type ActivityStickerId } from './ActivitySticker';
 
@@ -15,6 +15,9 @@ export const ROUTE_STYLE: Record<RouteId, { label: string; color: string; shine:
   '1km': { label: '1 กม.', color: '#EC4899', shine: '#F49AC6' },
 };
 const LEGEND_ORDER: RouteId[] = ['10km', '5km', '3km', '1km'];
+const ROUTE_KM: Record<RouteId, number> = { '10km': 10, '5km': 5, '3km': 3.8, '1km': 1 };
+/** how long the "survey run" takes to cover the whole line (ms) */
+const SURVEY_MS: Record<RouteId, number> = { '10km': 16000, '5km': 13000, '3km': 11000, '1km': 7000 };
 
 /**
  * A place marked on the map: a pin with its name, and optionally a sticker picture joined to the pin
@@ -72,7 +75,7 @@ const BIG: MapDef = {
       label: 'ค่ายนเรศวร',
       sub: 'กองบัญชาการตำรวจตระเวนชายแดน',
       color: '#7C3AED',
-      sticker: { id: 'camp', src: '/images/map/sticker-bpp-school.webp', x: 1930, y: 315, w: 300, h: 305, rotate: 5 },
+      sticker: { id: 'camp', src: '/images/map/sticker-bpp-school.webp', x: 1645, y: 628, w: 196, h: 199, rotate: -4 },
     },
     {
       id: 'statue',
@@ -80,7 +83,7 @@ const BIG: MapDef = {
       label: 'พระบรมราชานุสาวรีย์',
       sub: 'สมเด็จพระนเรศวรมหาราช',
       color: '#D97706',
-      sticker: { id: 'statue', src: '/images/map/sticker-statue.webp', x: 2520, y: 470, w: 290, h: 313, rotate: -4 },
+      sticker: { id: 'statue', src: '/images/map/sticker-statue.webp', x: 2470, y: 480, w: 330, h: 330, rotate: -4 },
     },
   ],
   routes: {
@@ -151,7 +154,9 @@ const MapLandmark: React.FC<{ lm: Landmark; big: boolean; index: number }> = ({ 
             aria-label={`ดูสติกเกอร์ ${lm.label}`}
             onClick={pop}
             onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), pop())}
-            transform={`rotate(${st.rotate ?? 0} ${st.x + st.w / 2} ${st.y + st.h / 2})`}
+            // CSS rotate turns it around its own centre (.map-sticker: transform-box fill-box); an SVG
+            // transform attribute here would be shifted by that transform-origin as well
+            style={{ rotate: `${st.rotate ?? 0}deg` }}
           >
             <image href={st.src} x={st.x} y={st.y} width={st.w} height={st.h} preserveAspectRatio="xMidYMid meet" />
           </g>
@@ -200,6 +205,51 @@ export const RouteIllustratedMap: React.FC<{
   const map = selectedRoute === '10km' || selectedRoute === '5km' ? BIG : CAMP;
   const ids = (Object.keys(map.routes) as RouteId[]).filter((r) => r !== selectedRoute).concat(selectedRoute);
 
+  // "Survey run": a runner + dog marker travels the selected line from start to finish.
+  const measureRefs = useRef<(SVGPathElement | null)[]>([]);
+  const [survey, setSurvey] = useState<{ route: RouteId; p: number; x: number; y: number; seg: number; segP: number } | null>(null);
+  const surveyOn = survey?.route === selectedRoute;
+  const startSurvey = () => setSurvey({ route: selectedRoute, p: 0, x: 0, y: 0, seg: 0, segP: 0 });
+  const stopSurvey = () => setSurvey(null);
+
+  useEffect(() => {
+    if (!survey || survey.route !== selectedRoute) return;
+    const paths = measureRefs.current.slice(0, (map.routes[selectedRoute] || []).length).filter(Boolean) as SVGPathElement[];
+    if (!paths.length) return;
+    const lens = paths.map((p) => p.getTotalLength());
+    const total = lens.reduce((a, b) => a + b, 0);
+    const popped = new Set<string>();
+    const dur = SURVEY_MS[selectedRoute];
+    let raf = 0;
+    let t0 = 0;
+    const tick = (now: number) => {
+      if (!t0) t0 = now;
+      const p = Math.min(1, (now - t0) / dur);
+      let d = p * total;
+      let seg = 0;
+      while (seg < lens.length - 1 && d > lens[seg]) d -= lens[seg++];
+      const pt = paths[seg].getPointAtLength(Math.min(d, lens[seg]));
+      setSurvey((s) => (s && s.route === selectedRoute ? { ...s, p, x: pt.x, y: pt.y, seg, segP: lens[seg] ? d / lens[seg] : 1 } : s));
+      // pop the landmark sticker as the runner passes it
+      for (const lm of map.landmarks || []) {
+        if (lm.sticker && !popped.has(lm.id) && Math.hypot(lm.pin[0] - pt.x, lm.pin[1] - pt.y) < 150) {
+          popped.add(lm.id);
+          showActivitySticker(lm.sticker.id, lm.sub ? `${lm.label} · ${lm.sub}` : lm.label);
+        }
+      }
+      // keep the runner in view on narrow screens
+      const el = scrollRef.current;
+      if (el && el.scrollWidth > el.clientWidth) {
+        const want = (pt.x / map.w) * el.scrollWidth - el.clientWidth / 2;
+        if (Math.abs(el.scrollLeft - want) > el.clientWidth * 0.25) el.scrollLeft = want;
+      }
+      if (p < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [survey?.route, selectedRoute, map]);
+
   useEffect(() => {
     const el = scrollRef.current;
     const cx = CENTER_X[selectedRoute];
@@ -208,7 +258,19 @@ export const RouteIllustratedMap: React.FC<{
   }, [selectedRoute, map]);
 
   return (
-    <div className={className}>
+    <div className={`relative ${className}`}>
+      {/* survey-run progress: outside the sideways scroller so it stays in view */}
+      {surveyOn && survey && (
+        <div className="absolute left-3 top-12 z-10 pointer-events-none rounded-2xl bg-[#2A1450]/90 text-white px-3 py-2 text-xs sm:text-sm font-extrabold shadow-lg backdrop-blur" role="status" aria-live="polite">
+          {survey.p < 1 ? '🏃 กำลังวิ่งสำรวจ' : '🏁 ถึงเส้นชัย!'} {ROUTE_STYLE[selectedRoute].label}
+          <span className="block font-mono text-[#FFE268] text-base sm:text-lg leading-tight">
+            {(survey.p * ROUTE_KM[selectedRoute]).toFixed(1)} / {ROUTE_KM[selectedRoute]} กม.
+          </span>
+          <span className="mt-1 block h-1.5 w-32 rounded-full bg-white/20 overflow-hidden">
+            <span className="block h-full rounded-full bg-[#FFE268]" style={{ width: `${survey.p * 100}%` }} />
+          </span>
+        </div>
+      )}
       <div
         ref={scrollRef}
         tabIndex={0}
@@ -255,6 +317,41 @@ export const RouteIllustratedMap: React.FC<{
             })}
           </g>
           </g>
+          {/* invisible copies of the selected line, used to measure the survey run */}
+          <g fill="none" stroke="none" aria-hidden="true">
+            {(map.routes[selectedRoute] || []).map((d, i) => (
+              <path key={`${selectedRoute}-m${i}`} d={d} ref={(el) => { measureRefs.current[i] = el; }} />
+            ))}
+          </g>
+          {surveyOn && survey && (
+            <g aria-hidden="true" pointerEvents="none">
+              {/* the part already covered glows gold */}
+              <g fill="none" strokeLinecap="round" strokeLinejoin="round">
+                {(map.routes[selectedRoute] || []).map((d, i) =>
+                  i > survey.seg ? null : (
+                    <path
+                      key={`t${i}`}
+                      d={d}
+                      pathLength={1}
+                      stroke="#FFE268"
+                      strokeWidth={map === BIG ? 10 : 9}
+                      strokeDasharray={i < survey.seg ? '1 0' : `${survey.segP} 1`}
+                    />
+                  )
+                )}
+              </g>
+              <g transform={`translate(${survey.x} ${survey.y})`}>
+                <circle r={70} fill={ROUTE_STYLE[selectedRoute].color} opacity={0.25} className="survey-ping" />
+                <circle r={42} fill="#FFFFFF" stroke="#2A1450" strokeWidth={7} />
+                <text y={16} textAnchor="middle" fontSize={46}>
+                  🏃
+                </text>
+                <text x={44} y={30} textAnchor="middle" fontSize={40}>
+                  🐕
+                </text>
+              </g>
+            </g>
+          )}
           {map.landmarks?.map((lm, i) => (
             <MapLandmark key={lm.id} lm={lm} big={map === BIG} index={i} />
           ))}
@@ -264,6 +361,14 @@ export const RouteIllustratedMap: React.FC<{
 
       {/* Legend doubles as a route selector */}
       <div className="mt-3 flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          onClick={surveyOn && survey && survey.p < 1 ? stopSurvey : startSurvey}
+          className="inline-flex items-center gap-1.5 min-h-[40px] px-4 rounded-full text-xs sm:text-sm font-black text-white border-2 border-[#2A1450] shadow-[0_3px_0_#2A1450] cursor-pointer active:translate-y-0.5"
+          style={{ background: `linear-gradient(135deg, ${ROUTE_STYLE[selectedRoute].color}, #2A1450)` }}
+        >
+          {surveyOn && survey && survey.p < 1 ? '⏹ หยุด' : surveyOn ? '🔁 วิ่งสำรวจอีกครั้ง' : `▶ วิ่งสำรวจเส้นทาง ${ROUTE_STYLE[selectedRoute].label}`}
+        </button>
         {showLegend &&
           LEGEND_ORDER.map((r) => {
             const st = ROUTE_STYLE[r];

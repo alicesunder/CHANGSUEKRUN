@@ -136,7 +136,7 @@ export const EventIntro: React.FC<EventIntroProps> = ({ onOpenVideoModal }) => {
             </button>
 
             <h3 className="text-xl sm:text-2xl font-black text-[#261042] mb-3">
-              เรื่องราวของ CHANGSUEK RUN 2026
+              เรื่องราวของ CHANGSUEK RUN 2027
             </h3>
             
             <p className="text-sm text-gray-600 leading-relaxed mb-4">

@@ -1,10 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
 import type { Map as LeafletMap } from 'leaflet';
 import { ExternalLink, MapPin, Navigation } from 'lucide-react';
-import { ACTIVITY_LOCATIONS } from '../data/activityLocations';
+import { ACTIVITY_LOCATIONS, locationTitle } from '../data/activityLocations';
 import { showActivitySticker } from './ActivitySticker';
 
-/** Real map with a pin for each add-on activity (tower, shooting range, wind tunnel). */
+/** Real map with a pin for each add-on activity (tower, shooting range, wind tunnel) and the resort. */
 export const ActivityMap: React.FC<{ className?: string }> = ({ className = '' }) => {
   const elRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<LeafletMap | null>(null);
@@ -29,13 +29,13 @@ export const ActivityMap: React.FC<{ className?: string }> = ({ className = '' }
             iconSize: [34, 42],
             iconAnchor: [17, 40],
             popupAnchor: [0, -36],
-            html: `<div style="width:34px;height:34px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:${a.color};border:3px solid #fff;box-shadow:0 3px 8px rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center"><span style="transform:rotate(45deg);color:#fff;font-weight:900;font-size:15px;font-family:inherit">${a.station}</span></div>`,
+            html: `<div style="width:34px;height:34px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:${a.color};border:3px solid #fff;box-shadow:0 3px 8px rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center"><span style="transform:rotate(45deg);color:#fff;font-weight:900;font-size:15px;font-family:inherit">${a.station ?? '🏖'}</span></div>`,
           });
           const popup = document.createElement('div');
           popup.style.cssText = 'padding:10px 14px;min-width:150px';
           const title = document.createElement('div');
           title.style.cssText = 'font-weight:900;color:#2A1450;font-size:14px';
-          title.textContent = `สถานีที่ ${a.station} · ${a.name}`;
+          title.textContent = locationTitle(a);
           const link = document.createElement('a');
           link.href = a.mapsUrl;
           link.target = '_blank';
@@ -46,7 +46,7 @@ export const ActivityMap: React.FC<{ className?: string }> = ({ className = '' }
           L.marker([a.lat, a.lng], { icon, title: a.name })
             .addTo(map)
             .bindPopup(popup)
-            .on('click', () => showActivitySticker(a.id, `สถานีที่ ${a.station} · ${a.name}`));
+            .on('click', () => showActivitySticker(a.id, locationTitle(a)));
           bounds.extend([a.lat, a.lng]);
         }
         map.fitBounds(bounds, { padding: [40, 40], maxZoom: 16 });
@@ -79,24 +79,24 @@ export const ActivityMap: React.FC<{ className?: string }> = ({ className = '' }
         <div
           ref={elRef}
           role="region"
-          aria-label="แผนที่ตำแหน่งสนามยิงปืน หอสูง และอุโมงค์ลม"
+          aria-label="แผนที่ตำแหน่งสนามยิงปืน หอสูง อุโมงค์ลม และ Sea Sand Sun Hua Hin Resort"
           className="h-[300px] sm:h-[360px] rounded-2xl border-[2.5px] border-[#2A1450] overflow-hidden bg-[#E6F1F5] z-0"
         />
       )}
-      <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-2">
+      <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
         {ACTIVITY_LOCATIONS.map((a) => (
           <div key={a.id} className="rounded-2xl border-2 border-[#2A1450]/15 bg-white p-2.5 flex items-center gap-2.5">
             <button
               type="button"
               onClick={() => {
                 focus(a.lat, a.lng);
-                showActivitySticker(a.id, `สถานีที่ ${a.station} · ${a.name}`);
+                showActivitySticker(a.id, locationTitle(a));
               }}
               aria-label={`ซูมไปที่${a.name}`}
               className="w-9 h-9 shrink-0 rounded-full text-white text-sm font-black cursor-pointer"
               style={{ background: a.color }}
             >
-              {a.station}
+              {a.station ?? '🏖'}
             </button>
             <div className="min-w-0 flex-1">
               <div className="text-xs font-black text-[#2A1450] truncate">{a.name}</div>
