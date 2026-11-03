@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { scheduleData } from '../data/eventData';
-import { Clock, AlertCircle, Calendar, Sparkles, Flag, Music, Utensils, Award } from 'lucide-react';
+import { Clock, AlertCircle, Calendar, Sparkles, Flag, Music, Utensils, Award, Stethoscope } from 'lucide-react';
 import { ElephantCharacter } from './brand/BrandCharacters';
 
 export const EventSchedule: React.FC = () => {
@@ -11,6 +11,7 @@ export const EventSchedule: React.FC = () => {
   const items = currentDay ? currentDay.items : [];
 
   const getEventIcon = (title: string) => {
+    if (title.includes('ตรวจสุขภาพ')) return <Stethoscope className="w-4 h-4 text-[#047857]" />;
     if (title.includes('ปล่อยตัว')) return <Flag className="w-4 h-4 text-[#EF5350]" />;
     if (title.includes('อาหาร') || title.includes('เสิร์ฟ')) return <Utensils className="w-4 h-4 text-[#FFC928]" />;
     if (title.includes('รางวัล') || title.includes('เหรียญ')) return <Award className="w-4 h-4 text-[#F5B800]" />;

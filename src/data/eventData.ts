@@ -694,6 +694,15 @@ export const scheduleData: ScheduleDay[] = [
         highlight: true,
       },
       {
+        id: 's-6b',
+        day: 'race_day',
+        time: '09.00–14.00 น.',
+        title: 'ตรวจสุขภาพสุนัข (ไม่มีค่าใช้จ่าย)',
+        description: 'โดย รพ.สัตว์ทองหล่อ สำหรับผู้สมัครวิ่ง Dog Run ทั้ง 2 ระยะ (1K / 3.8K)',
+        iconName: 'Stethoscope',
+        highlight: true,
+      },
+      {
         id: 's-7',
         day: 'race_day',
         time: '09.00–11.00 น.',

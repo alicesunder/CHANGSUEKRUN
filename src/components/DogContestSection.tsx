@@ -18,13 +18,23 @@ interface Contest {
   /** big floating emojis on the picture side */
   props: string[];
   /** contest artwork; without one, a framed placeholder is shown until the organiser sends a picture */
-  image?: { src: string; alt: string };
+  image?: { src: string; alt: string; /** tall picture: shown at a fixed height instead of full width */ tall?: boolean };
 }
 
 /** One picture for all three contests (organiser's artwork). */
 const DOG_SQUAD = {
   src: '/images/costume/dog-squad.webp',
   alt: 'น้องสุนัข 8 ตัวแต่งชุดธีมม่วงทอง มีทั้งมงกุฎ หมวกพ่อมด เกราะอัศวิน และแว่นนักบิน',
+};
+
+const HEALTHY_IMG = {
+  src: '/images/contest/healthy.webp',
+  alt: 'สัตวแพทย์ใส่ชุดสีม่วงทองใช้หูฟังตรวจหัวใจน้องหมาชิบะที่เจ้าของกอดไว้อย่างอารมณ์ดี',
+};
+const OBEDIENCE_IMG = {
+  src: '/images/contest/obedience.webp',
+  alt: 'เจ้าหน้าที่ ตชด. K-9 ยื่นมือสั่งน้องหมาโกลเด้นที่นั่งเชื่อฟังอยู่ข้างตัว',
+  tall: true,
 };
 
 /**
@@ -77,32 +87,34 @@ const CONTESTS: Contest[] = [
       'กรรมการขอจับตัวน้องหมาได้ เจ้าของต้องอยู่ข้างน้องตลอดเวลา',
     ],
     props: ['🩺', '🦴', '💚'],
-    image: DOG_SQUAD,
+    image: HEALTHY_IMG,
   },
   {
     id: 'obedience',
     emoji: '🎓',
     tab: 'เชื่อฟังคำสั่ง',
     title: 'ประกวดสุนัขเชื่อฟังคำสั่ง',
-    tagline: '5 ด่าน ภายใน 3 นาที ทำได้ครบ ได้คะแนนเต็ม 100',
+    tagline: '4 ท่า คะแนนเต็ม 100 · ท่า "คอย" คิดถึง 40 คะแนน',
     accent: '#7C3AED',
     tint: '#F5F3FF',
     criteria: [
-      { label: 'นั่ง (Sit)', pts: 20 },
-      { label: 'หมอบ (Down)', pts: 20 },
-      { label: 'รอ 30 วินาที (Stay)', pts: 20 },
-      { label: 'เรียกมา 5 เมตร (Recall)', pts: 20 },
-      { label: 'เดินชิด 10 เมตร (Heel)', pts: 20 },
+      { label: 'ชิด (Heel)', pts: 20 },
+      { label: 'นั่ง (Sit) ภายใน 2 วิ', pts: 20 },
+      { label: 'หมอบ (Down) ภายใน 2 วิ', pts: 20 },
+      { label: 'คอย (Stay) · เดินออก 5 ก้าว', pts: 40 },
     ],
     rules: [
-      'ทำ 5 ด่านต่อเนื่องภายใน 3 นาที สั่งได้ทั้งเสียงและมือ แต่ละด่านสั่งได้ไม่เกิน 3 ครั้ง',
-      'ด่าน "รอ" เจ้าของถอยห่าง 3 เมตร น้องต้องอยู่กับที่ 30 วินาที · ด่าน "เรียกมา" ใช้สายจูงยาว 5 เมตรที่ผู้จัดเตรียมให้',
-      'ให้ขนมได้หลังจบแต่ละด่านเท่านั้น ห้ามถือขนมล่อระหว่างสั่ง',
-      'ห้ามดุ ตี กระชากสาย หรือใช้ปลอกคอช็อตไฟฟ้า/ปลอกคอหนาม ฝ่าฝืนถูกตัดสิทธิ์ทันที',
-      'คะแนนเท่ากัน น้องที่ใช้เวลาน้อยกว่าชนะ',
+      'ชิด (Heel): สุนัขต้องเดินชิดผู้ควบคุมตามคำสั่ง โดยไม่ดึงสายจูงหรือออกนอกตำแหน่งที่กำหนด',
+      'นั่ง (Sit): สุนัขต้องนั่งตามคำสั่งภายใน 2 วินาที โดยไม่ต้องออกคำสั่งซ้ำ',
+      'หมอบ (Down): สุนัขต้องหมอบตามคำสั่งภายใน 2 วินาที โดยไม่ต้องออกคำสั่งซ้ำ',
+      'คอย (Stay): ผู้ควบคุมออกคำสั่งให้สุนัขคอย กรรมการตรวจการตอบสนองภายใน 2 วินาที จากนั้นผู้ควบคุมเดินออกไปข้างหน้า 5 ก้าว สุนัขต้องอยู่ท่าคอยที่ตำแหน่งเดิมจนผู้ควบคุมเดินครบ 5 ก้าว',
+      'ถ้าสุนัขลุก เปลี่ยนตำแหน่ง หรือเดินตามก่อนครบระยะ จะถูกหักคะแนนตามเกณฑ์ของกรรมการ',
+      'ออกคำสั่งได้ด้วยเสียงหรือสัญญาณมือ ท่าละ 1 ครั้ง · กรรมการพิจารณาการตอบสนองภายใน 2 วินาทีหลังออกคำสั่ง',
+      'ห้ามใช้อาหาร ของเล่น หรืออุปกรณ์ล่อระหว่างการแข่งขัน · ห้ามกระตุกสายจูงหรือใช้ความรุนแรงบังคับสุนัข',
+      'คะแนนเท่ากัน ให้ดูคะแนนท่า "คอย" เป็นลำดับแรก · คำตัดสินของคณะกรรมการถือเป็นที่สิ้นสุด',
     ],
     props: ['🎓', '🐾', '⭐'],
-    image: DOG_SQUAD,
+    image: OBEDIENCE_IMG,
   },
 ];
 
@@ -180,7 +192,13 @@ export const DogContestSection: React.FC = () => {
             <div className="md:col-span-5 relative mx-auto w-full max-w-[400px]">
               <div className={`rounded-[24px] bg-white border-[3px] border-[var(--ink)] shadow-[5px_6px_0_var(--ink)] p-2.5 ${c.id === 'healthy' ? 'rotate-1' : '-rotate-2'}`}>
                 {c.image ? (
-                  <img src={c.image.src} alt={c.image.alt} loading="lazy" decoding="async" className="block w-full h-auto rounded-[14px]" />
+                  <img
+                    src={c.image.src}
+                    alt={c.image.alt}
+                    loading="lazy"
+                    decoding="async"
+                    className={c.image.tall ? 'block w-full h-[320px] sm:h-[380px] object-contain rounded-[14px]' : 'block w-full h-auto rounded-[14px]'}
+                  />
                 ) : (
                   <div
                     className="relative aspect-[4/3] rounded-[14px] flex items-center justify-center overflow-hidden"

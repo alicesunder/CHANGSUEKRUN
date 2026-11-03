@@ -20,6 +20,7 @@ import { Hero } from './components/Hero';
 import { EventObjectiveSection } from './components/EventObjectiveSection';
 import { TicketShop } from './components/TicketShop';
 import { DogContestSection } from './components/DogContestSection';
+import { DogHealthCheckSection } from './components/DogHealthCheckSection';
 import { WinnersSection } from './components/WinnersSection';
 import { EMPTY_ADD_ONS, hasAddOns, type AddOnSelection } from './data/addOns';
 import { RaceDistances } from './components/RaceDistances';
@@ -241,6 +242,7 @@ export default function App() {
           }
           beforeMerch={
             <>
+              <DogHealthCheckSection />
               <DogContestSection />
             </>
           }
