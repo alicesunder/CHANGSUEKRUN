@@ -3,10 +3,13 @@
  * concert number, what was bought, the event dates, and QR codes as attachments: one for check-in
  * and one per VIP parking pass. The event logo is attached too and shown inline (cid:event-logo).
  *
- * Sending goes through Resend (https://resend.com/docs/api-reference/emails/send-email).
- * Needs RESEND_API_KEY (and optionally MAIL_FROM) in the environment; without a key nothing is sent
+ * Sending: Brevo SMTP relay when BREVO_SMTP_LOGIN + BREVO_SMTP_KEY are set (this site's choice),
+ * otherwise Resend (https://resend.com/docs/api-reference/emails/send-email) when RESEND_API_KEY is set.
+ * MAIL_FROM is optional (the sender must be verified at the provider). Without either, nothing is sent
  * and the result says so, so the rest of the order flow is never blocked by e-mail.
+ * SMTP is used for Brevo because it supports inline (cid:) images, which the ticket layout needs.
  */
+import nodemailer from 'nodemailer';
 import QRCode from 'qrcode';
 import { eventInfo, formatBaht, routesData } from '../src/data/eventData';
 import { parkingQrPayload } from '../src/data/vipParking';
@@ -22,13 +25,27 @@ const REPLY_TO = eventInfo.contactEmail;
 
 export interface MailResult {
   ok: boolean;
-  /** Resend message id when sent */
+  /** provider message id when sent */
   id?: string;
   error?: string;
+  /** which provider handled it */
+  provider?: 'brevo' | 'resend';
+}
+
+type Provider = 'brevo' | 'resend' | null;
+
+const brevoCreds = () => ({ user: (process.env.BREVO_SMTP_LOGIN || '').trim(), pass: (process.env.BREVO_SMTP_KEY || '').trim() });
+
+/** Brevo wins when its SMTP login + key are set; otherwise Resend; otherwise no e-mail. */
+function activeProvider(): Provider {
+  const b = brevoCreds();
+  if (b.user && b.pass) return 'brevo';
+  if ((process.env.RESEND_API_KEY || '').trim()) return 'resend';
+  return null;
 }
 
 export function mailConfigured(): boolean {
-  return Boolean((process.env.RESEND_API_KEY || '').trim());
+  return activeProvider() !== null;
 }
 
 const esc = (s: unknown) =>
@@ -203,30 +220,73 @@ export async function buildTicketEmail(o: StoredOrder) {
   return { subject, html, attachments };
 }
 
+const VALID_EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+type MailParts = Awaited<ReturnType<typeof buildTicketEmail>>;
+
+async function sendViaResend(to: string, mail: MailParts, apiKey: string): Promise<MailResult> {
+  const resp = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      from: (process.env.MAIL_FROM || DEFAULT_FROM).trim(),
+      to: [to],
+      reply_to: REPLY_TO,
+      subject: mail.subject,
+      html: mail.html,
+      attachments: mail.attachments,
+    }),
+    signal: AbortSignal.timeout(10_000),
+  });
+  const json: any = await resp.json().catch(() => ({}));
+  if (!resp.ok) return { ok: false, provider: 'resend', error: String(json?.message || json?.name || `HTTP_${resp.status}`).slice(0, 200) };
+  return { ok: true, provider: 'resend', id: json?.id };
+}
+
+async function sendViaBrevo(to: string, mail: MailParts): Promise<MailResult> {
+  const { user, pass } = brevoCreds();
+  // host / port can be overridden for local tests only; the real relay is always used with TLS
+  const host = (process.env.BREVO_SMTP_HOST || 'smtp-relay.brevo.com').trim();
+  const transport = nodemailer.createTransport({
+    host,
+    port: Number(process.env.BREVO_SMTP_PORT) || 587,
+    secure: false,
+    requireTLS: !process.env.BREVO_SMTP_HOST,
+    auth: { user, pass },
+    connectionTimeout: 10_000,
+    greetingTimeout: 10_000,
+    socketTimeout: 25_000,
+  });
+  try {
+    const info = await transport.sendMail({
+      from: (process.env.MAIL_FROM || DEFAULT_FROM).trim(),
+      to,
+      replyTo: REPLY_TO,
+      subject: mail.subject,
+      html: mail.html,
+      attachments: mail.attachments.map((a) => ({
+        filename: a.filename,
+        content: Buffer.from(a.content, 'base64'),
+        ...(a.content_id ? { cid: a.content_id, contentDisposition: 'inline' as const } : {}),
+      })),
+    });
+    return { ok: true, provider: 'brevo', id: String(info.messageId || '') };
+  } finally {
+    transport.close();
+  }
+}
+
 /** Sends the ticket e-mail to the address on the order. Never throws. */
 export async function sendTicketEmail(o: StoredOrder): Promise<MailResult> {
-  const apiKey = (process.env.RESEND_API_KEY || '').trim();
-  if (!apiKey) return { ok: false, error: 'MAIL_NOT_CONFIGURED' };
-  if (!o.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(o.email)) return { ok: false, error: 'NO_EMAIL' };
+  const provider = activeProvider();
+  if (!provider) return { ok: false, error: 'MAIL_NOT_CONFIGURED' };
+  if (!o.email || !VALID_EMAIL.test(o.email)) return { ok: false, provider, error: 'NO_EMAIL' };
   try {
-    const { subject, html, attachments } = await buildTicketEmail(o);
-    const resp = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        from: (process.env.MAIL_FROM || DEFAULT_FROM).trim(),
-        to: [o.email],
-        reply_to: REPLY_TO,
-        subject,
-        html,
-        attachments,
-      }),
-      signal: AbortSignal.timeout(10_000),
-    });
-    const json: any = await resp.json().catch(() => ({}));
-    if (!resp.ok) return { ok: false, error: String(json?.message || json?.name || `HTTP_${resp.status}`).slice(0, 200) };
-    return { ok: true, id: json?.id };
+    const mail = await buildTicketEmail(o);
+    if (provider === 'brevo') return await sendViaBrevo(o.email, mail);
+    return await sendViaResend(o.email, mail, (process.env.RESEND_API_KEY || '').trim());
   } catch (err: any) {
-    return { ok: false, error: err?.name === 'TimeoutError' ? 'TIMEOUT' : String(err?.message || 'NETWORK').slice(0, 200) };
+    const text = String(err?.response || err?.message || 'NETWORK').replace(/\s+/g, ' ').slice(0, 200);
+    return { ok: false, provider, error: err?.name === 'TimeoutError' || err?.code === 'ETIMEDOUT' ? 'TIMEOUT' : text };
   }
 }
