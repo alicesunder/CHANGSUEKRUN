@@ -85,6 +85,7 @@ import { RaceBib, runnerBib } from './RaceBib';
 import { FormSection, RunnerDetailsForm, emptyRunner, runnerFromSaved, runnerName, runnerProblems, toInsurance, type RunnerEntry } from './RunnerDetailsForm';
 import { VIP_PARKING_PER_TABLE, type ParkingPlate } from '../data/vipParking';
 import { waiversFor, type WaiverActivity, type WaiverParticipant } from '../data/activityWaivers';
+import { TEST_PRICE_BAHT, useTestMode } from '../utils/testMode';
 import { ActivityWaiverForm, mergeParticipant } from './ActivityWaiverForm';
 import { ParkingPasses } from './ParkingPass';
 import { EMPTY_ADD_ONS, addOnBonusDiscount, addOnConcertRate, addOnCountRate, addOnDiscountRate, addOnLabel, addOnTotal, concertDiscountPerTicket, hasAddOns, percentOf, type AddOnSelection } from '../data/addOns';
@@ -348,9 +349,11 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
   );
   const waiverKey = JSON.stringify(waiverPeople);
   const waiversDone = waiverActivities.every((a) => waiverAccepted[a] === waiverKey);
-  const total = ticketTotal + addOnSum;
+  const testMode = useTestMode();
+  // admin test mode: the server prices every order at 1 baht
+  const total = testMode ? TEST_PRICE_BAHT : ticketTotal + addOnSum;
   // With a sponsor code the run is free; add-on activities are always paid.
-  const chargeTotal = (sponsorOn ? 0 : ticketTotal) + addOnSum;
+  const chargeTotal = testMode ? TEST_PRICE_BAHT : (sponsorOn ? 0 : ticketTotal) + addOnSum;
   const isFreeOrder = sponsorOn && addOnSum === 0;
   const dogCount = isDog ? 1 + extraDogs : 0;
   const peopleCount = isAddonOnly ? addOns.people : isConcert ? gaQty + vipTables * VIP_TABLE_SEATS : isDog ? 1 + extraPeople : 1;

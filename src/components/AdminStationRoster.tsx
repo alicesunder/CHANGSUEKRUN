@@ -38,9 +38,9 @@ const STATIONS: Station[] = [
 
 /** A pending order still counts until its payment window closes. */
 const isLivePending = (o: ServerOrder) =>
-  !o.cancelledAt && o.paymentStatus !== 'PAID' && (!o.expiresAt || new Date(o.expiresAt).getTime() > Date.now());
+  !o.isTest && !o.cancelledAt && o.paymentStatus !== 'PAID' && (!o.expiresAt || new Date(o.expiresAt).getTime() > Date.now());
 /** Paid and not cancelled. */
-const isPaid = (o: ServerOrder) => o.paymentStatus === 'PAID' && !o.cancelledAt;
+const isPaid = (o: ServerOrder) => o.paymentStatus === 'PAID' && !o.cancelledAt && !o.isTest;
 
 const fmtDate = (iso?: string) => (iso ? new Date(iso).toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' }) : '-');
 

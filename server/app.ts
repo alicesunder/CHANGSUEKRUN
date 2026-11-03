@@ -33,6 +33,7 @@ import {
   listSponsorCodes,
   markOrderPaid,
   nextOrderId,
+  newTestOrderId,
   normalizeSponsorCode,
   peekSponsorCode,
   rateLimited,
@@ -67,7 +68,7 @@ import { parseShooting, type ShootingInfo } from '../src/data/shooting';
 import { parseActivityWaiver, waiversFor, type ActivityWaiverInfo } from '../src/data/activityWaivers';
 import { extraRunnersText, parseExtraRunners, type ExtraRunner } from '../src/data/shirts';
 import { parseParkingPlates, type ParkingPlate } from '../src/data/vipParking';
-import { checkCredentials, docsSignature, docsSignatureOk, issueToken, requireAdmin } from './auth';
+import { checkCredentials, docsSignature, docsSignatureOk, issueToken, requireAdmin, verifyToken } from './auth';
 import { buildDocumentsHtml } from './documents';
 
 /** The buyer's own view of an order, plus the link to its A4 documents once paid. */
@@ -292,11 +293,27 @@ export function createApp(): express.Express {
       res.status(429).json({ error: 'สร้างคำสั่งซื้อบ่อยเกินไป กรุณารอสักครู่แล้วลองใหม่' });
       return;
     }
-    if (!(await getSalesStatus()).open) {
+    const b = req.body || {};
+    // Admin test mode: the order total is 1 baht. Only a valid admin login may ask for it (never a visitor).
+    const testMode = b.testMode === true;
+    let testAdmin = '';
+    if (testMode) {
+      const header = req.headers.authorization || '';
+      const session = verifyToken(header.startsWith('Bearer ') ? header.slice(7) : undefined);
+      if (!session) {
+        res.status(401).json({ error: 'โหมดทดสอบ 1 บาทใช้ได้เฉพาะแอดมินที่ล็อกอินอยู่ กรุณาเข้าสู่ระบบแอดมินใหม่ หรือปิดโหมดทดสอบ' });
+        return;
+      }
+      if (b.sponsorCode) {
+        res.status(400).json({ error: 'โหมดทดสอบใช้ร่วมกับรหัสสปอนเซอร์ไม่ได้ กรุณาปิดโหมดทดสอบหรือเอารหัสออก' });
+        return;
+      }
+      testAdmin = session.username;
+    }
+    if (!testMode && !(await getSalesStatus()).open) {
       res.status(403).json({ error: 'ขณะนี้ปิดการขายบัตรชั่วคราว กรุณาติดตามประกาศจากผู้จัดงาน' });
       return;
     }
-    const b = req.body || {};
     const isConcert = b.ticketType === 'CONCERT';
     // Add-on activities only: no run ticket and no concert ticket
     const isAddonOnly = b.ticketType === 'ADDON';
@@ -421,14 +438,15 @@ export function createApp(): express.Express {
         : sponsorCode
           ? 0
           : calcTicketTotal(routeId, extraPeople, extraDogs) + CONCERT_PASS_PRICE * concertQty - concertDiscount + vipTotal;
-    const total = ticketTotal + addOnSum;
+    const total = testMode ? 1 : ticketTotal + addOnSum;
     const token = crypto.randomBytes(24).toString('base64url');
     const now = new Date();
     const settings = await getSettings();
     const timeoutMin = Math.max(1, settings.paymentTimeoutMinutes || 15);
 
     const order: StoredOrder = {
-      orderId: await nextOrderId(),
+      orderId: testMode ? newTestOrderId() : await nextOrderId(),
+      ...(testMode ? { isTest: true, testBy: testAdmin } : {}),
       accessTokenHash: hashToken(token),
       fullName,
       phone,

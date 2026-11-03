@@ -12,6 +12,7 @@ import { PeekingPup } from './components/PeekingPup';
 import { FunRibbon } from './components/FunRibbon';
 import { ActivityStickerLayer } from './components/ActivitySticker';
 import { IntroSplash } from './components/IntroSplash';
+import { TestModeBanner } from './components/TestModeBanner';
 import { CustomCursor } from './components/CustomCursor';
 import { EasterEggElephant } from './components/EasterEggElephant';
 import { MobileBottomNav } from './components/MobileBottomNav';
@@ -187,6 +188,7 @@ export default function App() {
       <PeekingPup />
       <ActivityStickerLayer />
       <IntroSplash />
+      <TestModeBanner />
 
       {/* 2. Easter Egg Elephant */}
       <EasterEggElephant

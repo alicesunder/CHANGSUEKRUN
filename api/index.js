@@ -63301,6 +63301,13 @@ function tokenMatches(order, token) {
   const b = Buffer.from(order.accessTokenHash, "hex");
   return a.length === b.length && crypto.timingSafeEqual(a, b);
 }
+function newTestOrderId() {
+  const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  const bytes = crypto.randomBytes(6);
+  let id = "";
+  for (const b of bytes) id += alphabet[b % alphabet.length];
+  return `TEST-${id}`;
+}
 async function nextOrderId() {
   const rows = await dbQuery("select nextval('csr.order_seq')::text as n");
   return `CSR27-${String(rows[0].n).padStart(5, "0")}`;
@@ -63319,6 +63326,7 @@ var orderParams = (o) => [o.orderId, o.accessTokenHash, o.routeId, o.paymentStat
 var WIND_TUNNEL_USED_SQL = `select coalesce(sum((data->'addOns'->>'people')::int), 0)::text as n from csr.orders
   where data->'addOns'->>'windTunnel' = 'true'
     and not (data ? 'cancelledAt')
+    and not (data ? 'isTest')
     and (payment_status = 'PAID' or (data->>'expiresAt')::timestamptz > now())`;
 async function windTunnelSeatsUsed() {
   const rows = await dbQuery(WIND_TUNNEL_USED_SQL);
@@ -63344,7 +63352,7 @@ async function restoreOrderChecked(orderId, windTunnelLimit) {
 }
 async function insertOrderChecked(o, windTunnelLimit) {
   return dbTx(async (q) => {
-    if (o.addOns?.windTunnel) {
+    if (o.addOns?.windTunnel && !o.isTest) {
       await q("select pg_advisory_xact_lock(727001)");
       const rows = await q(WIND_TUNNEL_USED_SQL);
       const used = Number(rows[0]?.n ?? 0);
@@ -63424,6 +63432,9 @@ async function markOrderPaid(orderId, info) {
       if (owner[0]?.order_id !== orderId) throw new RefUsedError(info.paymentRef);
     }
     const now = (/* @__PURE__ */ new Date()).toISOString();
+    if (!order.bibNumber && order.isTest) {
+      order.bibNumber = order.orderId;
+    }
     if (!order.bibNumber) {
       const c = await q(
         `insert into csr.bib_counters (route_id, last_seq) values ($1, 1)
@@ -64513,7 +64524,7 @@ async function buildTicketEmail(o) {
   const start = isRun ? routesData[o.routeId]?.startTime : "";
   const numberLabel = isRun ? "BIB NUMBER" : o.ticketType === "CONCERT" ? "CONCERT TICKET" : "TICKET NO.";
   const title = isRun ? `\u0E1A\u0E31\u0E15\u0E23\u0E27\u0E34\u0E48\u0E07 & BIB #${o.bibNumber}` : `\u0E1A\u0E31\u0E15\u0E23 #${o.bibNumber}`;
-  const subject = `[CHANGSUEK RUN] \u0E0A\u0E33\u0E23\u0E30\u0E40\u0E07\u0E34\u0E19\u0E2A\u0E33\u0E40\u0E23\u0E47\u0E08 \xB7 ${title} \xB7 \u0E04\u0E33\u0E2A\u0E31\u0E48\u0E07\u0E0B\u0E37\u0E49\u0E2D ${o.orderId}`;
+  const subject = `${o.isTest ? "[\u0E17\u0E14\u0E2A\u0E2D\u0E1A] " : ""}[CHANGSUEK RUN] \u0E0A\u0E33\u0E23\u0E30\u0E40\u0E07\u0E34\u0E19\u0E2A\u0E33\u0E40\u0E23\u0E47\u0E08 \xB7 ${title} \xB7 \u0E04\u0E33\u0E2A\u0E31\u0E48\u0E07\u0E0B\u0E37\u0E49\u0E2D ${o.orderId}`;
   const mainDate = !isRun && o.addOns && !o.concertQty && !o.vipTables ? eventInfo.activityDateNotice : eventInfo.dateNotice;
   const attachments = [
     { filename: "changsuek-run-logo.png", content: EMAIL_LOGO_PNG_BASE64, content_id: "event-logo" }
@@ -64842,11 +64853,26 @@ function createApp() {
       res.status(429).json({ error: "\u0E2A\u0E23\u0E49\u0E32\u0E07\u0E04\u0E33\u0E2A\u0E31\u0E48\u0E07\u0E0B\u0E37\u0E49\u0E2D\u0E1A\u0E48\u0E2D\u0E22\u0E40\u0E01\u0E34\u0E19\u0E44\u0E1B \u0E01\u0E23\u0E38\u0E13\u0E32\u0E23\u0E2D\u0E2A\u0E31\u0E01\u0E04\u0E23\u0E39\u0E48\u0E41\u0E25\u0E49\u0E27\u0E25\u0E2D\u0E07\u0E43\u0E2B\u0E21\u0E48" });
       return;
     }
-    if (!(await getSalesStatus()).open) {
+    const b = req.body || {};
+    const testMode = b.testMode === true;
+    let testAdmin = "";
+    if (testMode) {
+      const header = req.headers.authorization || "";
+      const session = verifyToken(header.startsWith("Bearer ") ? header.slice(7) : void 0);
+      if (!session) {
+        res.status(401).json({ error: "\u0E42\u0E2B\u0E21\u0E14\u0E17\u0E14\u0E2A\u0E2D\u0E1A 1 \u0E1A\u0E32\u0E17\u0E43\u0E0A\u0E49\u0E44\u0E14\u0E49\u0E40\u0E09\u0E1E\u0E32\u0E30\u0E41\u0E2D\u0E14\u0E21\u0E34\u0E19\u0E17\u0E35\u0E48\u0E25\u0E47\u0E2D\u0E01\u0E2D\u0E34\u0E19\u0E2D\u0E22\u0E39\u0E48 \u0E01\u0E23\u0E38\u0E13\u0E32\u0E40\u0E02\u0E49\u0E32\u0E2A\u0E39\u0E48\u0E23\u0E30\u0E1A\u0E1A\u0E41\u0E2D\u0E14\u0E21\u0E34\u0E19\u0E43\u0E2B\u0E21\u0E48 \u0E2B\u0E23\u0E37\u0E2D\u0E1B\u0E34\u0E14\u0E42\u0E2B\u0E21\u0E14\u0E17\u0E14\u0E2A\u0E2D\u0E1A" });
+        return;
+      }
+      if (b.sponsorCode) {
+        res.status(400).json({ error: "\u0E42\u0E2B\u0E21\u0E14\u0E17\u0E14\u0E2A\u0E2D\u0E1A\u0E43\u0E0A\u0E49\u0E23\u0E48\u0E27\u0E21\u0E01\u0E31\u0E1A\u0E23\u0E2B\u0E31\u0E2A\u0E2A\u0E1B\u0E2D\u0E19\u0E40\u0E0B\u0E2D\u0E23\u0E4C\u0E44\u0E21\u0E48\u0E44\u0E14\u0E49 \u0E01\u0E23\u0E38\u0E13\u0E32\u0E1B\u0E34\u0E14\u0E42\u0E2B\u0E21\u0E14\u0E17\u0E14\u0E2A\u0E2D\u0E1A\u0E2B\u0E23\u0E37\u0E2D\u0E40\u0E2D\u0E32\u0E23\u0E2B\u0E31\u0E2A\u0E2D\u0E2D\u0E01" });
+        return;
+      }
+      testAdmin = session.username;
+    }
+    if (!testMode && !(await getSalesStatus()).open) {
       res.status(403).json({ error: "\u0E02\u0E13\u0E30\u0E19\u0E35\u0E49\u0E1B\u0E34\u0E14\u0E01\u0E32\u0E23\u0E02\u0E32\u0E22\u0E1A\u0E31\u0E15\u0E23\u0E0A\u0E31\u0E48\u0E27\u0E04\u0E23\u0E32\u0E27 \u0E01\u0E23\u0E38\u0E13\u0E32\u0E15\u0E34\u0E14\u0E15\u0E32\u0E21\u0E1B\u0E23\u0E30\u0E01\u0E32\u0E28\u0E08\u0E32\u0E01\u0E1C\u0E39\u0E49\u0E08\u0E31\u0E14\u0E07\u0E32\u0E19" });
       return;
     }
-    const b = req.body || {};
     const isConcert = b.ticketType === "CONCERT";
     const isAddonOnly = b.ticketType === "ADDON";
     const noRun = isConcert || isAddonOnly;
@@ -64947,13 +64973,14 @@ function createApp() {
     const concertDiscount = concertQty * concertDiscountPerTicket(CONCERT_PASS_PRICE, !noRun && !sponsorCode);
     const vipTotal = VIP_TABLE_PRICE * vipTables;
     const ticketTotal = isAddonOnly ? 0 : isConcert ? CONCERT_PASS_PRICE * concertQty + vipTotal : sponsorCode ? 0 : calcTicketTotal(routeId, extraPeople, extraDogs) + CONCERT_PASS_PRICE * concertQty - concertDiscount + vipTotal;
-    const total = ticketTotal + addOnSum;
+    const total = testMode ? 1 : ticketTotal + addOnSum;
     const token = crypto3.randomBytes(24).toString("base64url");
     const now = /* @__PURE__ */ new Date();
     const settings = await getSettings();
     const timeoutMin = Math.max(1, settings.paymentTimeoutMinutes || 15);
     const order = {
-      orderId: await nextOrderId(),
+      orderId: testMode ? newTestOrderId() : await nextOrderId(),
+      ...testMode ? { isTest: true, testBy: testAdmin } : {},
       accessTokenHash: hashToken(token),
       fullName,
       phone,

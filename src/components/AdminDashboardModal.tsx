@@ -53,6 +53,7 @@ import { ServerOrder, adminApi, adminLogin, clearAdminToken, getAdminToken } fro
 import { formatThaiId } from '../data/shooting';
 import { AdminStationRoster, OrderFullDetails } from './AdminStationRoster';
 import { countShirts } from '../data/shirts';
+import { setTestMode, useTestMode } from '../utils/testMode';
 import {
   formatPromptPayDisplay,
   formatThaiBankAccount,
@@ -121,7 +122,7 @@ const SHIRT_SIZE_LIST = ['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL'];
 
 /** Counts in totals: not cancelled, and paid or still inside its payment window. */
 const isLiveOrder = (o: ServerOrder) =>
-  !o.cancelledAt && (o.paymentStatus === 'PAID' || !o.expiresAt || new Date(o.expiresAt).getTime() > Date.now());
+  !o.isTest && !o.cancelledAt && (o.paymentStatus === 'PAID' || !o.expiresAt || new Date(o.expiresAt).getTime() > Date.now());
 
 export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
   isOpen,
@@ -158,6 +159,7 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
 
   // PDPA Privacy Shield Masking State (Default ON to prevent accidental data leaks)
   const [isPiiMasked, setIsPiiMasked] = useState<boolean>(true);
+  const testMode = useTestMode();
   const [auditLogs, setAuditLogs] = useState<SecurityAuditEvent[]>([]);
 
   // Filters for Orders Directory
@@ -291,8 +293,9 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
     const pendingReviewCount = liveOrders.filter(
       (o) => o.verificationStatus === 'PENDING_REVIEW'
     ).length;
-    const cancelledCount = orders.filter((o) => (o as ServerOrder).cancelledAt).length;
-    const expiredCount = orders.length - liveOrders.length - cancelledCount;
+    const testCount = orders.filter((o) => (o as ServerOrder).isTest).length;
+    const cancelledCount = orders.filter((o) => !(o as ServerOrder).isTest && (o as ServerOrder).cancelledAt).length;
+    const expiredCount = orders.length - liveOrders.length - cancelledCount - testCount;
     const totalRevenue = validOrders.reduce((sum, o) => sum + (o.totalPrice || 0), 0);
     const totalPeople = validOrders.reduce((sum, o) => sum + (o.peopleCount || 1), 0);
     const totalDogs = validOrders.reduce((sum, o) => sum + (o.dogCount || 0), 0);
@@ -329,6 +332,7 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
       totalTickets,
       cancelledCount,
       expiredCount,
+      testCount,
       shirts,
       verifiedCount,
       pendingReviewCount,
@@ -778,6 +782,39 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
 
             <button
               type="button"
+              role="switch"
+              aria-checked={testMode}
+              onClick={() => {
+                if (testMode) {
+                  setTestMode(false);
+                  showToast('ปิดโหมดทดสอบ 1 บาทแล้ว');
+                } else if (
+                  window.confirm(
+                    [
+                      'เปิดโหมดทดสอบ 1 บาท?',
+                      '',
+                      '• มีผลเฉพาะเบราว์เซอร์นี้ ขณะที่ล็อกอินแอดมินอยู่',
+                      '• คำสั่งซื้อที่สร้างจากเบราว์เซอร์นี้จะคิดยอด 1 บาท',
+                      '• ใบทดสอบไม่นับในยอดขาย เสื้อ รายชื่อ และไม่ใช้เลข BIB จริง',
+                      '• ลูกค้าทั่วไปยังเห็นและจ่ายราคาปกติ',
+                    ].join('\n')
+                  )
+                ) {
+                  setTestMode(true);
+                  showToast('เปิดโหมดทดสอบ 1 บาทแล้ว (ปิดแอดมินแล้วไปสั่งซื้อในหน้าเว็บได้เลย)');
+                }
+              }}
+              title="โหมดทดสอบ 1 บาท: ใช้ทดลองโอนเงินจริง 1 บาทเพื่อทดสอบระบบตรวจสลิป (เฉพาะเบราว์เซอร์นี้)"
+              className={`px-3 py-2 rounded-xl text-xs font-extrabold flex items-center gap-1.5 transition-colors cursor-pointer ${
+                testMode ? 'bg-rose-600 text-white ring-2 ring-[#FFC928]' : 'bg-white/10 hover:bg-white/20 text-white/90'
+              }`}
+            >
+              <span aria-hidden="true">🧪</span>
+              <span>{testMode ? 'โหมดทดสอบ 1 บาท: เปิดอยู่' : 'โหมดทดสอบ 1 บาท'}</span>
+            </button>
+
+            <button
+              type="button"
               onClick={handleLogout}
               title="ล็อกหน้าจอ / ออกจากระบบแอดมิน"
               className="px-3 py-2 rounded-xl bg-white/10 hover:bg-amber-500 hover:text-slate-950 text-white/90 text-xs font-extrabold flex items-center gap-1.5 transition-colors cursor-pointer"
@@ -835,7 +872,7 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
               </div>
               {(analytics.cancelledCount > 0 || analytics.expiredCount > 0) && (
                 <div className="text-[10.5px] font-bold text-slate-400">
-                  ไม่นับ: ยกเลิก {analytics.cancelledCount} · หมดเวลาชำระ {analytics.expiredCount}
+                  ไม่นับ: ยกเลิก {analytics.cancelledCount} · หมดเวลาชำระ {analytics.expiredCount}{analytics.testCount > 0 ? ` · ใบทดสอบ ${analytics.testCount}` : ''}
                 </div>
               )}
               <div className="text-[11px] font-bold text-emerald-600 mt-1">
@@ -1125,11 +1162,16 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
                             >
                               {/* BIB Number Column */}
                               <td className="py-3.5 px-4 whitespace-nowrap">
+                                {(order as ServerOrder).isTest && (
+                                  <span className="mb-1 mr-1 inline-block rounded-md bg-amber-500 text-slate-950 px-1.5 py-0.5 text-[10px] font-black" title="ใบทดสอบ 1 บาท ไม่นับในยอดขาย">
+                                    🧪 ทดสอบ
+                                  </span>
+                                )}
                                 {(order as ServerOrder).cancelledAt ? (
                                   <span className="mb-1 inline-block rounded-md bg-rose-600 text-white px-1.5 py-0.5 text-[10px] font-black" title={(order as ServerOrder).cancelReason}>
                                     ยกเลิกแล้ว
                                   </span>
-                                ) : !isLiveOrder(order as ServerOrder) ? (
+                                ) : !isLiveOrder(order as ServerOrder) && !(order as ServerOrder).isTest ? (
                                   <span className="mb-1 inline-block rounded-md bg-slate-400 text-white px-1.5 py-0.5 text-[10px] font-black">หมดเวลาชำระ</span>
                                 ) : null}
                                 <div className="flex items-center gap-2">

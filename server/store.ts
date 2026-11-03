@@ -93,6 +93,9 @@ export interface StoredOrder {
   createdAt: string;
   expiresAt: string;
   /** Cancelled by an admin (orders are never deleted): when, by whom and why */
+  /** 1-baht test order made by an admin (admin test mode): own order/BIB numbers, never counted in sales or limits */
+  isTest?: boolean;
+  testBy?: string;
   cancelledAt?: string;
   cancelledBy?: string;
   cancelReason?: string;
@@ -201,6 +204,15 @@ export function tokenMatches(order: StoredOrder, token: string | undefined): boo
   return a.length === b.length && crypto.timingSafeEqual(a, b);
 }
 
+/** Test orders get their own ids (TEST-XXXXXX) so the real order numbers and BIB numbers are never used up. */
+export function newTestOrderId(): string {
+  const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  const bytes = crypto.randomBytes(6);
+  let id = '';
+  for (const b of bytes) id += alphabet[b % alphabet.length];
+  return `TEST-${id}`;
+}
+
 export async function nextOrderId(): Promise<string> {
   const rows = await dbQuery<{ n: string }>("select nextval('csr.order_seq')::text as n");
   return `CSR27-${String(rows[0].n).padStart(5, '0')}`;
@@ -228,6 +240,7 @@ export async function insertOrder(o: StoredOrder): Promise<void> {
 const WIND_TUNNEL_USED_SQL = `select coalesce(sum((data->'addOns'->>'people')::int), 0)::text as n from csr.orders
   where data->'addOns'->>'windTunnel' = 'true'
     and not (data ? 'cancelledAt')
+    and not (data ? 'isTest')
     and (payment_status = 'PAID' or (data->>'expiresAt')::timestamptz > now())`;
 
 export async function windTunnelSeatsUsed(): Promise<number> {
@@ -261,7 +274,7 @@ export async function insertOrderChecked(
   windTunnelLimit: number
 ): Promise<{ ok: true } | { ok: false; remaining: number }> {
   return dbTx(async (q) => {
-    if (o.addOns?.windTunnel) {
+    if (o.addOns?.windTunnel && !o.isTest) {
       await q('select pg_advisory_xact_lock(727001)');
       const rows = await q<{ n: string }>(WIND_TUNNEL_USED_SQL);
       const used = Number(rows[0]?.n ?? 0);
@@ -368,6 +381,9 @@ export async function markOrderPaid(
     }
 
     const now = new Date().toISOString();
+    if (!order.bibNumber && order.isTest) {
+      order.bibNumber = order.orderId; // test orders never take a real BIB number
+    }
     if (!order.bibNumber) {
       const c = await q<{ last_seq: number }>(
         `insert into csr.bib_counters (route_id, last_seq) values ($1, 1)

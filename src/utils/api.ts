@@ -7,6 +7,7 @@ import type { InsuranceInfo } from '../data/insurance';
 import type { Shooter, ShootingInfo } from '../data/shooting';
 import type { ActivityWaiverInfo, WaiverActivity, WaiverParticipant } from '../data/activityWaivers';
 import type { ExtraRunner } from '../data/shirts';
+import { isTestModeOn, setTestMode } from './testMode';
 import type { ParkingPlate } from '../data/vipParking';
 import type { RouteId } from '../types';
 import type { TicketOrder } from './runnerStorage';
@@ -47,6 +48,9 @@ export type ServerOrder = TicketOrder & {
   /** tower / wind tunnel waivers (ID numbers masked in the runner's view) */
   activityWaiver?: ActivityWaiverInfo;
   extraRunners?: ExtraRunner[];
+  /** 1-baht test order from admin test mode */
+  isTest?: boolean;
+  testBy?: string;
   /** cancelled by an admin (orders are never deleted) */
   cancelledAt?: string;
   cancelledBy?: string;
@@ -162,9 +166,16 @@ export function loadPendingOrderRef(): PendingOrderRef | null {
 export async function createOrder(
   input: CreateOrderInput
 ): Promise<{ order: ServerOrder; accessToken: string; config: PublicConfig }> {
+  // Admin test mode (1 baht): send the admin token so the server can check it is really an admin.
+  const test = isTestModeOn();
+  const adminToken = test ? getAdminToken() : null;
   const res = await request<{ order: ServerOrder; accessToken: string; config: PublicConfig }>(
     '/api/orders',
-    { method: 'POST', headers: jsonHeaders, body: JSON.stringify(input) }
+    {
+      method: 'POST',
+      headers: adminToken ? { ...jsonHeaders, Authorization: `Bearer ${adminToken}` } : jsonHeaders,
+      body: JSON.stringify(test ? { ...input, testMode: true } : input),
+    }
   );
   cachedConfig = res.config;
   return res;
@@ -224,6 +235,7 @@ export function getAdminToken(): string | null {
 }
 
 export function clearAdminToken(): void {
+  setTestMode(false); // logging out always ends test mode
   try {
     sessionStorage.removeItem(ADMIN_TOKEN_KEY);
   } catch {

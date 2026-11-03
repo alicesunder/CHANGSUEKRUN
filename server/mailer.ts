@@ -53,7 +53,7 @@ export async function buildTicketEmail(o: StoredOrder) {
   const start = isRun ? routesData[o.routeId as keyof typeof routesData]?.startTime : '';
   const numberLabel = isRun ? 'BIB NUMBER' : o.ticketType === 'CONCERT' ? 'CONCERT TICKET' : 'TICKET NO.';
   const title = isRun ? `บัตรวิ่ง & BIB #${o.bibNumber}` : `บัตร #${o.bibNumber}`;
-  const subject = `[CHANGSUEK RUN] ชำระเงินสำเร็จ · ${title} · คำสั่งซื้อ ${o.orderId}`;
+  const subject = `${o.isTest ? '[ทดสอบ] ' : ''}[CHANGSUEK RUN] ชำระเงินสำเร็จ · ${title} · คำสั่งซื้อ ${o.orderId}`;
   // an add-on-only order happens on the activity day; everything else on run day
   const mainDate = !isRun && o.addOns && !o.concertQty && !o.vipTables ? eventInfo.activityDateNotice : eventInfo.dateNotice;
 
