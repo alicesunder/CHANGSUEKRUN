@@ -36,6 +36,8 @@ export interface VisitStats {
 }
 
 export type ServerOrder = TicketOrder & {
+  /** printable A4 documents (BIB, ticket, parking, insurance, waivers) once paid */
+  documentsUrl?: string;
   ticketType?: 'RUN' | 'CONCERT' | 'ADDON';
   concertQty?: number;
   vipTables?: number;

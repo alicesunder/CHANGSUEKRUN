@@ -49,6 +49,18 @@ function sign(payload: string): string {
   return crypto.createHmac('sha256', SESSION_SECRET).update(payload).digest('base64url');
 }
 
+/**
+ * Link to an order's A4 documents (sent in the ticket e-mail): HMAC of the order id. DOCS_LINK_SECRET
+ * keeps the links working if the admin password changes; without it the session secret is used.
+ */
+const DOCS_SECRET = process.env.DOCS_LINK_SECRET || SESSION_SECRET;
+export function docsSignature(orderId: string): string {
+  return crypto.createHmac('sha256', DOCS_SECRET).update(`docs|${orderId}`).digest('base64url').slice(0, 32);
+}
+export function docsSignatureOk(orderId: string, sig: unknown): boolean {
+  return typeof sig === 'string' && sig.length === 32 && safeEqual(sig, docsSignature(orderId));
+}
+
 export function issueToken(username: string): { token: string; expiresAt: number } {
   const expiresAt = Date.now() + TOKEN_TTL_MS;
   const payload = Buffer.from(JSON.stringify({ u: username, exp: expiresAt })).toString('base64url');

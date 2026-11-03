@@ -67,7 +67,14 @@ import { parseShooting, type ShootingInfo } from '../src/data/shooting';
 import { parseActivityWaiver, waiversFor, type ActivityWaiverInfo } from '../src/data/activityWaivers';
 import { extraRunnersText, parseExtraRunners, type ExtraRunner } from '../src/data/shirts';
 import { parseParkingPlates, type ParkingPlate } from '../src/data/vipParking';
-import { checkCredentials, issueToken, requireAdmin } from './auth';
+import { checkCredentials, docsSignature, docsSignatureOk, issueToken, requireAdmin } from './auth';
+import { buildDocumentsHtml } from './documents';
+
+/** The buyer's own view of an order, plus the link to its A4 documents once paid. */
+const runnerView = (o: StoredOrder) => ({
+  ...toRunnerView(o),
+  documentsUrl: o.paymentStatus === 'PAID' && !o.cancelledAt ? `/api/orders/${encodeURIComponent(o.orderId)}/documents?s=${docsSignature(o.orderId)}` : undefined,
+});
 import { fetchVerifiedOmiseCharge, maskedAccountMatches, verifySlipWithEasySlip } from './payments';
 import { mailConfigured, maskEmail, sendTicketEmail } from './mailer';
 
@@ -232,6 +239,24 @@ export function createApp(): express.Express {
   }));
 
   // Is this sponsor code usable? (Does not use it up.) Heavily rate limited against guessing.
+  // A4 documents of a paid order (BIB, ticket, parking, insurance, waivers): signed link from the e-mail.
+  app.get('/api/orders/:id/documents', h(async (req, res) => {
+    const id = String(req.params.id);
+    if (await rateLimited(`docs:${clientIp(req)}`, 60, 10 * 60 * 1000)) {
+      res.status(429).type('text/plain; charset=utf-8').send('เปิดเอกสารบ่อยเกินไป กรุณารอสักครู่แล้วลองใหม่');
+      return;
+    }
+    const order = docsSignatureOk(id, req.query.s) ? await getOrder(id) : undefined;
+    if (!order || order.paymentStatus !== 'PAID' || order.cancelledAt) {
+      res.status(404).type('text/plain; charset=utf-8').send('ไม่พบเอกสาร หรือลิงก์ไม่ถูกต้อง');
+      return;
+    }
+    res.setHeader('Cache-Control', 'private, no-store');
+    res.setHeader('X-Robots-Tag', 'noindex, nofollow');
+    res.setHeader('Referrer-Policy', 'no-referrer');
+    res.type('text/html; charset=utf-8').send(await buildDocumentsHtml(order));
+  }));
+
   // Visitor counter: one anonymous page load. Rate limited so one script cannot inflate it.
   app.post('/api/visit', smallJson, h(async (req, res) => {
     const vid = req.body?.vid;
@@ -488,12 +513,12 @@ export function createApp(): express.Express {
         throw err;
       }
       await mailNewlyPaid(false, paid);
-      res.json({ order: toRunnerView(paid || order), accessToken: token, config: await publicConfig() });
+      res.json({ order: runnerView(paid || order), accessToken: token, config: await publicConfig() });
       return;
     }
 
     // The runner now transfers by PromptPay and uploads the slip (POST /api/orders/:orderId/slip).
-    res.json({ order: toRunnerView(order), accessToken: token, config: await publicConfig() });
+    res.json({ order: runnerView(order), accessToken: token, config: await publicConfig() });
   }));
 
   // Order status for the runner who created it (requires the order's access token).
@@ -501,7 +526,7 @@ export function createApp(): express.Express {
     let order = await loadOwnedOrder(req, res);
     if (!order) return;
     order = await settleAll(order);
-    res.json({ order: toRunnerView(order) });
+    res.json({ order: runnerView(order) });
   }));
 
   // A buyer who lost their ticket asks for the e-mail again: order id + the phone number on the order.
@@ -533,7 +558,7 @@ export function createApp(): express.Express {
     if (!order) return;
     order = await settleAll(order);
     if (order.paymentStatus === 'PAID') {
-      res.json({ order: toRunnerView(order) });
+      res.json({ order: runnerView(order) });
       return;
     }
     if (order.verificationStatus === 'REJECTED' || order.cancelledAt) {
@@ -604,7 +629,7 @@ export function createApp(): express.Express {
         });
         console.log(`[slip] ${order.orderId} paid by slip ${slip.transRef}`);
         await mailNewlyPaid(false, paid);
-        res.json({ order: toRunnerView(paid!) });
+        res.json({ order: runnerView(paid!) });
         return;
       } catch (err) {
         if (!(err instanceof RefUsedError)) throw err;
@@ -613,10 +638,10 @@ export function createApp(): express.Express {
     }
     const latest = (await getOrder(order.orderId))!;
     if (review) {
-      res.json({ order: toRunnerView(latest), review: true, message: 'ได้รับสลิปแล้ว ระบบตรวจอัตโนมัติไม่ได้ เจ้าหน้าที่จะตรวจและยืนยันให้' });
+      res.json({ order: runnerView(latest), review: true, message: 'ได้รับสลิปแล้ว ระบบตรวจอัตโนมัติไม่ได้ เจ้าหน้าที่จะตรวจและยืนยันให้' });
       return;
     }
-    res.status(400).json({ error: `สลิปไม่ผ่าน: ${problems.join(' · ')}`, order: toRunnerView(latest) });
+    res.status(400).json({ error: `สลิปไม่ผ่าน: ${problems.join(' · ')}`, order: runnerView(latest) });
   }));
 
   // Omise webhook. The body is only a hint — we always re-fetch the charge from Omise.

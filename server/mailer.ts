@@ -12,6 +12,10 @@ import { eventInfo, formatBaht, routesData } from '../src/data/eventData';
 import { parkingQrPayload } from '../src/data/vipParking';
 import type { StoredOrder } from './store';
 import { EMAIL_LOGO_PNG_BASE64 } from './emailLogo';
+import { docsSignature } from './auth';
+import { buildDocumentsHtml } from './documents';
+
+const SITE = (process.env.PUBLIC_SITE_URL || 'https://www.changsuekrun.com').replace(/\/+$/, '');
 
 const DEFAULT_FROM = 'CHANGSUEK RUN <tickets@mail.changsuekrun.com>';
 const REPLY_TO = eventInfo.contactEmail;
@@ -53,7 +57,7 @@ export async function buildTicketEmail(o: StoredOrder) {
   // an add-on-only order happens on the activity day; everything else on run day
   const mainDate = !isRun && o.addOns && !o.concertQty && !o.vipTables ? eventInfo.activityDateNotice : eventInfo.dateNotice;
 
-  const attachments: { filename: string; content: string; content_id: string }[] = [
+  const attachments: { filename: string; content: string; content_id?: string }[] = [
     { filename: 'changsuek-run-logo.png', content: EMAIL_LOGO_PNG_BASE64, content_id: 'event-logo' },
   ];
   const qrOpts = { width: 360, margin: 1, errorCorrectionLevel: 'M' as const, color: { dark: '#2A1450', light: '#FFFFFF' } };
@@ -110,6 +114,20 @@ export async function buildTicketEmail(o: StoredOrder) {
     )
     .join('');
 
+  // The A4 documents: a signed link, and the same page attached (images load from the site)
+  const docsUrl = `${SITE}/api/orders/${encodeURIComponent(o.orderId)}/documents?s=${docsSignature(o.orderId)}`;
+  const docsList = [
+    isRun ? 'ป้าย BIB' : '',
+    'บัตรเข้างาน',
+    parking.length ? 'บัตรจอดรถ VIP' : '',
+    o.insurance ? (o.runningWithDog ? 'ข้อมูลประกันนักวิ่งและน้องสุนัข' : 'ข้อมูลประกัน') : '',
+    o.activityWaiver ? 'เอกสารสละสิทธิ์กิจกรรม' : '',
+  ]
+    .filter(Boolean)
+    .join(' · ');
+  const docsHtml = await buildDocumentsHtml(o, { assetBase: SITE });
+  attachments.push({ filename: `CHANGSUEK_RUN_A4_${o.orderId}.html`, content: Buffer.from(docsHtml, 'utf8').toString('base64') });
+
   const html = `<!doctype html><html lang="th"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><meta name="color-scheme" content="light"/></head>
 <body style="margin:0;padding:0;background:#EFE7FF;font-family:Tahoma,'Leelawadee UI','Noto Sans Thai',sans-serif">
   <div style="display:none;max-height:0;overflow:hidden">ตั๋วของคุณพร้อมแล้ว ${esc(title)} · แสดง QR ในอีเมลนี้ที่จุดเช็กอิน</div>
@@ -150,6 +168,15 @@ export async function buildTicketEmail(o: StoredOrder) {
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:6px;border-collapse:collapse;background:#ffffff;border:2px solid #EEE7F8">${rows.join('')}</table>
 
       ${parkingHtml}
+
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:16px;border-collapse:separate;border:3px solid #2A1450;border-radius:18px;background:#FFF7DB">
+        <tr><td style="padding:14px 16px;text-align:center">
+          <div style="font-size:15px;font-weight:900;color:#2A1450">📄 เอกสาร A4 สำหรับพิมพ์</div>
+          <div style="font-size:12px;color:#6B5A85;margin-top:4px;line-height:1.6">${esc(docsList)}</div>
+          <a href="${esc(docsUrl)}" style="display:inline-block;margin-top:10px;background:#7C3AED;color:#ffffff;text-decoration:none;font-weight:900;font-size:15px;border-radius:12px;padding:12px 20px;border:2px solid #2A1450">เปิด / พิมพ์เอกสาร A4</a>
+          <div style="font-size:11px;color:#6B5A85;margin-top:8px">มีไฟล์เดียวกันแนบมากับอีเมลนี้ด้วย (CHANGSUEK_RUN_A4_…html)</div>
+        </td></tr>
+      </table>
 
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:16px;background:#F0FDF4;border:2px solid #BBF7D0;border-radius:14px">
         <tr><td style="padding:12px 14px;font-size:13px;color:#14532D;line-height:1.7">

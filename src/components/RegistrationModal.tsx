@@ -2217,6 +2217,17 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                 </div>
               )}
 
+              {(createdOrder as ServerOrder).documentsUrl && (
+                <a
+                  href={(createdOrder as ServerOrder).documentsUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center gap-2 min-h-[54px] px-5 rounded-2xl bg-gradient-to-r from-[#7C3AED] to-[#EC4899] text-white text-base font-black border-[3px] border-[#2A1450] shadow-[0_5px_0_#2A1450] active:translate-y-0.5"
+                >
+                  📄 เปิด / พิมพ์เอกสาร A4 (BIB · บัตร · ประกัน)
+                </a>
+              )}
+
               <ParkingPasses
                 orderId={createdOrder.orderId}
                 vipTables={(createdOrder as ServerOrder).vipTables}

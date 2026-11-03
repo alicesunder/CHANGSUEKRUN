@@ -9,7 +9,7 @@ import {
   type WaiverActivity,
   type WaiverParticipant,
 } from '../data/activityWaivers';
-import { formatThaiId } from '../data/shooting';
+import { formatThaiId, maskThaiId } from '../data/shooting';
 
 /*
  * One filled-in waiver for one participant. Inline styles only, so the same markup can be copied
@@ -55,7 +55,9 @@ export const WaiverDocument: React.FC<{
   orderId?: string;
   /** when the buyer accepted the document online (ISO) */
   acceptedAt?: string;
-}> = ({ activity, participant: p, orderId, acceptedAt }) => {
+  /** show the national ID as x-xxxx-xxxxx-12-3 (copies sent to the buyer) */
+  maskId?: boolean;
+}> = ({ activity, participant: p, orderId, acceptedAt, maskId }) => {
   const doc = WAIVER_DOCS[activity];
   const age = ageOn(p.birthDate);
   const minor = age !== null && age < WAIVER_GUARDIAN_AGE;
@@ -75,7 +77,7 @@ export const WaiverDocument: React.FC<{
       <p style={S.p}>
         ข้าพเจ้า <Fill v={p.fullName} w={200} /> วัน เดือน ปี เกิด <Fill v={thaiDate(p.birthDate)} w={130} /> อายุ <Fill v={age !== null ? String(age) : ''} w={36} /> ปี
         วันเดือนปีที่ใช้บริการ <Fill v={thaiDate(WAIVER_ACTIVITY_DATE)} w={130} /> เบอร์โทรศัพท์มือถือ <Fill v={p.phone} w={110} /> เลขบัตรประชาชน{' '}
-        <Fill v={formatThaiId(p.idCard)} w={150} /> ยอมรับเงื่อนไขดังต่อไปนี้
+        <Fill v={maskId ? maskThaiId(p.idCard) : formatThaiId(p.idCard)} w={150} /> ยอมรับเงื่อนไขดังต่อไปนี้
       </p>
 
       {doc.body.map((b, i) => (
