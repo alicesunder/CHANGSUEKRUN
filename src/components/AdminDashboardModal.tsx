@@ -58,6 +58,7 @@ import {
   formatPromptPayDisplay,
   formatThaiBankAccount,
   generatePromptPayPayload,
+  buildQrWithAmount,
 } from '../utils/promptPay';
 import {
   SecurityAuditEvent,
@@ -272,11 +273,11 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
   // Generate test QR preview in Settings tab
   useEffect(() => {
     if (!isOpen || !isAuthenticated) return;
-    if (!configForm.promptPayId.trim()) {
+    if (!configForm.promptPayId.trim() && !configForm.qrPayload?.trim()) {
       setTestQrUrl('');
       return;
     }
-    const payload = generatePromptPayPayload(configForm.promptPayId, testQrAmount);
+    const payload = (configForm.qrPayload?.trim() ? buildQrWithAmount(configForm.qrPayload, testQrAmount) : null) ?? generatePromptPayPayload(configForm.promptPayId, testQrAmount);
     QRCode.toDataURL(payload, {
       width: 240,
       margin: 1,
@@ -284,7 +285,7 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
     })
       .then((url) => setTestQrUrl(url))
       .catch(() => setTestQrUrl(''));
-  }, [isOpen, isAuthenticated, configForm.promptPayId, testQrAmount]);
+  }, [isOpen, isAuthenticated, configForm.promptPayId, configForm.qrPayload, testQrAmount]);
 
   // Analytics Computations
   const analytics = useMemo(() => {
@@ -506,6 +507,7 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
       const res = await adminApi.saveSettings(
         {
           promptPayId: configForm.promptPayId,
+          qrPayload: configForm.qrPayload || '',
           accountName: configForm.accountName,
           bankLabel: configForm.bankLabel,
           bankAccountNo: configForm.bankAccountNo || '',
@@ -1795,6 +1797,22 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
                         placeholder="ธนาคารกสิกรไทย"
                         className="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-sm font-bold text-slate-900"
                       />
+                    </div>
+
+                    <div className="sm:col-span-3">
+                      <label className="block text-xs font-extrabold text-slate-700 mb-1">
+                        ข้อความ QR ของธนาคาร (ใช้สร้าง QR พร้อมยอด · ถ้าใส่ จะใช้แทนรหัสพร้อมเพย์)
+                      </label>
+                      <textarea
+                        rows={3}
+                        value={configForm.qrPayload || ''}
+                        onChange={(e) => setConfigForm({ ...configForm, qrPayload: e.target.value })}
+                        placeholder="000201010211…"
+                        className="w-full px-4 py-2.5 rounded-xl border border-slate-300 font-mono text-xs font-bold text-slate-900 break-all"
+                      />
+                      <p className="mt-1 text-[11px] font-semibold text-slate-500">
+                        ได้จากการสแกนรูป QR ร้านค้าของธนาคารด้วยแอปอ่าน QR (ได้ข้อความขึ้นต้น 000201) เว็บจะใส่ยอดเงินให้เอง
+                      </p>
                     </div>
 
                     <div className="sm:col-span-2">

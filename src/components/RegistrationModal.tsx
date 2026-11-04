@@ -44,7 +44,7 @@ import { PawIcon } from './brand/DogDecor';
 import { LABRADOR_SVG_PATH, LabradorMascot } from './brand/LabradorMascot';
 import { playVictoryCelebrationSound } from '../utils/ticketSoundFx';
 import { TicketOrder, saveRunnerProfile } from '../utils/runnerStorage';
-import { formatThaiBankAccount, generatePromptPayPayload } from '../utils/promptPay';
+import { buildQrWithAmount, formatThaiBankAccount, generatePromptPayPayload } from '../utils/promptPay';
 import { processUploadedSlipImage } from '../utils/slipVerifier';
 import { openPrivacyNotice } from './PrivacyNotice';
 import { openTerms } from './TermsSection';
@@ -470,14 +470,19 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
 
   // PromptPay QR with the exact amount, made in the browser from the organiser's PromptPay ID
   const [qrError, setQrError] = useState<string | null>(null);
-  const qrPromptPayId = publicCfg?.promptPayId || '';
+  const qrPromptPayId = publicCfg?.qrPayload || publicCfg?.promptPayId || '';
   const qrAmount = serverOrder?.totalPrice ?? 0;
   useEffect(() => {
     if (!isOpen || step !== 3 || !qrPromptPayId || qrAmount <= 0) return;
     let cancelled = false;
     setQrDataUrl('');
     setQrError(null);
-    QRCode.toDataURL(generatePromptPayPayload(qrPromptPayId, qrAmount), { width: 480, margin: 1, errorCorrectionLevel: 'M' })
+    const qrText = publicCfg?.qrPayload ? buildQrWithAmount(publicCfg.qrPayload, qrAmount) : generatePromptPayPayload(qrPromptPayId, qrAmount);
+    if (!qrText) {
+      setQrError('สร้าง QR ไม่สำเร็จ กรุณาโอนเข้าบัญชีด้านล่างแทน');
+      return;
+    }
+    QRCode.toDataURL(qrText, { width: 480, margin: 1, errorCorrectionLevel: 'M' })
       .then((u) => !cancelled && setQrDataUrl(u))
       .catch(() => !cancelled && setQrError('สร้าง QR ไม่สำเร็จ กรุณาโอนเข้าบัญชีด้านล่างแทน'));
     return () => {

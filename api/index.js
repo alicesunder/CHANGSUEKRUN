@@ -33821,6 +33821,7 @@ function parseShooting(raw, people) {
 // server/store.ts
 var ROUTES = ["10km", "5km", "3km", "1km"];
 var DEFAULT_SETTINGS = {
+  qrPayload: process.env.QR_PAYLOAD || "00020101021130780016A00000067701011201150107537000882050219YV099400ZK0159200FN0312CHANGSUEKRUN53037645802TH62080704000063043D85",
   promptPayId: process.env.PROMPTPAY_ID || "",
   accountName: process.env.PROMPTPAY_ACCOUNT_NAME || "\u0E42\u0E04\u0E23\u0E07\u0E01\u0E32\u0E23\u0E0A\u0E49\u0E32\u0E07\u0E28\u0E36\u0E01\u0E23\u0E31\u0E19\u0E40\u0E2B\u0E47\u0E19\u0E0A\u0E49\u0E32\u0E07\u0E27\u0E34\u0E48\u0E07\u0E27\u0E34\u0E48\u0E07\u0E15\u0E32\u0E21\u0E0A\u0E49\u0E32\u0E07 (CHANGSUEK RUN 2026)",
   bankLabel: process.env.BANK_LABEL || "\u0E18\u0E19\u0E32\u0E04\u0E32\u0E23\u0E01\u0E23\u0E38\u0E07\u0E44\u0E17\u0E22",
@@ -34216,6 +34217,42 @@ async function visitStats() {
     total: { visitors: Number(sum.total_visitors), views: Number(sum.total_views) },
     days
   };
+}
+
+// src/utils/promptPay.ts
+function crc16CcittFalse(payload) {
+  let crc = 65535;
+  for (let i = 0; i < payload.length; i++) {
+    crc ^= payload.charCodeAt(i) << 8;
+    for (let j = 0; j < 8; j++) {
+      if ((crc & 32768) !== 0) {
+        crc = (crc << 1 ^ 4129) & 65535;
+      } else {
+        crc = crc << 1 & 65535;
+      }
+    }
+  }
+  return crc.toString(16).toUpperCase().padStart(4, "0");
+}
+function readTlv(payload) {
+  const out = [];
+  let i = 0;
+  while (i < payload.length) {
+    const id = payload.slice(i, i + 2);
+    const len = Number(payload.slice(i + 2, i + 4));
+    if (!/^\d{2}$/.test(id) || !Number.isInteger(len) || payload.length < i + 4 + len) return null;
+    out.push({ id, value: payload.slice(i + 4, i + 4 + len) });
+    i += 4 + len;
+  }
+  return out;
+}
+function isValidQrPayload(payload) {
+  const p = (payload || "").trim();
+  if (!/^[\x20-\x7E]{20,400}$/.test(p) || !p.startsWith("000201")) return false;
+  const tags = readTlv(p);
+  if (!tags || tags[tags.length - 1].id !== "63") return false;
+  const body = p.slice(0, p.length - 4);
+  return crc16CcittFalse(body) === p.slice(-4);
 }
 
 // src/data/addOns.ts
@@ -47615,6 +47652,7 @@ async function publicConfig() {
     windTunnelLimit: WIND_TUNNEL_LIMIT,
     windTunnelRemaining: Math.max(0, WIND_TUNNEL_LIMIT - windUsed),
     promptPayId: s.promptPayId,
+    qrPayload: s.qrPayload,
     accountName: s.accountName,
     bankLabel: s.bankLabel,
     bankAccountNo: s.bankAccountNo,
@@ -48358,7 +48396,13 @@ function createApp() {
       return;
     }
     const cur = await getSettings();
+    const qrPayload = String(s.qrPayload || "").trim();
+    if (qrPayload && !isValidQrPayload(qrPayload)) {
+      res.status(400).json({ error: "\u0E02\u0E49\u0E2D\u0E04\u0E27\u0E32\u0E21 QR \u0E44\u0E21\u0E48\u0E16\u0E39\u0E01\u0E15\u0E49\u0E2D\u0E07 (\u0E15\u0E49\u0E2D\u0E07\u0E40\u0E1B\u0E47\u0E19\u0E02\u0E49\u0E2D\u0E04\u0E27\u0E32\u0E21\u0E17\u0E35\u0E48\u0E2D\u0E48\u0E32\u0E19\u0E44\u0E14\u0E49\u0E08\u0E32\u0E01 QR \u0E02\u0E2D\u0E07\u0E18\u0E19\u0E32\u0E04\u0E32\u0E23 \u0E02\u0E36\u0E49\u0E19\u0E15\u0E49\u0E19 000201)" });
+      return;
+    }
     await saveSettings({
+      qrPayload,
       promptPayId,
       accountName: clean(s.accountName, 150) || cur.accountName,
       bankLabel: clean(s.bankLabel, 80) || cur.bankLabel,

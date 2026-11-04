@@ -88,3 +88,46 @@ export function formatThaiBankAccount(raw: string): string {
   if (d.length === 12) return `${d.slice(0, 3)}-${d.slice(3, 9)}-${d.slice(9)}`;
   return d;
 }
+
+// ---------------------------------------------------------------------------
+// Merchant / bill-payment QR given by the bank: the organiser's own QR text is kept as it is, and only the
+// amount is added (and the QR is marked "dynamic"), so a bank app opens it with the amount filled in.
+// ---------------------------------------------------------------------------
+function readTlv(payload: string): { id: string; value: string }[] | null {
+  const out: { id: string; value: string }[] = [];
+  let i = 0;
+  while (i < payload.length) {
+    const id = payload.slice(i, i + 2);
+    const len = Number(payload.slice(i + 2, i + 4));
+    if (!/^\d{2}$/.test(id) || !Number.isInteger(len) || payload.length < i + 4 + len) return null;
+    out.push({ id, value: payload.slice(i + 4, i + 4 + len) });
+    i += 4 + len;
+  }
+  return out;
+}
+
+/** True when the text is a well-formed EMV QR payload whose CRC (last tag) is right. */
+export function isValidQrPayload(payload: string): boolean {
+  const p = (payload || '').trim();
+  if (!/^[\x20-\x7E]{20,400}$/.test(p) || !p.startsWith('000201')) return false;
+  const tags = readTlv(p);
+  if (!tags || tags[tags.length - 1].id !== '63') return false;
+  const body = p.slice(0, p.length - 4);
+  return crc16CcittFalse(body) === p.slice(-4);
+}
+
+/** The organiser's QR with `amount` baht in it (no amount given = the QR unchanged). Null if the text is not a valid QR. */
+export function buildQrWithAmount(staticPayload: string, amount?: number): string | null {
+  const p = (staticPayload || '').trim();
+  if (!isValidQrPayload(p)) return null;
+  if (!(typeof amount === 'number' && amount > 0)) return p;
+  const tags = (readTlv(p) as { id: string; value: string }[]).filter((t) => t.id !== '63' && t.id !== '54');
+  const parts: string[] = [];
+  for (const t of tags) {
+    parts.push(formatTag(t.id, t.id === '01' ? '12' : t.value));
+    if (t.id === '53') parts.push(formatTag('54', amount.toFixed(2)));
+  }
+  if (!tags.some((t) => t.id === '53')) return null;
+  const raw = `${parts.join('')}6304`;
+  return `${raw}${crc16CcittFalse(raw)}`;
+}

@@ -79,6 +79,7 @@ export interface TicketOrder extends RunnerProfile {
 
 export interface PromptPayConfig {
   promptPayId: string;
+  qrPayload?: string;
   accountName: string;
   bankLabel: string;
   bankAccountNo?: string;

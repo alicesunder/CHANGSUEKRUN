@@ -15,6 +15,8 @@ import type { TicketOrder } from './runnerStorage';
 
 export interface PublicConfig {
   promptPayId: string;
+  /** the bank's own QR text; the amount is added in the browser */
+  qrPayload?: string;
   accountName: string;
   bankLabel: string;
   bankAccountNo: string;
@@ -286,6 +288,7 @@ export function adminFetch<T>(url: string, init: RequestInit = {}): Promise<T> {
 
 export interface AdminSettings {
   promptPayId: string;
+  qrPayload?: string;
   accountName: string;
   bankLabel: string;
   bankAccountNo: string;

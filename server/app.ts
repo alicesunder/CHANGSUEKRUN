@@ -65,6 +65,7 @@ import {
   recordVisit,
   visitStats,
 } from './store';
+import { isValidQrPayload } from '../src/utils/promptPay';
 import { WIND_TUNNEL_LIMIT, addOnBonusDiscount, addOnLabel, addOnPricePerPerson, addOnTotal, concertDiscountPerTicket, hasAddOns, normalizeAddOns } from '../src/data/addOns';
 import { needsInsurance, parseInsurance, type InsuranceInfo } from '../src/data/insurance';
 import { parseShooting, type ShootingInfo } from '../src/data/shooting';
@@ -175,6 +176,7 @@ async function publicConfig() {
     windTunnelLimit: WIND_TUNNEL_LIMIT,
     windTunnelRemaining: Math.max(0, WIND_TUNNEL_LIMIT - windUsed),
     promptPayId: s.promptPayId,
+    qrPayload: s.qrPayload,
     accountName: s.accountName,
     bankLabel: s.bankLabel,
     bankAccountNo: s.bankAccountNo,
@@ -1028,7 +1030,13 @@ export function createApp(): express.Express {
       return;
     }
     const cur = await getSettings();
+    const qrPayload = String(s.qrPayload || '').trim();
+    if (qrPayload && !isValidQrPayload(qrPayload)) {
+      res.status(400).json({ error: 'ข้อความ QR ไม่ถูกต้อง (ต้องเป็นข้อความที่อ่านได้จาก QR ของธนาคาร ขึ้นต้น 000201)' });
+      return;
+    }
     await saveSettings({
+      qrPayload,
       promptPayId,
       accountName: clean(s.accountName, 150) || cur.accountName,
       bankLabel: clean(s.bankLabel, 80) || cur.bankLabel,

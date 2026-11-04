@@ -107,6 +107,8 @@ export interface StoredOrder {
 }
 
 export interface PublicSettings {
+  /** The bank's own QR text (bill payment / merchant); the website adds the amount to it. Empty = use the PromptPay ID. */
+  qrPayload: string;
   /** PromptPay proxy used to build the QR: phone (10), citizen/tax ID (13) or K PLUS/e-wallet ref (15) */
   promptPayId: string;
   accountName: string;
@@ -120,6 +122,7 @@ export const ROUTES: RouteId[] = ['10km', '5km', '3km', '1km'];
 export type BibCounters = Record<RouteId, number>;
 
 const DEFAULT_SETTINGS: PublicSettings = {
+  qrPayload: process.env.QR_PAYLOAD || '00020101021130780016A00000067701011201150107537000882050219YV099400ZK0159200FN0312CHANGSUEKRUN53037645802TH62080704000063043D85',
   promptPayId: process.env.PROMPTPAY_ID || '',
   accountName:
     process.env.PROMPTPAY_ACCOUNT_NAME ||
