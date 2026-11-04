@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import QRCode from 'qrcode';
 import { eventInfo } from '../data/eventData';
+import { BIB_PERKS, BIB_SIZE_LABEL, BIB_SPONSOR_LOGOS } from '../data/bibStrip';
 
 /**
  * The race BIB in the organiser's design (public/images/bib/bib-base.webp, 1536 x 1024, sponsor strip
@@ -23,8 +24,10 @@ export const RaceBib: React.FC<{
   age?: number | null;
   /** Dog Run: the dog's name goes next to the runner's */
   dogName?: string;
+  /** jersey size, shown in the last box of the bottom strip */
+  shirtSize?: string;
   className?: string;
-}> = ({ bib, routeId, name, orderId, gender, age, dogName, className = '' }) => {
+}> = ({ bib, routeId, name, orderId, gender, age, dogName, shirtSize, className = '' }) => {
   const [qr, setQr] = useState('');
   useEffect(() => {
     let off = false;
@@ -69,6 +72,26 @@ export const RaceBib: React.FC<{
       <div className="rbib-qr">
         {qr ? <img src={qr} alt="" /> : <span className="rbib-qr-wait" />}
         <small>CHECK-IN · RACE RESULT</small>
+      </div>
+      {/* bottom strip: sponsors on the left half, medal / food / drink / jersey size on the right half */}
+      <div className="rbib-strip">
+        <div className="rbib-logos">
+          {BIB_SPONSOR_LOGOS.map((src) => (
+            <img key={src} src={src} alt="" loading="lazy" decoding="async" draggable={false} />
+          ))}
+        </div>
+        <div className="rbib-perks">
+          {BIB_PERKS.map((p) => (
+            <div key={p.id} className="rbib-perk">
+              <span className="rbib-perk-ic" dangerouslySetInnerHTML={{ __html: p.icon }} />
+              <small>{p.label}</small>
+            </div>
+          ))}
+          <div className="rbib-perk">
+            <span className="rbib-perk-size">{shirtSize || ''}</span>
+            <small>{BIB_SIZE_LABEL}</small>
+          </div>
+        </div>
       </div>
       <div className="rbib-sos">
         <small>EMERGENCY CONTACT</small>

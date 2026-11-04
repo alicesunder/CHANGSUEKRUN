@@ -203,6 +203,7 @@ export const RunnerBibCard: React.FC<RunnerBibCardProps> = ({
                 orderId={profile.orderId}
                 gender={insurance?.gender}
                 age={insurance?.age}
+                shirtSize={profile.shirtSize}
                 dogName={profile.runningWithDog ? profile.dogName : undefined}
               />
               <div className="mt-2 flex justify-end">

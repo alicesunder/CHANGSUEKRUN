@@ -183,6 +183,7 @@ export const PaymentSuccess: React.FC<{
               orderId={order.orderId}
               gender={r.ins?.gender}
               age={r.ins?.age}
+              shirtSize={r.shirt}
               dogName={order.runningWithDog ? order.dogName : undefined}
             />
           ))}

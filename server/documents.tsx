@@ -10,6 +10,7 @@ import { eventInfo, formatBaht, routesData, scheduleData, ticketById } from '../
 import { parkingQrPayload } from '../src/data/vipParking';
 import type { InsuranceInfo } from '../src/data/insurance';
 import { maskThaiId } from '../src/data/shooting';
+import { BIB_PERKS, BIB_SIZE_LABEL, BIB_SPONSOR_LOGOS } from '../src/data/bibStrip';
 import type { StoredOrder } from './store';
 
 const DIST: Record<string, { label: string; sub: string }> = {
@@ -74,6 +75,13 @@ export async function buildDocumentsHtml(o: StoredOrder, opts: { assetBase?: str
           <div class="bib-line"></div>
           <div class="bib-name">${esc(r.name)}${dog ? `<span style="color:#0F766E;font-size:.8em"> · 🐶 ${esc(dog)}</span>` : ''}</div>
           <div class="bib-qr"><img src="${code}" alt="QR" /><small>CHECK-IN · RACE RESULT</small></div>
+          <div class="bib-strip">
+            <div class="bib-logos">${BIB_SPONSOR_LOGOS.map((s) => `<img src="${A}${s}" alt="" />`).join('')}</div>
+            <div class="bib-perks">
+              ${BIB_PERKS.map((p) => `<div class="bib-perk"><span class="bib-perk-ic">${p.icon}</span><small>${p.label}</small></div>`).join('')}
+              <div class="bib-perk"><span class="bib-perk-size">${esc(r.shirt || '')}</span><small>${BIB_SIZE_LABEL}</small></div>
+            </div>
+          </div>
           <div class="bib-sos"><small>EMERGENCY CONTACT</small>${phones.map((p) => `<b>${p}</b>`).join('')}</div>
         </div>`;
       })
@@ -247,6 +255,15 @@ const CSS = `
   .bib-qr img { width:100%; border:.35cqw solid #160A2E; border-radius:.8cqw; display:block; }
   .bib-qr small { display:block; margin-top:.5cqw; font:800 .95cqw 'Montserrat',sans-serif; color:#2A1450; }
   .bib-sos { position:absolute; left:84.8%; top:64.2%; width:13.4%; text-align:center; border-top:.3cqw solid var(--gold); padding-top:.5cqw; }
+  .bib-strip { position:absolute; left:2.73%; top:81.84%; width:94.4%; height:12.6%; background:#fff; border-radius:1cqw; display:flex; align-items:stretch; }
+  .bib-logos { flex:0 0 57%; min-height:0; overflow:hidden; display:grid; grid-template-columns:repeat(9,minmax(0,1fr)); grid-template-rows:repeat(2,minmax(0,1fr)); gap:.2cqw .45cqw; padding:.7cqw 1cqw; box-sizing:border-box; }
+  .bib-logos img { width:100%; height:100%; min-height:0; object-fit:contain; }
+  .bib-perks { flex:1; display:flex; border-left:.25cqw solid #E4DAF5; margin:.8cqw 0; }
+  .bib-perk { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:.35cqw; }
+  .bib-perk-ic { width:4.2cqw; height:4.2cqw; border-radius:50%; border:.3cqw dashed #3B1883; display:flex; align-items:center; justify-content:center; padding:.55cqw; box-sizing:border-box; }
+  .bib-perk-ic svg { width:100%; height:100%; display:block; }
+  .bib-perk-size { min-width:5cqw; height:4.2cqw; padding:0 .8cqw; border-radius:1cqw; border:.3cqw solid #3B1883; display:flex; align-items:center; justify-content:center; font:900 2.2cqw 'Montserrat',sans-serif; color:#3B1883; box-sizing:border-box; }
+  .bib-perk small { font:700 1.2cqw 'Mitr',sans-serif; color:#2A1450; white-space:nowrap; }
   .bib-sos small { display:block; font:800 .9cqw 'Montserrat',sans-serif; color:#2A1450; } .bib-sos b { display:block; font:800 1.45cqw/1.3 'Montserrat',sans-serif; color:#160A2E; }
   .hero-ticket { display:grid; grid-template-columns:1fr 54mm; border-radius:18px; overflow:hidden; border:3px solid var(--ink); box-shadow:0 6px 0 var(--ink); }
   .hero-ticket .l { padding:16px 18px; background:linear-gradient(135deg,#F5F0FF,#FFF7DB 60%,#FCE7F3); }

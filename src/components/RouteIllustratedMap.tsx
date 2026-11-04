@@ -30,6 +30,11 @@ interface Landmark {
   sub?: string;
   /** label goes above the pin instead of below */
   labelAbove?: boolean;
+  /** put the label here instead (artwork pixels), left-aligned from this point unless `anchor` says otherwise */
+  labelAt?: [number, number];
+  anchor?: 'start' | 'middle' | 'end';
+  /** label font size in artwork pixels (a long name on a narrow map) */
+  fs?: number;
   color: string;
   sticker?: { id: ActivityStickerId; src: string; x: number; y: number; w: number; h: number; rotate?: number };
 }
@@ -118,17 +123,49 @@ const CAMP: MapDef = {
   label: 'แผนที่เส้นทางวิ่ง 1 กม. (ชมพู) และ 4 กม. (ส้ม)',
   landmarks: [
     {
+      id: 'resort',
+      pin: [96, 410],
+      label: 'Sea Sand Sun Resort',
+      labelAt: [58, 470],
+      color: '#0284C7',
+      sticker: { id: 'resort', src: '/images/map/sticker-resort.webp', x: 330, y: -70, w: 420, h: 280, rotate: 4 },
+    },
+    {
       id: 'camp',
-      pin: [1180, 290],
+      pin: [900, 840],
       label: 'ค่ายนเรศวร',
       sub: 'กองบัญชาการ ตชด.',
-      labelAbove: true,
+      labelAt: [900, 925],
+      anchor: 'middle',
       color: '#7C3AED',
+      sticker: { id: 'camp', src: '/images/map/sticker-bpp-school.webp', x: 1010, y: 650, w: 240, h: 243, rotate: -4 },
+    },
+    {
+      id: 'mangrove',
+      pin: [210, 720],
+      label: 'ป่าชายเลน',
+      sub: 'หอดูนก',
+      labelAt: [210, 805],
+      anchor: 'middle',
+      color: '#16A34A',
+      sticker: { id: 'mangrove', src: '/images/map/sticker-mangrove.webp', x: 40, y: 1010, w: 320, h: 320, rotate: -5 },
+    },
+    {
+      id: 'statue',
+      pin: [968, 1352],
+      label: 'พระบรมราชานุสาวรีย์',
+      sub: 'สมเด็จพระนเรศวรมหาราช',
+      labelAt: [1468, 1196],
+      anchor: 'end',
+      fs: 32,
+      color: '#D97706',
+      sticker: { id: 'statue', src: '/images/map/sticker-statue.webp', x: 1236, y: 1236, w: 230, h: 230, rotate: -4 },
     },
   ],
   routes: {
+  // 4 km: traced from the organiser's hand-drawn red line over the camp map (Nov 2026)
   "3km": [
-    "M144,319 L175,344 L174,339 L175,338 L179,338 L845,462 L851,465 L853,471 L850,557 L852,563 L857,567 L1121,618 L1366,669 L1371,675 L1374,681 L1378,697 L1380,713 L1376,866 L1376,1010 L1375,1018 L1371,1028 L1356,1050 L1350,1055 L1344,1059 L1148,1131 L1140,1136 L1132,1145 L1118,1165 L1114,1173 L1112,1181 L1112,1335 L1111,1339 L1108,1342 L1101,1344 L1025,1346 L1019,1347 L1014,1349 L1010,1353 L994,1383 L990,1386 L985,1387 L980,1387 L954,1379 L948,1376 L940,1369 L926,1352 L921,1347 L915,1345 L801,1346 L797,1345 L794,1343 L792,1337 L798,1169 L797,1165 L793,1161 L789,1160 L614,1156 L429,1148 L425,1147 L421,1143 L420,1139 L431,948 L432,940 L434,935 L439,927 L448,917 L473,887 L483,876 L490,871 L568,825 L572,820 L572,814 L518,728 L449,621 L438,610 L400,580 L394,574 L393,570 L392,564 L405,509 L406,504 L404,500 L398,497 L271,483 L265,482 L261,479 L257,476 L254,472 L219,418 L175,344"
+    "M144,319 L235,332 L307,325 L342,328 L401,345 L574,374 L666,398 L714,412 L772,436 L814,447 L824,453 L830,462 L833,477 L835,542 L846,556 L859,564 L916,583 L1027,603 L1059,614 L1150,631 L1248,657 L1318,662 L1337,667 L1351,679 L1388,725 L1398,747 L1394,765 L1365,831 L1351,925 L1343,1030 L1320,1045 L1223,1086 L1168,1121 L1135,1176 L1123,1225 L1122,1281 L1115,1302 L1085,1317 L1064,1332 L1016,1339 L998,1363 L990,1368 L953,1374 L912,1342 L874,1339 L845,1330 L820,1327 L798,1334 L764,1366 L745,1392 L712,1397 L670,1411 L601,1407 L570,1398 L542,1395 L488,1399 L459,1392 L420,1366 L395,1339 L390,1321 L392,1294 L415,1254 L422,1227 L431,1149 L431,1047 L445,958 L451,936 L465,916 L509,874 L566,830 L571,819 L570,809 L519,734 L455,656 L436,627 L423,594 L419,536 L412,515 L386,503 L307,489 L258,471 L211,422 L188,379 L165,349 L144,319"
   ],
   "1km": [
     "M144,319 L686,407 L144,319"
@@ -162,9 +199,11 @@ function arrowsAlong(paths: string[], step: number): { x: number; y: number; a: 
 /** One landmark: dotted leader line, bobbing sticker (tap = big sticker pop), pin and name. */
 const MapLandmark: React.FC<{ lm: Landmark; big: boolean; index: number }> = ({ lm, big, index }) => {
   const [px, py] = lm.pin;
-  const fs = big ? 44 : 46;
+  const fs = lm.fs ?? (big ? 44 : 46);
   const st = lm.sticker;
-  const labelY = lm.labelAbove ? py - 92 : py + fs + 6;
+  const labelY = lm.labelAt ? lm.labelAt[1] : lm.labelAbove ? py - 92 : py + fs + 6;
+  const labelX = lm.labelAt ? lm.labelAt[0] : px;
+  const anchor = lm.anchor ?? (lm.labelAt ? 'start' : 'middle');
   const pop = () => st && showActivitySticker(st.id, lm.sub ? `${lm.label} · ${lm.sub}` : lm.label);
   return (
     <g className="map-landmark" style={{ ['--i' as string]: index }}>
@@ -200,9 +239,9 @@ const MapLandmark: React.FC<{ lm: Landmark; big: boolean; index: number }> = ({ 
         <circle cx={0} cy={-50} r={9} fill="#FFFFFF" />
       </g>
       <text
-        x={px}
+        x={labelX}
         y={labelY}
-        textAnchor="middle"
+        textAnchor={anchor}
         fontSize={fs}
         fontWeight={900}
         fill="#2A1450"
@@ -214,7 +253,7 @@ const MapLandmark: React.FC<{ lm: Landmark; big: boolean; index: number }> = ({ 
       >
         {lm.label}
         {lm.sub && (
-          <tspan x={px} dy={fs * 0.95} fontSize={fs * 0.72} fontWeight={800} fill={lm.color}>
+          <tspan x={labelX} dy={fs * 0.95} fontSize={fs * 0.72} fontWeight={800} fill={lm.color}>
             {lm.sub}
           </tspan>
         )}
