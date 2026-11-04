@@ -31,8 +31,8 @@ export const DogHealthCheckSection: React.FC = () => (
           <div className="relative">
             <div className="rounded-[24px] bg-white border-[3px] border-[var(--ink)] shadow-[5px_6px_0_var(--ink)] p-2.5 -rotate-1">
               <img
-                src="/images/contest/healthy-vet.webp"
-                alt="สัตวแพทย์สวมหน้ากากกำลังพันผ้าให้น้องชิบะที่เจ้าของกอดไว้ มีทีมงานชุดม่วงทองยืนดูอยู่"
+                src="/images/contest/healthy-check.webp"
+                alt="สัตวแพทย์ใช้หูฟังตรวจหัวใจน้องชิบะที่เจ้าของสวมหมวกกอดไว้อย่างอารมณ์ดี มีทีมงานชุดม่วงทองยืนดูอยู่"
                 loading="lazy"
                 decoding="async"
                 className="block w-full h-auto rounded-[14px]"
