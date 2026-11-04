@@ -59,7 +59,7 @@ export interface StoredOrder {
   /** Set when the registration was made free with a sponsor code */
   sponsorCode?: string;
   sponsorName?: string;
-  /** Accident-insurance details (5 KM / 10 KM runners only) */
+  /** Accident-insurance details (5 km / 10 km runners only) */
   insurance?: InsuranceInfo;
   /** VIP tables: registered cars for the parking passes */
   parkingPlates?: ParkingPlate[];
@@ -617,7 +617,7 @@ export function toAdminView(o: StoredOrder) {
 // ---------------------------------------------------------------------------
 export interface Winner {
   id: string;
-  /** e.g. "5 KM ชาย อันดับ 1", "ประกวดแต่งตัว ชนะเลิศ" */
+  /** e.g. "5 km ชาย อันดับ 1", "ประกวดแต่งตัว ชนะเลิศ" */
   title: string;
   name: string;
   /** small data: URL (resized in the browser) */

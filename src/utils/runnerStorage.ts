@@ -141,7 +141,7 @@ export const INITIAL_SEED_ORDERS: TicketOrder[] = [
     orderId: 'CSR27-0001',
     bibNumber: '10-0001',
     routeId: '10km',
-    routeName: '10 KM วิ่งบุคคลทั่วไป',
+    routeName: '10 km วิ่งบุคคลทั่วไป',
     fullName: 'พ.ต.ท. กิตติพงศ์ วรโชติ',
     phone: '081-234-5678',
     emergencyPhone: '089-112-3344',
@@ -170,7 +170,7 @@ export const INITIAL_SEED_ORDERS: TicketOrder[] = [
     orderId: 'CSR27-0002',
     bibNumber: '10-0002',
     routeId: '10km',
-    routeName: '10 KM วิ่งบุคคลทั่วไป',
+    routeName: '10 km วิ่งบุคคลทั่วไป',
     fullName: 'ธนภัทร เจริญสุข',
     phone: '086-554-9012',
     emergencyPhone: '086-554-9013',
@@ -199,7 +199,7 @@ export const INITIAL_SEED_ORDERS: TicketOrder[] = [
     orderId: 'CSR27-0003',
     bibNumber: '05-0001',
     routeId: '5km',
-    routeName: '5 KM วิ่งบุคคลทั่วไป',
+    routeName: '5 km วิ่งบุคคลทั่วไป',
     fullName: 'พิมพ์ชนก สุวรรณรัตน์',
     phone: '089-876-5432',
     emergencyPhone: '081-998-7766',
@@ -228,7 +228,7 @@ export const INITIAL_SEED_ORDERS: TicketOrder[] = [
     orderId: 'CSR27-0004',
     bibNumber: '05-0002',
     routeId: '5km',
-    routeName: '5 KM วิ่งบุคคลทั่วไป',
+    routeName: '5 km วิ่งบุคคลทั่วไป',
     fullName: 'ณัฐวุฒิ ศรีสวัสดิ์',
     phone: '092-345-6789',
     emergencyPhone: '092-345-0000',
@@ -257,7 +257,7 @@ export const INITIAL_SEED_ORDERS: TicketOrder[] = [
     orderId: 'CSR27-0005',
     bibNumber: '03-0001',
     routeId: '3km',
-    routeName: '3.8 KM วิ่งคู่น้องสุนัข',
+    routeName: '4 km วิ่งคู่น้องสุนัข',
     fullName: 'ภัทรวดี อัศวเมธี',
     phone: '084-112-9988',
     emergencyPhone: '081-445-6677',
@@ -289,7 +289,7 @@ export const INITIAL_SEED_ORDERS: TicketOrder[] = [
     orderId: 'CSR27-0006',
     bibNumber: '03-0002',
     routeId: '3km',
-    routeName: '3.8 KM วิ่งคู่น้องสุนัข',
+    routeName: '4 km วิ่งคู่น้องสุนัข',
     fullName: 'ศุภชัย วงศ์สว่าง',
     phone: '095-678-1234',
     emergencyPhone: '089-001-2233',
@@ -318,7 +318,7 @@ export const INITIAL_SEED_ORDERS: TicketOrder[] = [
     orderId: 'CSR27-0007',
     bibNumber: '01-0001',
     routeId: '1km',
-    routeName: '1 KM วิ่งคู่น้องสุนัข',
+    routeName: '1 km วิ่งคู่น้องสุนัข',
     fullName: 'แพรวพรรณ ลิ้มเจริญ',
     phone: '082-990-1122',
     emergencyPhone: '081-778-9900',
@@ -715,7 +715,7 @@ export function exportTicketOrdersToCsv(
 }
 
 /**
- * CSV for the insurance company: one row per paid 5 KM / 10 KM runner, in the order the insurer asked for
+ * CSV for the insurance company: one row per paid 5 km / 10 km runner, in the order the insurer asked for
  * (prefix, name, e-mail, phone, gender, birth date, age, blood type, conditions, emergency contact, relationship, phone, shirt, distance).
  */
 export function exportInsuranceCsv(orders: TicketOrder[], actor = 'admin'): number {
@@ -740,7 +740,7 @@ export function exportInsuranceCsv(orders: TicketOrder[], actor = 'admin'): numb
     'ระยะวิ่ง',
     'เลข BIB',
   ];
-  const DIST: Record<string, string> = { '1km': '1 km', '3km': '3.8 km', '5km': '5 km', '10km': '10 km' };
+  const DIST: Record<string, string> = { '1km': '1 km', '3km': '4 km', '5km': '5 km', '10km': '10 km' };
   // runner 1 of each order, then the extra runners who came with their own insurance details
   const people = insured.flatMap((o) => [
     { o, n: o.insurance!, shirt: o.shirtSize },

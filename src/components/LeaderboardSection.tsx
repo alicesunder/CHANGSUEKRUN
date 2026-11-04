@@ -105,7 +105,7 @@ const LeaderboardResults: React.FC = () => {
     {
       rank: 1,
       teamName: 'ชมรมวิ่งช้างศึกเพชรบุรี (Changsuek Phetchaburi)',
-      totalDistance: '1,420 KM',
+      totalDistance: '1,420 km',
       members: 128,
       cheers: 890,
       badge: '👑 สโมสรเจ้าภาพ',
@@ -113,7 +113,7 @@ const LeaderboardResults: React.FC = () => {
     {
       rank: 2,
       teamName: 'Cha-Am Beach Runners Club',
-      totalDistance: '985 KM',
+      totalDistance: '985 km',
       members: 94,
       cheers: 642,
       badge: '🌊 เจ้าถิ่นริมหาด',
@@ -121,7 +121,7 @@ const LeaderboardResults: React.FC = () => {
     {
       rank: 3,
       teamName: 'เพื่อนสี่ขา พาวิ่ง (Dog & Runner Community)',
-      totalDistance: '740 KM',
+      totalDistance: '740 km',
       members: 86,
       cheers: 1205,
       badge: '🐾 ขวัญใจมหาชน',
@@ -129,7 +129,7 @@ const LeaderboardResults: React.FC = () => {
     {
       rank: 4,
       teamName: 'Bangkok Weekend Striders',
-      totalDistance: '620 KM',
+      totalDistance: '620 km',
       members: 52,
       cheers: 410,
       badge: '⚡ ทีมนักวิ่งกรุงเทพฯ',
@@ -207,7 +207,7 @@ const LeaderboardResults: React.FC = () => {
                 { id: 'all', label: 'ทุกระยะ' },
                 { id: '10km', label: '10K' },
                 { id: '5km', label: '5K' },
-                { id: '3km', label: 'Dog 3.8K 🐾' },
+                { id: '3km', label: 'Dog 4K 🐾' },
                 { id: '1km', label: 'Dog 1K 🐾' },
               ].map((filter) => (
                 <button

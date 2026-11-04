@@ -704,7 +704,7 @@ export const InteractiveRouteMap: React.FC<InteractiveRouteMapProps> = ({
         </div>
 
         {/* ============================================================ */}
-        {/* ROUTE SELECTOR TABS: [ 1 KM ] [ 3 KM ] [ 5 KM ] [ 10 KM ]    */}
+        {/* ROUTE SELECTOR TABS: [ 1 km ] [ 3 km ] [ 5 km ] [ 10 km ]    */}
         {/* ============================================================ */}
         <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-2 sm:p-2.5 border border-purple-100 shadow-xs mb-4">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
@@ -730,7 +730,7 @@ export const InteractiveRouteMap: React.FC<InteractiveRouteMapProps> = ({
                     />
                     <span>{rId.toUpperCase()}{rId === '1km' || rId === '3km' ? ' 🐾' : ''}</span>
                     <span className="text-[10px] opacity-80 hidden sm:inline">
-                      ({r?.distanceKm || 0} KM)
+                      ({r?.distanceKm || 0} km)
                     </span>
                   </button>
                 );
@@ -1072,10 +1072,10 @@ export const InteractiveRouteMap: React.FC<InteractiveRouteMapProps> = ({
             <div className="bg-[#FAF8FD] p-3 rounded-2xl border border-purple-100/80">
               <div className="text-[11px] text-gray-500 font-bold uppercase">ระยะทางจริง</div>
               <div className="text-lg font-black text-[#261042] mt-0.5">
-                {currentRoute.distanceKm} KM
+                {currentRoute.distanceKm} km
               </div>
               <div className="text-[10px] text-[#5B20A8] font-semibold">
-                สำรวจ: {currentRoute.measuredPerimeterKm || currentRoute.distanceKm} KM
+                สำรวจ: {currentRoute.measuredPerimeterKm || currentRoute.distanceKm} km
               </div>
             </div>
 

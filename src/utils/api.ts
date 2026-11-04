@@ -134,13 +134,15 @@ export interface CreateOrderInput {
   concertQty?: number;
   /** VIP concert tables (6 seats each) */
   vipTables?: number;
-  /** Insurance details: required for 5 KM / 10 KM runners */
+  /** Insurance details: required for 5 km / 10 km runners */
   insurance?: InsuranceInfo;
   insuranceConsent?: boolean;
   /** VIP tables: cars for the parking passes (2 per table) */
   parkingPlates?: ParkingPlate[];
   /** Shooting: one entry per person on the add-on */
   shooters?: Shooter[];
+  /** the buyer read the shooting range's safety rules and accepted them */
+  shootingAck?: boolean;
   /** Tower / wind tunnel: participants for the legal waivers, and which documents the buyer accepted */
   activityWaiver?: { participants: WaiverParticipant[]; accepted: Partial<Record<WaiverActivity, boolean>> };
   /** Dog Run extra runners: name + jersey size each */

@@ -95,7 +95,7 @@ export const WinnersAdmin: React.FC = () => {
                 <input type="file" accept="image/*" className="sr-only" onChange={(e) => pickPhoto(w.id, e.target.files?.[0])} />
               </label>
               <div className="space-y-2 min-w-0">
-                <input className={input} value={w.title} onChange={(e) => patch(w.id, { title: e.target.value })} placeholder="หัวข้อ เช่น 5 KM ชาย อันดับ 1 / ประกวดแต่งตัว ชนะเลิศ" maxLength={120} />
+                <input className={input} value={w.title} onChange={(e) => patch(w.id, { title: e.target.value })} placeholder="หัวข้อ เช่น 5 km ชาย อันดับ 1 / ประกวดแต่งตัว ชนะเลิศ" maxLength={120} />
                 <input className={input} value={w.name} onChange={(e) => patch(w.id, { name: e.target.value })} placeholder="ชื่อผู้ชนะ *" maxLength={120} />
                 <input className={input} value={w.note || ''} onChange={(e) => patch(w.id, { note: e.target.value })} placeholder="หมายเหตุ เช่น เวลา 22:15 (ไม่บังคับ)" maxLength={200} />
                 <div className="flex items-center gap-2">

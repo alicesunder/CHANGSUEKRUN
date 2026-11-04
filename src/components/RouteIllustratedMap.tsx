@@ -6,16 +6,16 @@ import { showActivitySticker, type ActivityStickerId } from './ActivitySticker';
  * Course maps (organiser's artwork). Routes are drawn as SVG so the selected distance can be
  * highlighted:
  *  - "big" map: 10 km (purple) and 5 km (red)
- *  - "camp" map: 3.8 km (orange) and 1 km (pink)
+ *  - "camp" map: 4 km (orange) and 1 km (pink)
  */
 export const ROUTE_STYLE: Record<RouteId, { label: string; color: string; shine: string }> = {
   '10km': { label: '10 กม.', color: '#8B5CF6', shine: '#BFA5FA' },
   '5km': { label: '5 กม.', color: '#FF5460', shine: '#FFA0A7' },
-  '3km': { label: '3.8 กม.', color: '#FF8A00', shine: '#FFBE72' },
+  '3km': { label: '4 กม.', color: '#FF8A00', shine: '#FFBE72' },
   '1km': { label: '1 กม.', color: '#EC4899', shine: '#F49AC6' },
 };
 const LEGEND_ORDER: RouteId[] = ['10km', '5km', '3km', '1km'];
-const ROUTE_KM: Record<RouteId, number> = { '10km': 10, '5km': 5, '3km': 3.8, '1km': 1 };
+const ROUTE_KM: Record<RouteId, number> = { '10km': 10, '5km': 5, '3km': 4, '1km': 1 };
 /** how long the "survey run" takes to cover the whole line (ms) */
 const SURVEY_MS: Record<RouteId, number> = { '10km': 16000, '5km': 13000, '3km': 11000, '1km': 7000 };
 
@@ -115,7 +115,7 @@ const CAMP: MapDef = {
   h: 1470,
   start: [144, 319],
   bg: '/images/route/route-map-camp.webp',
-  label: 'แผนที่เส้นทางวิ่ง 1 กม. (ชมพู) และ 3.8 กม. (ส้ม)',
+  label: 'แผนที่เส้นทางวิ่ง 1 กม. (ชมพู) และ 4 กม. (ส้ม)',
   landmarks: [
     {
       id: 'camp',

@@ -401,11 +401,11 @@ export function createApp(): express.Express {
       if (p.ok) parkingPlates = p.value;
       else parkingError = p.error;
     }
-    // Shooting needs every shooter's name + national ID (the range registers them).
+    // Shooting needs every shooter's name and the buyer's acceptance of the range's safety rules.
     let shooting: ShootingInfo | undefined;
     let shootingError = '';
     if (addOns.gun !== 'none') {
-      const p = parseShooting(b.shooters, addOns.people);
+      const p = parseShooting(b.shooters, addOns.people, b.shootingAck === true);
       if (p.ok) shooting = p.value;
       else shootingError = p.error;
     }

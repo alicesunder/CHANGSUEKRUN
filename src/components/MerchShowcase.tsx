@@ -73,15 +73,15 @@ const KIT: KitItem[] = [
   {
     id: 'bandana',
     name: 'ผ้าพันคอน้องสุนัข',
-    desc: 'ลายช้างศึกม่วง-ทอง ผูกง่าย ใส่ถ่ายรูปคู่เจ้าของ (หมายเหตุ: สำหรับระยะ 1 KM และ 3.8 KM)',
+    desc: 'ลายช้างศึกม่วง-ทอง ผูกง่าย ใส่ถ่ายรูปคู่เจ้าของ (หมายเหตุ : สำหรับ Dog Run ระยะ 1 km และ 4 km)',
     image: '/images/merch/kit-bandana.webp',
     group: 'dog',
   },
   {
-    id: 'bowl',
-    name: 'Race Pack',
-    desc: 'ชุดอุปกรณ์สำหรับนักวิ่งและน้องหมา รับพร้อมเสื้อและเบอร์วิ่งในวันรับอุปกรณ์',
-    image: '/images/merch/kit-racepack.webp',
+    id: 'pet-pack',
+    name: 'Pet Sponsor Gift Pack',
+    desc: 'รวมผลิตภัณฑ์สำหรับน้องสุนัขจากผู้สนับสนุนภายในงาน (หมายเหตุ : สำหรับ Dog Run ระยะ 1 km และ 4 km)',
+    image: '/images/merch/kit-pet-sponsor-pack.webp',
     group: 'dog',
   },
 ];
@@ -189,7 +189,7 @@ export const MerchShowcase: React.FC<MerchShowcaseProps> = ({ onOpenRegister, cl
             <PawPrint className="w-4 h-4" /> ของที่คุณจะได้รับ
           </span>
           <h3 id="race-kit-heading" data-reveal="pop" className="squiggle squiggle-center mt-3 font-hero text-3xl sm:text-4xl font-bold text-white">
-            ของที่ระลึกสำหรับนักวิ่งช้างศึก
+            Race Pack
           </h3>
           <p className="mt-2 text-sm sm:text-base font-medium text-white/85">
             ออกแบบพิเศษเฉพาะงานนี้ ในธีมม่วง-ทองของช้างศึก

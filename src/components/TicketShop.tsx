@@ -29,7 +29,7 @@ import {
   percentOf,
 } from '../data/addOns';
 import { getPublicConfig } from '../utils/api';
-import { AddOnPicker, PeopleStepper } from './AddOnPicker';
+import { AddOnPicker } from './AddOnPicker';
 import { DealStrip, DiscountCelebration } from './PerkCelebration';
 import { LABRADOR_SVG_PATH } from './brand/LabradorMascot';
 import { PawIcon } from './brand/DogDecor';
@@ -41,7 +41,7 @@ const BRAND_HEADER = 'linear-gradient(135deg, #2A1450 0%, #4C1D95 55%, #6D28D9 1
 const STATIONS = {
   run: { n: 1, emoji: '🏃', title: 'ตั๋ววิ่ง', hint: 'เลือก 1 ระยะ (ไม่วิ่งก็ข้ามได้)', grad: BRAND_HEADER },
   concert: { n: 2, emoji: '🎶', title: 'ตั๋วคอนเสิร์ต', hint: 'ริมหาด Door Open 17.30 น. · เริ่ม 18.00 น. · GA หรือ VIP TABLE · ซื้อแยกได้', grad: BRAND_HEADER },
-  addon: { n: 3, emoji: '🎢', title: 'กิจกรรมเสริม', hint: 'วันอาทิตย์ที่ 10 ม.ค. 2570 · 2 อย่างขึ้นไปลด 10% · มีคอนเสิร์ตลดเพิ่ม 10% (สูงสุด 20%)', grad: BRAND_HEADER },
+  addon: { n: 3, emoji: '🎢', title: 'กิจกรรมเสริม (เฉพาะบุคคล)', hint: 'วันอาทิตย์ที่ 10 ม.ค. 2570 · 2 อย่างขึ้นไปลด 10% · มีคอนเสิร์ตลดเพิ่ม 10% (สูงสุด 20%)', grad: BRAND_HEADER },
 } as const;
 type StationKey = keyof typeof STATIONS;
 
@@ -713,16 +713,6 @@ export const TicketShop: React.FC<TicketShopProps> = ({
                           : `2 กิจกรรมขึ้นไปลด ${percentOf(ADDON_TWO_RATE)}% · มีคอนเสิร์ตลดเพิ่มอีก ${percentOf(ADDON_CONCERT_RATE)}% (สูงสุด ${percentOf(ADDON_MAX_RATE)}%) 🎁`}
                   </p>
                   <AddOnPicker value={addOns} onChange={onAddOnsChange} windTunnelRemaining={windRemaining} showResult={false} layout="rows" discountCtx={discountCtx} />
-                  <AnimatePresence>
-                    {picked && (
-                      <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
-                        <div className="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-[#E0F7FA] border-2 border-[#0EA5E9]/30 px-3.5 py-2.5">
-                          <span className="text-sm font-extrabold text-[var(--ink)]">จำนวนคนที่เล่น</span>
-                          <PeopleStepper value={addOns.people} onChange={(n) => onAddOnsChange({ ...addOns, people: n })} />
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
                   <details className="group mt-3 rounded-2xl bg-[#FAF7FF] border-2 border-[var(--ink)]/10">
                     <summary className="list-none cursor-pointer flex items-center justify-between gap-3 px-4 py-2.5 min-h-[48px] text-sm font-extrabold text-[var(--ink)]">
                       <span>ราคาแพ็กเกจ & รายชื่อปืนที่เลือกได้</span>

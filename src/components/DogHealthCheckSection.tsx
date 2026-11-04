@@ -10,12 +10,12 @@ const FACTS = [
 ];
 
 const STEPS = [
-  { n: 1, emoji: '🎟️', text: 'ซื้อบัตร Dog Run (1K หรือ 3.8K)' },
+  { n: 1, emoji: '🎟️', text: 'ซื้อบัตร Dog Run (1K หรือ 4K)' },
   { n: 2, emoji: '🐶', text: 'พาน้องหมามาที่จุดตรวจสุขภาพ ระหว่าง 09.00–14.00 น.' },
   { n: 3, emoji: '🩺', text: 'ทีมสัตวแพทย์ตรวจสุขภาพน้องหมาให้โดยไม่มีค่าใช้จ่าย' },
 ];
 
-/** Free vet check by Thonglor Pet Hospital for the Dog Run (1K / 3.8K) runners, 09.00–14.00 on run day. */
+/** Free vet check by Thonglor Pet Hospital for the Dog Run (1K / 4K) runners, 09.00–14.00 on run day. */
 export const DogHealthCheckSection: React.FC = () => (
   <section id="dog-health-check" aria-labelledby="dog-health-heading" className="mt-10 sm:mt-14 scroll-mt-24">
     <div className="relative sticker overflow-hidden bg-gradient-to-br from-[#E8FFF3] via-white to-[#EAF6FF]">
@@ -84,7 +84,7 @@ export const DogHealthCheckSection: React.FC = () => (
             </p>
             <div className="mt-2 flex flex-wrap gap-2">
               <span className="px-3.5 py-2 rounded-xl bg-white border-2 border-[var(--ink)] text-sm font-black text-[var(--ink)] shadow-[0_3px_0_var(--ink)]">🐕 Dog Run 1K</span>
-              <span className="px-3.5 py-2 rounded-xl bg-white border-2 border-[var(--ink)] text-sm font-black text-[var(--ink)] shadow-[0_3px_0_var(--ink)]">🐕 Dog Run 3.8K</span>
+              <span className="px-3.5 py-2 rounded-xl bg-white border-2 border-[var(--ink)] text-sm font-black text-[var(--ink)] shadow-[0_3px_0_var(--ink)]">🐕 Dog Run 4K</span>
             </div>
             <p className="mt-2 text-xs sm:text-sm font-semibold text-[#6B4A10]">ผู้สมัครวิ่งทั้ง 2 ระยะนี้ พาน้องหมามาตรวจได้เลย</p>
           </div>

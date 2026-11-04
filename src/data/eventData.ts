@@ -101,7 +101,7 @@ export const safetyContacts: SafetyContact[] = [
 export const routesData: Record<RouteId, RouteData> = {
   '1km': {
     id: '1km',
-    name: '1 KM DOG MINI RUN',
+    name: '1 km DOG MINI RUN',
     title: 'วิ่งเล่นกับน้องสุนัข ทางเรียบเลียบหาด (ไป-กลับ)',
     distanceKm: 1.0,
     measuredPerimeterKm: 1.03,
@@ -170,9 +170,9 @@ export const routesData: Record<RouteId, RouteData> = {
   },
   '3km': {
     id: '3km',
-    name: '3.8 KM DOG RUN',
+    name: '4 km DOG RUN',
     title: 'วิ่งคู่น้องสุนัข รอบแกนกลางค่ายนเรศวร',
-    distanceKm: 3.8,
+    distanceKm: 4,
     measuredPerimeterKm: 4.08,
     measuredAreaSqM: 631710.65,
     googleEarthSummary: 'รังวัดจากภาพถ่ายดาวเทียม Google Earth: เส้นขอบรอบทิศ 4.08 กม. (พื้นที่รูปหลายเหลี่ยม 631,710.65 ม²)',
@@ -298,7 +298,7 @@ export const routesData: Record<RouteId, RouteData> = {
   },
   '5km': {
     id: '5km',
-    name: '5 KM RUN',
+    name: '5 km RUN',
     title: 'วิ่งท้าทายเต็มรอบค่ายนเรศวร (5.2 กม. Google Earth)',
     distanceKm: 5.0,
     measuredPerimeterKm: 5.20,
@@ -439,7 +439,7 @@ export const routesData: Record<RouteId, RouteData> = {
   },
   '10km': {
     id: '10km',
-    name: '10 KM RUN',
+    name: '10 km RUN',
     title: 'เส้นทางมินิมาราธอนผสมเทรล (10.52 กม. Google Earth)',
     distanceKm: 10.0,
     measuredPerimeterKm: 10.52,
@@ -698,7 +698,7 @@ export const scheduleData: ScheduleDay[] = [
         day: 'race_day',
         time: '09.00–14.00 น.',
         title: 'ตรวจสุขภาพสุนัข (ไม่มีค่าใช้จ่าย)',
-        description: 'โดย รพ.สัตว์ทองหล่อ สำหรับผู้สมัครวิ่ง Dog Run ทั้ง 2 ระยะ (1K / 3.8K)',
+        description: 'โดย รพ.สัตว์ทองหล่อ สำหรับผู้สมัครวิ่ง Dog Run ทั้ง 2 ระยะ (1K / 4K)',
         iconName: 'Stethoscope',
         highlight: true,
       },
@@ -757,7 +757,7 @@ export const scheduleData: ScheduleDay[] = [
         id: 's-13',
         day: 'race_day',
         time: '17.15 น.',
-        title: 'ปล่อยตัวนักวิ่ง 3.8 กิโลเมตร',
+        title: 'ปล่อยตัวนักวิ่ง 4 กิโลเมตร',
         description: 'ประเภทวิ่งร่วมกับน้องสุนัข',
         iconName: 'Flag',
         highlight: true,
@@ -1061,9 +1061,9 @@ export const faqData: FAQItem[] = [
   {
     id: 'faq-2',
     category: 'routes',
-    question: 'เส้นทางวิ่ง 3.8 KM, 5 KM และ 10 KM แตกต่างกันอย่างไร?',
+    question: 'เส้นทางวิ่ง 4 km, 5 km และ 10 km แตกต่างกันอย่างไร?',
     answer:
-      'ระยะ 3.8 KM (Fun Run) เป็นทางเรียบเลียบหาด เหมาะสำหรับครอบครัวและเด็ก; ระยะ 5 KM (Challenge Run) เพิ่มระยะทางเข้าสู่พื้นที่ด้านในค่ายนเรศวร; ระยะ 10 KM (War Dog Trail) เป็นระยะมินิมาราธอนผสมเทรล ผ่านธรรมชาติ บึงน้ำ ป่าชายเลน และสนามฝึกน้องสุนัขสงคราม',
+      'ระยะ 4 km (Fun Run) เป็นทางเรียบเลียบหาด เหมาะสำหรับครอบครัวและเด็ก; ระยะ 5 km (Challenge Run) เพิ่มระยะทางเข้าสู่พื้นที่ด้านในค่ายนเรศวร; ระยะ 10 km (War Dog Trail) เป็นระยะมินิมาราธอนผสมเทรล ผ่านธรรมชาติ บึงน้ำ ป่าชายเลน และสนามฝึกน้องสุนัขสงคราม',
   },
   {
     id: 'faq-3',
@@ -1077,7 +1077,7 @@ export const faqData: FAQItem[] = [
     category: 'pet',
     question: 'สามารถนำน้องสุนัขหรือสัตว์เลี้ยงเข้าร่วมวิ่งได้หรือไม่?',
     answer:
-      'น้องสุนัขร่วมวิ่งได้เฉพาะประเภท Dog Run 1 กม. และ 3.8 กม. น้องสุนัขต้องมีอายุ 1 ปีขึ้นไป แสดงหลักฐานการฉีดวัคซีนครบถ้วน อยู่ในสายจูงตลอดเวลา และเจ้าของต้องเตรียมถุงเก็บมูลมาด้วย',
+      'น้องสุนัขร่วมวิ่งได้เฉพาะประเภท Dog Run 1 กม. และ 4 กม. น้องสุนัขต้องมีอายุ 1 ปีขึ้นไป แสดงหลักฐานการฉีดวัคซีนครบถ้วน อยู่ในสายจูงตลอดเวลา และเจ้าของต้องเตรียมถุงเก็บมูลมาด้วย',
   },
   {
     id: 'faq-5',
@@ -1098,7 +1098,7 @@ export const faqData: FAQItem[] = [
     category: 'routes',
     question: 'มีจุดบริการน้ำดื่มและหน่วยพยาบาลตลอดเส้นทางหรือไม่?',
     answer:
-      'มีจุดบริการน้ำดื่มทุก ๆ 1.5 - 2 กิโลเมตร พร้อมเกลือแร่และผลไม้สดในระยะ 5KM และ 10KM พร้อมทั้งมีแพทย์ พยาบาลฉุกเฉิน และรถกู้ชีพสแตนด์บายตลอดเวลาการแข่งขัน',
+      'มีจุดบริการน้ำดื่มทุก ๆ 1.5 - 2 กิโลเมตร พร้อมเกลือแร่และผลไม้สดในระยะ 5km และ 10km พร้อมทั้งมีแพทย์ พยาบาลฉุกเฉิน และรถกู้ชีพสแตนด์บายตลอดเวลาการแข่งขัน',
   },
   {
     id: 'faq-8',
@@ -1126,7 +1126,7 @@ export const announcementsData: Announcement[] = [
     id: 'ann-2',
     date: 'อัปเดตล่าสุด',
     category: 'เส้นทาง',
-    title: 'เปิดตัวผังเส้นทางวิ่ง 3.8 KM, 5 KM, 10 KM WAR DOG TRAIL ประจำปี 2027',
+    title: 'เปิดตัวผังเส้นทางวิ่ง 4 km, 5 km, 10 km WAR DOG TRAIL ประจำปี 2027',
     summary:
       'ชวนชมแผนที่เส้นทางวิ่งตัวอย่างที่ผสมผสานระหว่างชายหาดค่ายนเรศวร ป่าสน และสนามฝึกน้องสุนัขสงคราม ออกแบบให้วิ่งสนุกและปลอดภัยสำหรับทุกคน',
     content:
@@ -1167,10 +1167,10 @@ export const raceRules = [
   {
     title: 'เวลาตัดตัว (Cut-off Time) และความปลอดภัย',
     details: [
-      'ระยะ 10 KM ตัดตัวที่เวลา 2 ชั่วโมง (18:30 น.)',
-      'ระยะ 5 KM ตัดตัวที่เวลา 1 ชั่วโมง 15 นาที (18:15 น.)',
-      'ระยะ 3.8 KM ตัดตัวที่เวลา 1 ชั่วโมง (18:15 น.)',
-      'ระยะ 1 KM ตัดตัวที่เวลา 30 นาที (18:00 น.)',
+      'ระยะ 10 km ตัดตัวที่เวลา 2 ชั่วโมง (18:30 น.)',
+      'ระยะ 5 km ตัดตัวที่เวลา 1 ชั่วโมง 15 นาที (18:15 น.)',
+      'ระยะ 4 km ตัดตัวที่เวลา 1 ชั่วโมง (18:15 น.)',
+      'ระยะ 1 km ตัดตัวที่เวลา 30 นาที (18:00 น.)',
       'นักวิ่งที่ไม่ผ่านจุดตัดตัวตามเวลาที่กำหนด ต้องขึ้นรถพยาบาลหรือรถรับส่งนักวิ่ง (Sweeper Car) เพื่อความปลอดภัย',
     ],
   },
@@ -1185,7 +1185,7 @@ export const raceRules = [
 
 // ---------------------------------------------------------------------------
 // Ticket categories & pricing (single source of truth for every price on the site)
-// Individual: 5 KM, 10 KM  |  Dog + owner: 1 KM, 3.8 KM
+// Individual: 5 km, 10 km  |  Dog + owner: 1 km, 4 km
 // ---------------------------------------------------------------------------
 export type TicketGroup = 'individual' | 'dog';
 
@@ -1212,7 +1212,7 @@ export const ticketCategories: TicketCategory[] = [
     group: 'individual',
     category: 'individual',
     distanceLabel: '5K',
-    name: '5 KM วิ่งบุคคลทั่วไป',
+    name: '5 km วิ่งบุคคลทั่วไป',
     subtitle: 'ก้าวแรกสู่สุขภาพที่ดี',
     basePrice: 690,
     baseLabel: 'ต่อ 1 คน',
@@ -1224,7 +1224,7 @@ export const ticketCategories: TicketCategory[] = [
     group: 'individual',
     category: 'individual',
     distanceLabel: '10K',
-    name: '10 KM วิ่งบุคคลทั่วไป',
+    name: '10 km วิ่งบุคคลทั่วไป',
     subtitle: 'ท้าทายตัวเอง ไปให้ไกลกว่าเดิม',
     basePrice: 890,
     baseLabel: 'ต่อ 1 คน',
@@ -1235,7 +1235,7 @@ export const ticketCategories: TicketCategory[] = [
     group: 'dog',
     category: 'dog',
     distanceLabel: '1K',
-    name: '1 KM วิ่งคู่น้องสุนัข',
+    name: '1 km วิ่งคู่น้องสุนัข',
     subtitle: 'วิ่งเล่นสบาย ๆ เหมาะกับทุกวัย',
     basePrice: 790,
     baseLabel: '1 คน + 1 น้องสุนัข',
@@ -1248,8 +1248,8 @@ export const ticketCategories: TicketCategory[] = [
     id: '3km',
     group: 'dog',
     category: 'dog',
-    distanceLabel: '3.8K',
-    name: '3.8 KM วิ่งคู่น้องสุนัข',
+    distanceLabel: '4K',
+    name: '4 km วิ่งคู่น้องสุนัข',
     subtitle: 'คนกับน้องสุนัข วิ่งเคียงข้างกัน',
     basePrice: 890,
     baseLabel: '1 คน + 1 น้องสุนัข',

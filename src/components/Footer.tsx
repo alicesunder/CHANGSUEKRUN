@@ -70,7 +70,7 @@ export const Footer: React.FC<FooterProps> = ({
                 <a href="#objective" className="inline-block py-1.5 hover:text-[#FFCC00] hover:translate-x-1.5 transition-all before:content-['🐾'] before:mr-1.5 before:opacity-0 hover:before:opacity-100 before:transition-opacity">รายละเอียดงาน</a>
               </li>
               <li>
-                <a href="#distances" className="inline-block py-1.5 hover:text-[#FFCC00] hover:translate-x-1.5 transition-all before:content-['🐾'] before:mr-1.5 before:opacity-0 hover:before:opacity-100 before:transition-opacity">ระยะวิ่ง (10K / 5K / Dog 3.8K / Dog 1K)</a>
+                <a href="#distances" className="inline-block py-1.5 hover:text-[#FFCC00] hover:translate-x-1.5 transition-all before:content-['🐾'] before:mr-1.5 before:opacity-0 hover:before:opacity-100 before:transition-opacity">ระยะวิ่ง (10K / 5K / Dog 4K / Dog 1K)</a>
               </li>
               <li>
                 <a href="#schedule-and-map" className="inline-block py-1.5 hover:text-[#FFCC00] hover:translate-x-1.5 transition-all before:content-['🐾'] before:mr-1.5 before:opacity-0 hover:before:opacity-100 before:transition-opacity">เส้นทางวิ่ง & กำหนดการแข่งขัน</a>

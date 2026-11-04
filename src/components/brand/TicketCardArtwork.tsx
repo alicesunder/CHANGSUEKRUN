@@ -21,7 +21,7 @@ export const TICKET_CARD_IMAGES: Record<
   '5km': {
     src: '/images/distances/card-5k-editorial.jpg',
     objectPosition: '82% center',
-    alt: 'บัตรวิ่ง 5 KM บุคคลทั่วไป - นักวิ่งชายหญิงวิ่งรับแสงเช้าเลียบชายหาดชะอำพร้อมช้างศึก',
+    alt: 'บัตรวิ่ง 5 km บุคคลทั่วไป - นักวิ่งชายหญิงวิ่งรับแสงเช้าเลียบชายหาดชะอำพร้อมช้างศึก',
     sceneTag: 'SUNRISE COASTAL RUN',
     terrainBadge: 'ทางเรียบเลียบหาด & รอบค่าย',
     skyGrad: 'linear-gradient(135deg, #FFF3B0 0%, #FFD55A 55%, #FFAE34 100%)',
@@ -29,7 +29,7 @@ export const TICKET_CARD_IMAGES: Record<
   '10km': {
     src: '/images/distances/card-10k-editorial.jpg',
     objectPosition: '85% center',
-    alt: 'บัตรวิ่ง 10 KM มินิมาราธอน - นักวิ่งท้าทายเส้นทางถนนเลียบชายฝั่งและธรรมชาติเคียงข้างช้างศึก',
+    alt: 'บัตรวิ่ง 10 km มินิมาราธอน - นักวิ่งท้าทายเส้นทางถนนเลียบชายฝั่งและธรรมชาติเคียงข้างช้างศึก',
     sceneTag: 'COASTAL & MANGROVE TRAIL',
     terrainBadge: 'ถนนค่าย + สะพานไม้ป่าชายเลน',
     skyGrad: 'linear-gradient(135deg, #E2CEFF 0%, #9F65EB 55%, #4A1C88 100%)',
@@ -37,7 +37,7 @@ export const TICKET_CARD_IMAGES: Record<
   '1km': {
     src: '/images/hero/beach-run.jpg',
     objectPosition: '58% 45%',
-    alt: 'บัตรวิ่ง 1 KM Dog Mini Run - ช้างศึกสีม่วง นักวิ่ง และน้องสุนัขวิ่งเล่นสนุกสนานริมชายหาด',
+    alt: 'บัตรวิ่ง 1 km Dog Mini Run - ช้างศึกสีม่วง นักวิ่ง และน้องสุนัขวิ่งเล่นสนุกสนานริมชายหาด',
     sceneTag: 'BEACH PUPPY FUN RUN',
     terrainBadge: 'ทางเรียบชายหาด 100% (ไป-กลับ)',
     skyGrad: 'linear-gradient(135deg, #FFE0C2 0%, #FFB076 55%, #FF8442 100%)',
@@ -45,7 +45,7 @@ export const TICKET_CARD_IMAGES: Record<
   '3km': {
     src: '/images/distances/card-3k-editorial.jpg',
     objectPosition: '85% 38%',
-    alt: 'บัตรวิ่ง 3.8 KM Dog Run - นักวิ่งและน้องสุนัขโกลเด้นวิ่งเคียงข้างกันบนเส้นทางเลียบหาดและทิวสน',
+    alt: 'บัตรวิ่ง 4 km Dog Run - นักวิ่งและน้องสุนัขโกลเด้นวิ่งเคียงข้างกันบนเส้นทางเลียบหาดและทิวสน',
     sceneTag: 'SHADED PINE & BEACH LOOP',
     terrainBadge: 'เลียบหาด + ร่มสนแกนกลางค่าย',
     skyGrad: 'linear-gradient(135deg, #CCF5E1 0%, #6DD5A5 55%, #28A766 100%)',

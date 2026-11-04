@@ -28,7 +28,7 @@ export const ElevationProfile: React.FC<ElevationProfileProps> = ({ selectedRout
                 </span>
               </div>
               <h3 className="text-xl sm:text-2xl font-black text-[#18151D]">
-                ระดับความสูงและลักษณะภูมิประเทศ — {currentRoute.name} ({currentRoute.distanceKm} KM)
+                ระดับความสูงและลักษณะภูมิประเทศ — {currentRoute.name} ({currentRoute.distanceKm} km)
               </h3>
             </div>
 

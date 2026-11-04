@@ -21,7 +21,6 @@ import { LabradorMascot } from './brand/LabradorMascot';
 import { BouncyText } from './BouncyText';
 import { useEarlyBird } from '../utils/earlyBird';
 import { EARLY_BIRD_OFF, formatBaht } from '../data/eventData';
-import { EARLY_BIRD_ACTIVITY_OFF } from '../data/addOns';
 
 interface HeroProps {
   onOpenArtworkModal: () => void;
@@ -51,7 +50,7 @@ const EarlyBirdBadge: React.FC<{ onClick: () => void; className?: string }> = ({
   >
     <span className="text-[13px] sm:text-sm font-black leading-tight">🐦 เปิดขาย Early Bird แล้ว!</span>
     <span className="text-[10.5px] sm:text-xs font-extrabold leading-tight text-[#FFE9A8]">
-      วิ่งลด {formatBaht(EARLY_BIRD_OFF.run)} · คอนเสิร์ต GA ลด {formatBaht(EARLY_BIRD_OFF.concert)} · VIP ลด {formatBaht(EARLY_BIRD_OFF.vip)} · กิจกรรมเสริมลง {formatBaht(EARLY_BIRD_ACTIVITY_OFF)}
+      วิ่งลด {formatBaht(EARLY_BIRD_OFF.run)} · คอนเสิร์ต GA ลด {formatBaht(EARLY_BIRD_OFF.concert)} · VIP ลด {formatBaht(EARLY_BIRD_OFF.vip)}
     </span>
   </button>
 );
@@ -71,10 +70,10 @@ export const Hero: React.FC<HeroProps> = ({
   };
 
   const mobileDistancePills: { id: RouteId; label: string; tag: string; color: string; bg: string }[] = [
-    { id: '1km', label: '1 KM', tag: 'Dog Mini', color: '#C2410C', bg: '#FFF7ED' },
-    { id: '3km', label: '3.8 KM', tag: 'Dog Run', color: '#0F766E', bg: '#F0FDFA' },
-    { id: '5km', label: '5 KM', tag: 'Fun Run', color: '#B45309', bg: '#FFFBEB' },
-    { id: '10km', label: '10 KM', tag: 'Mini Marathon', color: '#7C3AED', bg: '#FAF5FF' },
+    { id: '1km', label: '1 km', tag: 'Dog Mini', color: '#C2410C', bg: '#FFF7ED' },
+    { id: '3km', label: '4 km', tag: 'Dog Run', color: '#0F766E', bg: '#F0FDFA' },
+    { id: '5km', label: '5 km', tag: 'Fun Run', color: '#B45309', bg: '#FFFBEB' },
+    { id: '10km', label: '10 km', tag: 'Mini Marathon', color: '#7C3AED', bg: '#FAF5FF' },
   ];
 
 
@@ -160,7 +159,7 @@ export const Hero: React.FC<HeroProps> = ({
               onClick={() => onSelectDistance('1km')}
               className="mt-1 inline-flex items-center gap-1 min-h-[28px] text-xs font-extrabold text-[#6D28D9] hover:text-[#4C1D95] cursor-pointer"
             >
-              <span>ดูบัตร Dog Run 1K & 3.8K</span>
+              <span>ดูบัตร Dog Run 1K & 4K</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>

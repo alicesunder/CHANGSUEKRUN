@@ -130,7 +130,7 @@ export const StartSimulationControls: React.FC<StartSimulationControlsProps> = (
           <div className="flex items-center gap-2">
             <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
             <span className="font-mono font-black text-sm text-[#1F1035]">
-              KM {currentKm.toFixed(2)} / {totalKm.toFixed(2)} KM
+              km {currentKm.toFixed(2)} / {totalKm.toFixed(2)} km
             </span>
           </div>
 

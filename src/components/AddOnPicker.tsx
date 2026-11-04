@@ -1,12 +1,11 @@
 import React from 'react';
-import { Check, Crosshair, ExternalLink, MapPin, Minus, Plus, Sparkles, Star, TowerControl, Wind } from 'lucide-react';
+import { Check, Crosshair, ExternalLink, MapPin, Plus, Sparkles, Star, TowerControl, Wind } from 'lucide-react';
 import { ACTIVITY_LOCATIONS, type ActivityLocation } from '../data/activityLocations';
 import { showActivitySticker } from './ActivitySticker';
 import {
   AddOnSelection,
   DiscountContext,
   GunLevel,
-  MAX_ADD_ON_PEOPLE,
   WIND_TUNNEL_LIMIT,
   addOnLabel,
   addOnPricePerPerson,
@@ -180,33 +179,6 @@ const GUN_SEGMENTS: { id: Exclude<GunLevel, 'none'>; label: string; price: numbe
   { id: 'premium', label: 'Premium', price: 1950, note: 'HK UMP / KRISS / MP5 SD' },
 ];
 
-export const PeopleStepper: React.FC<{ value: number; onChange: (n: number) => void; dark?: boolean }> = ({ value, onChange, dark }) => (
-  <div className="flex items-center gap-1.5" role="group" aria-label="จำนวนคนที่ร่วมกิจกรรมเสริม">
-    <button
-      type="button"
-      aria-label="ลดจำนวนคน"
-      disabled={value <= 1}
-      onClick={() => onChange(Math.max(1, value - 1))}
-      className="w-11 h-11 rounded-full bg-white/95 shadow-[0_8px_16px_-6px_rgba(0,0,0,0.35)] flex items-center justify-center disabled:opacity-40 cursor-pointer"
-    >
-      <Minus className="w-4 h-4 text-[#2A1450]" />
-    </button>
-    <span className="min-w-[52px] text-center">
-      <span className="block text-2xl font-extrabold tabular-nums leading-none">{value}</span>
-      <span className={`block text-[11px] font-bold ${dark ? 'text-white/80' : 'text-[#7C3F00]'}`}>คน</span>
-    </span>
-    <button
-      type="button"
-      aria-label="เพิ่มจำนวนคน"
-      disabled={value >= MAX_ADD_ON_PEOPLE}
-      onClick={() => onChange(Math.min(MAX_ADD_ON_PEOPLE, value + 1))}
-      className="w-11 h-11 rounded-full bg-white/95 shadow-[0_8px_16px_-6px_rgba(0,0,0,0.35)] flex items-center justify-center disabled:opacity-40 cursor-pointer"
-    >
-      <Plus className="w-4 h-4 text-[#2A1450]" />
-    </button>
-  </div>
-);
-
 const NO_BUNDLE: DiscountContext = { hasRun: false, hasConcert: false };
 
 /** Opens the activity's pin in Google Maps. Sits under the card, not inside it (a link can't live inside the card's button). */
@@ -228,7 +200,8 @@ const PinLink: React.FC<{ id: ActivityLocation['id'] }> = ({ id }) => {
 };
 
 export const AddOnPicker: React.FC<AddOnPickerProps> = ({ value, onChange, windTunnelRemaining = null, showResult = true, layout = 'grid', discountCtx = NO_BUNDLE }) => {
-  const set = (patch: Partial<AddOnSelection>) => onChange({ ...value, ...patch });
+  // activities are per person and one person per order (the stepper was removed), so the count stays 1
+  const set = (patch: Partial<AddOnSelection>) => onChange({ ...value, ...patch, people: 1 });
   const picked = hasAddOns(value);
   const off = discountCtx.earlyBird ? EARLY_BIRD_ACTIVITY_OFF : 0;
   const perPerson = addOnPricePerPerson(value, discountCtx.earlyBird);
@@ -390,8 +363,7 @@ export const AddOnPicker: React.FC<AddOnPickerProps> = ({ value, onChange, windT
                 <p className={`text-xs font-bold ${isFull ? 'text-white/85' : 'text-[#7C3F00]'}`}>ราคาต่อคน {baht(perPerson)}</p>
               </div>
               <div className="flex items-center justify-between sm:justify-end gap-4">
-                <PeopleStepper value={value.people} onChange={(n) => set({ people: n })} dark={isFull} />
-                <span className="text-right">
+                                <span className="text-right">
                   <span className={`block text-3xl font-extrabold tabular-nums leading-none ${isFull ? 'text-[#FDE68A]' : ''}`}>{formatBaht(total)}</span>
                   <span className="block text-[11px] font-bold opacity-80">บาท · กิจกรรมเสริม</span>
                 </span>

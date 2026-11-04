@@ -24,10 +24,10 @@ interface Station {
 const isRunOrder = (o: ServerOrder) => (o.ticketType ?? 'RUN') === 'RUN';
 
 const STATIONS: Station[] = [
-  { id: '10km', emoji: '🏃', name: 'วิ่ง 10 KM', day: '9 ม.ค.', color: '#8B5CF6', qty: (o) => (isRunOrder(o) && o.routeId === '10km' ? o.peopleCount || 1 : 0), unit: 'คน' },
-  { id: '5km', emoji: '🏃', name: 'วิ่ง 5 KM', day: '9 ม.ค.', color: '#FF5460', qty: (o) => (isRunOrder(o) && o.routeId === '5km' ? o.peopleCount || 1 : 0), unit: 'คน' },
-  { id: '3km', emoji: '🐕', name: 'Dog Run 3.8 KM', day: '9 ม.ค.', color: '#FF8A00', qty: (o) => (isRunOrder(o) && o.routeId === '3km' ? o.peopleCount || 1 : 0), unit: 'คน' },
-  { id: '1km', emoji: '🐕', name: 'Dog Run 1 KM', day: '9 ม.ค.', color: '#EC4899', qty: (o) => (isRunOrder(o) && o.routeId === '1km' ? o.peopleCount || 1 : 0), unit: 'คน' },
+  { id: '10km', emoji: '🏃', name: 'วิ่ง 10 km', day: '9 ม.ค.', color: '#8B5CF6', qty: (o) => (isRunOrder(o) && o.routeId === '10km' ? o.peopleCount || 1 : 0), unit: 'คน' },
+  { id: '5km', emoji: '🏃', name: 'วิ่ง 5 km', day: '9 ม.ค.', color: '#FF5460', qty: (o) => (isRunOrder(o) && o.routeId === '5km' ? o.peopleCount || 1 : 0), unit: 'คน' },
+  { id: '3km', emoji: '🐕', name: 'Dog Run 4 km', day: '9 ม.ค.', color: '#FF8A00', qty: (o) => (isRunOrder(o) && o.routeId === '3km' ? o.peopleCount || 1 : 0), unit: 'คน' },
+  { id: '1km', emoji: '🐕', name: 'Dog Run 1 km', day: '9 ม.ค.', color: '#EC4899', qty: (o) => (isRunOrder(o) && o.routeId === '1km' ? o.peopleCount || 1 : 0), unit: 'คน' },
   { id: 'concert', emoji: '🎶', name: 'คอนเสิร์ต GA', day: '9 ม.ค.', color: '#DB2777', qty: (o) => o.concertQty || 0, unit: 'ใบ' },
   { id: 'vip', emoji: '⭐', name: 'VIP TABLE', day: '9 ม.ค.', color: '#B45309', qty: (o) => o.vipTables || 0, unit: 'โต๊ะ' },
   { id: 'tower', emoji: '🪂', name: 'หอสูง', day: '10 ม.ค.', color: '#4F46E5', qty: (o) => (o.addOns?.tower ? o.addOns.people : 0), unit: 'คน' },
@@ -319,9 +319,9 @@ export const OrderFullDetails: React.FC<{ order: ServerOrder }> = ({ order: o })
           'ผู้ยิงปืน',
           o.shooting?.shooters?.length ? (
             <span>
-              {o.shooting.shooters.map((x) => `${x.fullName} (${formatThaiId(x.idCard)})`).join(' · ')}
+              {o.shooting.shooters.map((x) => (x.idCard ? `${x.fullName} (${formatThaiId(x.idCard)})` : x.fullName)).join(' · ')}
               <br />
-              {o.shooting.consentAt && <span className="text-slate-500">ยอมรับใบยินยอม {fmtDate(o.shooting.consentAt)}</span>}
+              {o.shooting.consentAt && <span className="text-slate-500">ยอมรับกฎความปลอดภัย {fmtDate(o.shooting.consentAt)}</span>}
             </span>
           ) : (
             '-'

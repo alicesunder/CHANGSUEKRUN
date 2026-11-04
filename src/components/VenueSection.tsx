@@ -90,7 +90,7 @@ export const VenueSection: React.FC = () => {
                     <div className="text-[10px] text-white/70 font-bold">ไร่ พื้นที่สีเขียว</div>
                   </div>
                   <div>
-                    <div className="text-lg font-black text-[#FFC928]">1.5 KM</div>
+                    <div className="text-lg font-black text-[#FFC928]">1.5 km</div>
                     <div className="text-[10px] text-white/70 font-bold">หาดทรายขาว</div>
                   </div>
                   <div>

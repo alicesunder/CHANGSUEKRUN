@@ -1,11 +1,12 @@
-// Extra details for the shooting activity: every shooter's name + Thai national ID.
-// Shared by the form and the server (the server checks it). The consent form was dropped in
-// Nov 2026; older orders still carry consentAt / consentVersion.
+// Extra details for the shooting activity: every shooter's name, plus the buyer's acceptance of the range's
+// safety rules (consentAt / consentVersion). The national ID is no longer collected (Nov 2026); older orders
+// still carry it. Shared by the form and the server (the server checks it).
+import { SHOOTING_RULES_VERSION } from './shootingRules';
 
 export interface Shooter {
   fullName: string;
-  /** 13 digits, no dashes */
-  idCard: string;
+  /** 13 digits, no dashes. Not collected any more; only older orders have it. */
+  idCard?: string;
 }
 
 export interface ShootingInfo {
@@ -32,7 +33,7 @@ export function formatThaiId(id: string): string {
 }
 
 /** x-xxxx-xxxxx-12-3: what the runner sees back (the full number stays with the organiser). */
-export function maskThaiId(id: string): string {
+export function maskThaiId(id?: string): string {
   const d = digitsOnly(id);
   return d.length === 13 ? `x-xxxx-xxxxx-${d.slice(10, 12)}-${d[12]}` : '';
 }
@@ -40,20 +41,21 @@ export function maskThaiId(id: string): string {
 const clip = (v: unknown, n: number) => (typeof v === 'string' ? v.replace(/[\u0000-\u001f<>]/g, ' ').trim().slice(0, n) : '');
 
 /** Cleans what the browser sent. One shooter per person on the add-on. */
-export function parseShooting(raw: unknown, people: number): { ok: true; value: ShootingInfo } | { ok: false; error: string } {
+export function parseShooting(
+  raw: unknown,
+  people: number,
+  acknowledged: boolean
+): { ok: true; value: ShootingInfo } | { ok: false; error: string } {
   const list = Array.isArray(raw) ? raw.slice(0, people) : [];
   const errors: string[] = [];
   const shooters: Shooter[] = [];
   for (let i = 0; i < people; i++) {
     const r = (list[i] && typeof list[i] === 'object' ? list[i] : {}) as Record<string, unknown>;
     const fullName = clip(r.fullName, 120);
-    const idCard = digitsOnly(r.idCard);
     if (fullName.length < 3) errors.push(`กรุณากรอกชื่อ-นามสกุลผู้ยิงปืนคนที่ ${i + 1}`);
-    if (!isValidThaiId(idCard)) errors.push(`เลขบัตรประชาชนผู้ยิงปืนคนที่ ${i + 1} ไม่ถูกต้อง`);
-    shooters.push({ fullName, idCard });
+    shooters.push({ fullName });
   }
-  const ids = shooters.map((s) => s.idCard).filter(Boolean);
-  if (new Set(ids).size !== ids.length) errors.push('เลขบัตรประชาชนผู้ยิงปืนซ้ำกัน');
+  if (!acknowledged) errors.push('กรุณาอ่านกฎความปลอดภัยและกดรับทราบ/ยอมรับกิจกรรมยิงปืน');
   if (errors.length) return { ok: false, error: errors.join(' · ') };
-  return { ok: true, value: { shooters } };
+  return { ok: true, value: { shooters, consentAt: new Date().toISOString(), consentVersion: SHOOTING_RULES_VERSION } };
 }

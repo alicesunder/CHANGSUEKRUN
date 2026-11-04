@@ -30,7 +30,7 @@ export const EventQuickInfo: React.FC = () => {
 
   const handleAddToCalendar = () => {
     const title = encodeURIComponent('CHANG SUEK RUN 2027 (เห็นช้างวิ่ง วิ่งตามช้าง)');
-    const details = encodeURIComponent('งานวิ่งเพื่อสุขภาพและครอบครัว ค่ายนเรศวร ชะอำ-หัวหิน ระยะ 10KM, 5KM และวิ่งคู่น้องสุนัข 3.8KM, 1KM');
+    const details = encodeURIComponent('งานวิ่งเพื่อสุขภาพและครอบครัว ค่ายนเรศวร ชะอำ-หัวหิน ระยะ 10km, 5km และวิ่งคู่น้องสุนัข 4km, 1km');
     const location = encodeURIComponent('ค่ายนเรศวร กองบัญชาการตำรวจตระเวนชายแดน ชะอำ เพชรบุรี');
     const googleCalendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&details=${details}&location=${location}`;
     window.open(googleCalendarUrl, '_blank');
@@ -77,7 +77,7 @@ export const EventQuickInfo: React.FC = () => {
             <div>
               <div className="text-[11px] font-bold text-gray-500">ระยะวิ่ง</div>
               <div className="text-xs sm:text-sm font-black text-gray-900 leading-tight whitespace-nowrap">
-                10 / 5 KM + Dog 3 / 1 KM
+                10 / 5 km + Dog 4 / 1 km
               </div>
               <div className="text-[10px] text-gray-400 font-medium">เหมาะสำหรับทุกคน</div>
             </div>

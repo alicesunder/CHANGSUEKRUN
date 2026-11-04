@@ -92,7 +92,6 @@ export const HotelExplorer: React.FC<HotelExplorerProps> = () => {
   const [viewMode, setViewMode] = useState<'cards' | 'table'>('cards');
   const [searchQuery, setSearchQuery] = useState('');
   const [distanceFilter, setDistanceFilter] = useState<'all' | 'under3' | '3to5' | 'above5'>('all');
-  const [priceFilter, setPriceFilter] = useState<'all' | 'budget' | 'mid' | 'premium'>('all');
   const [typeFilter, setTypeFilter] = useState<
     'all' | 'Resort' | 'Hotel' | 'Villa' | 'Guest House'
   >('all');
@@ -177,18 +176,13 @@ export const HotelExplorer: React.FC<HotelExplorerProps> = () => {
           return false;
         if (distanceFilter === 'above5' && hotel.distanceKm <= 5) return false;
 
-        if (priceFilter === 'budget' && hotel.priceMin > 1000) return false;
-        if (priceFilter === 'mid' && (hotel.priceMin <= 1000 || hotel.priceMin > 3000))
-          return false;
-        if (priceFilter === 'premium' && hotel.priceMin <= 3000) return false;
-
         if (typeFilter !== 'all' && !hotel.type.toLowerCase().includes(typeFilter.toLowerCase()))
           return false;
 
         return true;
       })
       .sort((a, b) => (a.rank ?? 999) - (b.rank ?? 999));
-  }, [searchQuery, distanceFilter, priceFilter, typeFilter]);
+  }, [searchQuery, distanceFilter, typeFilter]);
 
   const displayedHotels = useMemo(() => {
     if (showAllHotels || viewMode === 'table') {
@@ -199,7 +193,6 @@ export const HotelExplorer: React.FC<HotelExplorerProps> = () => {
 
   const totalHotelsCount = hotelsData.length;
   const petFriendlyCount = hotelsData.filter((h) => h.petFriendly).length;
-  const lowestPrice = Math.min(...hotelsData.map((h) => h.priceMin || 9999));
 
   return (
     <section
@@ -282,10 +275,6 @@ export const HotelExplorer: React.FC<HotelExplorerProps> = () => {
                     <h3 className="text-sm sm:text-[15px] font-extrabold text-[#2A1450] group-hover:text-[#6B2FD6] transition-colors truncate">
                       {item.name}
                     </h3>
-
-                    <div className="mt-1 text-xs font-extrabold text-[#4B2D78] tabular-nums">
-                      ราคาเริ่มต้น {item.priceStart} / คืน
-                    </div>
                   </div>
                 </div>
 
@@ -316,7 +305,7 @@ export const HotelExplorer: React.FC<HotelExplorerProps> = () => {
                   <span>ฐานข้อมูลที่พัก Pet-Friendly ทั้งหมด {totalHotelsCount} แห่ง</span>
                 </div>
                 <h3 className="text-lg sm:text-xl font-black text-[#261042]">
-                  ค้นหาเปรียบเทียบราคาและระยะทาง
+                  ค้นหาเปรียบเทียบระยะทาง
                 </h3>
               </div>
 
@@ -372,15 +361,6 @@ export const HotelExplorer: React.FC<HotelExplorerProps> = () => {
                 </div>
                 <CheckCircle2 className="w-4 h-4 text-emerald-600" />
               </div>
-              <div className="bg-[#FAF8FD] border border-purple-100 rounded-xl px-3.5 py-2 flex items-center justify-between">
-                <div>
-                  <div className="text-[10px] text-slate-500 font-semibold uppercase">ราคาเริ่มต้น</div>
-                  <div className="text-base font-black text-[#B87A00]">
-                    ฿{lowestPrice.toLocaleString()}+
-                  </div>
-                </div>
-                <Sparkles className="w-4 h-4 text-[#B87A00]" />
-              </div>
             </div>
 
             {/* Filter Bar */}
@@ -413,17 +393,6 @@ export const HotelExplorer: React.FC<HotelExplorerProps> = () => {
                 <option value="under3">&lt; 3 กม. (ใกล้มาก)</option>
                 <option value="3to5">3 - 5 กม.</option>
                 <option value="above5">&gt; 5 กม.</option>
-              </select>
-
-              <select
-                value={priceFilter}
-                onChange={(e) => setPriceFilter(e.target.value as any)}
-                className="bg-white border border-purple-100 rounded-lg px-2.5 py-1.5 text-xs text-slate-700 font-semibold cursor-pointer"
-              >
-                <option value="all">ราคา ทั้งหมด</option>
-                <option value="budget">ประหยัด (&lt; ฿1,000)</option>
-                <option value="mid">ปานกลาง (฿1,000 - ฿3,000)</option>
-                <option value="premium">พรีเมียม (&gt; ฿3,000)</option>
               </select>
 
 
@@ -488,14 +457,6 @@ export const HotelExplorer: React.FC<HotelExplorerProps> = () => {
                       </div>
 
                       <div className="flex sm:flex-col items-center sm:items-end justify-between gap-2 shrink-0">
-                        <div className="text-left sm:text-right">
-                          <div>
-                            <span className="text-base font-black text-[#5B20A8]">
-                              {hotel.priceStart || `฿${hotel.priceMin.toLocaleString()}`}
-                            </span>
-                            <span className="text-[9px] text-slate-400"> /คืน</span>
-                          </div>
-                        </div>
 
                         <div className="flex items-center gap-1.5">
                           <button
@@ -554,7 +515,6 @@ export const HotelExplorer: React.FC<HotelExplorerProps> = () => {
                         <th className="py-3 px-3.5">#</th>
                         <th className="py-3 px-3.5">ชื่อที่พัก</th>
                         <th className="py-3 px-3.5 text-center">ระยะทาง</th>
-                        <th className="py-3 px-3.5 text-right">ราคาเริ่มต้น</th>
                         <th className="py-3 px-3.5">สัตว์เลี้ยง</th>
                       </tr>
                     </thead>
@@ -568,9 +528,6 @@ export const HotelExplorer: React.FC<HotelExplorerProps> = () => {
                           <td className="py-2.5 px-3.5 font-bold text-[#5B20A8]">#{hotel.rank}</td>
                           <td className="py-2.5 px-3.5 font-bold text-[#261042]">{hotel.name}</td>
                           <td className="py-2.5 px-3.5 text-center">{hotel.distanceKm} กม.</td>
-                          <td className="py-2.5 px-3.5 text-right font-black text-[#5B20A8]">
-                            {hotel.priceStart || `฿${hotel.priceMin.toLocaleString()}`}
-                          </td>
                           <td className="py-2.5 px-3.5 text-[11px] text-slate-600 truncate max-w-[180px]">
                             {hotel.petPolicy}
                           </td>

@@ -94,28 +94,28 @@ const ROUTE_BADGE_STYLE: Record<
     bg: 'bg-purple-100',
     text: 'text-purple-900',
     border: 'border-purple-300',
-    label: '10 KM บุคคลทั่วไป',
+    label: '10 km บุคคลทั่วไป',
     prefix: '10-',
   },
   '5km': {
     bg: 'bg-amber-100',
     text: 'text-amber-900',
     border: 'border-amber-300',
-    label: '5 KM บุคคลทั่วไป',
+    label: '5 km บุคคลทั่วไป',
     prefix: '05-',
   },
   '3km': {
     bg: 'bg-emerald-100',
     text: 'text-emerald-900',
     border: 'border-emerald-300',
-    label: '3.8 KM วิ่งกับน้องสุนัข',
+    label: '4 km วิ่งกับน้องสุนัข',
     prefix: '03-',
   },
   '1km': {
     bg: 'bg-orange-100',
     text: 'text-orange-900',
     border: 'border-orange-300',
-    label: '1 KM วิ่งกับน้องสุนัข',
+    label: '1 km วิ่งกับน้องสุนัข',
     prefix: '01-',
   },
 };
@@ -1063,10 +1063,10 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
                     {(
                       [
                         { id: 'ALL', label: `ทั้งหมด (${orders.length})` },
-                        { id: '10km', label: '10 KM (10-XXXX)' },
-                        { id: '5km', label: '5 KM (05-XXXX)' },
-                        { id: '3km', label: '3.8 KM Dog (03-XXXX)' },
-                        { id: '1km', label: '1 KM Dog (01-XXXX)' },
+                        { id: '10km', label: '10 km (10-XXXX)' },
+                        { id: '5km', label: '5 km (05-XXXX)' },
+                        { id: '3km', label: '4 km Dog (03-XXXX)' },
+                        { id: '1km', label: '1 km Dog (01-XXXX)' },
                       ] as const
                     ).map((tab) => (
                       <button
@@ -2048,8 +2048,8 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
                   ) : null}
                   {(inspectingOrder as ServerOrder).shooting && (
                     <p className="mt-1 text-xs font-bold text-violet-900 bg-violet-50 border border-violet-200 rounded-lg px-2.5 py-1.5">
-                      🎯 ผู้ยิงปืน: {(inspectingOrder as ServerOrder).shooting!.shooters.map((x) => `${x.fullName} (${formatThaiId(x.idCard)})`).join(' · ')}
-                      {' '}· ยอมรับใบยินยอม {(inspectingOrder as ServerOrder).shooting!.consentAt?.slice(0, 10)}
+                      🎯 ผู้ยิงปืน: {(inspectingOrder as ServerOrder).shooting!.shooters.map((x) => (x.idCard ? `${x.fullName} (${formatThaiId(x.idCard)})` : x.fullName)).join(' · ')}
+                      {' '}· ยอมรับกฎความปลอดภัย {(inspectingOrder as ServerOrder).shooting!.consentAt?.slice(0, 10)}
                     </p>
                   )}
                   {inspectingOrder.paymentStatus === 'PAID' && (

@@ -15,7 +15,7 @@ import type { StoredOrder } from './store';
 const DIST: Record<string, { label: string; sub: string }> = {
   '10km': { label: '10K', sub: 'THAILAND' },
   '5km': { label: '5K', sub: 'THAILAND' },
-  '3km': { label: '3.8K', sub: 'DOG RUN' },
+  '3km': { label: '4K', sub: 'DOG RUN' },
   '1km': { label: '1K', sub: 'DOG RUN' },
 };
 

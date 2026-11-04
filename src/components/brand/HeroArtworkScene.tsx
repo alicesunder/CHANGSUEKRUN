@@ -291,7 +291,7 @@ export const HeroArtworkScene: React.FC<HeroArtworkSceneProps> = ({
           id="heroRockRunner"
           filter="url(#heroDropShadow)"
           className={`cursor-pointer transition-transform duration-300 ${wiggleTarget === 'rock' ? 'animate-wiggle scale-105' : 'hover:scale-103'}`}
-          onClick={() => triggerReaction('rock', 'หัวใจแกร่งดั่งหินผา! วิ่ง 10KM ได้สบาย! 🪨')}
+          onClick={() => triggerReaction('rock', 'หัวใจแกร่งดั่งหินผา! วิ่ง 10km ได้สบาย! 🪨')}
         >
           {/* Back Leg */}
           <path d="M 835,268 L 862,302 L 880,296" fill="none" stroke="#FAD7A0" strokeWidth="7" strokeLinecap="round" />

@@ -11,7 +11,7 @@ type ScanOrder = ServerOrder & {
   addOns?: { label: string; people: number; total: number };
   vipTables?: number;
   parkingPlates?: { plate: string; province: string }[];
-  shooting?: { shooters: { fullName: string; idCard: string }[] };
+  shooting?: { shooters: { fullName: string; idCard?: string }[] };
 };
 
 /** Pulls an order id / BIB out of whatever a QR code holds (our JSON payload or a plain code). */
@@ -272,11 +272,11 @@ export const TicketScannerAdmin: React.FC = () => {
             )}
             {order.shooting && (
               <div className="col-span-2 rounded-2xl bg-white border-2 border-[#2A1450]/15 p-3">
-                <span className="block text-[11px] font-extrabold text-[#6F6878]">ผู้ยิงปืน (ตรวจบัตรประชาชนตัวจริง)</span>
+                <span className="block text-[11px] font-extrabold text-[#6F6878]">ผู้ยิงปืน</span>
                 <ul className="mt-0.5 space-y-0.5">
                   {order.shooting.shooters.map((s, i) => (
                     <li key={i} className="font-extrabold text-[#2A1450] break-words">
-                      {i + 1}. {s.fullName} <span className="font-mono text-xs text-[#6F6878]">{s.idCard}</span>
+                      {i + 1}. {s.fullName}{s.idCard ? <span className="ml-1.5 font-mono text-xs text-[#6F6878]">{s.idCard}</span> : null}
                     </li>
                   ))}
                 </ul>

@@ -81,7 +81,8 @@ import {
 import { TicketPrintEmailModal } from './TicketPrintEmailModal';
 import { AddOnPicker } from './AddOnPicker';
 import { needsInsurance } from '../data/insurance';
-import { digitsOnly, formatThaiId, isValidThaiId, type Shooter } from '../data/shooting';
+import { digitsOnly, type Shooter } from '../data/shooting';
+import { ShootingSafetyRules } from './ShootingSafetyRules';
 import { PaymentWow } from './PaymentWow';
 import { PaymentStep } from './PaymentStep';
 import { PaymentSuccess } from './PaymentSuccess';
@@ -166,7 +167,7 @@ const ROUTE_THEME: Record<
 const TICKET_ICONS: Record<RouteId, { src: string; alt: string }> = {
   '10km': { src: '/images/distances/icon-10k.webp', alt: 'นักวิ่ง 10 กม. บนถนนเลียบชายฝั่ง' },
   '5km': { src: '/images/distances/icon-5k.webp', alt: 'นักวิ่ง 5 กม. คู่หนึ่งวิ่งริมหาด' },
-  '3km': { src: '/images/distances/icon-3k.webp', alt: 'นักวิ่งกับน้องสุนัขระยะ 3.8 กม. ริมหาด' },
+  '3km': { src: '/images/distances/icon-3k.webp', alt: 'นักวิ่งกับน้องสุนัขระยะ 4 กม. ริมหาด' },
   '1km': { src: '/images/distances/icon-1k.webp', alt: 'น้องสุนัขวิ่งระยะ 1 กม.' },
 };
 
@@ -268,8 +269,9 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
   const [insConsent, setInsConsent] = useState(false);
   // VIP parking: up to 2 cars per table
   const [plates, setPlates] = useState<ParkingPlate[]>([]);
-  // Shooting: name + national ID for each person (names start from the runners' names)
+  // Shooting: a name for each person (starts from the runners' names) + acceptance of the range's safety rules
   const [shooters, setShooters] = useState<Partial<Shooter>[]>([]);
+  const [shootingAck, setShootingAck] = useState(false);
   // Tower / wind tunnel: the buyer's edits to each participant, and which waivers were accepted
   // (stored as the details they were accepted for, so changing a detail asks again)
   const [waiverEdits, setWaiverEdits] = useState<Partial<WaiverParticipant>[]>([]);
@@ -347,7 +349,6 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
   const autoName = (i: number) => (i === 0 ? buyerName : runnerName(runners[i]));
   const shooterList: Shooter[] = Array.from({ length: hasGun ? addOns.people : 0 }, (_, i) => ({
     fullName: shooters[i]?.fullName ?? autoName(i),
-    idCard: shooters[i]?.idCard ?? '',
   }));
   const waiverPeople: WaiverParticipant[] = Array.from({ length: waiverActivities.length ? addOns.people : 0 }, (_, i) =>
     mergeParticipant(
@@ -355,7 +356,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
         fullName: shooterList[i]?.fullName || autoName(i),
         phone: i === 0 ? digitsOnly(phone) : '',
         birthDate: runners[i]?.birthDate || '',
-        idCard: shooterList[i]?.idCard || '',
+        idCard: '',
       },
       waiverEdits[i]
     )
@@ -607,7 +608,8 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
         insurance: insured ? toInsurance(runners[0], runners[0]) : undefined,
         insuranceConsent: insured ? insConsent : undefined,
         parkingPlates: vipTables > 0 ? plates.slice(0, vipTables * VIP_PARKING_PER_TABLE).filter((p) => p.plate.trim() || p.province.trim()) : undefined,
-        shooters: hasGun ? shooterList.map((x) => ({ fullName: x.fullName.trim(), idCard: digitsOnly(x.idCard) })) : undefined,
+        shooters: hasGun ? shooterList.map((x) => ({ fullName: x.fullName.trim() })) : undefined,
+        shootingAck: hasGun ? shootingAck : undefined,
         activityWaiver: waiverActivities.length
           ? { participants: waiverPeople, accepted: Object.fromEntries(waiverActivities.map((a) => [a, waiverAccepted[a] === waiverKey])) }
           : undefined,
@@ -895,7 +897,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                     {([
                       { key: 'run', emoji: '🏃', title: 'ตั๋ววิ่ง', sub: 'เลือกระยะด้านล่าง', on: wantRun, set: setWantRun },
                       { key: 'concert', emoji: '🎶', title: 'ตั๋วคอนเสิร์ต', sub: `GA ${formatBaht(concertUnit)} · VIP โต๊ะ`, on: wantConcert, set: setWantConcert },
-                      { key: 'addon', emoji: '🎢', title: 'กิจกรรมเสริม', sub: 'หอสูง · ยิงปืน · อุโมงค์ลม', on: wantAddons, set: setWantAddons },
+                      { key: 'addon', emoji: '🎢', title: 'กิจกรรมเสริม (เฉพาะบุคคล)', sub: 'หอสูง · ยิงปืน · อุโมงค์ลม', on: wantAddons, set: setWantAddons },
                     ] as const).map((m) => (
                       <button
                         key={m.key}
@@ -1045,7 +1047,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                   <div className="flex items-center gap-2.5 mb-3">
                     <span className="w-10 h-10 rounded-2xl flex items-center justify-center text-lg shadow-[0_8px_14px_-6px_rgba(245,158,11,0.6)]" style={{ background: 'linear-gradient(135deg, #FDE68A 0%, #FBBF24 55%, #FB923C 100%)' }} aria-hidden="true">🎉</span>
                     <div>
-                      <h3 className="text-base font-black text-[#2A1450] leading-tight">เพิ่มความสนุก · กิจกรรมเสริม (วันอาทิตย์ที่ 10 ม.ค. 2570)</h3>
+                      <h3 className="text-base font-black text-[#2A1450] leading-tight">เพิ่มความสนุก · กิจกรรมเสริม (เฉพาะบุคคล) · วันอาทิตย์ที่ 10 ม.ค. 2570</h3>
                       <p className="text-[11px] font-bold text-[#6F6878]">ไม่บังคับ · เลือกหลายอย่างได้ ยิ่งเลือกยิ่งคุ้ม</p>
                     </div>
                   </div>
@@ -1405,19 +1407,18 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                           </div>
                         )}
 
-                        {/* SHOOTING: each shooter's name (from the runner cards) + national ID */}
+                        {/* SHOOTING: each shooter's name (from the runner cards) + the range's safety rules to read and accept */}
                         {hasGun && (
                           <div className="rounded-3xl border-2 border-[#8B5CF6] bg-[#F5F3FF] p-4 sm:p-5 space-y-3">
                             <div className="flex items-center gap-2.5">
                               <span className="w-10 h-10 rounded-2xl bg-white border-2 border-[#2A1450] flex items-center justify-center text-lg shrink-0" aria-hidden="true">🎯</span>
                               <div>
                                 <h3 className="text-base font-black text-[#2A1450] leading-tight">ข้อมูลผู้ยิงปืน ({addOns.people} คน)</h3>
-                                <p className="text-xs font-bold text-[#6B5A85]">สนามยิงปืนลงทะเบียนด้วยชื่อและเลขบัตรประชาชน · ใช้กับสนามเท่านั้น · นำบัตรตัวจริงมาแสดงที่สนาม</p>
+                                <p className="text-xs font-bold text-[#6B5A85]">ใช้ลงทะเบียนกับสนามยิงปืน · อ่านกฎความปลอดภัยด้านล่างแล้วกดรับทราบก่อนชำระเงิน</p>
                               </div>
                             </div>
                             <div className="space-y-3">
                               {shooterList.map((sh, i) => {
-                                const idBad = sh.idCard.length === 13 && !isValidThaiId(sh.idCard);
                                 const setSh = (patch: Partial<Shooter>) =>
                                   setShooters((ss) => {
                                     const next = [...ss];
@@ -1425,31 +1426,16 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                                     return next;
                                   });
                                 return (
-                                  <div key={i} className="rounded-2xl bg-white border-2 border-[#2A1450]/15 p-3 grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                                  <div key={i} className="rounded-2xl bg-white border-2 border-[#2A1450]/15 p-3">
                                     <div>
                                       <label className={labelCls}>ผู้ยิงคนที่ {i + 1}: ชื่อ-นามสกุล *</label>
                                       <input type="text" required value={sh.fullName} maxLength={120} onChange={(e) => setSh({ fullName: e.target.value })} className="w-full min-h-[48px] px-3 rounded-xl border-2 border-[#2A1450]/20 bg-white text-sm font-semibold text-[#2A1450]" />
-                                    </div>
-                                    <div>
-                                      <label className={labelCls}>เลขบัตรประจำตัวประชาชน 13 หลัก *</label>
-                                      <input
-                                        type="text"
-                                        inputMode="numeric"
-                                        autoComplete="off"
-                                        required
-                                        value={formatThaiId(sh.idCard)}
-                                        maxLength={17}
-                                        onChange={(e) => setSh({ idCard: digitsOnly(e.target.value).slice(0, 13) })}
-                                        placeholder="x-xxxx-xxxxx-xx-x"
-                                        aria-invalid={idBad}
-                                        className={`w-full min-h-[48px] px-3 rounded-xl border-2 bg-white text-sm font-semibold font-mono text-[#2A1450] ${idBad ? 'border-rose-500' : 'border-[#2A1450]/20'}`}
-                                      />
-                                      {idBad && <p className="mt-1 text-xs font-bold text-rose-600">เลขบัตรไม่ถูกต้อง กรุณาตรวจอีกครั้ง</p>}
                                     </div>
                                   </div>
                                 );
                               })}
                             </div>
+                            <ShootingSafetyRules accepted={shootingAck} onChange={setShootingAck} />
                           </div>
                         )}
 

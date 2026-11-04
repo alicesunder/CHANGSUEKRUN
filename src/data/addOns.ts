@@ -160,8 +160,8 @@ const COMBO_PRICES: Record<string, number> = {
 
 const SINGLE_PRICES = { tower: 350, standard: 890, premium: 1950, windTunnel: 990 };
 
-/** Early bird (admin switch): baht off each chosen activity, per person; the % discounts below come after it. */
-export const EARLY_BIRD_ACTIVITY_OFF = 100;
+/** Early bird (admin switch) no longer cuts the activity prices (it is 0 baht); only run / concert tickets get the early-bird price. */
+export const EARLY_BIRD_ACTIVITY_OFF = 0;
 
 export const hasAddOns = (s: AddOnSelection): boolean => s.tower || s.gun !== 'none' || s.windTunnel;
 
