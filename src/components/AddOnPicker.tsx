@@ -1,5 +1,5 @@
 import React from 'react';
-import { Check, ExternalLink, MapPin, Minus, Plus, Sparkles, Star } from 'lucide-react';
+import { Check, Crosshair, ExternalLink, MapPin, Minus, Plus, Sparkles, Star, TowerControl, Wind } from 'lucide-react';
 import { ACTIVITY_LOCATIONS, type ActivityLocation } from '../data/activityLocations';
 import { showActivitySticker } from './ActivitySticker';
 import {
@@ -75,11 +75,6 @@ export const ADD_ON_THEMES = {
 
 type ThemeKey = keyof typeof ADD_ON_THEMES;
 
-const STICKER: Record<ThemeKey, string> = {
-  tower: '/images/addons/sticker-tower.webp',
-  gun: '/images/addons/sticker-gun.webp',
-  wind: '/images/addons/sticker-wind.webp',
-};
 
 const Gloss: React.FC = () => (
   <>
@@ -88,7 +83,7 @@ const Gloss: React.FC = () => (
   </>
 );
 
-/** `vertical` stacks the sticker over the text once the box is wide enough for three columns. */
+/** A compact activity card: a colour bar, a small icon, the text and the pick control. (The sticker only pops up when picked.) */
 const Card: React.FC<{
   theme: ThemeKey;
   title: string;
@@ -96,49 +91,37 @@ const Card: React.FC<{
   perks: string[];
   active: boolean;
   disabled?: boolean;
-  vertical: boolean;
+  icon: React.ReactNode;
   badge?: React.ReactNode;
-  stickerSrc?: string;
   children: React.ReactNode;
-}> = ({ theme, title, tagline, perks, active, disabled, vertical, badge, stickerSrc, children }) => {
+}> = ({ theme, title, tagline, perks, active, disabled, icon, badge, children }) => {
   const t = ADD_ON_THEMES[theme];
   return (
     <div
       style={{
         background: active ? t.on : t.soft,
         borderColor: active ? t.borderActive : t.border,
-        boxShadow: active ? `0 18px 34px -14px ${t.glow}, 0 0 0 3px ${t.ring}` : '0 10px 22px -16px rgba(42,20,80,0.4)',
+        boxShadow: active ? `0 14px 28px -14px ${t.glow}, 0 0 0 3px ${t.ring}` : '0 8px 18px -14px rgba(42,20,80,0.4)',
       }}
-      className={`relative flex h-full overflow-hidden rounded-[26px] border-[3px] transition-all duration-300 ${vertical ? 'flex-row @[620px]:flex-col' : 'flex-row'} ${active ? '-translate-y-0.5' : ''} ${disabled ? 'opacity-60 grayscale' : ''}`}
+      className={`relative flex h-full flex-col overflow-hidden rounded-[22px] border-[3px] transition-all duration-300 ${active ? '-translate-y-0.5' : ''} ${disabled ? 'opacity-60 grayscale' : ''}`}
     >
+      <span aria-hidden="true" style={{ background: t.panel }} className="block h-2 shrink-0" />
       {active && (
-        <span className="absolute top-2 right-2 z-10 inline-flex items-center gap-1 rounded-full bg-white px-2.5 py-1 text-[11px] font-black shadow-md" style={{ color: t.ink }}>
+        <span className="absolute top-3.5 right-3 z-10 inline-flex items-center gap-1 rounded-full bg-white px-2.5 py-1 text-[11px] font-black shadow-md" style={{ color: t.ink }}>
           <Check className="w-3.5 h-3.5 stroke-[3.5]" aria-hidden="true" /> เลือกแล้ว
         </span>
       )}
-      {/* sticker panel */}
-      <div
-        style={{ background: t.panel }}
-        className={`relative shrink-0 flex items-center justify-center overflow-hidden ${vertical ? 'w-[112px] @[620px]:w-full @[620px]:h-[150px]' : 'w-[112px] sm:w-[132px]'}`}
-      >
-        <span aria-hidden="true" className="absolute -top-6 -left-6 w-24 h-24 rounded-full bg-white/25 blur-xl" />
-        <span aria-hidden="true" className="absolute -bottom-8 -right-4 w-28 h-28 rounded-full bg-white/20 blur-2xl" />
-        <img
-          src={stickerSrc || STICKER[theme]}
-          alt=""
-          loading="lazy"
-          decoding="async"
-          draggable={false}
-          className={`relative object-contain drop-shadow-[0_8px_10px_rgba(0,0,0,0.3)] ${vertical ? 'w-[92px] h-[92px] @[620px]:w-[128px] @[620px]:h-[128px]' : 'w-[96px] h-[96px] sm:w-[112px] sm:h-[112px]'}`}
-        />
-      </div>
-      {/* text */}
-      <div className="flex-1 min-w-0 p-3.5 sm:p-4 flex flex-col gap-2.5">
-        <div>
-          <h4 className="text-[22px] leading-tight font-black pr-24" style={{ color: t.ink }}>
-            {title}
-          </h4>
-          <p className="text-[13px] font-bold leading-snug text-[#4B2D78] mt-0.5">{tagline}</p>
+      <div className="flex-1 p-3.5 flex flex-col gap-2.5">
+        <div className="flex items-center gap-3 pr-20">
+          <span style={{ background: t.panel }} className="shrink-0 w-11 h-11 rounded-2xl flex items-center justify-center text-white shadow-[0_6px_12px_-4px_rgba(0,0,0,0.35)]">
+            {icon}
+          </span>
+          <div className="min-w-0">
+            <h4 className="text-xl leading-tight font-black" style={{ color: t.ink }}>
+              {title}
+            </h4>
+            <p className="text-[12.5px] font-bold leading-snug text-[#4B2D78]">{tagline}</p>
+          </div>
         </div>
         <ul className="flex flex-wrap gap-1.5">
           {perks.map((x) => (
@@ -148,7 +131,7 @@ const Card: React.FC<{
           ))}
         </ul>
         {badge}
-        <div className="mt-auto flex flex-col gap-2.5">{children}</div>
+        <div className="mt-auto">{children}</div>
       </div>
     </div>
   );
@@ -157,7 +140,7 @@ const Card: React.FC<{
 const PriceTag: React.FC<{ price: number; listPrice?: number; ink: string }> = ({ price, listPrice, ink }) => (
   <span className="flex items-baseline gap-1.5 flex-wrap">
     {listPrice !== undefined && <s className="text-sm font-bold text-[#6B5A85]/80 decoration-2 decoration-rose-500">{formatBaht(listPrice)}</s>}
-    <span className="text-[30px] leading-none font-black tabular-nums" style={{ color: listPrice !== undefined ? '#E11D48' : ink }}>
+    <span className="text-[26px] leading-none font-black tabular-nums" style={{ color: listPrice !== undefined ? '#E11D48' : ink }}>
       {formatBaht(price)}
     </span>
     <span className="text-xs font-extrabold text-[#6B5A85]">บาท / คน</span>
@@ -176,7 +159,7 @@ const PickButton: React.FC<{ theme: ThemeKey; active: boolean; disabled?: boolea
       disabled={disabled}
       onClick={onClick}
       style={active ? { background: '#fff', color: t.ink, borderColor: t.borderActive } : { background: t.button, color: '#fff', borderColor: '#2A1450', boxShadow: '0 4px 0 #2A1450' }}
-      className="w-full min-h-[52px] rounded-2xl border-[2.5px] text-base font-black flex items-center justify-center gap-2 cursor-pointer active:translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60 focus:outline-none focus-visible:ring-4 focus-visible:ring-[#7B3FC6]/50"
+      className="flex-1 min-w-[170px] min-h-[48px] px-3 rounded-2xl border-[2.5px] text-[15px] font-black flex items-center justify-center gap-2 cursor-pointer active:translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60 focus:outline-none focus-visible:ring-4 focus-visible:ring-[#7B3FC6]/50"
     >
       {active ? (
         <>
@@ -253,7 +236,6 @@ export const AddOnPicker: React.FC<AddOnPickerProps> = ({ value, onChange, windT
   const total = addOnTotal(value, discountCtx);
   const isFull = value.tower && value.gun === 'standard' && value.windTunnel;
   const gunOn = value.gun !== 'none';
-  const vertical = layout === 'grid';
 
   const windFull = windTunnelRemaining !== null && windTunnelRemaining <= 0;
   const windShort = windTunnelRemaining !== null && value.windTunnel && value.people > windTunnelRemaining && !windFull;
@@ -264,7 +246,8 @@ export const AddOnPicker: React.FC<AddOnPickerProps> = ({ value, onChange, windT
       {/* three columns only when the box itself is wide enough (the box is narrow inside the booking window) */}
       <div className={layout === 'rows' ? 'grid grid-cols-1 gap-3' : 'grid grid-cols-1 @[620px]:grid-cols-3 gap-3 sm:gap-4'}>
         <div className="flex flex-col gap-1">
-          <Card theme="tower" title="หอสูง" tagline="มีครูฝึกดูแลตลอดกิจกรรม" perks={['🧑‍🏫 ครูฝึกดูแล', '📜 ได้ใบประกาศ / ปีก']} active={value.tower} vertical={vertical}>
+          <Card theme="tower" title="หอสูง" tagline="มีครูฝึกดูแลตลอดกิจกรรม" perks={['🧑‍🏫 ครูฝึกดูแล', '📜 ได้ใบประกาศ / ปีก']} active={value.tower} icon={<TowerControl className="w-6 h-6" aria-hidden="true" />}>
+            <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
             <PriceTag price={350 - off} listPrice={off ? 350 : undefined} ink={ADD_ON_THEMES.tower.ink} />
             <PickButton
               theme="tower"
@@ -275,6 +258,7 @@ export const AddOnPicker: React.FC<AddOnPickerProps> = ({ value, onChange, windT
                 set({ tower: !value.tower });
               }}
             />
+            </div>
           </Card>
           <PinLink id="tower" />
         </div>
@@ -287,8 +271,7 @@ export const AddOnPicker: React.FC<AddOnPickerProps> = ({ value, onChange, windT
             tagline="ครูฝึกส่วนตัวดูแลใกล้ชิด"
             perks={['🎯 ยิง 10 นัด', '🧑‍🏫 ครูฝึกส่วนตัว']}
             active={gunOn}
-            vertical={vertical}
-            stickerSrc={value.gun === 'premium' ? '/images/addons/sticker-gun-premium.webp' : undefined}
+            icon={<Crosshair className="w-6 h-6" aria-hidden="true" />}
           >
             <div role="radiogroup" aria-label="ยิงปืน" className="grid grid-cols-1 gap-2">
               {GUN_SEGMENTS.map((o) => {
@@ -337,7 +320,7 @@ export const AddOnPicker: React.FC<AddOnPickerProps> = ({ value, onChange, windT
             perks={['🌪️ ลอยตัวในอุโมงค์ลม']}
             active={value.windTunnel && !windFull}
             disabled={windFull}
-            vertical={vertical}
+            icon={<Wind className="w-6 h-6" aria-hidden="true" />}
             badge={
               <span
                 className={`self-start inline-block px-3 py-1 rounded-full text-xs font-black shadow-[0_4px_10px_-4px_rgba(0,0,0,0.35)] ${
@@ -348,6 +331,7 @@ export const AddOnPicker: React.FC<AddOnPickerProps> = ({ value, onChange, windT
               </span>
             }
           >
+            <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
             <PriceTag price={990 - off} listPrice={off ? 990 : undefined} ink={ADD_ON_THEMES.wind.ink} />
             <PickButton
               theme="wind"
@@ -359,6 +343,7 @@ export const AddOnPicker: React.FC<AddOnPickerProps> = ({ value, onChange, windT
                 set({ windTunnel: !value.windTunnel });
               }}
             />
+            </div>
           </Card>
           <PinLink id="wind" />
         </div>
