@@ -4,6 +4,7 @@ import { ArrowRight, Check, ChevronDown, Clock, Crown, Droplets, Flame, Medal, M
 import type { RouteId } from '../types';
 import { EarlyBirdPrice } from './EarlyBirdPrice';
 import { useEarlyBird } from '../utils/earlyBird';
+import { useLang } from '../i18n/lang';
 import { CONCERT_PASS_PRICE, MAX_VIP_TABLES, VIP_TABLE_PERKS, VIP_TABLE_PRICE, VIP_TABLE_SEATS, calcTicketTotal, concertPassPrice, runBasePrice, vipTablePrice, isDogCategory, routesData, ticketById } from '../data/eventData';
 import {
   AddOnSelection,
@@ -39,9 +40,9 @@ import { PawIcon } from './brand/DogDecor';
 // ---------------------------------------------------------------------------
 const BRAND_HEADER = 'linear-gradient(135deg, #2A1450 0%, #4C1D95 55%, #6D28D9 100%)';
 const STATIONS = {
-  run: { n: 1, emoji: '🏃', title: 'ตั๋ววิ่ง', hint: 'เลือก 1 ระยะ (ไม่วิ่งก็ข้ามได้)', grad: BRAND_HEADER },
-  concert: { n: 2, emoji: '🎶', title: 'ตั๋วคอนเสิร์ต', hint: 'ริมหาด Door Open 17.30 น. · เริ่ม 18.00 น. · GA หรือ VIP TABLE · ซื้อแยกได้', grad: BRAND_HEADER },
-  addon: { n: 3, emoji: '🎢', title: 'กิจกรรมเสริม (เฉพาะบุคคล)', hint: 'วันอาทิตย์ที่ 10 ม.ค. 2570 · 2 อย่างขึ้นไปลด 10% · มีคอนเสิร์ตลดเพิ่ม 10% (สูงสุด 20%)', grad: BRAND_HEADER },
+  run: { n: 1, emoji: '🏃', title: 'ตั๋ววิ่ง', titleEn: 'Run ticket', hint: 'เลือก 1 ระยะ (ไม่วิ่งก็ข้ามได้)', hintEn: 'Pick 1 distance (skip it if you are not running)', grad: BRAND_HEADER },
+  concert: { n: 2, emoji: '🎶', title: 'ตั๋วคอนเสิร์ต', titleEn: 'Concert ticket', hint: 'ริมหาด Door Open 17.30 น. · เริ่ม 18.00 น. · GA หรือ VIP TABLE · ซื้อแยกได้', hintEn: 'On the beach · doors 17:30 · show 18:00 · GA or VIP table · can be bought separately', grad: BRAND_HEADER },
+  addon: { n: 3, emoji: '🎢', title: 'กิจกรรมเสริม (เฉพาะบุคคล)', titleEn: 'Activities (individuals only)', hint: 'วันอาทิตย์ที่ 10 ม.ค. 2570 · 2 อย่างขึ้นไปลด 10% · มีคอนเสิร์ตลดเพิ่ม 10% (สูงสุด 20%)', hintEn: 'Sunday 10 Jan 2027 · 2+ activities −10% · with a concert ticket another −10% (max 20%)', grad: BRAND_HEADER },
 } as const;
 type StationKey = keyof typeof STATIONS;
 
@@ -172,6 +173,7 @@ const PACKAGE_TABLE: { name: string; price: number; strong?: boolean }[] = [
 
 // ---------------------------------------------------------------------------
 const StationCard: React.FC<{ id: string; k: StationKey; done: boolean; children: React.ReactNode; aside?: React.ReactNode }> = ({ id, k, done, children, aside }) => {
+  const { t: tr } = useLang();
   const s = STATIONS[k];
   return (
     <section
@@ -198,9 +200,9 @@ const StationCard: React.FC<{ id: string; k: StationKey; done: boolean; children
         </motion.span>
         <div className="relative min-w-0 flex-1">
           <h3 id={`${id}-title`} className="text-lg sm:text-xl font-extrabold leading-tight">
-            {s.title}
+            {tr(s.title, s.titleEn)}
           </h3>
-          <p className="text-xs sm:text-sm font-bold text-white/90 leading-snug">{s.hint}</p>
+          <p className="text-xs sm:text-sm font-bold text-white/90 leading-snug">{tr(s.hint, s.hintEn)}</p>
         </div>
         {aside && <div className="relative">{aside}</div>}
       </header>
@@ -212,6 +214,7 @@ const StationCard: React.FC<{ id: string; k: StationKey; done: boolean; children
 /** One collectible run ticket (colours + details from the original ticket cards). */
 const RunTicket: React.FC<{ id: RouteId; on: boolean; onPick: () => void }> = ({ id, on, onPick }) => {
   const earlyBird = useEarlyBird();
+  const { t: tr } = useLang();
   const t = ticketById(id);
   const l = LOOK[id];
   const isDog = isDogCategory(id);
@@ -316,11 +319,11 @@ const RunTicket: React.FC<{ id: RouteId; on: boolean; onPick: () => void }> = ({
       <div className="relative z-10 p-3.5 pt-2.5 bg-white/90">
         <div className="flex items-end justify-between mb-2.5">
           <span>
-            <span className="block text-xs font-bold text-[#6B5A85]">ราคาบัตร ({t.baseLabel})</span>
+            <span className="block text-xs font-bold text-[#6B5A85]">{tr('ราคาบัตร', 'Ticket price')} ({t.baseLabel})</span>
             <span className="font-display text-3xl font-black tabular-nums leading-none" style={{ color: l.accentDark }}>
               <EarlyBirdPrice list={t.basePrice} now={runBasePrice(id, earlyBird)} />
             </span>
-            <span className="ml-1 text-xs font-extrabold text-[#261247]">บาท</span>
+            <span className="ml-1 text-xs font-extrabold text-[#261247]">{tr('บาท', 'THB')}</span>
           </span>
           <span aria-hidden="true" className="inline-flex items-end gap-[2px] h-5 opacity-60">
             {[2, 3.5, 1.5, 3, 1.5, 3.5, 2, 1.5, 3, 2].map((w, i) => (
@@ -339,7 +342,7 @@ const RunTicket: React.FC<{ id: RouteId; on: boolean; onPick: () => void }> = ({
         >
           <span className="absolute inset-0 ticket-foil-shimmer opacity-40 pointer-events-none" />
           {on ? <Check className="w-4 h-4 stroke-[3] relative" /> : <Ticket className="w-4 h-4 relative" />}
-          <span className="relative">{on ? `เลือกแล้ว · ${t.distanceLabel}` : `เลือกบัตร ${t.distanceLabel}`}</span>
+          <span className="relative">{on ? `${tr('เลือกแล้ว', 'Selected')} · ${t.distanceLabel}` : `${tr('เลือกบัตร', 'Pick')} ${t.distanceLabel}`}</span>
         </motion.button>
       </div>
 
@@ -438,6 +441,7 @@ export const TicketShop: React.FC<TicketShopProps> = ({
   // the admin's open / close switch (see SalesSwitchCard)
   const [salesClosed, setSalesClosed] = useState(false);
   const earlyBird = useEarlyBird();
+  const { t: tr } = useLang();
   useEffect(() => {
     let alive = true;
     getPublicConfig()
@@ -527,7 +531,7 @@ export const TicketShop: React.FC<TicketShopProps> = ({
         compact ? 'px-4 py-2.5 text-sm min-h-[48px]' : 'w-full px-5 py-3.5 text-base min-h-[56px]'
       }`}
     >
-      {count === 0 ? 'เลือกอย่างน้อย 1 อย่าง' : compact ? 'ไปต่อ' : 'ไปกรอกข้อมูล & ชำระเงิน'}
+      {count === 0 ? tr('เลือกอย่างน้อย 1 อย่าง', 'Pick at least 1 item') : compact ? tr('ไปต่อ', 'Continue') : tr('ไปกรอกข้อมูล & ชำระเงิน', 'Continue to details & payment')}
       {count > 0 && <ArrowRight className="w-5 h-5 stroke-[2.5]" />}
     </button>
   );
@@ -546,17 +550,17 @@ export const TicketShop: React.FC<TicketShopProps> = ({
         <div className="relative mb-5 sm:mb-6 space-y-3">
           <div className="text-center">
             <h2 className="squiggle squiggle-center font-hero text-4xl sm:text-6xl font-extrabold leading-[1.4]">
-              <span className="inline-block px-1 pt-2 pb-1 text-[#1E0B3D] [text-shadow:0_4px_0_#FFC928,0_8px_18px_rgba(42,20,80,0.25)]">ซื้อบัตรงานวิ่ง</span>
+              <span className="inline-block px-1 pt-2 pb-1 text-[#1E0B3D] [text-shadow:0_4px_0_#FFC928,0_8px_18px_rgba(42,20,80,0.25)]">{tr('ซื้อบัตรงานวิ่ง', 'Buy tickets')}</span>
             </h2>
             <p className="mt-2 text-sm font-bold text-[#4B2D78]">
-              เลือกได้ 1, 2 หรือครบ 3 อย่าง <span className="text-[#7C3AED]">แล้วจ่ายทีเดียวจบ</span>
+              {tr('เลือกได้ 1, 2 หรือครบ 3 อย่าง', 'Pick 1, 2 or all 3')} <span className="text-[#7C3AED]">{tr('แล้วจ่ายทีเดียวจบ', 'and pay once')}</span>
             </p>
           </div>
           <DealStrip hasRun={eligible} hasGaConcert={concertQty > 0} hasConcert={hasConcert} activities={activityCount} />
         </div>
         {salesClosed && (
           <div role="status" className="mx-auto mt-5 max-w-2xl rounded-2xl border-[3px] border-[#2A1450] bg-[#FFE4E6] px-4 py-3 text-center shadow-[0_5px_0_#2A1450]">
-            <p className="text-base sm:text-lg font-black text-[#9F1239]">⏸️ ขณะนี้ปิดการขายบัตรชั่วคราว</p>
+            <p className="text-base sm:text-lg font-black text-[#9F1239]">{tr('⏸️ ขณะนี้ปิดการขายบัตรชั่วคราว', '⏸️ Ticket sales are paused for now')}</p>
             <p className="text-xs sm:text-sm font-bold text-[#4B2D78]">ดูรายละเอียดบัตรได้ตามปกติ · ติดตามประกาศเปิดขายจากผู้จัดงาน</p>
           </div>
         )}
@@ -764,7 +768,7 @@ export const TicketShop: React.FC<TicketShopProps> = ({
               <div className="relative overflow-hidden px-5 py-4 text-white flex items-center gap-2.5" style={{ background: 'linear-gradient(135deg, #2A1450 0%, #6D28D9 60%, #EC4899 100%)' }}>
                 <span aria-hidden="true" className="pointer-events-none absolute -top-10 -right-8 w-32 h-32 rounded-full bg-white/20 blur-2xl" />
                 <ShoppingBasket className="relative w-6 h-6 text-[#FFC928]" aria-hidden="true" />
-                <h3 className="relative text-lg font-extrabold">ตะกร้าของคุณ</h3>
+                <h3 className="relative text-lg font-extrabold">{tr('ตะกร้าของคุณ', 'Your basket')}</h3>
                 <span className="relative ml-auto px-2.5 py-0.5 rounded-full bg-[#FFC928] text-[var(--ink)] text-xs font-black">{count}/3</span>
               </div>
               <div className="p-5">
@@ -773,8 +777,8 @@ export const TicketShop: React.FC<TicketShopProps> = ({
                     <motion.span className="inline-block text-5xl" animate={{ rotate: [-8, 8, -8] }} transition={{ duration: 2.2, repeat: Infinity }} aria-hidden="true">
                       🐶
                     </motion.span>
-                    <p className="mt-2 text-sm font-extrabold text-[var(--ink)]">ตะกร้ายังว่างอยู่</p>
-                    <p className="text-xs font-bold text-[#6B5A85]">แตะเลือกตั๋วทางซ้ายได้เลย</p>
+                    <p className="mt-2 text-sm font-extrabold text-[var(--ink)]">{tr('ตะกร้ายังว่างอยู่', 'Your basket is empty')}</p>
+                    <p className="text-xs font-bold text-[#6B5A85]">{tr('แตะเลือกตั๋วทางซ้ายได้เลย', 'Tap a ticket on the left to add it')}</p>
                   </div>
                 ) : (
                   <ul className="space-y-2.5">
@@ -808,8 +812,8 @@ export const TicketShop: React.FC<TicketShopProps> = ({
                     className="mt-3 rounded-2xl border-[3px] border-[var(--ink)] px-3 py-2 text-center text-[var(--ink)] shadow-[0_4px_0_var(--ink)]"
                     style={{ background: 'linear-gradient(135deg, #FFE268, #FFC928 50%, #FF7A59)' }}
                   >
-                    <span className="block text-xs font-extrabold">🎉 คุณประหยัดไปแล้ว</span>
-                    <span className="block text-2xl font-black tabular-nums leading-tight">{formatBaht(totalSaved)} บาท!</span>
+                    <span className="block text-xs font-extrabold">{tr('🎉 คุณประหยัดไปแล้ว', '🎉 You are saving')}</span>
+                    <span className="block text-2xl font-black tabular-nums leading-tight">{formatBaht(totalSaved)} {tr('บาท', 'THB')}!</span>
                   </motion.div>
                 )}
                 {nudge && (
@@ -817,7 +821,7 @@ export const TicketShop: React.FC<TicketShopProps> = ({
                 )}
                 <div className="my-4 border-t-[3px] border-dashed border-[var(--ink)]/15" />
                 <div className="flex items-end justify-between mb-4">
-                  <span className="text-sm font-extrabold text-[#6B5A85]">ยอดรวม{totalSaved > 0 && <s className="ml-2 text-xs font-bold opacity-70 tabular-nums">{formatBaht(total + totalSaved)}</s>}</span>
+                  <span className="text-sm font-extrabold text-[#6B5A85]">{tr('ยอดรวม', 'Total')}{totalSaved > 0 && <s className="ml-2 text-xs font-bold opacity-70 tabular-nums">{formatBaht(total + totalSaved)}</s>}</span>
                   <motion.span
                     key={total}
                     initial={{ scale: 1.25, color: '#EC4899' }}
@@ -826,11 +830,11 @@ export const TicketShop: React.FC<TicketShopProps> = ({
                     className="text-4xl font-black tabular-nums leading-none"
                   >
                     {formatBaht(total)}
-                    <span className="text-base font-bold ml-1">บาท</span>
+                    <span className="text-base font-bold ml-1">{tr('บาท', 'THB')}</span>
                   </motion.span>
                 </div>
                 {checkoutBtn()}
-                <p className="mt-2.5 text-center text-xs font-bold text-[#6B5A85]">ชำระด้วย QR หรือโอนเข้าบัญชี · ได้ตั๋วทันที</p>
+                <p className="mt-2.5 text-center text-xs font-bold text-[#6B5A85]">{tr('ชำระด้วย QR หรือโอนเข้าบัญชี · ได้ตั๋วทันที', 'Pay by QR or bank transfer · get your ticket right away')}</p>
               </div>
             </div>
           </aside>
@@ -850,7 +854,7 @@ export const TicketShop: React.FC<TicketShopProps> = ({
               </span>
               <span className="min-w-0 flex-1">
                 <span className="block text-xs font-extrabold text-[#6B5A85] break-words">
-                  {lines.length ? lines.map((l) => l.emoji).join(' ') + ` · ${count} อย่าง` : 'ตะกร้ายังว่าง'}
+                  {lines.length ? lines.map((l) => l.emoji).join(' ') + ` · ${count} ${tr('อย่าง', 'item(s)')}` : tr('ตะกร้ายังว่าง', 'Basket is empty')}
                 </span>
                 <motion.span key={total} initial={{ scale: 1.15 }} animate={{ scale: 1 }} className="block origin-left text-xl font-black text-[var(--ink)] tabular-nums leading-tight">
                   {formatBaht(total)} <span className="text-xs font-bold">บาท</span>

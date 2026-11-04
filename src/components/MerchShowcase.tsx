@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { ArrowRight, PawPrint, Sparkles, X, ZoomIn } from 'lucide-react';
+import { useLang } from '../i18n/lang';
 
 interface MerchShowcaseProps {
   onOpenRegister?: () => void;
@@ -9,7 +10,9 @@ interface MerchShowcaseProps {
 interface KitItem {
   id: string;
   name: string;
+  nameEn: string;
   desc: string;
+  descEn: string;
   image: string;
   /** who receives it — CONFIRM with the organiser before launch */
   group: 'all' | 'dog';
@@ -42,7 +45,9 @@ const KIT: KitItem[] = [
   {
     id: 'jersey',
     name: 'เสื้อวิ่ง Micro-Dry',
+    nameEn: 'Micro-Dry running shirt',
     desc: 'สีม่วงเข้ม ข้างลำตัวลายพราง ผ้าตาข่ายระบายอากาศ ด้านหน้าโลโก้ช้าง-นักวิ่ง-น้องสุนัขสีทอง ด้านหลัง CHANG SUEK RUN · BORDER PATROL POLICE',
+    descEn: 'Deep purple with camouflage side panels and breathable mesh. Gold elephant-runner-dog logo on the front, CHANG SUEK RUN · BORDER PATROL POLICE on the back.',
     image: '/images/merch/kit-jersey-2026.webp',
     group: 'all',
     wide: true,
@@ -50,7 +55,9 @@ const KIT: KitItem[] = [
   {
     id: 'medal',
     name: 'เหรียญ Finisher',
+    nameEn: 'Finisher medal',
     desc: 'เหรียญทองหน้าน้องสุนัข ด้านหลังโลโก้ CHANG SUEK RUN พร้อมสายคล้องคอม่วง-ทองลายรอยเท้า',
+    descEn: 'Gold medal with a dog on the front and the CHANG SUEK RUN logo on the back, on a purple-and-gold paw-print ribbon.',
     image: '/images/merch/kit-medal-2026.webp',
     group: 'all',
     star: true,
@@ -58,14 +65,18 @@ const KIT: KitItem[] = [
   {
     id: 'bag',
     name: 'กระเป๋าหูรูด',
+    nameEn: 'Drawstring bag',
     desc: 'กระเป๋าสีม่วงสกรีนโลโก้งาน เชือกถักสะพายหลังได้',
+    descEn: 'Purple bag printed with the event logo, with braided rope straps to carry on your back.',
     image: '/images/merch/kit-bag.webp',
     group: 'all',
   },
   {
     id: 'bib',
     name: 'ป้ายเบอร์วิ่ง (BIB)',
+    nameEn: 'Race bib (BIB)',
     desc: 'พิมพ์ชื่อและเบอร์ของคุณ มี QR ดูผลการวิ่ง และเบอร์ติดต่อฉุกเฉิน',
+    descEn: 'Printed with your name and number, a QR code for results and an emergency contact number.',
     image: '/images/merch/bib.webp',
     group: 'all',
     wide: true,
@@ -73,14 +84,18 @@ const KIT: KitItem[] = [
   {
     id: 'bandana',
     name: 'ผ้าพันคอน้องสุนัข',
+    nameEn: 'Dog bandana',
     desc: 'ลายช้างศึกม่วง-ทอง ผูกง่าย ใส่ถ่ายรูปคู่เจ้าของ (หมายเหตุ : สำหรับ Dog Run ระยะ 1 km และ 4 km)',
+    descEn: 'Purple-and-gold elephant pattern, easy to tie, great for photos with your owner (note: for Dog Run 1 km and 4 km).',
     image: '/images/merch/kit-bandana.webp',
     group: 'dog',
   },
   {
     id: 'pet-pack',
     name: 'Pet Sponsor Gift Pack',
+    nameEn: 'Pet Sponsor Gift Pack',
     desc: 'รวมผลิตภัณฑ์สำหรับน้องสุนัขจากผู้สนับสนุนภายในงาน (หมายเหตุ : สำหรับ Dog Run ระยะ 1 km และ 4 km)',
+    descEn: 'A bundle of dog products from the event sponsors (note: for Dog Run 1 km and 4 km).',
     image: '/images/merch/kit-pet-sponsor-pack.webp',
     group: 'dog',
   },
@@ -99,6 +114,7 @@ const SIZES = [
 ];
 
 export const MerchShowcase: React.FC<MerchShowcaseProps> = ({ onOpenRegister, className = '' }) => {
+  const { t } = useLang();
   const [zoom, setZoom] = useState<KitItem | null>(null);
 
   useEffect(() => {
@@ -122,12 +138,12 @@ export const MerchShowcase: React.FC<MerchShowcaseProps> = ({ onOpenRegister, cl
       <button
         type="button"
         onClick={() => setZoom(item)}
-        aria-label={`ดูภาพ${item.name}ขนาดใหญ่`}
+        aria-label={`${t('ดูภาพ', 'View')} ${t(item.name, item.nameEn)} ${t('ขนาดใหญ่', 'larger')}`}
         className={`relative block w-full overflow-hidden cursor-zoom-in ${row ? 'lg:w-[58%] lg:shrink-0' : ''}`}
       >
         <img
           src={item.image}
-          alt={item.name}
+          alt={t(item.name, item.nameEn)}
           loading="lazy"
           decoding="async"
           className="block w-full aspect-[3/2] object-contain p-2 transition-transform duration-500 group-hover:scale-[1.04]"
@@ -139,8 +155,8 @@ export const MerchShowcase: React.FC<MerchShowcaseProps> = ({ onOpenRegister, cl
         {item.star && (
           <span className="absolute top-2.5 right-2.5 z-10 inline-flex items-center gap-1 rounded-full bg-[#2A1450] text-[#FFC928] text-[11px] font-extrabold px-2.5 py-1">
             <Sparkles className="w-3 h-3" />
-            <span className="sm:hidden">เส้นชัย</span>
-            <span className="hidden sm:inline">ของที่ระลึกเส้นชัย</span>
+            <span className="sm:hidden">{t('เส้นชัย', 'Finish')}</span>
+            <span className="hidden sm:inline">{t('ของที่ระลึกเส้นชัย', 'Finish-line keepsake')}</span>
           </span>
         )}
         <span className="absolute bottom-2.5 right-2.5 z-10 grid h-8 w-8 place-items-center rounded-full bg-[#F3ECFF] text-[#4C1D95] opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
@@ -149,11 +165,11 @@ export const MerchShowcase: React.FC<MerchShowcaseProps> = ({ onOpenRegister, cl
       </button>
 
       <div className={`flex-1 border-t-2 border-dashed border-[#2A1450]/15 px-3.5 pb-3.5 pt-2.5 sm:px-4 sm:pb-4 ${row ? 'lg:border-t-0 lg:border-l-2 lg:py-5' : ''}`}>
-        <h4 className="font-hero text-[15px] sm:text-lg font-bold leading-snug text-[#2A1450]">{item.name}</h4>
-        <p className="mt-1 text-xs sm:text-sm font-medium leading-relaxed text-[#5B4A78]">{item.desc}</p>
+        <h4 className="font-hero text-[15px] sm:text-lg font-bold leading-snug text-[#2A1450]">{t(item.name, item.nameEn)}</h4>
+        <p className="mt-1 text-xs sm:text-sm font-medium leading-relaxed text-[#5B4A78]">{t(item.desc, item.descEn)}</p>
         {item.id === 'jersey' && (
           <div className="mt-2.5">
-            <p className="text-[11px] font-extrabold tracking-wide text-[#7C3AED]">ไซซ์ (รอบอก)</p>
+            <p className="text-[11px] font-extrabold tracking-wide text-[#7C3AED]">{t('ไซซ์ (รอบอก)', 'Size (chest)')}</p>
             <ul className="mt-1 grid grid-cols-7 gap-1">
               {SIZES.map((sz) => (
                 <li key={sz.size} className="rounded-lg bg-[#F3ECFF] py-1 text-center leading-none">
@@ -186,21 +202,21 @@ export const MerchShowcase: React.FC<MerchShowcaseProps> = ({ onOpenRegister, cl
       <div className="relative px-4 sm:px-8 lg:px-12 py-8 sm:py-11">
         <div className="text-center max-w-2xl mx-auto">
           <span className="inline-flex items-center gap-1.5 rounded-full bg-[#FFC928] text-[#2A1450] text-xs sm:text-sm font-bold px-3.5 py-1.5">
-            <PawPrint className="w-4 h-4" /> ของที่คุณจะได้รับ
+            <PawPrint className="w-4 h-4" /> {t('ของที่คุณจะได้รับ', 'What you will receive')}
           </span>
           <h3 id="race-kit-heading" data-reveal="pop" className="squiggle squiggle-center mt-3 font-hero text-3xl sm:text-4xl font-bold text-white">
             Race Pack
           </h3>
           <p className="mt-2 text-sm sm:text-base font-medium text-white/85">
-            ออกแบบพิเศษเฉพาะงานนี้ ในธีมม่วง-ทองของช้างศึก
+            {t('ออกแบบพิเศษเฉพาะงานนี้ ในธีมม่วง-ทองของช้างศึก', 'Designed just for this event in the purple-and-gold elephant theme')}
           </p>
         </div>
 
         {/* Every runner */}
         <div className="mt-8 flex items-center gap-3">
-          <h4 className="font-hero text-lg sm:text-xl font-semibold text-[#FFC928]">รวมในค่าสมัครทุกระยะ</h4>
+          <h4 className="font-hero text-lg sm:text-xl font-semibold text-[#FFC928]">{t('รวมในค่าสมัครทุกระยะ', 'Included with every distance')}</h4>
           <span aria-hidden="true" className="h-px flex-1 bg-[#FFC928]/30" />
-          <span className="shrink-0 rounded-full bg-white/10 px-2.5 py-0.5 text-xs font-bold text-white/85">{allItems.length} ชิ้น</span>
+          <span className="shrink-0 rounded-full bg-white/10 px-2.5 py-0.5 text-xs font-bold text-white/85">{allItems.length} {t('ชิ้น', 'items')}</span>
         </div>
         <ul data-reveal-stagger="tilt" className="mt-4 grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-3">
           {allItems.map((k, i) => renderTile(k, i + 1, !!k.wide))}
@@ -208,9 +224,9 @@ export const MerchShowcase: React.FC<MerchShowcaseProps> = ({ onOpenRegister, cl
 
         {/* Dog Run extras */}
         <div className="mt-10 flex items-center gap-3">
-          <h4 className="font-hero text-lg sm:text-xl font-semibold text-[#FFC928]">🐶 เพิ่มให้น้องสุนัข</h4>
+          <h4 className="font-hero text-lg sm:text-xl font-semibold text-[#FFC928]">{t('🐶 เพิ่มให้น้องสุนัข', '🐶 Extras for your dog')}</h4>
           <span aria-hidden="true" className="h-px flex-1 bg-[#FFC928]/30" />
-          <span className="shrink-0 rounded-full bg-white/10 px-2.5 py-0.5 text-xs font-bold text-white/85">Dog Run · {dogItems.length} ชิ้น</span>
+          <span className="shrink-0 rounded-full bg-white/10 px-2.5 py-0.5 text-xs font-bold text-white/85">Dog Run · {dogItems.length} {t('ชิ้น', 'items')}</span>
         </div>
         <ul data-reveal-stagger="tilt" className="mt-4 grid grid-cols-2 gap-3 sm:gap-5">
           {dogItems.map((k, i) => renderTile(k, allItems.length + i + 1, true))}
@@ -222,10 +238,10 @@ export const MerchShowcase: React.FC<MerchShowcaseProps> = ({ onOpenRegister, cl
             onClick={onOpenRegister}
             className="inline-flex items-center justify-center gap-2 min-h-[52px] px-7 rounded-2xl bg-[#FFC928] hover:bg-[#FFD65A] text-[#2A1450] font-hero text-lg font-bold border-[3px] border-[#140826] shadow-[0_6px_0_#140826] active:translate-y-0.5 active:shadow-[0_4px_0_#140826] transition cursor-pointer"
           >
-            ซื้อบัตรวิ่งเพื่อรับของที่ระลึก <ArrowRight className="w-5 h-5" />
+            {t('ซื้อบัตรวิ่งเพื่อรับของที่ระลึก', 'Buy a run ticket to get your Race Pack')} <ArrowRight className="w-5 h-5" />
           </button>
           <p className="text-xs font-medium text-white/70 text-center">
-            {MOCKUP_NOTICE} · สี รายละเอียด และวัสดุของจริงอาจแตกต่างจากภาพเล็กน้อย
+            {t(MOCKUP_NOTICE, 'Illustration for promotion only')} · {t('สี รายละเอียด และวัสดุของจริงอาจแตกต่างจากภาพเล็กน้อย', 'Actual colours, details and materials may differ slightly from the pictures')}
           </p>
         </div>
       </div>

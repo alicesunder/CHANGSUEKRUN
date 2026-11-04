@@ -49,6 +49,7 @@ import { processUploadedSlipImage } from '../utils/slipVerifier';
 import { openPrivacyNotice } from './PrivacyNotice';
 import { openTerms } from './TermsSection';
 import { authApi, useSession } from '../utils/runnerAuth';
+import { useLang } from '../i18n/lang';
 import { SHIRT_SIZES } from '../data/shirts';
 import {
   ApiError,
@@ -243,6 +244,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
   onNeedLogin,
 }) => {
   const session = useSession();
+  const { t: tr } = useLang();
   const [selectedRoute, setSelectedRoute] = useState<RouteId>(initialRoute);
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
   // Three independent choices: any one, or any mix
@@ -763,16 +765,16 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
   // Step names follow what is being bought: a run ticket has a runner + BIB, the rest a buyer + e-ticket.
   const steps = wantRun
     ? [
-        { num: 1, title: 'เลือกระยะวิ่ง', sub: 'Package & Add-on' },
-        { num: 2, title: 'ข้อมูลนักวิ่ง', sub: 'Runner & Shirt' },
-        { num: 3, title: 'โอนเงิน', sub: 'โอน + แนบสลิป' },
-        { num: 4, title: 'รับเลข BIB', sub: 'Auto E-BIB' },
+        { num: 1, title: tr('เลือกระยะวิ่ง', 'Choose distance'), sub: 'Package & Add-on' },
+        { num: 2, title: tr('ข้อมูลนักวิ่ง', 'Runner details'), sub: 'Runner & Shirt' },
+        { num: 3, title: tr('โอนเงิน', 'Payment'), sub: tr('โอน + แนบสลิป', 'Transfer + slip') },
+        { num: 4, title: tr('รับเลข BIB', 'Get your BIB'), sub: 'Auto E-BIB' },
       ]
     : [
-        { num: 1, title: wantConcert ? 'เลือกบัตร' : 'เลือกกิจกรรม', sub: wantConcert ? 'Concert & VIP' : 'Activities' },
-        { num: 2, title: wantConcert ? 'ข้อมูลผู้ซื้อ' : 'ข้อมูลผู้ร่วมกิจกรรม', sub: wantConcert ? 'Buyer details' : 'Participants' },
-        { num: 3, title: 'โอนเงิน', sub: 'โอน + แนบสลิป' },
-        { num: 4, title: 'รับบัตร', sub: 'E-Ticket' },
+        { num: 1, title: wantConcert ? tr('เลือกบัตร', 'Choose tickets') : tr('เลือกกิจกรรม', 'Choose activities'), sub: wantConcert ? 'Concert & VIP' : 'Activities' },
+        { num: 2, title: wantConcert ? tr('ข้อมูลผู้ซื้อ', 'Buyer details') : tr('ข้อมูลผู้ร่วมกิจกรรม', 'Participant details'), sub: wantConcert ? 'Buyer details' : 'Participants' },
+        { num: 3, title: tr('โอนเงิน', 'Payment'), sub: tr('โอน + แนบสลิป', 'Transfer + slip') },
+        { num: 4, title: tr('รับบัตร', 'Get your ticket'), sub: 'E-Ticket' },
       ];
 
   const renderTicketOption = (id: RouteId) => {
@@ -871,7 +873,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                   className="inline-flex items-center gap-1.5 min-h-[46px] px-3.5 rounded-2xl bg-[#FFE268] hover:bg-[#FFD43B] text-[#261247] text-sm font-black border-2 border-white shadow-[0_4px_0_rgba(0,0,0,0.35)] cursor-pointer shrink-0 active:translate-y-0.5"
                 >
                   <ArrowLeft className="w-5 h-5 stroke-[3]" />
-                  <span>ย้อนกลับ</span>
+                  <span>{tr('ย้อนกลับ', 'Back')}</span>
                 </button>
               )}
               <div className={`w-13 h-13 rounded-2xl ${step === 2 ? 'hidden sm:flex' : 'flex'} bg-white/95 border-2 border-[#FFE268] shadow-[0_8px_20px_-4px_rgba(0,0,0,0.35)] items-center justify-center shrink-0 overflow-hidden`}>
@@ -888,7 +890,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                   <span>CHANGSUEK RUN 2027<span className="hidden sm:inline"> · SMART E-TICKET & AUTO-BIB</span></span>
                 </div>
                 <h2 className="text-lg sm:text-2xl font-black tracking-tight text-white leading-tight">
-                  {isAddonOnly ? 'ซื้อกิจกรรมเสริม' : isConcert ? 'ซื้อตั๋วคอนเสิร์ต / เข้างาน' : 'สมัครวิ่ง & รับบัตรวิ่ง E-BIB'}
+                  {isAddonOnly ? tr('ซื้อกิจกรรมเสริม', 'Buy activities') : isConcert ? tr('ซื้อตั๋วคอนเสิร์ต / เข้างาน', 'Buy concert / entry tickets') : tr('สมัครวิ่ง & รับบัตรวิ่ง E-BIB', 'Register & get your E-BIB')}
                 </h2>
               </div>
             </div>
@@ -896,7 +898,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              aria-label="ปิดหน้าต่าง"
+              aria-label={tr('ปิดหน้าต่าง', 'Close')}
               className="w-10 h-10 rounded-full bg-white/10 hover:bg-[#FFE268] text-white hover:text-[#261247] border border-white/25 flex items-center justify-center transition-all cursor-pointer shrink-0"
             >
               <X className="w-5 h-5 stroke-[2.5]" />
@@ -959,13 +961,13 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
               {/* Left 7 cols: 4 Distance Selectors + Add-on Steppers */}
               <div className="lg:col-span-7 space-y-5">
-                <div role="group" aria-label="เลือกสิ่งที่ต้องการซื้อ (เลือกได้หลายอย่าง)" className="space-y-2">
-                  <p className="text-xs font-extrabold uppercase tracking-wider text-[#6D28D9]">เลือกสิ่งที่ต้องการซื้อ · ติ๊กได้ทั้งหมด หรืออย่างเดียวก็ได้</p>
+                <div role="group" aria-label={tr('เลือกสิ่งที่ต้องการซื้อ (เลือกได้หลายอย่าง)', 'Choose what to buy (you can pick several)')} className="space-y-2">
+                  <p className="text-xs font-extrabold uppercase tracking-wider text-[#6D28D9]">{tr('เลือกสิ่งที่ต้องการซื้อ · ติ๊กได้ทั้งหมด หรืออย่างเดียวก็ได้', 'Choose what to buy · tick all of them, or just one')}</p>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                     {([
-                      { key: 'run', emoji: '🏃', title: 'ตั๋ววิ่ง', sub: 'เลือกระยะด้านล่าง', on: wantRun, set: setWantRun },
-                      { key: 'concert', emoji: '🎶', title: 'ตั๋วคอนเสิร์ต', sub: `GA ${formatBaht(concertUnit)} · VIP โต๊ะ`, on: wantConcert, set: setWantConcert },
-                      { key: 'addon', emoji: '🎢', title: 'กิจกรรมเสริม (เฉพาะบุคคล)', sub: 'หอสูง · ยิงปืน · อุโมงค์ลม', on: wantAddons, set: setWantAddons },
+                      { key: 'run', emoji: '🏃', title: tr('ตั๋ววิ่ง', 'Run ticket'), sub: tr('เลือกระยะด้านล่าง', 'Pick a distance below'), on: wantRun, set: setWantRun },
+                      { key: 'concert', emoji: '🎶', title: tr('ตั๋วคอนเสิร์ต', 'Concert ticket'), sub: `GA ${formatBaht(concertUnit)} · ${tr('VIP โต๊ะ', 'VIP table')}`, on: wantConcert, set: setWantConcert },
+                      { key: 'addon', emoji: '🎢', title: tr('กิจกรรมเสริม (เฉพาะบุคคล)', 'Activities (individuals only)'), sub: tr('หอสูง · ยิงปืน · อุโมงค์ลม', 'High tower · shooting · wind tunnel'), on: wantAddons, set: setWantAddons },
                     ] as const).map((m) => (
                       <button
                         key={m.key}
@@ -1043,7 +1045,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                 <div>
                   <div className="flex items-center justify-between mb-2.5">
                     <span className="text-xs font-extrabold uppercase tracking-wider text-[#6D28D9]">
-                      1. เลือกระยะวิ่งบุคคลทั่วไป (General Run)
+                      1. {tr('เลือกระยะวิ่งบุคคลทั่วไป (General Run)', 'General Run — individuals')}
                     </span>
                     <span className="text-[11px] font-bold text-[#6B5A85]">
                       รันเลข BIB `10-XXXX` และ `05-XXXX`
@@ -1059,7 +1061,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                   <div className="flex items-center justify-between mb-2.5">
                     <span className="text-xs font-extrabold uppercase tracking-wider text-[#0F766E] flex items-center gap-1.5">
                       <PawIcon size={14} color="#0D9488" />
-                      <span>2. เลือกระยะวิ่งร่วมกับน้องสุนัข (Dog Run)</span>
+                      <span>2. {tr('เลือกระยะวิ่งร่วมกับน้องสุนัข (Dog Run)', 'Dog Run — run with your dog')}</span>
                     </span>
                     <span className="text-[11px] font-bold text-[#0F766E]">
                       รันเลข BIB `03-XXXX` และ `01-XXXX`
@@ -1115,8 +1117,8 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                   <div className="flex items-center gap-2.5 mb-3">
                     <span className="w-10 h-10 rounded-2xl flex items-center justify-center text-lg shadow-[0_8px_14px_-6px_rgba(245,158,11,0.6)]" style={{ background: 'linear-gradient(135deg, #FDE68A 0%, #FBBF24 55%, #FB923C 100%)' }} aria-hidden="true">🎉</span>
                     <div>
-                      <h3 className="text-base font-black text-[#2A1450] leading-tight">เพิ่มความสนุก · กิจกรรมเสริม (เฉพาะบุคคล) · วันอาทิตย์ที่ 10 ม.ค. 2570</h3>
-                      <p className="text-[11px] font-bold text-[#6F6878]">ไม่บังคับ · เลือกหลายอย่างได้ ยิ่งเลือกยิ่งคุ้ม</p>
+                      <h3 className="text-base font-black text-[#2A1450] leading-tight">{tr('เพิ่มความสนุก · กิจกรรมเสริม (เฉพาะบุคคล) · วันอาทิตย์ที่ 10 ม.ค. 2570', 'More fun · activities (individuals only) · Sunday 10 Jan 2027')}</h3>
+                      <p className="text-[11px] font-bold text-[#6F6878]">{tr('ไม่บังคับ · เลือกหลายอย่างได้ ยิ่งเลือกยิ่งคุ้ม', 'Optional · pick several, the more the better value')}</p>
                     </div>
                   </div>
                   <AddOnPicker
@@ -1481,7 +1483,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                             <div className="flex items-center gap-2.5">
                               <span className="w-10 h-10 rounded-2xl bg-white border-2 border-[#2A1450] flex items-center justify-center text-lg shrink-0" aria-hidden="true">🎯</span>
                               <div>
-                                <h3 className="text-base font-black text-[#2A1450] leading-tight">ข้อมูลผู้ยิงปืน ({addOns.people} คน)</h3>
+                                <h3 className="text-base font-black text-[#2A1450] leading-tight">{tr('ข้อมูลผู้ยิงปืน', 'Shooter details')} ({addOns.people})</h3>
                                 <p className="text-xs font-bold text-[#6B5A85]">ใช้ลงทะเบียนกับสนามยิงปืน · อ่านกฎความปลอดภัยด้านล่างแล้วกดรับทราบก่อนชำระเงิน</p>
                               </div>
                             </div>

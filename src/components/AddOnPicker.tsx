@@ -16,6 +16,7 @@ import {
   hasAddOns,
 } from '../data/addOns';
 import { PawIcon } from './brand/DogDecor';
+import { useLang } from '../i18n/lang';
 
 interface AddOnPickerProps {
   /** what else is in the order (decides the bundle discounts) */
@@ -94,6 +95,7 @@ const Card: React.FC<{
   badge?: React.ReactNode;
   children: React.ReactNode;
 }> = ({ theme, title, tagline, perks, active, disabled, icon, badge, children }) => {
+  const { t: tr } = useLang();
   const t = ADD_ON_THEMES[theme];
   return (
     <div
@@ -107,7 +109,7 @@ const Card: React.FC<{
       <span aria-hidden="true" style={{ background: t.panel }} className="block h-2 shrink-0" />
       {active && (
         <span className="absolute top-3.5 right-3 z-10 inline-flex items-center gap-1 rounded-full bg-white px-2.5 py-1 text-[11px] font-black shadow-md" style={{ color: t.ink }}>
-          <Check className="w-3.5 h-3.5 stroke-[3.5]" aria-hidden="true" /> เลือกแล้ว
+          <Check className="w-3.5 h-3.5 stroke-[3.5]" aria-hidden="true" /> {tr('เลือกแล้ว', 'Selected')}
         </span>
       )}
       <div className="flex-1 p-3.5 flex flex-col gap-2.5">
@@ -136,25 +138,29 @@ const Card: React.FC<{
   );
 };
 
-const PriceTag: React.FC<{ price: number; listPrice?: number; ink: string }> = ({ price, listPrice, ink }) => (
+const PriceTag: React.FC<{ price: number; listPrice?: number; ink: string }> = ({ price, listPrice, ink }) => {
+  const { t: tr } = useLang();
+  return (
   <span className="flex items-baseline gap-1.5 flex-wrap">
     {listPrice !== undefined && <s className="text-sm font-bold text-[#6B5A85]/80 decoration-2 decoration-rose-500">{formatBaht(listPrice)}</s>}
     <span className="text-[26px] leading-none font-black tabular-nums" style={{ color: listPrice !== undefined ? '#E11D48' : ink }}>
       {formatBaht(price)}
     </span>
-    <span className="text-xs font-extrabold text-[#6B5A85]">บาท / คน</span>
+    <span className="text-xs font-extrabold text-[#6B5A85]">{tr('บาท / คน', 'THB / person')}</span>
   </span>
-);
+  );
+};
 
 /** The big tap target of an activity: says what a tap will do. */
 const PickButton: React.FC<{ theme: ThemeKey; active: boolean; disabled?: boolean; label: string; onClick: () => void }> = ({ theme, active, disabled, label, onClick }) => {
+  const { t: tr } = useLang();
   const t = ADD_ON_THEMES[theme];
   return (
     <button
       type="button"
       role="switch"
       aria-checked={active}
-      aria-label={`${active ? 'ยกเลิก' : 'เลือก'}${label}`}
+      aria-label={`${active ? tr('ยกเลิก', 'Remove') : tr('เลือก', 'Pick')} ${label}`}
       disabled={disabled}
       onClick={onClick}
       style={active ? { background: '#fff', color: t.ink, borderColor: t.borderActive } : { background: t.button, color: '#fff', borderColor: '#2A1450', boxShadow: '0 4px 0 #2A1450' }}
@@ -162,11 +168,11 @@ const PickButton: React.FC<{ theme: ThemeKey; active: boolean; disabled?: boolea
     >
       {active ? (
         <>
-          <Check className="w-5 h-5 stroke-[3.5]" aria-hidden="true" /> เลือกแล้ว · แตะเพื่อยกเลิก
+          <Check className="w-5 h-5 stroke-[3.5]" aria-hidden="true" /> {tr('เลือกแล้ว · แตะเพื่อยกเลิก', 'Selected · tap to remove')}
         </>
       ) : (
         <>
-          <Plus className="w-5 h-5 stroke-[3.5]" aria-hidden="true" /> เลือกกิจกรรมนี้
+          <Plus className="w-5 h-5 stroke-[3.5]" aria-hidden="true" /> {tr('เลือกกิจกรรมนี้', 'Pick this activity')}
         </>
       )}
     </button>
@@ -174,15 +180,16 @@ const PickButton: React.FC<{ theme: ThemeKey; active: boolean; disabled?: boolea
 };
 
 // Tap a level to pick it, tap the picked level again to cancel (same as the other activities).
-const GUN_SEGMENTS: { id: Exclude<GunLevel, 'none'>; label: string; price: number; note: string }[] = [
-  { id: 'standard', label: 'Standard', price: 890, note: 'เลือกได้ 1 กระบอก' },
-  { id: 'premium', label: 'Premium', price: 1950, note: 'HK UMP / KRISS / MP5 SD' },
+const GUN_SEGMENTS: { id: Exclude<GunLevel, 'none'>; label: string; price: number; note: string; noteEn: string }[] = [
+  { id: 'standard', label: 'Standard', price: 890, note: 'เลือกได้ 1 กระบอก', noteEn: 'Choose 1 gun' },
+  { id: 'premium', label: 'Premium', price: 1950, note: 'HK UMP / KRISS / MP5 SD', noteEn: 'HK UMP / KRISS / MP5 SD' },
 ];
 
 const NO_BUNDLE: DiscountContext = { hasRun: false, hasConcert: false };
 
 /** Opens the activity's pin in Google Maps. Sits under the card, not inside it (a link can't live inside the card's button). */
 const PinLink: React.FC<{ id: ActivityLocation['id'] }> = ({ id }) => {
+  const { t: tr } = useLang();
   const loc = ACTIVITY_LOCATIONS.find((a) => a.id === id);
   if (!loc) return null;
   return (
@@ -193,13 +200,14 @@ const PinLink: React.FC<{ id: ActivityLocation['id'] }> = ({ id }) => {
       className="self-start inline-flex items-center gap-1 min-h-[32px] px-1 text-[12px] font-extrabold text-[#5B20A8] underline underline-offset-2 hover:text-[#2A1450]"
     >
       <MapPin className="w-3.5 h-3.5" style={{ color: loc.color }} aria-hidden="true" />
-      ดูตำแหน่ง{loc.name}
+      {tr('ดูตำแหน่ง', 'Directions to')} {tr(loc.name, ({ gun: 'the shooting range', tower: 'the high tower', wind: 'the wind tunnel', resort: 'the resort' } as Record<string, string>)[loc.id] || loc.name)}
       <ExternalLink className="w-3 h-3" aria-hidden="true" />
     </a>
   );
 };
 
 export const AddOnPicker: React.FC<AddOnPickerProps> = ({ value, onChange, windTunnelRemaining = null, showResult = true, layout = 'grid', discountCtx = NO_BUNDLE }) => {
+  const { t: tr } = useLang();
   // activities are per person and one person per order (the stepper was removed), so the count stays 1
   const set = (patch: Partial<AddOnSelection>) => onChange({ ...value, ...patch, people: 1 });
   const picked = hasAddOns(value);
@@ -219,12 +227,12 @@ export const AddOnPicker: React.FC<AddOnPickerProps> = ({ value, onChange, windT
       {/* three columns only when the box itself is wide enough (the box is narrow inside the booking window) */}
       <div className={layout === 'rows' ? 'grid grid-cols-1 gap-3' : 'grid grid-cols-1 @[620px]:grid-cols-3 gap-3 sm:gap-4'}>
         <div className="flex flex-col gap-1">
-          <Card theme="tower" title="หอสูง" tagline="มีครูฝึกดูแลตลอดกิจกรรม" perks={['🧑‍🏫 ครูฝึกดูแล', '📜 ได้ใบประกาศ / ปีก']} active={value.tower} icon={<TowerControl className="w-6 h-6" aria-hidden="true" />}>
+          <Card theme="tower" title={tr('หอสูง', 'High tower')} tagline={tr('มีครูฝึกดูแลตลอดกิจกรรม', 'An instructor looks after you throughout')} perks={[tr('🧑‍🏫 ครูฝึกดูแล', '🧑‍🏫 Instructor'), tr('📜 ได้ใบประกาศ / ปีก', '📜 Certificate / wings')]} active={value.tower} icon={<TowerControl className="w-6 h-6" aria-hidden="true" />}>
             <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
             <PriceTag price={350 - off} listPrice={off ? 350 : undefined} ink={ADD_ON_THEMES.tower.ink} />
             <PickButton
               theme="tower"
-              label="หอสูง"
+              label={tr('หอสูง', 'High tower')}
               active={value.tower}
               onClick={() => {
                 if (!value.tower) showActivitySticker('tower');
@@ -240,13 +248,13 @@ export const AddOnPicker: React.FC<AddOnPickerProps> = ({ value, onChange, windT
         <div className="flex flex-col gap-1">
           <Card
             theme="gun"
-            title="ยิงปืน"
-            tagline="ครูฝึกส่วนตัวดูแลใกล้ชิด"
-            perks={['🎯 ยิง 10 นัด', '🧑‍🏫 ครูฝึกส่วนตัว']}
+            title={tr('ยิงปืน', 'Shooting')}
+            tagline={tr('ครูฝึกส่วนตัวดูแลใกล้ชิด', 'A personal instructor by your side')}
+            perks={[tr('🎯 ยิง 10 นัด', '🎯 10 rounds'), tr('🧑‍🏫 ครูฝึกส่วนตัว', '🧑‍🏫 Personal instructor')]}
             active={gunOn}
             icon={<Crosshair className="w-6 h-6" aria-hidden="true" />}
           >
-            <div role="radiogroup" aria-label="ยิงปืน" className="grid grid-cols-1 gap-2">
+            <div role="radiogroup" aria-label={tr('ยิงปืน', 'Shooting')} className="grid grid-cols-1 gap-2">
               {GUN_SEGMENTS.map((o) => {
                 const on = value.gun === o.id;
                 const g = ADD_ON_THEMES.gun;
@@ -269,7 +277,7 @@ export const AddOnPicker: React.FC<AddOnPickerProps> = ({ value, onChange, windT
                         {on && '✓ '}
                         {o.label}
                       </span>
-                      <span className={`block text-[11.5px] font-bold leading-tight ${on ? 'text-white/90' : 'text-[#6B5A85]'}`}>{o.note}</span>
+                      <span className={`block text-[11.5px] font-bold leading-tight ${on ? 'text-white/90' : 'text-[#6B5A85]'}`}>{tr(o.note, o.noteEn)}</span>
                     </span>
                     <span className="shrink-0 text-right tabular-nums">
                       {off > 0 && <s className={`block text-[11px] font-bold ${on ? 'text-white/70' : 'text-[#6B5A85]/70'}`}>{formatBaht(o.price)}</s>}
@@ -280,7 +288,7 @@ export const AddOnPicker: React.FC<AddOnPickerProps> = ({ value, onChange, windT
                 );
               })}
             </div>
-            <p className="text-xs font-extrabold text-[#6B5A85]">{gunOn ? 'แตะระดับที่เลือกอีกครั้งเพื่อยกเลิก' : 'เลือกระดับการยิง · ราคาต่อคน (บาท)'}</p>
+            <p className="text-xs font-extrabold text-[#6B5A85]">{gunOn ? tr('แตะระดับที่เลือกอีกครั้งเพื่อยกเลิก', 'Tap the selected level again to remove it') : tr('เลือกระดับการยิง · ราคาต่อคน (บาท)', 'Choose a level · price per person (THB)')}</p>
           </Card>
           <PinLink id="gun" />
         </div>
@@ -288,9 +296,9 @@ export const AddOnPicker: React.FC<AddOnPickerProps> = ({ value, onChange, windT
         <div className="flex flex-col gap-1">
           <Card
             theme="wind"
-            title="อุโมงค์ลม"
-            tagline="ลอยตัวกลางอุโมงค์ลม · เปิดรับสมัครล่วงหน้า"
-            perks={['🌪️ ลอยตัวในอุโมงค์ลม']}
+            title={tr('อุโมงค์ลม', 'Wind tunnel')}
+            tagline={tr('ลอยตัวกลางอุโมงค์ลม · เปิดรับสมัครล่วงหน้า', 'Float in the wind tunnel · early registration')}
+            perks={[tr('🌪️ ลอยตัวในอุโมงค์ลม', '🌪️ Fly in the wind tunnel')]}
             active={value.windTunnel && !windFull}
             disabled={windFull}
             icon={<Wind className="w-6 h-6" aria-hidden="true" />}
@@ -300,7 +308,7 @@ export const AddOnPicker: React.FC<AddOnPickerProps> = ({ value, onChange, windT
                   windFull ? 'bg-slate-300 text-slate-700' : windLow ? 'bg-gradient-to-r from-[#FF7A59] to-[#FF4E88] text-white' : 'bg-white text-[#075985] border-2 border-[#7DD3FC]'
                 }`}
               >
-                {windFull ? 'เต็มแล้ว' : windTunnelRemaining === null ? `จำกัด ${WIND_TUNNEL_LIMIT} ท่าน` : `เหลือ ${windTunnelRemaining} / ${WIND_TUNNEL_LIMIT} ที่`}
+                {windFull ? tr('เต็มแล้ว', 'Full') : windTunnelRemaining === null ? tr(`จำกัด ${WIND_TUNNEL_LIMIT} ท่าน`, `Limited to ${WIND_TUNNEL_LIMIT} people`) : tr(`เหลือ ${windTunnelRemaining} / ${WIND_TUNNEL_LIMIT} ที่`, `${windTunnelRemaining} / ${WIND_TUNNEL_LIMIT} seats left`)}
               </span>
             }
           >
@@ -308,7 +316,7 @@ export const AddOnPicker: React.FC<AddOnPickerProps> = ({ value, onChange, windT
             <PriceTag price={990 - off} listPrice={off ? 990 : undefined} ink={ADD_ON_THEMES.wind.ink} />
             <PickButton
               theme="wind"
-              label="อุโมงค์ลม"
+              label={tr('อุโมงค์ลม', 'Wind tunnel')}
               active={value.windTunnel && !windFull}
               disabled={windFull}
               onClick={() => {
@@ -324,7 +332,7 @@ export const AddOnPicker: React.FC<AddOnPickerProps> = ({ value, onChange, windT
 
       {windShort && (
         <p role="alert" className="text-sm font-bold text-rose-700 bg-rose-50 border-2 border-rose-300 rounded-xl px-3 py-2">
-          อุโมงค์ลมเหลือเพียง {windTunnelRemaining} ที่ กรุณาลดจำนวนคนหรือเอาอุโมงค์ลมออก
+          {tr(`อุโมงค์ลมเหลือเพียง ${windTunnelRemaining} ที่ กรุณาเอาอุโมงค์ลมออก`, `Only ${windTunnelRemaining} wind-tunnel seats left — please remove the wind tunnel`)}
         </p>
       )}
 
@@ -346,7 +354,7 @@ export const AddOnPicker: React.FC<AddOnPickerProps> = ({ value, onChange, windT
           {!picked ? (
             <p className="flex items-center gap-2 text-sm font-extrabold text-[#6B5A85]">
               <PawIcon size={16} color="#8B5CF6" />
-              แตะเลือกกิจกรรมที่สนใจ ยิ่งเลือกหลายอย่างยิ่งคุ้ม!
+              {tr('แตะเลือกกิจกรรมที่สนใจ ยิ่งเลือกหลายอย่างยิ่งคุ้ม!', 'Tap the activities you like — the more you pick, the more you save!')}
             </p>
           ) : (
             <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -356,16 +364,16 @@ export const AddOnPicker: React.FC<AddOnPickerProps> = ({ value, onChange, windT
                   {addOnLabel(value)}
                   {saving > 0 && (
                     <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-gradient-to-r from-[#10B981] to-[#0EA5E9] text-white text-[11px] font-extrabold">
-                      <Sparkles className="w-3 h-3" aria-hidden="true" /> ประหยัด {baht(saving)}
+                      <Sparkles className="w-3 h-3" aria-hidden="true" /> {tr('ประหยัด', 'Save')} {baht(saving)}
                     </span>
                   )}
                 </p>
-                <p className={`text-xs font-bold ${isFull ? 'text-white/85' : 'text-[#7C3F00]'}`}>ราคาต่อคน {baht(perPerson)}</p>
+                <p className={`text-xs font-bold ${isFull ? 'text-white/85' : 'text-[#7C3F00]'}`}>{tr('ราคาต่อคน', 'Price per person')} {baht(perPerson)}</p>
               </div>
               <div className="flex items-center justify-between sm:justify-end gap-4">
                                 <span className="text-right">
                   <span className={`block text-3xl font-extrabold tabular-nums leading-none ${isFull ? 'text-[#FDE68A]' : ''}`}>{formatBaht(total)}</span>
-                  <span className="block text-[11px] font-bold opacity-80">บาท · กิจกรรมเสริม</span>
+                  <span className="block text-[11px] font-bold opacity-80">{tr('บาท · กิจกรรมเสริม', 'THB · activities')}</span>
                 </span>
               </div>
             </div>

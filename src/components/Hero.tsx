@@ -20,6 +20,7 @@ import { PawIcon } from './brand/DogDecor';
 import { LabradorMascot } from './brand/LabradorMascot';
 import { BouncyText } from './BouncyText';
 import { useEarlyBird } from '../utils/earlyBird';
+import { useLang } from '../i18n/lang';
 import { EARLY_BIRD_OFF, formatBaht } from '../data/eventData';
 
 interface HeroProps {
@@ -41,19 +42,22 @@ const fadeMask: React.CSSProperties = {
 };
 
 /** Ribbon shown while the admin's early-bird switch is on; a tap opens the ticket shop. */
-const EarlyBirdBadge: React.FC<{ onClick: () => void; className?: string }> = ({ onClick, className = '' }) => (
+const EarlyBirdBadge: React.FC<{ onClick: () => void; className?: string }> = ({ onClick, className = '' }) => {
+  const { t } = useLang();
+  return (
   <button
     type="button"
     onClick={onClick}
     className={`inline-flex flex-col items-center rounded-2xl border-[2.5px] border-[#2A1450] bg-gradient-to-b from-[#FF5A6A] to-[#E11D48] px-4 py-1.5 text-white shadow-[0_4px_0_#2A1450] cursor-pointer active:translate-y-0.5 ${className}`}
-    aria-label="เปิดขาย Early Bird แล้ว กดเพื่อซื้อบัตร"
+    aria-label={t('เปิดขาย Early Bird แล้ว กดเพื่อซื้อบัตร', 'Early Bird is open — tap to buy tickets')}
   >
-    <span className="text-[13px] sm:text-sm font-black leading-tight">🐦 เปิดขาย Early Bird แล้ว!</span>
+    <span className="text-[13px] sm:text-sm font-black leading-tight">{t('🐦 เปิดขาย Early Bird แล้ว!', '🐦 Early Bird is open!')}</span>
     <span className="text-[10.5px] sm:text-xs font-extrabold leading-tight text-[#FFE9A8]">
-      วิ่งลด {formatBaht(EARLY_BIRD_OFF.run)} · คอนเสิร์ต GA ลด {formatBaht(EARLY_BIRD_OFF.concert)} · VIP ลด {formatBaht(EARLY_BIRD_OFF.vip)}
+      {t('วิ่งลด', 'Run −')} {formatBaht(EARLY_BIRD_OFF.run)} · {t('คอนเสิร์ต GA ลด', 'Concert GA −')} {formatBaht(EARLY_BIRD_OFF.concert)} · {t('VIP ลด', 'VIP −')} {formatBaht(EARLY_BIRD_OFF.vip)}
     </span>
   </button>
-);
+  );
+};
 
 export const Hero: React.FC<HeroProps> = ({
   onOpenArtworkModal,
@@ -62,6 +66,7 @@ export const Hero: React.FC<HeroProps> = ({
 }) => {
   const reduceMotion = useReducedMotion();
   const earlyBird = useEarlyBird();
+  const { t } = useLang();
   const scrollToSection = (id: string) => {
     const el = document.getElementById(id);
     if (el) {
@@ -149,17 +154,17 @@ export const Hero: React.FC<HeroProps> = ({
           <div className="text-left">
             <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-100/90 text-amber-900 text-[10px] font-extrabold">
               <Heart className="w-3 h-3 text-rose-500 fill-rose-500" />
-              <span>มาสคอตน้องสุนัข</span>
+              <span>{t('มาสคอตน้องสุนัข', 'Our dog mascot')}</span>
             </div>
             <div className="text-sm font-black text-[#261247] mt-0.5">
-              พาน้องสุนัขมาวิ่งด้วยกันนะ!
+              {t('พาน้องสุนัขมาวิ่งด้วยกันนะ!', 'Bring your dog and run together!')}
             </div>
             <button
               type="button"
               onClick={() => onSelectDistance('1km')}
               className="mt-1 inline-flex items-center gap-1 min-h-[28px] text-xs font-extrabold text-[#6D28D9] hover:text-[#4C1D95] cursor-pointer"
             >
-              <span>ดูบัตร Dog Run 1K & 4K</span>
+              <span>{t('ดูบัตร Dog Run 1K & 4K', 'See Dog Run 1K & 4K tickets')}</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>
@@ -200,7 +205,7 @@ export const Hero: React.FC<HeroProps> = ({
               className="flex flex-col items-center text-center"
             >
               <span className="inline-flex items-center gap-1.5 rounded-full bg-[#FFC928] text-[#2A1450] text-[11px] font-extrabold px-3 py-1 shadow-[0_3px_0_#2A1450]">
-                <Sparkles className="w-3 h-3" /> เปิดรับสมัครออนไลน์แล้ว
+                <Sparkles className="w-3 h-3" /> {t('เปิดรับสมัครออนไลน์แล้ว', 'Online registration is open')}
               </span>
               {earlyBird && <EarlyBirdBadge onClick={onOpenRegisterModal} className="mt-2" />}
               <img
@@ -213,8 +218,8 @@ export const Hero: React.FC<HeroProps> = ({
                 className="mt-1 font-hero text-[34px] sm:text-[48px] font-bold leading-[1.38] text-white"
                 style={{ textShadow: '0 2px 0 #2A1450, 0 5px 16px rgba(25,10,60,.55)' }}
               >
-                <span className="block">วิ่งสนุกไปกับ</span>
-                <BouncyText text="เพื่อนสี่ขาคู่ใจ" className="block text-[#FFD84D]" delayMs={450} />
+                <span className="block">{t('วิ่งสนุกไปกับ', 'Run for fun with')}</span>
+                <BouncyText text={t('เพื่อนสี่ขาคู่ใจ', 'your four-legged friend')} className="block text-[#FFD84D]" delayMs={450} />
               </p>
             </motion.div>
 
@@ -228,17 +233,17 @@ export const Hero: React.FC<HeroProps> = ({
               className="text-center"
             >
               <p className="text-[12px] sm:text-sm font-semibold leading-relaxed text-white/92 max-w-[340px] sm:max-w-[460px] mx-auto [@media(max-height:700px)]:hidden">
-                งานวิ่งการกุศลรักษ์ช้างและพัฒนาศูนย์ฝึกสุนัขตำรวจ{' '}
-                <span className="whitespace-nowrap">ค่ายนเรศวร</span> ริมชายหาด
-                <span className="whitespace-nowrap">ชะอำ-หัวหิน</span>
+                {t('งานวิ่งการกุศลรักษ์ช้างและพัฒนาศูนย์ฝึกสุนัขตำรวจ', 'A charity run to protect elephants and develop the police dog training centre')}{' '}
+                <span className="whitespace-nowrap">{t('ค่ายนเรศวร', 'Naresuan Camp')}</span> {t('ริมชายหาด', 'on the beach of')}
+                <span className="whitespace-nowrap"> {t('ชะอำ-หัวหิน', 'Cha-am – Hua Hin')}</span>
               </p>
 
               <div className="mt-2.5 flex items-center justify-center gap-2 text-[11px] font-bold text-white">
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 backdrop-blur-md border border-white/35 px-3 py-1.5">
-                  <Calendar className="w-3.5 h-3.5 text-[#FFD84D]" /> 9 ม.ค. 2570
+                  <Calendar className="w-3.5 h-3.5 text-[#FFD84D]" /> {t('9 ม.ค. 2570', '9 Jan 2027')}
                 </span>
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 backdrop-blur-md border border-white/35 px-3 py-1.5">
-                  <MapPin className="w-3.5 h-3.5 text-[#FFD84D]" /> หาดชะอำ (ค่ายนเรศวร)
+                  <MapPin className="w-3.5 h-3.5 text-[#FFD84D]" /> {t('หาดชะอำ (ค่ายนเรศวร)', 'Cha-am Beach (Naresuan Camp)')}
                 </span>
               </div>
 
@@ -250,14 +255,14 @@ export const Hero: React.FC<HeroProps> = ({
                 >
                   <span className="absolute inset-0 ticket-foil-shimmer opacity-55 pointer-events-none" />
                   <PawIcon size={17} color="#261247" className="relative z-10" />
-                  <span className="relative z-10">ซื้อบัตรตอนนี้</span>
+                  <span className="relative z-10">{t('ซื้อบัตรตอนนี้', 'Buy tickets now')}</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => scrollToSection('distances')}
                   className="inline-flex items-center justify-center gap-1.5 min-h-[50px] rounded-full bg-white/95 text-[#2A1450] text-[13px] font-extrabold border-[3px] border-[#2A1450] shadow-[0_5px_0_#2A1450] active:translate-y-0.5 active:shadow-[0_3px_0_#2A1450] cursor-pointer"
                 >
-                  ดูบัตรวิ่ง <ArrowRight className="w-4 h-4" />
+                  {t('ดูบัตรวิ่ง', 'See run tickets')} <ArrowRight className="w-4 h-4" />
                 </button>
               </div>
 
@@ -318,9 +323,9 @@ export const Hero: React.FC<HeroProps> = ({
               {/* Thai needs generous line-height for upper/lower vowel & tone marks; the
                   gradient line gets vertical padding so bg-clip-text doesn't cut them off. */}
               <h1 className="font-hero text-[38px] sm:text-[56px] lg:text-[62px] font-semibold leading-[1.28] text-[#2D1052] drop-shadow-[0_2px_0_rgba(255,255,255,0.95)]">
-                <span className="block">วิ่งสนุกไปกับ</span>
+                <span className="block">{t('วิ่งสนุกไปกับ', 'Run for fun with')}</span>
                 <BouncyText
-                  text="เพื่อนสี่ขาคู่ใจ"
+                  text={t('เพื่อนสี่ขาคู่ใจ', 'your four-legged friend')}
                   className="inline-block pt-1 pb-2 -mt-1 font-bold drop-shadow-none cursor-default"
                   gradient="linear-gradient(90deg, #5B20A8, #7C3AED, #C026D3)"
                   delayMs={350}
@@ -329,21 +334,21 @@ export const Hero: React.FC<HeroProps> = ({
             </div>
 
             <p className="mt-2 sm:mt-3 text-xs sm:text-base font-bold text-[#3A1F5D] max-w-[360px] sm:max-w-[520px] mx-auto lg:mx-0 leading-relaxed text-balance">
-              งานวิ่งการกุศลรักษ์ช้างและพัฒนาศูนย์ฝึกสุนัขตำรวจ{' '}
-              <span className="whitespace-nowrap">ค่ายนเรศวร</span>
-              <br className="hidden sm:inline" /> ริมชายหาด
-              <span className="whitespace-nowrap">ชะอำ-หัวหิน</span> บรรยากาศอบอุ่นสำหรับทุกครอบครัว
+              {t('งานวิ่งการกุศลรักษ์ช้างและพัฒนาศูนย์ฝึกสุนัขตำรวจ', 'A charity run to protect elephants and develop the police dog training centre')}{' '}
+              <span className="whitespace-nowrap">{t('ค่ายนเรศวร', 'Naresuan Camp')}</span>
+              <br className="hidden sm:inline" /> {t('ริมชายหาด', 'on the beach of')}
+              <span className="whitespace-nowrap"> {t('ชะอำ-หัวหิน', 'Cha-am – Hua Hin')}</span> {t('บรรยากาศอบอุ่นสำหรับทุกครอบครัว', '— a warm day out for the whole family')}
             </p>
 
             {/* Desktop Date & Venue Glass Pills */}
             <div className="hidden lg:flex mt-6 flex-wrap gap-2.5 justify-start text-xs sm:text-[13px] font-bold text-[#2A1450]">
               <span className="inline-flex items-center gap-2 bg-white/90 backdrop-blur-md rounded-full px-4 py-2 shadow-[0_8px_20px_-6px_rgba(42,20,80,0.18)] border border-white">
                 <Calendar className="w-4 h-4 text-[#6D28D9]" />
-                <span>9 ม.ค. 2570</span>
+                <span>{t('9 ม.ค. 2570', '9 Jan 2027')}</span>
               </span>
               <span className="inline-flex items-center gap-2 bg-white/90 backdrop-blur-md rounded-full px-4 py-2 shadow-[0_8px_20px_-6px_rgba(42,20,80,0.18)] border border-white">
                 <MapPin className="w-4 h-4 text-[#C2410C]" />
-                <span>หาดชะอำ (ค่ายนเรศวร) จ.เพชรบุรี</span>
+                <span>{t('หาดชะอำ (ค่ายนเรศวร) จ.เพชรบุรี', 'Cha-am Beach (Naresuan Camp), Phetchaburi')}</span>
               </span>
             </div>
 
@@ -356,7 +361,7 @@ export const Hero: React.FC<HeroProps> = ({
               >
                 <span className="absolute inset-0 ticket-foil-shimmer opacity-55 pointer-events-none" />
                 <PawIcon size={16} color="#261247" className="relative z-10" />
-                <span className="relative z-10">ซื้อบัตรตอนนี้</span>
+                <span className="relative z-10">{t('ซื้อบัตรตอนนี้', 'Buy tickets now')}</span>
               </button>
 
               <button
@@ -364,7 +369,7 @@ export const Hero: React.FC<HeroProps> = ({
                 onClick={() => scrollToSection('distances')}
                 className="inline-flex items-center justify-center gap-1.5 sm:gap-2 rounded-full px-4 sm:px-6 py-3.5 text-xs sm:text-base font-extrabold bg-white/95 hover:bg-white text-[#261247] border-2 border-[#261247]/80 shadow-[0_10px_24px_-8px_rgba(42,20,80,0.28),0_4px_0_#261247] hover:scale-[1.03] active:scale-95 transition-transform cursor-pointer sm:min-w-[185px]"
               >
-                <span>ดูบัตรวิ่งโฉมใหม่</span>
+                <span>{t('ดูบัตรวิ่งโฉมใหม่', 'See the new run tickets')}</span>
                 <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               </button>
             </div>
@@ -434,8 +439,8 @@ export const Hero: React.FC<HeroProps> = ({
           <div className="lg:col-span-6 text-center lg:text-left lg:pl-8 pt-2 lg:pt-0 border-t border-white/15 lg:border-t-0">
             <div className="inline-block -rotate-1 sm:-rotate-2">
               <p className="font-display text-xl sm:text-4xl font-bold text-white drop-shadow-[0_3px_8px_rgba(0,0,0,0.45)] leading-snug">
-                “ มากกว่างานวิ่ง คือ{' '}
-                <span className="text-[#FFE28A] block sm:inline">การวิ่งไปด้วยกัน ”</span>
+                “ {t('มากกว่างานวิ่ง คือ', 'More than a run, it is')}{' '}
+                <span className="text-[#FFE28A] block sm:inline">{t('การวิ่งไปด้วยกัน', 'running together')} ”</span>
               </p>
               <p className="mt-1 text-[9px] sm:text-xs font-mono font-extrabold tracking-[0.24em] text-[#FFC928] uppercase drop-shadow">
                 MORE THAN A RUN · A BIGGER FAMILY

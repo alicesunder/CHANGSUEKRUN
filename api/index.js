@@ -18977,14 +18977,14 @@ var require_etag = __commonJS({
   "node_modules/etag/index.js"(exports, module) {
     "use strict";
     module.exports = etag;
-    var crypto11 = __require("crypto");
+    var crypto12 = __require("crypto");
     var Stats = __require("fs").Stats;
     var toString = Object.prototype.toString;
     function entitytag(entity) {
       if (entity.length === 0) {
         return '"0-2jmj7l5rSw0yVb/vlWAYkK/YBwk"';
       }
-      var hash = crypto11.createHash("sha1").update(entity, "utf8").digest("base64").substring(0, 27);
+      var hash = crypto12.createHash("sha1").update(entity, "utf8").digest("base64").substring(0, 27);
       var len = typeof entity === "string" ? Buffer.byteLength(entity, "utf8") : entity.length;
       return '"' + len.toString(16) + "-" + hash + '"';
     }
@@ -21893,11 +21893,11 @@ var require_request = __commonJS({
 // node_modules/cookie-signature/index.js
 var require_cookie_signature = __commonJS({
   "node_modules/cookie-signature/index.js"(exports) {
-    var crypto11 = __require("crypto");
+    var crypto12 = __require("crypto");
     exports.sign = function(val, secret) {
       if ("string" !== typeof val) throw new TypeError("Cookie value must be provided as a string.");
       if (null == secret) throw new TypeError("Secret key must be provided.");
-      return val + "." + crypto11.createHmac("sha256", secret).update(val).digest("base64").replace(/\=+$/, "");
+      return val + "." + crypto12.createHmac("sha256", secret).update(val).digest("base64").replace(/\=+$/, "");
     };
     exports.unsign = function(val, secret) {
       if ("string" !== typeof val) throw new TypeError("Signed cookie string must be provided.");
@@ -21906,7 +21906,7 @@ var require_cookie_signature = __commonJS({
       return sha1(mac) == sha1(val) ? str : false;
     };
     function sha1(str) {
-      return crypto11.createHash("sha1").update(str).digest("hex");
+      return crypto12.createHash("sha1").update(str).digest("hex");
     }
   }
 });
@@ -24207,7 +24207,7 @@ var require_cert_signatures = __commonJS({
 var require_sasl = __commonJS({
   "node_modules/pg/lib/crypto/sasl.js"(exports, module) {
     "use strict";
-    var crypto11 = require_utils4();
+    var crypto12 = require_utils4();
     var { signatureAlgorithmHashFromCertificate } = require_cert_signatures();
     function saslprep(password) {
       const nonAsciiSpace = /[\u00A0\u1680\u2000-\u200B\u202F\u205F\u3000]/g;
@@ -24225,7 +24225,7 @@ var require_sasl = __commonJS({
       if (mechanism === "SCRAM-SHA-256-PLUS" && typeof stream.getPeerCertificate !== "function") {
         throw new Error("SASL: Mechanism SCRAM-SHA-256-PLUS requires a certificate");
       }
-      const clientNonce = crypto11.randomBytes(18).toString("base64");
+      const clientNonce = crypto12.randomBytes(18).toString("base64");
       const gs2Header = mechanism === "SCRAM-SHA-256-PLUS" ? "p=tls-server-end-point" : stream ? "y" : "n";
       return {
         mechanism,
@@ -24267,20 +24267,20 @@ var require_sasl = __commonJS({
         const peerCert = stream.getPeerCertificate().raw;
         let hashName = signatureAlgorithmHashFromCertificate(peerCert);
         if (hashName === "MD5" || hashName === "SHA-1") hashName = "SHA-256";
-        const certHash = await crypto11.hashByName(hashName, peerCert);
+        const certHash = await crypto12.hashByName(hashName, peerCert);
         const bindingData = Buffer.concat([Buffer.from("p=tls-server-end-point,,"), Buffer.from(certHash)]);
         channelBinding = bindingData.toString("base64");
       }
       const clientFinalMessageWithoutProof = "c=" + channelBinding + ",r=" + sv.nonce;
       const authMessage = clientFirstMessageBare + "," + serverFirstMessage + "," + clientFinalMessageWithoutProof;
       const saltBytes = Buffer.from(sv.salt, "base64");
-      const saltedPassword = await crypto11.deriveKey(saslprep(password), saltBytes, sv.iteration);
-      const clientKey = await crypto11.hmacSha256(saltedPassword, "Client Key");
-      const storedKey = await crypto11.sha256(clientKey);
-      const clientSignature = await crypto11.hmacSha256(storedKey, authMessage);
+      const saltedPassword = await crypto12.deriveKey(saslprep(password), saltBytes, sv.iteration);
+      const clientKey = await crypto12.hmacSha256(saltedPassword, "Client Key");
+      const storedKey = await crypto12.sha256(clientKey);
+      const clientSignature = await crypto12.hmacSha256(storedKey, authMessage);
       const clientProof = xorBuffers(Buffer.from(clientKey), Buffer.from(clientSignature)).toString("base64");
-      const serverKey = await crypto11.hmacSha256(saltedPassword, "Server Key");
-      const serverSignatureBytes = await crypto11.hmacSha256(serverKey, authMessage);
+      const serverKey = await crypto12.hmacSha256(saltedPassword, "Server Key");
+      const serverSignatureBytes = await crypto12.hmacSha256(serverKey, authMessage);
       session.message = "SASLResponse";
       session.serverSignature = Buffer.from(serverSignatureBytes).toString("base64");
       session.response = clientFinalMessageWithoutProof + ",p=" + clientProof;
@@ -26519,7 +26519,7 @@ var require_client = __commonJS({
     var Query2 = require_query2();
     var defaults2 = require_defaults();
     var Connection2 = require_connection();
-    var crypto11 = require_utils4();
+    var crypto12 = require_utils4();
     var activeQueryDeprecationNotice = nodeUtils.deprecate(
       () => {
       },
@@ -26774,7 +26774,7 @@ var require_client = __commonJS({
       _handleAuthMD5Password(msg) {
         this._getPassword(async () => {
           try {
-            const hashedPassword = await crypto11.postgresMd5PasswordHash(this.user, this.password, msg.salt);
+            const hashedPassword = await crypto12.postgresMd5PasswordHash(this.user, this.password, msg.salt);
             this.connection.password(hashedPassword);
           } catch (e) {
             this.emit("error", e);
@@ -32719,8 +32719,8 @@ var require_lib5 = __commonJS({
 });
 
 // server/app.ts
-var import_express = __toESM(require_express2(), 1);
-import crypto10 from "crypto";
+var import_express2 = __toESM(require_express2(), 1);
+import crypto11 from "crypto";
 
 // src/data/dogProfile.ts
 var DOG_GENDERS = ["\u0E1C\u0E39\u0E49", "\u0E40\u0E21\u0E35\u0E22"];
@@ -32800,7 +32800,7 @@ var eventInfo = {
 var routesData = {
   "1km": {
     id: "1km",
-    name: "1 KM DOG MINI RUN",
+    name: "1 km DOG MINI RUN",
     title: "\u0E27\u0E34\u0E48\u0E07\u0E40\u0E25\u0E48\u0E19\u0E01\u0E31\u0E1A\u0E19\u0E49\u0E2D\u0E07\u0E2A\u0E38\u0E19\u0E31\u0E02 \u0E17\u0E32\u0E07\u0E40\u0E23\u0E35\u0E22\u0E1A\u0E40\u0E25\u0E35\u0E22\u0E1A\u0E2B\u0E32\u0E14 (\u0E44\u0E1B-\u0E01\u0E25\u0E31\u0E1A)",
     distanceKm: 1,
     measuredPerimeterKm: 1.03,
@@ -32868,9 +32868,9 @@ var routesData = {
   },
   "3km": {
     id: "3km",
-    name: "3.8 KM DOG RUN",
+    name: "4 km DOG RUN",
     title: "\u0E27\u0E34\u0E48\u0E07\u0E04\u0E39\u0E48\u0E19\u0E49\u0E2D\u0E07\u0E2A\u0E38\u0E19\u0E31\u0E02 \u0E23\u0E2D\u0E1A\u0E41\u0E01\u0E19\u0E01\u0E25\u0E32\u0E07\u0E04\u0E48\u0E32\u0E22\u0E19\u0E40\u0E23\u0E28\u0E27\u0E23",
-    distanceKm: 3.8,
+    distanceKm: 4,
     measuredPerimeterKm: 4.08,
     measuredAreaSqM: 631710.65,
     googleEarthSummary: "\u0E23\u0E31\u0E07\u0E27\u0E31\u0E14\u0E08\u0E32\u0E01\u0E20\u0E32\u0E1E\u0E16\u0E48\u0E32\u0E22\u0E14\u0E32\u0E27\u0E40\u0E17\u0E35\u0E22\u0E21 Google Earth: \u0E40\u0E2A\u0E49\u0E19\u0E02\u0E2D\u0E1A\u0E23\u0E2D\u0E1A\u0E17\u0E34\u0E28 4.08 \u0E01\u0E21. (\u0E1E\u0E37\u0E49\u0E19\u0E17\u0E35\u0E48\u0E23\u0E39\u0E1B\u0E2B\u0E25\u0E32\u0E22\u0E40\u0E2B\u0E25\u0E35\u0E48\u0E22\u0E21 631,710.65 \u0E21\xB2)",
@@ -33006,7 +33006,7 @@ var routesData = {
   },
   "5km": {
     id: "5km",
-    name: "5 KM RUN",
+    name: "5 km RUN",
     title: "\u0E27\u0E34\u0E48\u0E07\u0E17\u0E49\u0E32\u0E17\u0E32\u0E22\u0E40\u0E15\u0E47\u0E21\u0E23\u0E2D\u0E1A\u0E04\u0E48\u0E32\u0E22\u0E19\u0E40\u0E23\u0E28\u0E27\u0E23 (5.2 \u0E01\u0E21. Google Earth)",
     distanceKm: 5,
     measuredPerimeterKm: 5.2,
@@ -33156,7 +33156,7 @@ var routesData = {
   },
   "10km": {
     id: "10km",
-    name: "10 KM RUN",
+    name: "10 km RUN",
     title: "\u0E40\u0E2A\u0E49\u0E19\u0E17\u0E32\u0E07\u0E21\u0E34\u0E19\u0E34\u0E21\u0E32\u0E23\u0E32\u0E18\u0E2D\u0E19\u0E1C\u0E2A\u0E21\u0E40\u0E17\u0E23\u0E25 (10.52 \u0E01\u0E21. Google Earth)",
     distanceKm: 10,
     measuredPerimeterKm: 10.52,
@@ -33410,7 +33410,7 @@ var scheduleData = [
         day: "race_day",
         time: "09.00\u201314.00 \u0E19.",
         title: "\u0E15\u0E23\u0E27\u0E08\u0E2A\u0E38\u0E02\u0E20\u0E32\u0E1E\u0E2A\u0E38\u0E19\u0E31\u0E02 (\u0E44\u0E21\u0E48\u0E21\u0E35\u0E04\u0E48\u0E32\u0E43\u0E0A\u0E49\u0E08\u0E48\u0E32\u0E22)",
-        description: "\u0E42\u0E14\u0E22 \u0E23\u0E1E.\u0E2A\u0E31\u0E15\u0E27\u0E4C\u0E17\u0E2D\u0E07\u0E2B\u0E25\u0E48\u0E2D \u0E2A\u0E33\u0E2B\u0E23\u0E31\u0E1A\u0E1C\u0E39\u0E49\u0E2A\u0E21\u0E31\u0E04\u0E23\u0E27\u0E34\u0E48\u0E07 Dog Run \u0E17\u0E31\u0E49\u0E07 2 \u0E23\u0E30\u0E22\u0E30 (1K / 3.8K)",
+        description: "\u0E42\u0E14\u0E22 \u0E23\u0E1E.\u0E2A\u0E31\u0E15\u0E27\u0E4C\u0E17\u0E2D\u0E07\u0E2B\u0E25\u0E48\u0E2D \u0E2A\u0E33\u0E2B\u0E23\u0E31\u0E1A\u0E1C\u0E39\u0E49\u0E2A\u0E21\u0E31\u0E04\u0E23\u0E27\u0E34\u0E48\u0E07 Dog Run \u0E17\u0E31\u0E49\u0E07 2 \u0E23\u0E30\u0E22\u0E30 (1K / 4K)",
         iconName: "Stethoscope",
         highlight: true
       },
@@ -33469,7 +33469,7 @@ var scheduleData = [
         id: "s-13",
         day: "race_day",
         time: "17.15 \u0E19.",
-        title: "\u0E1B\u0E25\u0E48\u0E2D\u0E22\u0E15\u0E31\u0E27\u0E19\u0E31\u0E01\u0E27\u0E34\u0E48\u0E07 3.8 \u0E01\u0E34\u0E42\u0E25\u0E40\u0E21\u0E15\u0E23",
+        title: "\u0E1B\u0E25\u0E48\u0E2D\u0E22\u0E15\u0E31\u0E27\u0E19\u0E31\u0E01\u0E27\u0E34\u0E48\u0E07 4 \u0E01\u0E34\u0E42\u0E25\u0E40\u0E21\u0E15\u0E23",
         description: "\u0E1B\u0E23\u0E30\u0E40\u0E20\u0E17\u0E27\u0E34\u0E48\u0E07\u0E23\u0E48\u0E27\u0E21\u0E01\u0E31\u0E1A\u0E19\u0E49\u0E2D\u0E07\u0E2A\u0E38\u0E19\u0E31\u0E02",
         iconName: "Flag",
         highlight: true
@@ -33542,7 +33542,7 @@ var ticketCategories = [
     group: "individual",
     category: "individual",
     distanceLabel: "5K",
-    name: "5 KM \u0E27\u0E34\u0E48\u0E07\u0E1A\u0E38\u0E04\u0E04\u0E25\u0E17\u0E31\u0E48\u0E27\u0E44\u0E1B",
+    name: "5 km \u0E27\u0E34\u0E48\u0E07\u0E1A\u0E38\u0E04\u0E04\u0E25\u0E17\u0E31\u0E48\u0E27\u0E44\u0E1B",
     subtitle: "\u0E01\u0E49\u0E32\u0E27\u0E41\u0E23\u0E01\u0E2A\u0E39\u0E48\u0E2A\u0E38\u0E02\u0E20\u0E32\u0E1E\u0E17\u0E35\u0E48\u0E14\u0E35",
     basePrice: 690,
     baseLabel: "\u0E15\u0E48\u0E2D 1 \u0E04\u0E19",
@@ -33554,7 +33554,7 @@ var ticketCategories = [
     group: "individual",
     category: "individual",
     distanceLabel: "10K",
-    name: "10 KM \u0E27\u0E34\u0E48\u0E07\u0E1A\u0E38\u0E04\u0E04\u0E25\u0E17\u0E31\u0E48\u0E27\u0E44\u0E1B",
+    name: "10 km \u0E27\u0E34\u0E48\u0E07\u0E1A\u0E38\u0E04\u0E04\u0E25\u0E17\u0E31\u0E48\u0E27\u0E44\u0E1B",
     subtitle: "\u0E17\u0E49\u0E32\u0E17\u0E32\u0E22\u0E15\u0E31\u0E27\u0E40\u0E2D\u0E07 \u0E44\u0E1B\u0E43\u0E2B\u0E49\u0E44\u0E01\u0E25\u0E01\u0E27\u0E48\u0E32\u0E40\u0E14\u0E34\u0E21",
     basePrice: 890,
     baseLabel: "\u0E15\u0E48\u0E2D 1 \u0E04\u0E19",
@@ -33565,7 +33565,7 @@ var ticketCategories = [
     group: "dog",
     category: "dog",
     distanceLabel: "1K",
-    name: "1 KM \u0E27\u0E34\u0E48\u0E07\u0E04\u0E39\u0E48\u0E19\u0E49\u0E2D\u0E07\u0E2A\u0E38\u0E19\u0E31\u0E02",
+    name: "1 km \u0E27\u0E34\u0E48\u0E07\u0E04\u0E39\u0E48\u0E19\u0E49\u0E2D\u0E07\u0E2A\u0E38\u0E19\u0E31\u0E02",
     subtitle: "\u0E27\u0E34\u0E48\u0E07\u0E40\u0E25\u0E48\u0E19\u0E2A\u0E1A\u0E32\u0E22 \u0E46 \u0E40\u0E2B\u0E21\u0E32\u0E30\u0E01\u0E31\u0E1A\u0E17\u0E38\u0E01\u0E27\u0E31\u0E22",
     basePrice: 790,
     baseLabel: "1 \u0E04\u0E19 + 1 \u0E19\u0E49\u0E2D\u0E07\u0E2A\u0E38\u0E19\u0E31\u0E02",
@@ -33578,8 +33578,8 @@ var ticketCategories = [
     id: "3km",
     group: "dog",
     category: "dog",
-    distanceLabel: "3.8K",
-    name: "3.8 KM \u0E27\u0E34\u0E48\u0E07\u0E04\u0E39\u0E48\u0E19\u0E49\u0E2D\u0E07\u0E2A\u0E38\u0E19\u0E31\u0E02",
+    distanceLabel: "4K",
+    name: "4 km \u0E27\u0E34\u0E48\u0E07\u0E04\u0E39\u0E48\u0E19\u0E49\u0E2D\u0E07\u0E2A\u0E38\u0E19\u0E31\u0E02",
     subtitle: "\u0E04\u0E19\u0E01\u0E31\u0E1A\u0E19\u0E49\u0E2D\u0E07\u0E2A\u0E38\u0E19\u0E31\u0E02 \u0E27\u0E34\u0E48\u0E07\u0E40\u0E04\u0E35\u0E22\u0E07\u0E02\u0E49\u0E32\u0E07\u0E01\u0E31\u0E19",
     basePrice: 890,
     baseLabel: "1 \u0E04\u0E19 + 1 \u0E19\u0E49\u0E2D\u0E07\u0E2A\u0E38\u0E19\u0E31\u0E02",
@@ -33699,6 +33699,25 @@ create table if not exists csr.visits (
   primary key (day, vid)
 );
 
+-- Runner accounts (sign-up / login). Passwords are scrypt hashes; LINE logins have no password.
+create table if not exists csr.runners (
+  runner_id     text primary key,
+  email         text,
+  username      text,
+  name          text not null default '',
+  phone         text not null default '',
+  password_hash text,
+  line_user_id  text,
+  profile       jsonb not null default '{}'::jsonb,
+  created_at    timestamptz not null default now(),
+  last_login_at timestamptz
+);
+create unique index if not exists runners_email_uidx on csr.runners (email) where email is not null;
+create unique index if not exists runners_username_uidx on csr.runners (username) where username is not null;
+create unique index if not exists runners_line_uidx on csr.runners (line_user_id) where line_user_id is not null;
+create index if not exists orders_runner_idx on csr.orders ((data->>'runnerId')) where data ? 'runnerId';
+alter table csr.runners enable row level security;
+
 alter table csr.orders          enable row level security;
 alter table csr.bib_counters    enable row level security;
 alter table csr.used_refs       enable row level security;
@@ -33787,6 +33806,9 @@ async function dbTx(fn) {
   return (await getDriver()).tx(fn);
 }
 
+// src/data/shootingRules.ts
+var SHOOTING_RULES_VERSION = "2026-11-04";
+
 // src/data/shooting.ts
 function isValidThaiId(id) {
   if (!/^\d{13}$/.test(id)) return false;
@@ -33800,22 +33822,19 @@ function maskThaiId(id) {
   return d.length === 13 ? `x-xxxx-xxxxx-${d.slice(10, 12)}-${d[12]}` : "";
 }
 var clip2 = (v, n) => typeof v === "string" ? v.replace(/[\u0000-\u001f<>]/g, " ").trim().slice(0, n) : "";
-function parseShooting(raw, people) {
+function parseShooting(raw, people, acknowledged) {
   const list = Array.isArray(raw) ? raw.slice(0, people) : [];
   const errors2 = [];
   const shooters = [];
   for (let i = 0; i < people; i++) {
     const r = list[i] && typeof list[i] === "object" ? list[i] : {};
     const fullName = clip2(r.fullName, 120);
-    const idCard = digitsOnly(r.idCard);
     if (fullName.length < 3) errors2.push(`\u0E01\u0E23\u0E38\u0E13\u0E32\u0E01\u0E23\u0E2D\u0E01\u0E0A\u0E37\u0E48\u0E2D-\u0E19\u0E32\u0E21\u0E2A\u0E01\u0E38\u0E25\u0E1C\u0E39\u0E49\u0E22\u0E34\u0E07\u0E1B\u0E37\u0E19\u0E04\u0E19\u0E17\u0E35\u0E48 ${i + 1}`);
-    if (!isValidThaiId(idCard)) errors2.push(`\u0E40\u0E25\u0E02\u0E1A\u0E31\u0E15\u0E23\u0E1B\u0E23\u0E30\u0E0A\u0E32\u0E0A\u0E19\u0E1C\u0E39\u0E49\u0E22\u0E34\u0E07\u0E1B\u0E37\u0E19\u0E04\u0E19\u0E17\u0E35\u0E48 ${i + 1} \u0E44\u0E21\u0E48\u0E16\u0E39\u0E01\u0E15\u0E49\u0E2D\u0E07`);
-    shooters.push({ fullName, idCard });
+    shooters.push({ fullName });
   }
-  const ids = shooters.map((s) => s.idCard).filter(Boolean);
-  if (new Set(ids).size !== ids.length) errors2.push("\u0E40\u0E25\u0E02\u0E1A\u0E31\u0E15\u0E23\u0E1B\u0E23\u0E30\u0E0A\u0E32\u0E0A\u0E19\u0E1C\u0E39\u0E49\u0E22\u0E34\u0E07\u0E1B\u0E37\u0E19\u0E0B\u0E49\u0E33\u0E01\u0E31\u0E19");
+  if (!acknowledged) errors2.push("\u0E01\u0E23\u0E38\u0E13\u0E32\u0E2D\u0E48\u0E32\u0E19\u0E01\u0E0E\u0E04\u0E27\u0E32\u0E21\u0E1B\u0E25\u0E2D\u0E14\u0E20\u0E31\u0E22\u0E41\u0E25\u0E30\u0E01\u0E14\u0E23\u0E31\u0E1A\u0E17\u0E23\u0E32\u0E1A/\u0E22\u0E2D\u0E21\u0E23\u0E31\u0E1A\u0E01\u0E34\u0E08\u0E01\u0E23\u0E23\u0E21\u0E22\u0E34\u0E07\u0E1B\u0E37\u0E19");
   if (errors2.length) return { ok: false, error: errors2.join(" \xB7 ") };
-  return { ok: true, value: { shooters } };
+  return { ok: true, value: { shooters, consentAt: (/* @__PURE__ */ new Date()).toISOString(), consentVersion: SHOOTING_RULES_VERSION } };
 }
 
 // server/store.ts
@@ -34158,6 +34177,43 @@ function toRunnerView(o) {
   const waiverView = activityWaiver ? { ...activityWaiver, participants: activityWaiver.participants.map((p) => ({ ...p, idCard: maskThaiId(p.idCard) })) } : void 0;
   return { ...rest, shooting: shootingView, activityWaiver: waiverView, hasSlip: Boolean(slipFile) };
 }
+async function listOrdersByRunner(runnerId) {
+  const rows = await dbQuery(
+    `select case when data ? 'slipFile' then (data - 'slipFile') || '{"slipFile":"stored"}'::jsonb else data end as data
+     from csr.orders where data->>'runnerId' = $1 order by created_at desc, order_id desc`,
+    [runnerId]
+  );
+  return rows.map(rowToOrder);
+}
+function toStaffView(o) {
+  return {
+    orderId: o.orderId,
+    fullName: o.fullName,
+    routeId: o.routeId,
+    routeName: o.routeName,
+    ticketType: o.ticketType,
+    bibNumber: o.bibNumber,
+    shirtSize: o.shirtSize,
+    runningWithDog: o.runningWithDog,
+    dogName: o.dogName,
+    peopleCount: o.peopleCount,
+    dogCount: o.dogCount,
+    extraRunnerNames: o.extraRunnerNames,
+    concertQty: o.concertQty,
+    vipTables: o.vipTables,
+    parkingPlates: o.parkingPlates,
+    shooting: o.shooting ? { shooters: o.shooting.shooters.map((s) => ({ fullName: s.fullName })) } : void 0,
+    addOns: o.addOns ? { label: o.addOns.label, people: o.addOns.people, total: 0 } : void 0,
+    paymentStatus: o.paymentStatus,
+    verificationStatus: o.verificationStatus,
+    kitStatus: o.kitStatus,
+    registrationStatus: o.registrationStatus,
+    cancelledAt: o.cancelledAt,
+    cancelReason: o.cancelReason,
+    createdAt: o.createdAt,
+    expiresAt: o.expiresAt
+  };
+}
 function toAdminView(o) {
   const { accessTokenHash, slipFile, ...rest } = o;
   return { ...rest, hasSlip: Boolean(slipFile) };
@@ -34278,7 +34334,7 @@ var COMBO_PRICES = {
   PW: 2750,
   TPW: 3050
 };
-var EARLY_BIRD_ACTIVITY_OFF = 100;
+var EARLY_BIRD_ACTIVITY_OFF = 0;
 var hasAddOns = (s) => s.tower || s.gun !== "none" || s.windTunnel;
 function comboKey(s) {
   return (s.tower ? "T" : "") + (s.gun === "standard" ? "S" : s.gun === "premium" ? "P" : "") + (s.windTunnel ? "W" : "");
@@ -34641,10 +34697,53 @@ function requireAdmin(req, res, next) {
 
 // server/documents.tsx
 var import_qrcode = __toESM(require_lib5(), 1);
+
+// src/data/bibStrip.ts
+var BIB_SPONSOR_LOGOS = [
+  "bpp",
+  "tat",
+  "chang",
+  "thonglor-pet-hospital",
+  "bpp-police",
+  "msd-animal-health",
+  "kitchen-flavor",
+  "vif",
+  "dr-choice",
+  "konvy",
+  "we-are-family-for-pet",
+  "solid-gold",
+  "credo-plus",
+  "vetsynova",
+  "bestie",
+  "dogster",
+  "amor",
+  "yumove"
+].map((n) => `/images/sponsors/${n}.webp`);
+var svg = (inner) => `<svg viewBox="0 0 48 48" fill="none" stroke="#3B1883" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${inner}</svg>`;
+var BIB_PERKS = [
+  {
+    id: "medal",
+    label: "\u0E40\u0E2B\u0E23\u0E35\u0E22\u0E0D",
+    icon: svg('<circle cx="24" cy="30" r="10"/><path d="M15 6h7l4 13M33 6h-7l-4 13"/><path d="M24 25.5l1.6 3.3 3.6.5-2.6 2.5.6 3.6-3.2-1.7-3.2 1.7.6-3.6-2.6-2.5 3.6-.5z" fill="#3B1883" stroke="none"/>')
+  },
+  {
+    id: "food",
+    label: "\u0E2D\u0E32\u0E2B\u0E32\u0E23",
+    icon: svg('<circle cx="24" cy="25" r="9.5"/><circle cx="24" cy="25" r="4.5"/><path d="M8 9v9a3 3 0 0 0 3 3h1a3 3 0 0 0 3-3V9M11.5 9v32M40 9c-3.5 2-5 6-5 11v6h5v15"/>')
+  },
+  {
+    id: "drink",
+    label: "\u0E40\u0E04\u0E23\u0E37\u0E48\u0E2D\u0E07\u0E14\u0E37\u0E48\u0E21",
+    icon: svg('<path d="M20 5h8v5l3 5v24a3.5 3.5 0 0 1-3.5 3.5h-7A3.5 3.5 0 0 1 17 39V15l3-5z"/><path d="M17 22h14M17 32h14"/>')
+  }
+];
+var BIB_SIZE_LABEL = "\u0E44\u0E0B\u0E0B\u0E4C\u0E40\u0E2A\u0E37\u0E49\u0E2D";
+
+// server/documents.tsx
 var DIST = {
   "10km": { label: "10K", sub: "THAILAND" },
   "5km": { label: "5K", sub: "THAILAND" },
-  "3km": { label: "3.8K", sub: "DOG RUN" },
+  "3km": { label: "4K", sub: "DOG RUN" },
   "1km": { label: "1K", sub: "DOG RUN" }
 };
 var esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
@@ -34689,6 +34788,13 @@ async function buildDocumentsHtml(o, opts = {}) {
           <div class="bib-line"></div>
           <div class="bib-name">${esc(r.name)}${dog ? `<span style="color:#0F766E;font-size:.8em"> \xB7 \u{1F436} ${esc(dog)}</span>` : ""}</div>
           <div class="bib-qr"><img src="${code}" alt="QR" /><small>CHECK-IN \xB7 RACE RESULT</small></div>
+          <div class="bib-strip">
+            <div class="bib-logos">${BIB_SPONSOR_LOGOS.map((s) => `<img src="${A}${s}" alt="" />`).join("")}</div>
+            <div class="bib-perks">
+              ${BIB_PERKS.map((p) => `<div class="bib-perk"><span class="bib-perk-ic">${p.icon}</span><small>${p.label}</small></div>`).join("")}
+              <div class="bib-perk"><span class="bib-perk-size">${esc(r.shirt || "")}</span><small>${BIB_SIZE_LABEL}</small></div>
+            </div>
+          </div>
           <div class="bib-sos"><small>EMERGENCY CONTACT</small>${phones.map((p) => `<b>${p}</b>`).join("")}</div>
         </div>`;
       })
@@ -34852,6 +34958,15 @@ var CSS = `
   .bib-qr img { width:100%; border:.35cqw solid #160A2E; border-radius:.8cqw; display:block; }
   .bib-qr small { display:block; margin-top:.5cqw; font:800 .95cqw 'Montserrat',sans-serif; color:#2A1450; }
   .bib-sos { position:absolute; left:84.8%; top:64.2%; width:13.4%; text-align:center; border-top:.3cqw solid var(--gold); padding-top:.5cqw; }
+  .bib-strip { position:absolute; left:2.73%; top:81.84%; width:94.4%; height:12.6%; background:#fff; border-radius:1cqw; display:flex; align-items:stretch; }
+  .bib-logos { flex:0 0 57%; min-height:0; overflow:hidden; display:grid; grid-template-columns:repeat(9,minmax(0,1fr)); grid-template-rows:repeat(2,minmax(0,1fr)); gap:.2cqw .45cqw; padding:.7cqw 1cqw; box-sizing:border-box; }
+  .bib-logos img { width:100%; height:100%; min-height:0; object-fit:contain; }
+  .bib-perks { flex:1; display:flex; border-left:.25cqw solid #E4DAF5; margin:.8cqw 0; }
+  .bib-perk { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:.35cqw; }
+  .bib-perk-ic { width:4.2cqw; height:4.2cqw; border-radius:50%; border:.3cqw dashed #3B1883; display:flex; align-items:center; justify-content:center; padding:.55cqw; box-sizing:border-box; }
+  .bib-perk-ic svg { width:100%; height:100%; display:block; }
+  .bib-perk-size { min-width:5cqw; height:4.2cqw; padding:0 .8cqw; border-radius:1cqw; border:.3cqw solid #3B1883; display:flex; align-items:center; justify-content:center; font:900 2.2cqw 'Montserrat',sans-serif; color:#3B1883; box-sizing:border-box; }
+  .bib-perk small { font:700 1.2cqw 'Mitr',sans-serif; color:#2A1450; white-space:nowrap; }
   .bib-sos small { display:block; font:800 .9cqw 'Montserrat',sans-serif; color:#2A1450; } .bib-sos b { display:block; font:800 1.45cqw/1.3 'Montserrat',sans-serif; color:#160A2E; }
   .hero-ticket { display:grid; grid-template-columns:1fr 54mm; border-radius:18px; overflow:hidden; border:3px solid var(--ink); box-shadow:0 6px 0 var(--ink); }
   .hero-ticket .l { padding:16px 18px; background:linear-gradient(135deg,#F5F0FF,#FFF7DB 60%,#FCE7F3); }
@@ -38567,8 +38682,8 @@ var Encoder = class extends Transform {
    *
    * @internal
    */
-  _emit(b64, final) {
-    const src = Buffer.from(this._curLine + b64, "latin1");
+  _emit(b642, final) {
+    const src = Buffer.from(this._curLine + b642, "latin1");
     if (!src.length) {
       return;
     }
@@ -47586,6 +47701,410 @@ async function sendTicketEmail(o) {
   }
 }
 
+// server/runnerRoutes.ts
+var import_express = __toESM(require_express2(), 1);
+
+// server/runners.ts
+import crypto10 from "crypto";
+var SECRET_SOURCE = process.env.RUNNER_SESSION_SECRET || process.env.ADMIN_SESSION_SECRET || process.env.ADMIN_PASSWORD || crypto10.randomBytes(24).toString("hex");
+var KEY = crypto10.createHash("sha256").update(`csr-runner-session|${SECRET_SOURCE}`).digest();
+var RUNNER_TTL_MS = 30 * 24 * 60 * 60 * 1e3;
+var STAFF_TTL_MS = 12 * 60 * 60 * 1e3;
+var b64 = (s) => Buffer.from(s).toString("base64url");
+var hmac = (s) => crypto10.createHmac("sha256", KEY).update(s).digest("base64url");
+function safeEqual2(a, b) {
+  const ha = crypto10.createHash("sha256").update(a).digest();
+  const hb = crypto10.createHash("sha256").update(b).digest();
+  return crypto10.timingSafeEqual(ha, hb);
+}
+function issueSession(role, sub) {
+  const expiresAt = Date.now() + (role === "staff" ? STAFF_TTL_MS : RUNNER_TTL_MS);
+  const payload = b64(JSON.stringify({ k: role, s: sub, exp: expiresAt }));
+  return { token: `r1.${payload}.${hmac(`r1.${payload}`)}`, expiresAt };
+}
+function verifySession(token) {
+  if (!token) return null;
+  const [v, payload, sig] = token.split(".");
+  if (v !== "r1" || !payload || !sig || !safeEqual2(sig, hmac(`r1.${payload}`))) return null;
+  try {
+    const d = JSON.parse(Buffer.from(payload, "base64url").toString("utf8"));
+    if (typeof d.exp !== "number" || Date.now() > d.exp) return null;
+    if (d.k !== "runner" && d.k !== "staff" || typeof d.s !== "string" || !d.s) return null;
+    return { role: d.k, sub: d.s };
+  } catch {
+    return null;
+  }
+}
+function sessionFromRequest(req) {
+  const raw = req.headers["x-runner-token"];
+  return verifySession(typeof raw === "string" ? raw : void 0);
+}
+function requireRunner(req, res, next) {
+  const s = sessionFromRequest(req);
+  if (!s || s.role !== "runner") {
+    res.status(401).json({ error: "\u0E01\u0E23\u0E38\u0E13\u0E32\u0E40\u0E02\u0E49\u0E32\u0E2A\u0E39\u0E48\u0E23\u0E30\u0E1A\u0E1A\u0E01\u0E48\u0E2D\u0E19", needLogin: true });
+    return;
+  }
+  req.runner = s;
+  next();
+}
+var SCRYPT_N = 16384;
+function hashPassword(password) {
+  const salt = crypto10.randomBytes(16);
+  const hash = crypto10.scryptSync(password, salt, 32, { N: SCRYPT_N, r: 8, p: 1 });
+  return `scrypt$${SCRYPT_N}$${salt.toString("hex")}$${hash.toString("hex")}`;
+}
+function verifyPassword(password, stored) {
+  const [alg, n, saltHex, hashHex] = String(stored || "").split("$");
+  if (alg !== "scrypt" || !n || !saltHex || !hashHex) return false;
+  try {
+    const expected = Buffer.from(hashHex, "hex");
+    const got = crypto10.scryptSync(password, Buffer.from(saltHex, "hex"), expected.length, { N: Number(n), r: 8, p: 1 });
+    return got.length === expected.length && crypto10.timingSafeEqual(got, expected);
+  } catch {
+    return false;
+  }
+}
+var STAFF_DEFAULT = [{ username: "chr27", hash: "scrypt$16384$a3209a2451591de5ec28d883098e4081$881ce08021687007749a09f11df239e1573e75362c3abeb19f6eb3c74c6c4b4e" }];
+function staffAccounts() {
+  const raw = process.env.STAFF_ACCOUNTS;
+  if (!raw) return STAFF_DEFAULT;
+  try {
+    const list = JSON.parse(raw);
+    if (Array.isArray(list)) {
+      const ok = list.filter((a) => a && typeof a.username === "string" && typeof a.hash === "string");
+      return [...STAFF_DEFAULT, ...ok];
+    }
+  } catch {
+    console.error("[runners] STAFF_ACCOUNTS is not valid JSON; using the built-in staff account only");
+  }
+  return STAFF_DEFAULT;
+}
+var DUMMY_HASH = hashPassword(crypto10.randomBytes(8).toString("hex"));
+function checkStaff(username, password) {
+  const name2 = String(username || "").trim().toLowerCase();
+  const acc = staffAccounts().find((a) => a.username.toLowerCase() === name2);
+  const ok = verifyPassword(String(password || ""), acc ? acc.hash : DUMMY_HASH);
+  return acc && ok ? acc.username : null;
+}
+var tablesReady = null;
+function ensureRunnerTables() {
+  if (!tablesReady) {
+    tablesReady = (async () => {
+      await dbQuery(`create table if not exists csr.runners (
+        runner_id     text primary key,
+        email         text,
+        username      text,
+        name          text not null default '',
+        phone         text not null default '',
+        password_hash text,
+        line_user_id  text,
+        profile       jsonb not null default '{}'::jsonb,
+        created_at    timestamptz not null default now(),
+        last_login_at timestamptz
+      )`);
+      await dbQuery("create unique index if not exists runners_email_uidx on csr.runners (email) where email is not null");
+      await dbQuery("create unique index if not exists runners_username_uidx on csr.runners (username) where username is not null");
+      await dbQuery("create unique index if not exists runners_line_uidx on csr.runners (line_user_id) where line_user_id is not null");
+      await dbQuery("create index if not exists orders_runner_idx on csr.orders ((data->>'runnerId')) where data ? 'runnerId'");
+      await dbQuery("alter table csr.runners enable row level security");
+    })().catch((err) => {
+      tablesReady = null;
+      throw err;
+    });
+  }
+  return tablesReady;
+}
+var cleanText = (v, n) => typeof v === "string" ? v.replace(/[\u0000-\u001f<>]/g, " ").trim().slice(0, n) : "";
+var normEmail = (v) => cleanText(v, 120).toLowerCase();
+var normUsername = (v) => cleanText(v, 30).toLowerCase();
+var isEmail = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+var isUsername = (v) => /^[a-z0-9._-]{4,30}$/.test(v);
+function newRunnerId() {
+  return `R${crypto10.randomBytes(7).toString("base64url").replace(/[-_]/g, "x").slice(0, 10).toUpperCase()}`;
+}
+async function createRunner(input) {
+  await ensureRunnerTables();
+  const name2 = cleanText(input.name, 80);
+  const email = input.email ? normEmail(input.email) : "";
+  const username = input.username ? normUsername(input.username) : "";
+  const phone = cleanText(input.phone, 20).replace(/[^\d+\-\s]/g, "");
+  if (name2.length < 2) return { ok: false, error: "\u0E01\u0E23\u0E38\u0E13\u0E32\u0E01\u0E23\u0E2D\u0E01\u0E0A\u0E37\u0E48\u0E2D-\u0E19\u0E32\u0E21\u0E2A\u0E01\u0E38\u0E25" };
+  if (!email && !username) return { ok: false, error: "\u0E01\u0E23\u0E38\u0E13\u0E32\u0E01\u0E23\u0E2D\u0E01\u0E2D\u0E35\u0E40\u0E21\u0E25 \u0E2B\u0E23\u0E37\u0E2D\u0E15\u0E31\u0E49\u0E07\u0E0A\u0E37\u0E48\u0E2D\u0E1C\u0E39\u0E49\u0E43\u0E0A\u0E49" };
+  if (email && !isEmail(email)) return { ok: false, error: "\u0E2D\u0E35\u0E40\u0E21\u0E25\u0E44\u0E21\u0E48\u0E16\u0E39\u0E01\u0E15\u0E49\u0E2D\u0E07" };
+  if (username && !isUsername(username)) return { ok: false, error: "\u0E0A\u0E37\u0E48\u0E2D\u0E1C\u0E39\u0E49\u0E43\u0E0A\u0E49\u0E15\u0E49\u0E2D\u0E07\u0E40\u0E1B\u0E47\u0E19 a-z 0-9 . _ - \u0E22\u0E32\u0E27 4\u201330 \u0E15\u0E31\u0E27\u0E2D\u0E31\u0E01\u0E29\u0E23" };
+  if (username && staffAccounts().some((a) => a.username.toLowerCase() === username)) return { ok: false, error: "\u0E0A\u0E37\u0E48\u0E2D\u0E1C\u0E39\u0E49\u0E43\u0E0A\u0E49\u0E19\u0E35\u0E49\u0E16\u0E39\u0E01\u0E43\u0E0A\u0E49\u0E41\u0E25\u0E49\u0E27" };
+  if (String(input.password || "").length < 8) return { ok: false, error: "\u0E23\u0E2B\u0E31\u0E2A\u0E1C\u0E48\u0E32\u0E19\u0E15\u0E49\u0E2D\u0E07\u0E22\u0E32\u0E27\u0E2D\u0E22\u0E48\u0E32\u0E07\u0E19\u0E49\u0E2D\u0E22 8 \u0E15\u0E31\u0E27\u0E2D\u0E31\u0E01\u0E29\u0E23" };
+  if (String(input.password).length > 200) return { ok: false, error: "\u0E23\u0E2B\u0E31\u0E2A\u0E1C\u0E48\u0E32\u0E19\u0E22\u0E32\u0E27\u0E40\u0E01\u0E34\u0E19\u0E44\u0E1B" };
+  if (email && (await dbQuery("select 1 from csr.runners where email = $1", [email])).length) return { ok: false, error: "\u0E2D\u0E35\u0E40\u0E21\u0E25\u0E19\u0E35\u0E49\u0E2A\u0E21\u0E31\u0E04\u0E23\u0E44\u0E27\u0E49\u0E41\u0E25\u0E49\u0E27 \u0E01\u0E23\u0E38\u0E13\u0E32\u0E40\u0E02\u0E49\u0E32\u0E2A\u0E39\u0E48\u0E23\u0E30\u0E1A\u0E1A" };
+  if (username && (await dbQuery("select 1 from csr.runners where username = $1", [username])).length) return { ok: false, error: "\u0E0A\u0E37\u0E48\u0E2D\u0E1C\u0E39\u0E49\u0E43\u0E0A\u0E49\u0E19\u0E35\u0E49\u0E16\u0E39\u0E01\u0E43\u0E0A\u0E49\u0E41\u0E25\u0E49\u0E27" };
+  const id = newRunnerId();
+  try {
+    const rows = await dbQuery(
+      `insert into csr.runners (runner_id, email, username, name, phone, password_hash) values ($1, $2, $3, $4, $5, $6) returning *`,
+      [id, email || null, username || null, name2, phone, hashPassword(String(input.password))]
+    );
+    return { ok: true, runner: rows[0] };
+  } catch (err) {
+    if (String(err?.message || "").includes("duplicate")) return { ok: false, error: "\u0E2D\u0E35\u0E40\u0E21\u0E25\u0E2B\u0E23\u0E37\u0E2D\u0E0A\u0E37\u0E48\u0E2D\u0E1C\u0E39\u0E49\u0E43\u0E0A\u0E49\u0E19\u0E35\u0E49\u0E16\u0E39\u0E01\u0E43\u0E0A\u0E49\u0E41\u0E25\u0E49\u0E27" };
+    throw err;
+  }
+}
+async function loginRunner(identifier, password) {
+  await ensureRunnerTables();
+  const id = cleanText(identifier, 120).toLowerCase();
+  const rows = await dbQuery("select * from csr.runners where email = $1 or username = $1", [id]);
+  const row2 = rows[0];
+  const ok = verifyPassword(String(password || ""), row2?.password_hash || DUMMY_HASH);
+  if (!row2 || !row2.password_hash || !ok) return null;
+  await dbQuery("update csr.runners set last_login_at = now() where runner_id = $1", [row2.runner_id]);
+  return row2;
+}
+async function getRunner(runnerId) {
+  await ensureRunnerTables();
+  const rows = await dbQuery("select * from csr.runners where runner_id = $1", [runnerId]);
+  return rows[0];
+}
+var PROFILE_KEYS = ["firstName", "lastName", "shirtSize", "gender", "birthDate", "bloodType", "emergencyName", "emergencyPhone", "relationship"];
+async function updateRunnerProfile(runnerId, patch) {
+  const row2 = await getRunner(runnerId);
+  if (!row2) return { ok: false, error: "\u0E44\u0E21\u0E48\u0E1E\u0E1A\u0E1A\u0E31\u0E0D\u0E0A\u0E35" };
+  const name2 = patch.name !== void 0 ? cleanText(patch.name, 80) : row2.name;
+  const phone = patch.phone !== void 0 ? cleanText(patch.phone, 20).replace(/[^\d+\-\s]/g, "") : row2.phone;
+  let email = row2.email;
+  if (patch.email !== void 0) {
+    const e = normEmail(patch.email);
+    if (e && !isEmail(e)) return { ok: false, error: "\u0E2D\u0E35\u0E40\u0E21\u0E25\u0E44\u0E21\u0E48\u0E16\u0E39\u0E01\u0E15\u0E49\u0E2D\u0E07" };
+    if (e && e !== row2.email && (await dbQuery("select 1 from csr.runners where email = $1 and runner_id <> $2", [e, runnerId])).length) {
+      return { ok: false, error: "\u0E2D\u0E35\u0E40\u0E21\u0E25\u0E19\u0E35\u0E49\u0E16\u0E39\u0E01\u0E43\u0E0A\u0E49\u0E42\u0E14\u0E22\u0E1A\u0E31\u0E0D\u0E0A\u0E35\u0E2D\u0E37\u0E48\u0E19\u0E41\u0E25\u0E49\u0E27" };
+    }
+    email = e || null;
+  }
+  const profile = { ...row2.profile || {} };
+  if (patch.profile && typeof patch.profile === "object") {
+    for (const k of PROFILE_KEYS) {
+      const v = patch.profile[k];
+      if (typeof v === "string") profile[k] = cleanText(v, 80);
+    }
+  }
+  if (name2.length < 2) return { ok: false, error: "\u0E01\u0E23\u0E38\u0E13\u0E32\u0E01\u0E23\u0E2D\u0E01\u0E0A\u0E37\u0E48\u0E2D" };
+  const rows = await dbQuery(
+    "update csr.runners set name = $2, phone = $3, email = $4, profile = $5::jsonb where runner_id = $1 returning *",
+    [runnerId, name2, phone, email, JSON.stringify(profile)]
+  );
+  return { ok: true, runner: rows[0] };
+}
+async function upsertLineRunner(lineUserId, displayName) {
+  await ensureRunnerTables();
+  const existing = await dbQuery("select * from csr.runners where line_user_id = $1", [lineUserId]);
+  if (existing[0]) {
+    await dbQuery("update csr.runners set last_login_at = now() where runner_id = $1", [existing[0].runner_id]);
+    return existing[0];
+  }
+  const rows = await dbQuery(
+    "insert into csr.runners (runner_id, name, line_user_id, last_login_at) values ($1, $2, $3, now()) returning *",
+    [newRunnerId(), cleanText(displayName, 80) || "\u0E19\u0E31\u0E01\u0E27\u0E34\u0E48\u0E07 LINE", lineUserId]
+  );
+  return rows[0];
+}
+function publicRunner(r) {
+  return {
+    id: r.runner_id,
+    name: r.name,
+    email: r.email || "",
+    username: r.username || "",
+    phone: r.phone || "",
+    lineLinked: Boolean(r.line_user_id),
+    profile: r.profile || {},
+    createdAt: r.created_at
+  };
+}
+var lineConfigured = () => Boolean(process.env.LINE_CHANNEL_ID && process.env.LINE_CHANNEL_SECRET);
+function lineState() {
+  const nonce = crypto10.randomBytes(12).toString("hex");
+  const payload = b64(JSON.stringify({ n: nonce, exp: Date.now() + 10 * 60 * 1e3 }));
+  return { state: `${payload}.${hmac(`line|${payload}`)}`, nonce };
+}
+function lineStateOk(state, nonceCookie) {
+  const [payload, sig] = String(state || "").split(".");
+  if (!payload || !sig || !safeEqual2(sig, hmac(`line|${payload}`))) return false;
+  try {
+    const d = JSON.parse(Buffer.from(payload, "base64url").toString("utf8"));
+    return typeof d.exp === "number" && Date.now() < d.exp && typeof d.n === "string" && safeEqual2(d.n, nonceCookie);
+  } catch {
+    return false;
+  }
+}
+function lineAuthorizeUrl(redirectUri, state) {
+  const q = new URLSearchParams({
+    response_type: "code",
+    client_id: process.env.LINE_CHANNEL_ID || "",
+    redirect_uri: redirectUri,
+    state,
+    scope: "profile openid"
+  });
+  return `https://access.line.me/oauth2/v2.1/authorize?${q.toString()}`;
+}
+async function lineProfile(code, redirectUri) {
+  const tok = await fetch("https://api.line.me/oauth2/v2.1/token", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      grant_type: "authorization_code",
+      code,
+      redirect_uri: redirectUri,
+      client_id: process.env.LINE_CHANNEL_ID || "",
+      client_secret: process.env.LINE_CHANNEL_SECRET || ""
+    })
+  });
+  if (!tok.ok) throw new Error(`LINE token ${tok.status}`);
+  const { access_token } = await tok.json();
+  if (!access_token) throw new Error("LINE token missing");
+  const prof = await fetch("https://api.line.me/v2/profile", { headers: { Authorization: `Bearer ${access_token}` } });
+  if (!prof.ok) throw new Error(`LINE profile ${prof.status}`);
+  const p = await prof.json();
+  if (!p.userId) throw new Error("LINE profile missing userId");
+  return { userId: p.userId, displayName: p.displayName || "" };
+}
+
+// server/runnerRoutes.ts
+var cookieOf = (req, name2) => {
+  const m = String(req.headers.cookie || "").split(/;\s*/).find((c) => c.startsWith(`${name2}=`));
+  return m ? decodeURIComponent(m.slice(name2.length + 1)) : "";
+};
+function registerRunnerRoutes(app2, h2, clientIp2) {
+  const json = import_express.default.json({ limit: "50kb" });
+  const sessionBody = (token, expiresAt, role, user) => ({ token, expiresAt, role, user });
+  app2.post("/api/auth/register", json, h2(async (req, res) => {
+    if (await rateLimited(`signup:${clientIp2(req)}`, 10, 60 * 60 * 1e3)) {
+      res.status(429).json({ error: "\u0E2A\u0E21\u0E31\u0E04\u0E23\u0E1A\u0E48\u0E2D\u0E22\u0E40\u0E01\u0E34\u0E19\u0E44\u0E1B \u0E01\u0E23\u0E38\u0E13\u0E32\u0E23\u0E2D\u0E2A\u0E31\u0E01\u0E04\u0E23\u0E39\u0E48\u0E41\u0E25\u0E49\u0E27\u0E25\u0E2D\u0E07\u0E43\u0E2B\u0E21\u0E48" });
+      return;
+    }
+    const b = req.body || {};
+    const made = await createRunner({ name: b.name, email: b.email, username: b.username, password: b.password, phone: b.phone });
+    if (!made.ok) {
+      res.status(400).json({ error: made.error });
+      return;
+    }
+    const s = issueSession("runner", made.runner.runner_id);
+    res.json(sessionBody(s.token, s.expiresAt, "runner", publicRunner(made.runner)));
+  }));
+  app2.post("/api/auth/login", json, h2(async (req, res) => {
+    const ip = clientIp2(req);
+    const identifier = String(req.body?.identifier || "").slice(0, 120);
+    const password = String(req.body?.password || "").slice(0, 200);
+    if (!identifier || !password) {
+      res.status(400).json({ error: "\u0E01\u0E23\u0E38\u0E13\u0E32\u0E01\u0E23\u0E2D\u0E01\u0E2D\u0E35\u0E40\u0E21\u0E25/\u0E0A\u0E37\u0E48\u0E2D\u0E1C\u0E39\u0E49\u0E43\u0E0A\u0E49 \u0E41\u0E25\u0E30\u0E23\u0E2B\u0E31\u0E2A\u0E1C\u0E48\u0E32\u0E19" });
+      return;
+    }
+    if (await rateLimited(`login:${ip}`, 20, 15 * 60 * 1e3) || await rateLimited(`login-id:${identifier.toLowerCase()}`, 10, 15 * 60 * 1e3)) {
+      res.status(429).json({ error: "\u0E40\u0E02\u0E49\u0E32\u0E2A\u0E39\u0E48\u0E23\u0E30\u0E1A\u0E1A\u0E1C\u0E34\u0E14\u0E2B\u0E25\u0E32\u0E22\u0E04\u0E23\u0E31\u0E49\u0E07 \u0E01\u0E23\u0E38\u0E13\u0E32\u0E23\u0E2D 15 \u0E19\u0E32\u0E17\u0E35\u0E41\u0E25\u0E49\u0E27\u0E25\u0E2D\u0E07\u0E43\u0E2B\u0E21\u0E48" });
+      return;
+    }
+    const staff = checkStaff(identifier, password);
+    if (staff) {
+      const s2 = issueSession("staff", staff);
+      res.json(sessionBody(s2.token, s2.expiresAt, "staff", { id: staff, name: staff, username: staff }));
+      return;
+    }
+    const runner = await loginRunner(identifier, password);
+    if (!runner) {
+      res.status(401).json({ error: "\u0E2D\u0E35\u0E40\u0E21\u0E25/\u0E0A\u0E37\u0E48\u0E2D\u0E1C\u0E39\u0E49\u0E43\u0E0A\u0E49 \u0E2B\u0E23\u0E37\u0E2D\u0E23\u0E2B\u0E31\u0E2A\u0E1C\u0E48\u0E32\u0E19\u0E44\u0E21\u0E48\u0E16\u0E39\u0E01\u0E15\u0E49\u0E2D\u0E07" });
+      return;
+    }
+    const s = issueSession("runner", runner.runner_id);
+    res.json(sessionBody(s.token, s.expiresAt, "runner", publicRunner(runner)));
+  }));
+  app2.get("/api/auth/me", h2(async (req, res) => {
+    const s = sessionFromRequest(req);
+    if (!s) {
+      res.status(401).json({ error: "\u0E01\u0E23\u0E38\u0E13\u0E32\u0E40\u0E02\u0E49\u0E32\u0E2A\u0E39\u0E48\u0E23\u0E30\u0E1A\u0E1A", needLogin: true });
+      return;
+    }
+    if (s.role === "staff") {
+      res.json({ role: "staff", user: { id: s.sub, name: s.sub, username: s.sub } });
+      return;
+    }
+    const runner = await getRunner(s.sub);
+    if (!runner) {
+      res.status(401).json({ error: "\u0E44\u0E21\u0E48\u0E1E\u0E1A\u0E1A\u0E31\u0E0D\u0E0A\u0E35 \u0E01\u0E23\u0E38\u0E13\u0E32\u0E40\u0E02\u0E49\u0E32\u0E2A\u0E39\u0E48\u0E23\u0E30\u0E1A\u0E1A\u0E43\u0E2B\u0E21\u0E48", needLogin: true });
+      return;
+    }
+    res.json({ role: "runner", user: publicRunner(runner) });
+  }));
+  const redirectUri = (req) => `${(process.env.PUBLIC_SITE_URL || `${req.protocol}://${req.get("host")}`).replace(/\/+$/, "")}/api/auth/line/callback`;
+  app2.get("/api/auth/line/start", h2(async (req, res) => {
+    if (!lineConfigured()) {
+      res.status(503).json({ error: "\u0E22\u0E31\u0E07\u0E44\u0E21\u0E48\u0E44\u0E14\u0E49\u0E40\u0E1B\u0E34\u0E14\u0E43\u0E0A\u0E49\u0E01\u0E32\u0E23\u0E40\u0E02\u0E49\u0E32\u0E2A\u0E39\u0E48\u0E23\u0E30\u0E1A\u0E1A\u0E14\u0E49\u0E27\u0E22 LINE" });
+      return;
+    }
+    const { state, nonce } = lineState();
+    res.setHeader("Set-Cookie", `csr_line_state=${nonce}; Path=/api/auth/line; Max-Age=600; HttpOnly; SameSite=Lax${req.secure ? "; Secure" : ""}`);
+    res.redirect(lineAuthorizeUrl(redirectUri(req), state));
+  }));
+  app2.get("/api/auth/line/callback", h2(async (req, res) => {
+    const back = (q) => res.redirect(`/${q}`);
+    if (!lineConfigured()) return back("#line-error=off");
+    const code = String(req.query.code || "");
+    const state = String(req.query.state || "");
+    if (!code || !lineStateOk(state, cookieOf(req, "csr_line_state"))) return back("#line-error=state");
+    try {
+      const p = await lineProfile(code, redirectUri(req));
+      const runner = await upsertLineRunner(p.userId, p.displayName);
+      const s = issueSession("runner", runner.runner_id);
+      res.setHeader("Set-Cookie", "csr_line_state=; Path=/api/auth/line; Max-Age=0; HttpOnly; SameSite=Lax");
+      back(`#runner-auth=${s.token}`);
+    } catch (err) {
+      console.error("[line-login]", err?.message || err);
+      back("#line-error=fail");
+    }
+  }));
+  app2.patch("/api/me", requireRunner, json, h2(async (req, res) => {
+    const s = req.runner;
+    const out = await updateRunnerProfile(s.sub, { name: req.body?.name, phone: req.body?.phone, email: req.body?.email, profile: req.body?.profile });
+    if (!out.ok) {
+      res.status(400).json({ error: out.error });
+      return;
+    }
+    res.json({ user: publicRunner(out.runner) });
+  }));
+  app2.get("/api/me/orders", requireRunner, h2(async (req, res) => {
+    const s = req.runner;
+    await ensureRunnerTables();
+    const orders = await listOrdersByRunner(s.sub);
+    res.json({
+      orders: orders.map((o) => ({
+        ...toRunnerView(o),
+        // signed link to the A4 documents (BIB, e-ticket...) of a paid order
+        docsUrl: o.paymentStatus === "PAID" && !o.cancelledAt ? `/api/orders/${encodeURIComponent(o.orderId)}/documents?s=${docsSignature(o.orderId)}` : void 0
+      }))
+    });
+  }));
+  app2.post("/api/me/claim", requireRunner, json, h2(async (req, res) => {
+    const s = req.runner;
+    if (await rateLimited(`claim:${clientIp2(req)}`, 10, 60 * 60 * 1e3)) {
+      res.status(429).json({ error: "\u0E25\u0E2D\u0E07\u0E1A\u0E48\u0E2D\u0E22\u0E40\u0E01\u0E34\u0E19\u0E44\u0E1B \u0E01\u0E23\u0E38\u0E13\u0E32\u0E23\u0E2D\u0E2A\u0E31\u0E01\u0E04\u0E23\u0E39\u0E48" });
+      return;
+    }
+    const code = String(req.body?.orderId || "").trim().slice(0, 80);
+    const email = normEmail(req.body?.email);
+    const found = code ? await findOrderByCode(code) : void 0;
+    const order = found ? await getOrder(found.orderId) : void 0;
+    if (!order || !email || normEmail(order.email) !== email) {
+      res.status(404).json({ error: "\u0E44\u0E21\u0E48\u0E1E\u0E1A\u0E04\u0E33\u0E2A\u0E31\u0E48\u0E07\u0E0B\u0E37\u0E49\u0E2D\u0E17\u0E35\u0E48\u0E15\u0E23\u0E07\u0E01\u0E31\u0E1A\u0E40\u0E25\u0E02\u0E17\u0E35\u0E48\u0E41\u0E25\u0E30\u0E2D\u0E35\u0E40\u0E21\u0E25\u0E19\u0E35\u0E49" });
+      return;
+    }
+    if (order.runnerId && order.runnerId !== s.sub) {
+      res.status(409).json({ error: "\u0E04\u0E33\u0E2A\u0E31\u0E48\u0E07\u0E0B\u0E37\u0E49\u0E2D\u0E19\u0E35\u0E49\u0E1C\u0E39\u0E01\u0E01\u0E31\u0E1A\u0E1A\u0E31\u0E0D\u0E0A\u0E35\u0E2D\u0E37\u0E48\u0E19\u0E41\u0E25\u0E49\u0E27" });
+      return;
+    }
+    const updated = await updateOrder(order.orderId, (o) => {
+      if (!o.runnerId) o.runnerId = s.sub;
+    });
+    res.json({ order: updated ? toRunnerView(updated) : toRunnerView(order) });
+  }));
+}
+
 // server/app.ts
 var runnerView = (o) => ({
   ...toRunnerView(o),
@@ -47667,7 +48186,9 @@ async function publicConfig() {
     /** false until an EasySlip API key is configured — registration is closed until then */
     paymentReady: Boolean(key),
     /** true when paid orders get their ticket by e-mail */
-    emailReady: mailConfigured()
+    emailReady: mailConfigured(),
+    /** true when LINE_CHANNEL_ID / LINE_CHANNEL_SECRET are set (the LINE login button works) */
+    lineLoginReady: lineConfigured()
   };
 }
 async function gatewayStatus() {
@@ -47694,7 +48215,7 @@ var h = (fn) => (req, res, next) => {
   });
 };
 function createApp() {
-  const app2 = (0, import_express.default)();
+  const app2 = (0, import_express2.default)();
   app2.set("trust proxy", 1);
   app2.disable("x-powered-by");
   app2.use((_req, res, next) => {
@@ -47702,7 +48223,7 @@ function createApp() {
     res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
     next();
   });
-  const smallJson = import_express.default.json({ limit: "200kb" });
+  const smallJson = import_express2.default.json({ limit: "200kb" });
   app2.get("/api/public-config", h(async (_req, res) => {
     res.json(await publicConfig());
   }));
@@ -47772,6 +48293,12 @@ function createApp() {
         return;
       }
       testAdmin = session.username;
+    }
+    const buyer = sessionFromRequest(req);
+    const runnerId = buyer && buyer.role === "runner" ? buyer.sub : "";
+    if (!testMode && !runnerId) {
+      res.status(401).json({ error: "\u0E01\u0E23\u0E38\u0E13\u0E32\u0E40\u0E02\u0E49\u0E32\u0E2A\u0E39\u0E48\u0E23\u0E30\u0E1A\u0E1A\u0E2B\u0E23\u0E37\u0E2D\u0E2A\u0E21\u0E31\u0E04\u0E23\u0E2A\u0E21\u0E32\u0E0A\u0E34\u0E01\u0E01\u0E48\u0E2D\u0E19\u0E2A\u0E31\u0E48\u0E07\u0E0B\u0E37\u0E49\u0E2D", needLogin: true });
+      return;
     }
     if (!testMode && !(await getSalesStatus()).open) {
       res.status(403).json({ error: "\u0E02\u0E13\u0E30\u0E19\u0E35\u0E49\u0E1B\u0E34\u0E14\u0E01\u0E32\u0E23\u0E02\u0E32\u0E22\u0E1A\u0E31\u0E15\u0E23\u0E0A\u0E31\u0E48\u0E27\u0E04\u0E23\u0E32\u0E27 \u0E01\u0E23\u0E38\u0E13\u0E32\u0E15\u0E34\u0E14\u0E15\u0E32\u0E21\u0E1B\u0E23\u0E30\u0E01\u0E32\u0E28\u0E08\u0E32\u0E01\u0E1C\u0E39\u0E49\u0E08\u0E31\u0E14\u0E07\u0E32\u0E19" });
@@ -47845,7 +48372,7 @@ function createApp() {
     let shooting;
     let shootingError = "";
     if (addOns.gun !== "none") {
-      const p = parseShooting(b.shooters, addOns.people);
+      const p = parseShooting(b.shooters, addOns.people, b.shootingAck === true);
       if (p.ok) shooting = p.value;
       else shootingError = p.error;
     }
@@ -47888,7 +48415,7 @@ function createApp() {
     const vipTotal = vipTablePrice(earlyBird) * vipTables;
     const ticketTotal = isAddonOnly ? 0 : isConcert ? concertUnit * concertQty + vipTotal : sponsorCode ? 0 : calcTicketTotal(routeId, extraPeople, extraDogs, earlyBird) + concertUnit * concertQty - concertDiscount + vipTotal;
     const total = testMode ? 1 : ticketTotal + addOnSum;
-    const token = crypto10.randomBytes(24).toString("base64url");
+    const token = crypto11.randomBytes(24).toString("base64url");
     const now = /* @__PURE__ */ new Date();
     const settings = await getSettings();
     const timeoutMin = Math.min(15, Math.max(1, settings.paymentTimeoutMinutes || 15));
@@ -47896,6 +48423,7 @@ function createApp() {
       orderId: testMode ? newTestOrderId() : await nextOrderId(),
       ...testMode ? { isTest: true, testBy: testAdmin } : {},
       accessTokenHash: hashToken(token),
+      ...runnerId ? { runnerId } : {},
       fullName,
       phone,
       email,
@@ -48006,7 +48534,7 @@ function createApp() {
     }
     res.json({ ok: true, to: maskEmail(order.email) });
   }));
-  app2.post("/api/orders/:orderId/slip", import_express.default.json({ limit: "5mb" }), h(async (req, res) => {
+  app2.post("/api/orders/:orderId/slip", import_express2.default.json({ limit: "5mb" }), h(async (req, res) => {
     let order = await loadOwnedOrder(req, res);
     if (!order) return;
     order = await settleAll(order);
@@ -48057,7 +48585,7 @@ function createApp() {
       o.slipAttempts = (o.slipAttempts || 0) + 1;
       if (problems.length && o.verificationStatus === "PENDING_REVIEW") return;
       o.slipFile = image;
-      o.slipHash = crypto10.createHash("sha256").update(image).digest("hex");
+      o.slipHash = crypto11.createHash("sha256").update(image).digest("hex");
       o.slipCheckedAt = (/* @__PURE__ */ new Date()).toISOString();
       o.slipRef = slip.transRef || void 0;
       o.slipNote = note.slice(0, 600);
@@ -48113,18 +48641,31 @@ function createApp() {
       lockedSeconds: r.lockedSeconds
     });
   }));
-  app2.get("/api/admin/lookup", requireAdmin, h(async (req, res) => {
+  const adminOrStaff = (req, res, next) => {
+    const header = req.headers.authorization || "";
+    if (verifyToken(header.startsWith("Bearer ") ? header.slice(7) : void 0)) {
+      req.viewer = "admin";
+      return next();
+    }
+    const s = sessionFromRequest(req);
+    if (s && s.role === "staff") {
+      req.viewer = "staff";
+      return next();
+    }
+    res.status(401).json({ error: "\u0E01\u0E23\u0E38\u0E13\u0E32\u0E40\u0E02\u0E49\u0E32\u0E2A\u0E39\u0E48\u0E23\u0E30\u0E1A\u0E1A\u0E43\u0E2B\u0E21\u0E48" });
+  };
+  app2.get("/api/admin/lookup", adminOrStaff, h(async (req, res) => {
     const order = await findOrderByCode(String(req.query.q || "").slice(0, 80));
     if (!order) {
       res.status(404).json({ error: "\u0E44\u0E21\u0E48\u0E1E\u0E1A\u0E15\u0E31\u0E4B\u0E27/\u0E40\u0E25\u0E02 BIB \u0E19\u0E35\u0E49\u0E43\u0E19\u0E23\u0E30\u0E1A\u0E1A" });
       return;
     }
-    res.json({ order: toAdminView(order) });
+    res.json({ order: req.viewer === "staff" ? toStaffView(order) : toAdminView(order) });
   }));
   app2.get("/api/admin/winners", requireAdmin, h(async (_req, res) => {
     res.json({ winners: await getWinners() });
   }));
-  app2.put("/api/admin/winners", requireAdmin, import_express.default.json({ limit: "4mb" }), h(async (req, res) => {
+  app2.put("/api/admin/winners", requireAdmin, import_express2.default.json({ limit: "4mb" }), h(async (req, res) => {
     const raw = Array.isArray(req.body?.winners) ? req.body.winners.slice(0, 24) : [];
     const list = [];
     for (const w of raw) {
@@ -48132,7 +48673,7 @@ function createApp() {
       const name2 = clean(w?.name, 120);
       if (!name2) continue;
       list.push({
-        id: clean(w?.id, 40) || crypto10.randomBytes(6).toString("hex"),
+        id: clean(w?.id, 40) || crypto11.randomBytes(6).toString("hex"),
         title: clean(w?.title, 120),
         name: name2,
         photo,
@@ -48227,7 +48768,7 @@ function createApp() {
     res.setHeader("Cache-Control", "private, no-store");
     res.json({ image: order.slipFile });
   }));
-  app2.post("/api/admin/orders/:orderId/kit", requireAdmin, h(async (req, res) => {
+  app2.post("/api/admin/orders/:orderId/kit", adminOrStaff, h(async (req, res) => {
     const orderId = String(req.params.orderId);
     const order = await getOrder(orderId);
     if (!order) {
@@ -48246,7 +48787,7 @@ function createApp() {
       o.kitStatus = o.kitStatus === "CHECKED_IN" ? "PENDING_PICKUP" : "CHECKED_IN";
       o.registrationStatus = o.kitStatus === "CHECKED_IN" ? "CHECKED_IN" : "CONFIRMED";
     });
-    res.json({ order: toAdminView(updated) });
+    res.json({ order: req.viewer === "staff" ? toStaffView(updated) : toAdminView(updated) });
   }));
   app2.post("/api/admin/orders/:orderId/cancel", requireAdmin, smallJson, h(async (req, res) => {
     const id = String(req.params.orderId);
@@ -48438,6 +48979,7 @@ function createApp() {
     console.log(`[admin] ${admin} set the EasySlip key`);
     res.json(await gatewayStatus());
   }));
+  registerRunnerRoutes(app2, h, clientIp);
   app2.use("/api", (_req, res) => {
     res.status(404).json({ error: "Not found" });
   });
