@@ -64,6 +64,9 @@ export const ActivityWaiverForm: React.FC<{
           </p>
         </div>
       </div>
+      <p className="text-xs font-black text-[#7C2D12] bg-[#FFF7ED] border-2 border-dashed border-[#FDBA74] rounded-xl px-3 py-2 leading-snug">
+        หมายเหตุ: เป็นเอกสารที่เจ้าหน้าที่ประจำสถานีเตรียมไว้ให้ลงลายมือชื่อก่อนทำกิจกรรม
+      </p>
 
       {people.map((p, i) => {
         const age = ageOn(p.birthDate);
@@ -259,7 +262,7 @@ const WaiverReader: React.FC<{ activity: WaiverActivity; people: WaiverParticipa
             onClick={onAccept}
             className="w-full min-h-[52px] rounded-2xl bg-[#15803D] text-white text-base font-black border-[3px] border-[#14532D] shadow-[0_4px_0_#14532D] disabled:opacity-40 disabled:shadow-none cursor-pointer disabled:cursor-not-allowed"
           >
-            ✍️ ยอมรับและลงนามอิเล็กทรอนิกส์
+            ✍️ รับทราบและยอมรับ
           </button>
         </div>
       </div>

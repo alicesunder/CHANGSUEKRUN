@@ -138,7 +138,6 @@ export async function buildTicketEmail(o: StoredOrder) {
     'บัตรเข้างาน',
     parking.length ? 'บัตรจอดรถ VIP' : '',
     o.insurance ? (o.runningWithDog ? 'ข้อมูลประกันนักวิ่งและน้องสุนัข' : 'ข้อมูลประกัน') : '',
-    o.activityWaiver ? 'เอกสารสละสิทธิ์กิจกรรม' : '',
   ]
     .filter(Boolean)
     .join(' · ');

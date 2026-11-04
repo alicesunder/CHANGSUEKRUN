@@ -1,17 +1,15 @@
 /**
  * The A4 documents of a paid order, as one printable HTML page (approved design, Nov 2026):
- * race BIB per runner, e-ticket, VIP parking passes, insurance details (runners + dog) and the
- * filled-in activity waivers. Served from a signed link in the ticket e-mail and attached to it.
+ * race BIB per runner, e-ticket, VIP parking passes and insurance details (runners + dog).
+ * (The tower / wind-tunnel waivers are not part of it any more.) Served from a signed link in the ticket e-mail and attached to it.
  * National ID numbers are masked here; the organiser sees the full numbers in the admin console.
  */
 import React from 'react';
-import { renderToStaticMarkup } from 'react-dom/server';
 import QRCode from 'qrcode';
-import { WaiverDocument } from '../src/components/WaiverDocument';
-import { WAIVER_LABEL } from '../src/data/activityWaivers';
 import { eventInfo, formatBaht, routesData, scheduleData, ticketById } from '../src/data/eventData';
 import { parkingQrPayload } from '../src/data/vipParking';
 import type { InsuranceInfo } from '../src/data/insurance';
+import { maskThaiId } from '../src/data/shooting';
 import type { StoredOrder } from './store';
 
 const DIST: Record<string, { label: string; sub: string }> = {
@@ -116,7 +114,7 @@ export async function buildDocumentsHtml(o: StoredOrder, opts: { assetBase?: str
           ${isRun ? `<div class="fact"><small>ปล่อยตัว</small><b>${esc(start)}</b></div>` : ''}
           <div class="fact"><small>${isRun ? 'BIB' : 'เลขบัตร'}</small><b>#${esc(o.bibNumber)}</b></div>
           ${o.addOns ? `<div class="fact"><small>กิจกรรมเสริม</small><b>10 ม.ค. 2570</b></div>` : ''}
-          ${o.concertQty || o.vipTables || isRun ? `<div class="fact"><small>คอนเสิร์ต (น.)</small><b>19.00–23.00</b></div>` : ''}
+          ${o.concertQty || o.vipTables || isRun ? `<div class="fact"><small>คอนเสิร์ต (น.)</small><b>18.00–24.00</b></div>` : ''}
           <div class="fact"><small>ชำระเมื่อ</small><b class="sm">${esc(thaiDateTime(o.paidAt || o.verifiedAt))}</b></div>
         </div>
       </div>
@@ -175,7 +173,7 @@ export async function buildDocumentsHtml(o: StoredOrder, opts: { assetBase?: str
       return `<div class="ins" style="border-color:${c}">
       <header style="background:linear-gradient(90deg,${c},#1E0B3D)"><span>🛡️ ผู้เอาประกันคนที่ ${r.i + 1}: ${esc(n.prefix)}${esc(n.firstName)} ${esc(n.lastName)}</span><span>BIB #${esc(runnerBib(o.bibNumber, r.i))}</span></header>
       <div class="grid">
-        <div><small>เพศ</small><b>${esc(n.gender)}</b></div><div><small>วันเกิด (ค.ศ.)</small><b>${esc(n.birthDate)}</b></div><div><small>อายุ</small><b>${n.age} ปี</b></div><div><small>กรุ๊ปเลือด</small><b>${esc(n.bloodType)}</b></div>
+        <div class="s2"><small>เลขบัตรประชาชน</small><b>${esc(n.idCard ? maskThaiId(n.idCard) : '-')}</b></div><div><small>เพศ</small><b>${esc(n.gender)}</b></div><div><small>วันเกิด (ค.ศ.)</small><b>${esc(n.birthDate)}</b></div><div><small>อายุ</small><b>${n.age} ปี</b></div><div><small>กรุ๊ปเลือด</small><b>${esc(n.bloodType)}</b></div>
         <div class="s2"><small>โรคประจำตัว / แพ้ยา</small><b>${esc(n.medicalConditions)}</b></div><div><small>ระยะวิ่ง</small><b>${esc(ticketById(o.routeId).name)}</b></div><div><small>ไซส์เสื้อ</small><b>${esc(r.shirt)}</b></div>
         <div class="s2"><small>ผู้ติดต่อฉุกเฉิน</small><b>${esc(n.emergencyName)} (${esc(n.relationship)})</b></div><div class="s2"><small>เบอร์ผู้ติดต่อฉุกเฉิน</small><b>${esc(o.emergencyPhone)}</b></div>
       </div></div>`;
@@ -184,7 +182,7 @@ export async function buildDocumentsHtml(o: StoredOrder, opts: { assetBase?: str
       ? `<div class="ins" style="border-color:#10B981">
       <header style="background:linear-gradient(90deg,#10B981,#0F766E)"><span>🐶 น้องสุนัขผู้ร่วมวิ่ง: ${esc(dog)}</span><span>Dog Pass #${esc(o.bibNumber)}</span></header>
       <div class="grid">
-        <div><small>ชื่อน้อง</small><b>${esc(dog)}</b></div><div><small>สายพันธุ์</small><b>${esc(o.dogBreed || '-')}</b></div><div><small>เจ้าของ</small><b>${esc(o.fullName)}</b></div><div><small>เบอร์เจ้าของ</small><b>${esc(o.phone)}</b></div>
+        <div><small>ชื่อน้อง</small><b>${esc(dog)}</b></div><div><small>สายพันธุ์</small><b>${esc(o.dogBreed || '-')}</b></div>${o.dogProfile ? `<div><small>เพศ / ขนาด</small><b>${esc(o.dogProfile.gender)} · ${esc(o.dogProfile.size)}</b></div><div><small>ปีเกิด / น้ำหนัก</small><b>${o.dogProfile.birthYear} · ${o.dogProfile.weightKg} กก.</b></div><div><small>ทำหมัน</small><b>${esc(o.dogProfile.neutered)}</b></div><div><small>วัคซีน</small><b>${esc(o.dogProfile.vaccine)}</b></div><div class="s2"><small>ภูมิแพ้</small><b>${esc(o.dogProfile.allergies || 'ไม่มี')}</b></div><div class="s2"><small>นิสัยเมื่ออยู่กับน้องหมาตัวอื่น</small><b>${esc(o.dogProfile.temperament)}</b></div>` : ''}<div><small>เจ้าของ</small><b>${esc(o.fullName)}</b></div><div><small>เบอร์เจ้าของ</small><b>${esc(o.phone)}</b></div>
         <div class="s4"><small>เงื่อนไข</small><b>ต้องมีสมุดวัคซีนพิษสุนัขบ้า + วัคซีนรวม (ไม่เกิน 1 ปี) · สัตวแพทย์ตรวจคัดกรองก่อนลงวิ่ง</b></div>
       </div>
     </div>`
@@ -198,20 +196,6 @@ export async function buildDocumentsHtml(o: StoredOrder, opts: { assetBase?: str
   </div>
   ${foot}
 </section>`);
-  }
-
-  // ---- 5. Activity waivers (one per participant per activity), ID numbers masked
-  const w = o.activityWaiver;
-  if (w) {
-    for (const a of w.activities) {
-      for (const p of w.participants) {
-        pages.push(
-          `<section class="page doc"><div class="doc-tag">📜 เอกสารแนบ · กิจกรรม${esc(WAIVER_LABEL[a])}</div>${renderToStaticMarkup(
-            <WaiverDocument activity={a} participant={p} orderId={o.orderId} acceptedAt={w.acceptedAt?.[a]} maskId />
-          )}</section>`
-        );
-      }
-    }
   }
 
   return `<!doctype html><html lang="th"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />

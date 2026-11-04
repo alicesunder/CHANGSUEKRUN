@@ -211,7 +211,7 @@ export const RunnerCenter: React.FC<RunnerCenterProps> = ({
                       </div>
                       <div className="p-2.5 rounded-2xl bg-emerald-50 border border-emerald-100">
                         <div className="text-[10px] text-gray-500 font-bold uppercase">ดนตรี & คอนเสิร์ต</div>
-                        <div className="text-sm font-black text-emerald-700 mt-0.5">17.30 น. เป็นต้นไป</div>
+                        <div className="text-sm font-black text-emerald-700 mt-0.5">18.00 น. เป็นต้นไป</div>
                       </div>
                     </div>
                   </div>

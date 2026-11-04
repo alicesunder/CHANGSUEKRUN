@@ -12,7 +12,7 @@ const FACTS = [
 const STEPS = [
   { n: 1, emoji: '🎟️', text: 'ซื้อบัตร Dog Run (1K หรือ 3.8K)' },
   { n: 2, emoji: '🐶', text: 'พาน้องหมามาที่จุดตรวจสุขภาพ ระหว่าง 09.00–14.00 น.' },
-  { n: 3, emoji: '🩺', text: 'ทีมสัตวแพทย์ตรวจสุขภาพน้องหมาให้ฟรี' },
+  { n: 3, emoji: '🩺', text: 'ทีมสัตวแพทย์ตรวจสุขภาพน้องหมาให้โดยไม่มีค่าใช้จ่าย' },
 ];
 
 /** Free vet check by Thonglor Pet Hospital for the Dog Run (1K / 3.8K) runners, 09.00–14.00 on run day. */
@@ -72,7 +72,7 @@ export const DogHealthCheckSection: React.FC = () => (
               <Stethoscope className="w-3.5 h-3.5" aria-hidden="true" /> บริการพิเศษสำหรับคู่วิ่ง Dog Run
             </span>
             <h2 id="dog-health-heading" className="squiggle mt-2 font-hero text-2xl sm:text-3xl font-bold text-[var(--ink)] leading-[1.35]">
-              ตรวจสุขภาพสุนัข <span className="text-[#10B981]">ฟรี!</span>
+              ตรวจสุขภาพสุนัข <span className="text-[#10B981]">ไม่มีค่าใช้จ่าย</span>
             </h2>
             <p className="mt-1 text-sm sm:text-base font-semibold text-[#4B2D78] leading-relaxed">พาน้องหมามาให้คุณหมอตรวจสุขภาพ ไม่ต้องเสียค่าใช้จ่ายเพิ่ม</p>
           </div>

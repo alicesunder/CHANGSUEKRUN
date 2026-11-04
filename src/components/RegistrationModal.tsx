@@ -66,8 +66,11 @@ import {
   isDogCategory,
   calcTicketTotal,
   CONCERT_PASS_PRICE,
-  MAX_VIP_TABLES,
   VIP_TABLE_PRICE,
+  concertPassPrice,
+  runBasePrice,
+  vipTablePrice,
+  MAX_VIP_TABLES,
   VIP_TABLE_SEATS,
   formatBaht,
 } from '../data/eventData';
@@ -82,6 +85,10 @@ import { needsInsurance } from '../data/insurance';
 import { digitsOnly, formatThaiId, isValidThaiId, type Shooter } from '../data/shooting';
 import { PaymentWow } from './PaymentWow';
 import { RaceBib, runnerBib } from './RaceBib';
+import { EarlyBirdPrice } from './EarlyBirdPrice';
+import { DogDetailsForm, dogExtraFromProfile, emptyDogExtra, type DogExtra } from './DogDetailsForm';
+import { dogProfileProblems } from '../data/dogProfile';
+import { useEarlyBird } from '../utils/earlyBird';
 import { FormSection, RunnerDetailsForm, emptyRunner, runnerFromSaved, runnerName, runnerProblems, toInsurance, type RunnerEntry } from './RunnerDetailsForm';
 import { VIP_PARKING_PER_TABLE, type ParkingPlate } from '../data/vipParking';
 import { waiversFor, type WaiverActivity, type WaiverParticipant } from '../data/activityWaivers';
@@ -268,9 +275,12 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
   const [waiverAccepted, setWaiverAccepted] = useState<Partial<Record<WaiverActivity, string>>>({});
   const [dogName, setDogName] = useState('');
   const [dogBreed, setDogBreed] = useState('');
+  const [dogExtra, setDogExtra] = useState<DogExtra>(emptyDogExtra);
+  const [showDogErrors, setShowDogErrors] = useState(false);
 
   // Server-backed order & payment state (the server decides price, payment status and BIB)
   const [publicCfg, setPublicCfg] = useState<PublicConfig | null>(null);
+  const earlyBird = useEarlyBird();
   const promptPayConfig = {
     promptPayId: publicCfg?.promptPayId || '',
     accountName: publicCfg?.accountName || '',
@@ -321,9 +331,11 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
   // Bundle discounts never stack with a sponsor code (rules in data/addOns.ts; the server decides the real price).
   const sponsorOn = Boolean(sponsor) && wantRun;
   const discountCtx = { hasRun: wantRun, hasConcert: gaQty > 0 || vipTables > 0, sponsor: sponsorOn };
-  const concertDiscount = gaQty * concertDiscountPerTicket(CONCERT_PASS_PRICE, wantRun && !sponsorOn);
-  const vipTotal = VIP_TABLE_PRICE * vipTables;
-  const ticketTotal = (wantRun ? calcTicketTotal(selectedRoute, extraPeople, extraDogs) : 0) + (wantConcert ? CONCERT_PASS_PRICE * gaQty - concertDiscount + vipTotal : 0);
+  const concertUnit = concertPassPrice(earlyBird);
+  const vipUnit = vipTablePrice(earlyBird);
+  const concertDiscount = gaQty * concertDiscountPerTicket(concertUnit, wantRun && !sponsorOn);
+  const vipTotal = vipUnit * vipTables;
+  const ticketTotal = (wantRun ? calcTicketTotal(selectedRoute, extraPeople, extraDogs, earlyBird) : 0) + (wantConcert ? concertUnit * gaQty - concertDiscount + vipTotal : 0);
   const addOnSum = addOnTotal(addOns, discountCtx);
   const addOnOff = addOnBonusDiscount(addOns, discountCtx);
   const concertMissing = wantConcert && gaQty === 0 && vipTables === 0;
@@ -359,7 +371,6 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
   const peopleCount = isAddonOnly ? addOns.people : isConcert ? gaQty + vipTables * VIP_TABLE_SEATS : isDog ? 1 + extraPeople : 1;
   // Amount to pay always comes from the server order once it exists.
   const payAmount = serverOrder?.totalPrice ?? total;
-  const nextBibPreview = publicCfg?.nextBib?.[selectedRoute] ?? '—';
   // the admin closed ticket sales (orders already created can still be paid)
   const salesClosed = publicCfg?.salesOpen === false;
 
@@ -389,6 +400,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
     setEmergencyPhone(o.emergencyPhone || '');
     setDogName(o.dogName || '');
     setDogBreed(o.dogBreed || '');
+    setDogExtra(dogExtraFromProfile((o as ServerOrder).dogProfile));
     setRunnersState([
       runnerFromSaved(0, o.fullName || '', o.shirtSize, (o as ServerOrder).insurance),
       ...((o as ServerOrder).extraRunners || []).map((r, k) => runnerFromSaved(k + 1, r.name, r.shirtSize, r.insurance)),
@@ -570,6 +582,12 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
       document.getElementById('runner-details')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       return;
     }
+    if (isDog && dogProfileProblems({ name: dogName, breed: dogBreed, ...dogExtra }).length > 0) {
+      setShowDogErrors(true);
+      setFormError('กรุณากรอกข้อมูลน้องสุนัขให้ครบ (ช่องสีแดง)');
+      document.getElementById('dog-name')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
     setIsCreatingOrder(true);
     try {
       const res = await createOrder({
@@ -593,6 +611,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
         shirtSize: noRun ? '' : shirtSize,
         dogName: isDog ? dogName.trim() : undefined,
         dogBreed: isDog ? dogBreed.trim() : undefined,
+        dogProfile: isDog ? { name: dogName.trim(), breed: dogBreed.trim(), ...dogExtra } : undefined,
         extraRunners:
           extraPeople > 0
             ? runners.slice(1).map((r) => ({ name: runnerName(r), shirtSize: r.shirtSize, insurance: insured ? toInsurance(r, runners[0]) : undefined }))
@@ -684,7 +703,6 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
     const t = ticketById(id);
     const rTheme = ROUTE_THEME[id];
     const on = selectedRoute === id;
-    const routeNextBib = publicCfg?.nextBib?.[id] ?? '—';
 
     return (
       <button
@@ -745,13 +763,10 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
             <span className="text-[11px] font-bold text-[#4B2D78] flex items-center gap-1">
               <Clock className="w-3 h-3" /> ปล่อยตัว {rTheme.startTime}
             </span>
-            <span className="text-[10px] font-mono font-extrabold text-[#6D28D9] mt-0.5">
-              BIB ถัดไป: #{routeNextBib}
-            </span>
           </div>
           <div className="text-right">
             <span className="font-display text-lg font-black text-[#261247] tabular-nums">
-              {formatBaht(t.basePrice)}
+              <EarlyBirdPrice list={t.basePrice} now={runBasePrice(t.id, earlyBird)} />
             </span>
             <span className="text-[10px] font-extrabold text-[#4B2D78] ml-0.5">บาท</span>
           </div>
@@ -873,7 +888,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                     {([
                       { key: 'run', emoji: '🏃', title: 'ตั๋ววิ่ง', sub: 'เลือกระยะด้านล่าง', on: wantRun, set: setWantRun },
-                      { key: 'concert', emoji: '🎶', title: 'ตั๋วคอนเสิร์ต', sub: `GA ${formatBaht(CONCERT_PASS_PRICE)} · VIP โต๊ะ`, on: wantConcert, set: setWantConcert },
+                      { key: 'concert', emoji: '🎶', title: 'ตั๋วคอนเสิร์ต', sub: `GA ${formatBaht(concertUnit)} · VIP โต๊ะ`, on: wantConcert, set: setWantConcert },
                       { key: 'addon', emoji: '🎢', title: 'กิจกรรมเสริม', sub: 'หอสูง · ยิงปืน · อุโมงค์ลม', on: wantAddons, set: setWantAddons },
                     ] as const).map((m) => (
                       <button
@@ -912,7 +927,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                     <div className="rounded-2xl bg-white p-3 text-[#2A1450]">
                       <Stepper
                         label="ตั๋วคอนเสิร์ต GA"
-                        hint={`${formatBaht(CONCERT_PASS_PRICE)} บาท / คน`}
+                        hint={`${formatBaht(concertUnit)} บาท / คน${earlyBird ? ` (ปกติ ${formatBaht(CONCERT_PASS_PRICE)})` : ''}`}
                         value={concertQty}
                         onChange={(n: number) => setConcertQty(Math.min(9, Math.max(vipTablesState > 0 ? 0 : 1, n)))}
                         icon={<Music className="w-5 h-5" />}
@@ -921,7 +936,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                     <div className="rounded-2xl bg-white p-3 text-[#2A1450]">
                       <Stepper
                         label="VIP TABLE (6 ท่าน)"
-                        hint={`${formatBaht(VIP_TABLE_PRICE)} บาท / โต๊ะ`}
+                        hint={`${formatBaht(vipUnit)} บาท / โต๊ะ${earlyBird ? ` (ปกติ ${formatBaht(VIP_TABLE_PRICE)})` : ''}`}
                         value={vipTablesState}
                         onChange={(n: number) => {
                           const next = Math.min(MAX_VIP_TABLES, Math.max(0, n));
@@ -1070,15 +1085,15 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                       />
                       <div>
                         <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#6D28D9] block">
-                          หมายเลข BIB ถัดไปของคุณ
+                          หมายเลข BIB ของคุณ
                         </span>
                         <span className="text-[11px] font-bold text-[#4B2D78]">
-                          ล็อกเลขทันทีที่สแกนจ่ายสำเร็จ
+                          ได้เลขทันทีที่ชำระสำเร็จ
                         </span>
                       </div>
                     </div>
-                    <span className="font-mono text-xl font-black text-[#261247] bg-[#FFE268] px-3 py-1 rounded-xl border border-amber-400 shadow-xs tabular-nums">
-                      #{nextBibPreview}
+                    <span className="font-mono text-sm font-black text-[#261247] bg-[#FFE268] px-3 py-1 rounded-xl border border-amber-400 shadow-xs">
+                      สุ่มเลขให้
                     </span>
                   </div>
                   )}
@@ -1101,19 +1116,19 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                       {wantRun && (
                         <div className="flex justify-between">
                           <span>{`ค่าสมัครหลัก (${ticket.distanceLabel})`}</span>
-                          <span className="font-extrabold text-[#261247] tabular-nums">{formatBaht(ticket.basePrice)} บาท</span>
+                          <span className="font-extrabold text-[#261247] tabular-nums"><EarlyBirdPrice list={ticket.basePrice} now={runBasePrice(ticket.id, earlyBird)} /> บาท</span>
                         </div>
                       )}
                       {gaQty > 0 && (
                         <div className="flex justify-between">
                           <span>{`ตั๋วคอนเสิร์ต GA × ${gaQty}`}</span>
-                          <span className="font-extrabold text-[#261247] tabular-nums">{formatBaht(CONCERT_PASS_PRICE * gaQty)} บาท</span>
+                          <span className="font-extrabold text-[#261247] tabular-nums"><EarlyBirdPrice list={CONCERT_PASS_PRICE * gaQty} now={concertUnit * gaQty} /> บาท</span>
                         </div>
                       )}
                       {vipTables > 0 && (
                         <div className="flex justify-between">
                           <span>{`VIP TABLE × ${vipTables} โต๊ะ (${vipTables * VIP_TABLE_SEATS} ท่าน)`}</span>
-                          <span className="font-extrabold text-[#261247] tabular-nums">{formatBaht(vipTotal)} บาท</span>
+                          <span className="font-extrabold text-[#261247] tabular-nums"><EarlyBirdPrice list={VIP_TABLE_PRICE * vipTables} now={vipTotal} /> บาท</span>
                         </div>
                       )}
                       {concertDiscount > 0 && (
@@ -1220,8 +1235,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                         </span>
                       </div>
                       <div className="text-xs font-bold text-[#6B5A85] mt-0.5">
-                        {isAddonOnly ? <>กิจกรรมเสริม {peopleCount} คน · เลขบัตรออกหลังชำระเงิน</> : isConcert ? <>ตั๋วคอนเสิร์ต {peopleCount} ใบ · เลขบัตรออกหลังชำระเงิน</> : <>ผู้วิ่ง {peopleCount} คน {isDog ? `· น้องสุนัข ${dogCount} ตัว` : ''} · เลข BIB ถัดไป (ออกจริงหลังชำระเงิน){' '}
-                        <strong className="font-mono text-[#6D28D9]">#{nextBibPreview}</strong></>}
+                        {isAddonOnly ? <>กิจกรรมเสริม {peopleCount} คน · เลขบัตรออกหลังชำระเงิน</> : isConcert ? <>ตั๋วคอนเสิร์ต {peopleCount} ใบ · เลขบัตรออกหลังชำระเงิน</> : <>ผู้วิ่ง {peopleCount} คน {isDog ? `· น้องสุนัข ${dogCount} ตัว` : ''} · เลข BIB สุ่มให้หลังชำระเงิน</>}
                       </div>
                     </div>
                   </div>
@@ -1261,7 +1275,6 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                           onActive={setActiveRunner}
                           insured={insured}
                           showErrors={showRunnerErrors}
-                          bibPreview={String(nextBibPreview)}
                           distanceLabel={ticket.distanceLabel}
                         />
                       </div>
@@ -1325,6 +1338,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                         </div>
                         <img loading="lazy" decoding="async" src={LABRADOR_SVG_PATH} alt="" className="hidden sm:block w-14 h-14 object-contain" />
                       </div>
+                      <DogDetailsForm name={dogName} breed={dogBreed} extra={dogExtra} onChange={setDogExtra} showErrors={showDogErrors} />
                     </FormSection>
                   )}
 

@@ -2,7 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { ArrowRight, Check, ChevronDown, Clock, Crown, Droplets, Flame, Medal, Minus, Plus, Shirt, ShoppingBasket, Sparkles, Ticket, Zap } from 'lucide-react';
 import type { RouteId } from '../types';
-import { CONCERT_PASS_PRICE, MAX_VIP_TABLES, VIP_TABLE_PERKS, VIP_TABLE_PRICE, VIP_TABLE_SEATS, calcTicketTotal, isDogCategory, routesData, ticketById } from '../data/eventData';
+import { EarlyBirdPrice } from './EarlyBirdPrice';
+import { useEarlyBird } from '../utils/earlyBird';
+import { CONCERT_PASS_PRICE, MAX_VIP_TABLES, VIP_TABLE_PERKS, VIP_TABLE_PRICE, VIP_TABLE_SEATS, calcTicketTotal, concertPassPrice, runBasePrice, vipTablePrice, isDogCategory, routesData, ticketById } from '../data/eventData';
 import {
   AddOnSelection,
   EMPTY_ADD_ONS,
@@ -209,6 +211,7 @@ const StationCard: React.FC<{ id: string; k: StationKey; done: boolean; children
 
 /** One collectible run ticket (colours + details from the original ticket cards). */
 const RunTicket: React.FC<{ id: RouteId; on: boolean; onPick: () => void }> = ({ id, on, onPick }) => {
+  const earlyBird = useEarlyBird();
   const t = ticketById(id);
   const l = LOOK[id];
   const isDog = isDogCategory(id);
@@ -315,7 +318,7 @@ const RunTicket: React.FC<{ id: RouteId; on: boolean; onPick: () => void }> = ({
           <span>
             <span className="block text-xs font-bold text-[#6B5A85]">ราคาบัตร ({t.baseLabel})</span>
             <span className="font-display text-3xl font-black tabular-nums leading-none" style={{ color: l.accentDark }}>
-              {formatBaht(t.basePrice)}
+              <EarlyBirdPrice list={t.basePrice} now={runBasePrice(id, earlyBird)} />
             </span>
             <span className="ml-1 text-xs font-extrabold text-[#261247]">บาท</span>
           </span>
@@ -434,6 +437,7 @@ export const TicketShop: React.FC<TicketShopProps> = ({
   const [windRemaining, setWindRemaining] = useState<number | null>(null);
   // the admin's open / close switch (see SalesSwitchCard)
   const [salesClosed, setSalesClosed] = useState(false);
+  const earlyBird = useEarlyBird();
   useEffect(() => {
     let alive = true;
     getPublicConfig()
@@ -457,11 +461,13 @@ export const TicketShop: React.FC<TicketShopProps> = ({
   const addOnRate = addOnDiscountRate(addOns, discountCtx);
   const countRate = addOnCountRate(addOns, discountCtx);
   const concertBonusRate = addOnConcertRate(addOns, discountCtx);
-  const runPrice = run ? calcTicketTotal(run, 0, 0) : 0;
-  const concertUnitOff = concertDiscountPerTicket(CONCERT_PASS_PRICE, eligible);
+  const concertUnit = concertPassPrice(earlyBird);
+  const vipUnit = vipTablePrice(earlyBird);
+  const runPrice = run ? calcTicketTotal(run, 0, 0, earlyBird) : 0;
+  const concertUnitOff = concertDiscountPerTicket(concertUnit, eligible);
   const concertOff = concertUnitOff * concertQty;
-  const concertPrice = CONCERT_PASS_PRICE * concertQty - concertOff;
-  const vipPrice = VIP_TABLE_PRICE * vipTables;
+  const concertPrice = concertUnit * concertQty - concertOff;
+  const vipPrice = vipUnit * vipTables;
   const bonus = addOnBonusDiscount(addOns, discountCtx);
   const addOnPrice = addOnTotal(addOns, discountCtx);
   const total = runPrice + concertPrice + vipPrice + addOnPrice;
@@ -485,7 +491,7 @@ export const TicketShop: React.FC<TicketShopProps> = ({
           : activityCount === 1
             ? `อีก 1 กิจกรรม ลดรวมเป็น ${percentOf(ADDON_MAX_RATE)}%! 🔥`
             : run && concertQty === 0
-              ? `เพิ่มตั๋วคอนเสิร์ต GA ลดทันที ${formatBaht(Math.round(CONCERT_PASS_PRICE * CONCERT_BUNDLE_RATE))} บาท/ใบ 🎶`
+              ? `เพิ่มตั๋วคอนเสิร์ต GA ลดทันที ${formatBaht(Math.round(concertUnit * CONCERT_BUNDLE_RATE))} บาท/ใบ 🎶`
               : !run && concertQty > 0
                 ? `เพิ่มตั๋ววิ่ง ตั๋วคอนเสิร์ต GA ลด ${percentOf(CONCERT_BUNDLE_RATE)}%! 🏃`
                 : '';
@@ -496,10 +502,10 @@ export const TicketShop: React.FC<TicketShopProps> = ({
     lines.push({ key: 'run', emoji: '🏃', tint: LOOK[run].accentSoft, label: `วิ่ง ${t.distanceLabel}`, sub: t.name, price: runPrice, onRemove: () => onRunChange(null) });
   }
   if (concertQty > 0) {
-    lines.push({ key: 'concert', emoji: '🎶', tint: '#FEF3C7', label: `คอนเสิร์ต GA × ${concertQty}`, sub: concertOff > 0 ? `ลด ${percentOf(CONCERT_BUNDLE_RATE)}% เหลือ ${formatBaht(CONCERT_PASS_PRICE - concertUnitOff)} บาท/ใบ (−${formatBaht(concertOff)})` : `${formatBaht(CONCERT_PASS_PRICE)} บาท/ใบ`, price: concertPrice, onRemove: () => onConcertQtyChange(0) });
+    lines.push({ key: 'concert', emoji: '🎶', tint: '#FEF3C7', label: `คอนเสิร์ต GA × ${concertQty}`, sub: concertOff > 0 ? `ลด ${percentOf(CONCERT_BUNDLE_RATE)}% เหลือ ${formatBaht(concertUnit - concertUnitOff)} บาท/ใบ (−${formatBaht(concertOff)})` : `${formatBaht(concertUnit)} บาท/ใบ${earlyBird ? ` (Early Bird · ปกติ ${formatBaht(CONCERT_PASS_PRICE)})` : ''}`, price: concertPrice, onRemove: () => onConcertQtyChange(0) });
   }
   if (vipTables > 0) {
-    lines.push({ key: 'vip', emoji: '👑', tint: '#FEF3C7', label: `VIP TABLE × ${vipTables}`, sub: `${vipTables * VIP_TABLE_SEATS} ท่าน · ${formatBaht(VIP_TABLE_PRICE)} บาท/โต๊ะ`, price: vipPrice, onRemove: () => onVipTablesChange(0) });
+    lines.push({ key: 'vip', emoji: '👑', tint: '#FEF3C7', label: `VIP TABLE × ${vipTables}`, sub: `${vipTables * VIP_TABLE_SEATS} ท่าน · ${formatBaht(vipUnit)} บาท/โต๊ะ${earlyBird ? ` (Early Bird · ปกติ ${formatBaht(VIP_TABLE_PRICE)})` : ''}`, price: vipPrice, onRemove: () => onVipTablesChange(0) });
   }
   if (picked) {
     lines.push({
@@ -618,8 +624,8 @@ export const TicketShop: React.FC<TicketShopProps> = ({
                       <p className="text-lg font-extrabold leading-tight">บัตร GA · คอนเสิร์ตริมหาดชะอำ</p>
                       <p className="text-xs sm:text-sm font-semibold text-white/85 leading-snug">ไม่ต้องวิ่งก็มาได้ · ซื้อให้ทั้งครอบครัวได้</p>
                       <p className="mt-1 text-2xl font-black text-[#FFD84D] tabular-nums leading-none">
-                        {concertUnitOff > 0 && <span className="mr-1.5 text-base font-bold text-white/60 line-through">{formatBaht(CONCERT_PASS_PRICE)}</span>}
-                        {formatBaht(CONCERT_PASS_PRICE - concertUnitOff)} <span className="text-xs font-bold text-white/85">บาท / ใบ</span>
+                        {(concertUnitOff > 0 || earlyBird) && <span className="mr-1.5 text-base font-bold text-white/60 line-through">{formatBaht(CONCERT_PASS_PRICE)}</span>}
+                        {formatBaht(concertUnit - concertUnitOff)} <span className="text-xs font-bold text-white/85">บาท / ใบ</span>
                         {eligible && (
                           <span aria-hidden="true" className="deal-sticker ml-2 align-middle inline-block px-2.5 py-1 rounded-full border-2 border-[var(--ink)] bg-[#FFE268] text-[var(--ink)] text-xs font-black shadow-[0_3px_0_var(--ink)]">
                             ลด {percentOf(CONCERT_BUNDLE_RATE)}%!
@@ -628,7 +634,7 @@ export const TicketShop: React.FC<TicketShopProps> = ({
                       </p>
                       {!eligible && (
                         <p className="mt-1.5 inline-block rounded-full bg-[#FFE268] px-2.5 py-1 text-xs font-extrabold text-[var(--ink)]">
-                          🏃 ซื้อคู่ตั๋ววิ่ง ลดเหลือ {formatBaht(CONCERT_PASS_PRICE - Math.round(CONCERT_PASS_PRICE * CONCERT_BUNDLE_RATE))} บาท/ใบ!
+                          🏃 ซื้อคู่ตั๋ววิ่ง ลดเหลือ {formatBaht(concertUnit - Math.round(concertUnit * CONCERT_BUNDLE_RATE))} บาท/ใบ!
                         </p>
                       )}
                     </div>
@@ -651,7 +657,8 @@ export const TicketShop: React.FC<TicketShopProps> = ({
                     <div className="min-w-0">
                       <p className="text-lg font-extrabold leading-tight">VIP TABLE</p>
                       <p className="mt-1 text-2xl font-black text-[#FFD84D] tabular-nums leading-none">
-                        {formatBaht(VIP_TABLE_PRICE)} <span className="text-xs font-bold text-white/85">บาท / โต๊ะ ({VIP_TABLE_SEATS} ท่าน)</span>
+                        {earlyBird && <span className="mr-1.5 text-base font-bold text-white/60 line-through">{formatBaht(VIP_TABLE_PRICE)}</span>}
+                        {formatBaht(vipUnit)} <span className="text-xs font-bold text-white/85">บาท / โต๊ะ ({VIP_TABLE_SEATS} ท่าน)</span>
                       </p>
                       <ul className="mt-2.5 grid grid-cols-1 xl:grid-cols-2 gap-x-4 gap-y-1 text-xs sm:text-sm font-semibold text-white/90">
                         {VIP_TABLE_PERKS.map((p) => (

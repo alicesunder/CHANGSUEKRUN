@@ -51,6 +51,7 @@ export interface RunnerProfile {
 }
 
 import type { InsuranceInfo } from '../data/insurance';
+import { formatThaiId } from '../data/shooting';
 import type { ExtraRunner } from '../data/shirts';
 
 export interface TicketOrder extends RunnerProfile {
@@ -723,6 +724,7 @@ export function exportInsuranceCsv(orders: TicketOrder[], actor = 'admin'): numb
     'คำนำหน้า',
     'ชื่อ',
     'นามสกุล',
+    'เลขบัตรประชาชน',
     'อีเมล',
     'เบอร์โทร',
     'เพศ',
@@ -749,6 +751,7 @@ export function exportInsuranceCsv(orders: TicketOrder[], actor = 'admin'): numb
       n.prefix,
       n.firstName,
       n.lastName,
+      n.idCard ? formatThaiId(n.idCard) : '',
       o.email,
       o.phone,
       n.gender,

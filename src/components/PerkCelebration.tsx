@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ADDON_CONCERT_RATE, ADDON_MAX_RATE, ADDON_THREE_RATE, ADDON_TWO_RATE, CONCERT_BUNDLE_RATE, formatBaht, percentOf } from '../data/addOns';
-import { CONCERT_PASS_PRICE } from '../data/eventData';
+import { concertPassPrice } from '../data/eventData';
+import { useEarlyBird } from '../utils/earlyBird';
 
 const COLORS = ['#FFC928', '#EC4899', '#9333EA', '#0EA5E9', '#10B981', '#FB923C', '#FFFFFF'];
 const EMOJIS = ['🎉', '🐾', '⭐', '🐶', '✨', '🎊', '💰', '🔥'];
@@ -141,7 +142,8 @@ interface DealStripProps {
  * as the basket qualifies, and the progress line shows how many deals the basket has unlocked.
  */
 export const DealStrip: React.FC<DealStripProps> = ({ hasRun, hasGaConcert, hasConcert, activities }) => {
-  const concertNet = CONCERT_PASS_PRICE - Math.round(CONCERT_PASS_PRICE * CONCERT_BUNDLE_RATE);
+  const concertUnit = concertPassPrice(useEarlyBird());
+  const concertNet = concertUnit - Math.round(concertUnit * CONCERT_BUNDLE_RATE);
   const deals = [
     { key: 'concert', icon: '🏃🎶', label: 'วิ่ง + คอนเสิร์ต GA', big: `-${percentOf(CONCERT_BUNDLE_RATE)}%`, note: `เหลือ ${formatBaht(concertNet)} บาท/ใบ`, how: 'ซื้อตั๋ววิ่ง + ตั๋วคอนเสิร์ต GA', color: '#EC4899', on: hasRun && hasGaConcert },
     { key: 'two', icon: '✌️', label: '2 กิจกรรมขึ้นไป', big: `-${percentOf(ADDON_TWO_RATE)}%`, note: 'ค่ากิจกรรมเสริม', how: 'เลือกกิจกรรมเสริม 2 อย่าง', color: '#0EA5E9', on: activities >= 2 },

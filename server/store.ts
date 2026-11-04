@@ -15,6 +15,7 @@ export type VerificationStatus =
   | 'REJECTED';
 
 import type { InsuranceInfo } from '../src/data/insurance';
+import type { DogProfile } from '../src/data/dogProfile';
 import { maskThaiId, type ShootingInfo } from '../src/data/shooting';
 import type { ActivityWaiverInfo } from '../src/data/activityWaivers';
 import type { ExtraRunner } from '../src/data/shirts';
@@ -35,6 +36,8 @@ export interface StoredOrder {
   concertQty?: number;
   /** baht taken off the concert tickets by the run + concert bundle */
   concertDiscount?: number;
+  /** made while the admin early-bird switch was on */
+  earlyBird?: boolean;
   /** VIP concert tables (6 seats each), bought in the same order */
   vipTables?: number;
   routeName: string;
@@ -42,6 +45,7 @@ export interface StoredOrder {
   runningWithDog: boolean;
   dogName?: string;
   dogBreed?: string;
+  dogProfile?: DogProfile;
   extraPeople: number;
   extraDogs: number;
   extraRunnerNames?: string;
@@ -154,6 +158,23 @@ export async function setSalesOpen(open: boolean): Promise<{ open: boolean; upda
   const value = { open, updatedAt: new Date().toISOString() };
   await dbQuery(
     `insert into csr.settings (key, value) values ('sales', $1::jsonb)
+     on conflict (key) do update set value = excluded.value, updated_at = now()`,
+    [JSON.stringify(value)]
+  );
+  return value;
+}
+
+/** Early-bird switch (admin): when on, run / concert / VIP table prices are lowered (see EARLY_BIRD_OFF). */
+export async function getEarlyBird(): Promise<{ on: boolean; updatedAt?: string }> {
+  const rows = await dbQuery<{ value: unknown }>("select value from csr.settings where key = 'early_bird'");
+  const v = rows[0] ? asObj<{ on?: boolean; updatedAt?: string }>(rows[0].value) : {};
+  return { on: v.on === true, updatedAt: v.updatedAt };
+}
+
+export async function setEarlyBird(on: boolean): Promise<{ on: boolean; updatedAt: string }> {
+  const value = { on, updatedAt: new Date().toISOString() };
+  await dbQuery(
+    `insert into csr.settings (key, value) values ('early_bird', $1::jsonb)
      on conflict (key) do update set value = excluded.value, updated_at = now()`,
     [JSON.stringify(value)]
   );
@@ -325,6 +346,17 @@ export function formatBib(routeId: RouteId, seq: number): string {
   return `${BIB_PREFIX[routeId] || '05'}-${String(seq).padStart(4, '0')}`;
 }
 
+const RUN_BIB_ROUTES = new Set<string>(['10km', '5km', '3km', '1km']);
+
+async function randomFreeBib(q: Q, routeId: RouteId): Promise<string | null> {
+  for (let i = 0; i < 200; i++) {
+    const bib = formatBib(routeId, crypto.randomInt(1000, 10000));
+    const taken = await q('select 1 from csr.orders where bib_number = $1 limit 1', [bib]);
+    if (taken.length === 0) return bib;
+  }
+  return null;
+}
+
 export async function getBibCounters(): Promise<BibCounters> {
   const rows = await dbQuery<{ route_id: RouteId; last_seq: number }>('select route_id, last_seq from csr.bib_counters');
   const out = { '10km': 0, '5km': 0, '3km': 0, '1km': 0 } as BibCounters;
@@ -391,7 +423,11 @@ export async function markOrderPaid(
          returning last_seq`,
         [order.routeId]
       );
-      order.bibNumber = formatBib(order.routeId, Number(c[0].last_seq));
+      // Runners get a random free number (1000-9999) so BIBs do not reveal who registered first;
+      // the counter row stays locked until commit, so two payments of one route never pick together.
+      order.bibNumber = RUN_BIB_ROUTES.has(order.routeId)
+        ? (await randomFreeBib(q, order.routeId)) || formatBib(order.routeId, Number(c[0].last_seq))
+        : formatBib(order.routeId, Number(c[0].last_seq));
     }
     order.verificationStatus = info.status;
     order.paymentStatus = 'PAID';

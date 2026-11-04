@@ -71,6 +71,7 @@ import {
 import { formatBaht, ticketById } from '../data/eventData';
 import { RunnerBibCard } from './RunnerBibCard';
 import { SalesSwitchCard } from './SalesSwitchCard';
+import { EarlyBirdCard } from './EarlyBirdCard';
 import { VisitStatsCard } from './VisitStatsCard';
 import { PawIcon } from './brand/DogDecor';
 import { EasySlipSettingsCard } from './EasySlipSettingsCard';
@@ -118,7 +119,7 @@ const ROUTE_BADGE_STYLE: Record<
   },
 };
 
-const SHIRT_SIZE_LIST = ['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL'];
+const SHIRT_SIZE_LIST = ['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL', '4XL', '5XL'];
 
 /** Counts in totals: not cancelled, and paid or still inside its payment window. */
 const isLiveOrder = (o: ServerOrder) =>
@@ -1101,7 +1102,7 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
                       onChange={(e) => setShirtFilter(e.target.value)}
                       className="px-2.5 py-1.5 rounded-lg border border-slate-300 bg-white font-bold text-slate-700 text-xs"
                     >
-                      <option value="ALL">ทุกไซส์เสื้อ (XS–3XL)</option>
+                      <option value="ALL">ทุกไซส์เสื้อ (XS–5XL)</option>
                       {SHIRT_SIZE_LIST.map((sz) => (
                         <option key={sz} value={sz}>
                           เสื้อไซส์ {sz}
@@ -1417,6 +1418,7 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
           {activeTab === 'overview' && (
             <div className="space-y-6">
               <SalesSwitchCard />
+              <EarlyBirdCard />
               <VisitStatsCard />
 
               {/* Distance Breakdown Table */}
@@ -2010,6 +2012,14 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
                       🛡️ ประกัน: {inspectingOrder.insurance.prefix}{inspectingOrder.insurance.firstName} {inspectingOrder.insurance.lastName} · {inspectingOrder.insurance.gender} · อายุ {inspectingOrder.insurance.age} ปี (เกิด {inspectingOrder.insurance.birthDate}) · เลือด {inspectingOrder.insurance.bloodType} · โรคประจำตัว: {inspectingOrder.insurance.medicalConditions} · ติดต่อฉุกเฉิน: {inspectingOrder.insurance.emergencyName} ({inspectingOrder.insurance.relationship}) {inspectingOrder.emergencyPhone}
                     </p>
                   )}
+                  {(inspectingOrder as ServerOrder).dogProfile && (() => {
+                    const d = (inspectingOrder as ServerOrder).dogProfile!;
+                    return (
+                      <p className="mt-1 text-xs font-bold text-emerald-900 bg-emerald-50 border border-emerald-200 rounded-lg px-2.5 py-1.5">
+                        🐶 {d.name} ({d.breed}) · {d.gender} · เกิดปี {d.birthYear} · {d.weightKg} กก. · {d.size} · {d.neutered} · วัคซีน: {d.vaccine} · ภูมิแพ้: {d.allergies || 'ไม่มี'} · นิสัย: {d.temperament}
+                      </p>
+                    );
+                  })()}
                   {(inspectingOrder as ServerOrder).parkingPlates?.length ? (
                     <p className="mt-1 text-xs font-bold text-amber-900 bg-amber-50 border border-amber-200 rounded-lg px-2.5 py-1.5">
                       🚗 จอดรถ VIP: {(inspectingOrder as ServerOrder).parkingPlates!.map((p) => `${p.plate} ${p.province}`).join(' · ')}

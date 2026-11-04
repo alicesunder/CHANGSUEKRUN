@@ -1,6 +1,8 @@
 import React from 'react';
 import { Music } from 'lucide-react';
-import { CONCERT_LINEUP, CONCERT_PASS_PRICE, VIP_TABLE_PRICE, formatBaht } from '../data/eventData';
+import { CONCERT_LINEUP, CONCERT_PASS_PRICE, VIP_TABLE_PRICE, concertPassPrice, vipTablePrice, formatBaht } from '../data/eventData';
+import { EarlyBirdPrice } from './EarlyBirdPrice';
+import { useEarlyBird } from '../utils/earlyBird';
 
 const PHOTOS = [
   { src: '/images/concert/run-atmosphere.jpg', alt: 'นักวิ่งในเสื้อสีม่วงเดินผ่านซุ้มปล่อยตัวบนชายหาด ยิ้มและชูนิ้วโป้ง', cap: 'บรรยากาศงานวิ่งริมหาด ตชด. ครั้งที่ผ่านมา' },
@@ -32,7 +34,9 @@ const BEAMS = [
 ];
 
 /** This year's line-up (group photo + timetable), then last year's festival and the run atmosphere. */
-export const ConcertSection: React.FC = () => (
+export const ConcertSection: React.FC = () => {
+  const earlyBird = useEarlyBird();
+  return (
   <section id="concert" aria-labelledby="concert-heading" className="py-10 sm:py-14 scroll-mt-20">
     <div className="max-w-[1100px] mx-auto px-4 sm:px-6">
       <div className="rounded-[32px] border-[3px] border-[#2A1450] shadow-[0_10px_0_#2A1450] bg-gradient-to-br from-[#241047] via-[#341866] to-[#4A1F8F] text-white overflow-hidden">
@@ -44,7 +48,7 @@ export const ConcertSection: React.FC = () => (
         <div className="px-4 sm:px-8 py-8 sm:py-10">
           <div className="text-center max-w-2xl mx-auto">
             <span className="inline-flex items-center gap-1.5 rounded-full bg-[#FFC928] text-[#2A1450] text-xs sm:text-sm font-bold px-3.5 py-1.5">
-              <Music className="w-4 h-4" /> คอนเสิร์ตริมหาด 19.00–23.00 น. · 9 ม.ค. 2570
+              <Music className="w-4 h-4" /> คอนเสิร์ตริมหาด 18.00–24.00 น. · 9 ม.ค. 2570
             </span>
             <h2 id="concert-heading" className="squiggle squiggle-center mt-3 font-hero text-3xl sm:text-4xl font-bold text-white">
               บรรยากาศงานวิ่ง & คอนเสิร์ต
@@ -70,7 +74,7 @@ export const ConcertSection: React.FC = () => (
                 </h3>
               </div>
               <span className="self-start sm:self-auto shrink-0 rounded-xl bg-[#FFC928] text-[#2A1450] text-xs sm:text-sm font-black px-3 py-1.5 border-2 border-[#140826] shadow-[0_3px_0_#140826]">
-                📅 9 ม.ค. 2570 · 19.00–23.00 น.
+                📅 9 ม.ค. 2570 · 18.00–24.00 น.
               </span>
             </div>
             <figure className="relative z-[2] mt-4 mx-3 sm:mx-5 rounded-2xl overflow-hidden border-2 border-white/20">
@@ -155,11 +159,11 @@ export const ConcertSection: React.FC = () => (
               href="#shop-concert"
               className="inline-flex items-center gap-2 min-h-[52px] px-7 rounded-2xl bg-[#FFC928] text-[#2A1450] text-base font-extrabold border-[3px] border-[#140826] shadow-[0_6px_0_#140826] active:translate-y-0.5"
             >
-              🎶 ซื้อตั๋วคอนเสิร์ต GA {formatBaht(CONCERT_PASS_PRICE)} บาท
+              🎶 ซื้อตั๋วคอนเสิร์ต GA <EarlyBirdPrice list={CONCERT_PASS_PRICE} now={concertPassPrice(earlyBird)} /> บาท
             </a>
           </div>
           <p className="mt-3 text-center text-sm font-bold text-[#FFE28A]">
-            หรือจอง VIP TABLE {formatBaht(VIP_TABLE_PRICE)} บาท/โต๊ะ (6 ท่าน)
+            หรือจอง VIP TABLE <EarlyBirdPrice list={VIP_TABLE_PRICE} now={vipTablePrice(earlyBird)} /> บาท/โต๊ะ (6 ท่าน)
           </p>
           <p className="mt-4 text-center text-xs font-medium text-white/70">
             ภาพปีที่แล้วเป็นภาพบรรยากาศประกอบ ชื่อศิลปินวงปิดจะประกาศอีกครั้งผ่านช่องทางทางการของงาน
@@ -168,4 +172,5 @@ export const ConcertSection: React.FC = () => (
       </div>
     </div>
   </section>
-);
+  );
+};

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { RouteId } from '../types';
 import { RouteIllustratedMap } from './RouteIllustratedMap';
 import { ActivityMap } from './ActivityMap';
@@ -125,8 +126,20 @@ export const RouteAndScheduleSection: React.FC<RouteAndScheduleProps> = ({
       isGoldDot: true,
     },
     {
+      id: 'door-open',
+      time: '17.30 น.',
+      title: 'Door Open',
+      desc: 'เปิดประตูเข้าชมคอนเสิร์ต',
+      badge: 'DOOR OPEN',
+      iconBg: '#EDE9FE',
+      iconColor: '#6D28D9',
+      Icon: Music,
+      routeId: undefined as RouteId | undefined,
+      isGoldDot: false,
+    },
+    {
       id: 'concert',
-      time: '17.30 น. เป็นต้นไป',
+      time: '18.00 น.',
       title: 'การแสดงดนตรีและคอนเสิร์ต',
       desc: 'เปิดการแสดงโดยวงดนตรีตำรวจตระเวนชายแดน และการแสดงอื่น ๆ',
       badge: 'CONCERT',
@@ -292,6 +305,9 @@ export const RouteAndScheduleSection: React.FC<RouteAndScheduleProps> = ({
                       </h3>
                       <span className="block text-[11px] font-mono font-extrabold text-[#7B3FC6] uppercase mt-0.5">
                         09.00 – 17.30 น. เป็นต้นไป
+                      </span>
+                      <span className="block text-[11px] font-bold text-[#2A1450]/70 mt-0.5">
+                        กิจกรรมทั้งหมด ณ Sea Sand Sun Hua Hin Resort
                       </span>
                     </div>
                   </div>
@@ -546,9 +562,9 @@ export const RouteAndScheduleSection: React.FC<RouteAndScheduleProps> = ({
       {/* ============================================================ */}
       {/* PRINTER-FRIENDLY PDF SCHEDULE MODAL                          */}
       {/* ============================================================ */}
-      {printModalOpen && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-6 bg-black/60 backdrop-blur-sm print:bg-white print:p-0">
-          <div className="bg-white rounded-3xl max-w-2xl w-full max-h-[92vh] flex flex-col shadow-2xl border-2 border-[#2A1450] overflow-hidden print:border-none print:shadow-none print:max-w-none print:w-full print:max-h-none print:rounded-none">
+      {printModalOpen && createPortal(
+        <div className="schedule-print-portal fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-6 bg-black/60 backdrop-blur-sm print:bg-white print:p-0">
+          <div className="sheet-card bg-white rounded-3xl max-w-2xl w-full max-h-[92vh] flex flex-col shadow-2xl border-2 border-[#2A1450] overflow-hidden print:border-none print:shadow-none print:max-w-none print:w-full print:max-h-none print:rounded-none">
             <div className="print-hide flex items-center justify-between p-4 sm:p-6 border-b border-gray-100 bg-[#FAF8FD]">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-[#5B20A8] text-white flex items-center justify-center shadow-xs">
@@ -573,13 +589,17 @@ export const RouteAndScheduleSection: React.FC<RouteAndScheduleProps> = ({
             </div>
 
             <div className="p-6 sm:p-8 overflow-y-auto flex-1 printable-schedule-sheet text-[#111827] space-y-2.5">
+              <div className="hidden print:block sched-print-title">
+                <h1>CHANGSUEK RUN 2027 · กำหนดการ</h1>
+                <p>กิจกรรมทั้งหมด ณ Sea Sand Sun Hua Hin Resort · วิ่ง 9 มกราคม 2570 · กิจกรรมเสริม 10 มกราคม 2570</p>
+              </div>
               {timelineRows.map((item, idx) => (
                 <React.Fragment key={item.id}>
                 {(idx === 0 || dayOf(item.id) !== dayOf(timelineRows[idx - 1].id)) && (
-                  <div className="pt-2 text-sm font-black text-[#5B20A8]">{dayHeading(dayOf(item.id))}</div>
+                  <div className="sched-day pt-2 text-sm font-black text-[#5B20A8]">{dayHeading(dayOf(item.id))}</div>
                 )}
                 <div
-                  className="flex items-start gap-4 p-3.5 rounded-xl border border-purple-100 bg-[#FAF7FF]/50"
+                  className="sched-row flex items-start gap-4 p-3.5 rounded-xl border border-purple-100 bg-[#FAF7FF]/50"
                 >
                   <div className="w-32 font-mono font-black text-xs sm:text-sm text-[#5B20A8] shrink-0">
                     {item.time}
@@ -613,7 +633,8 @@ export const RouteAndScheduleSection: React.FC<RouteAndScheduleProps> = ({
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </section>
   );

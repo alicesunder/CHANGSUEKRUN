@@ -79,8 +79,8 @@ const KIT: KitItem[] = [
   },
   {
     id: 'bowl',
-    name: 'ชามพับเก็บได้',
-    desc: 'ชามซิลิโคนพับแบน พร้อมตะขอคล้อง ให้น้ำน้องระหว่างทาง',
+    name: 'Race Pack',
+    desc: 'ชุดอุปกรณ์สำหรับนักวิ่งและน้องหมา รับพร้อมเสื้อและเบอร์วิ่งในวันรับอุปกรณ์',
     image: '/images/merch/kit-bowl.webp',
     group: 'dog',
   },
@@ -94,6 +94,8 @@ const SIZES = [
   { size: 'XL', chest: '42"' },
   { size: '2XL', chest: '44"' },
   { size: '3XL', chest: '46"' },
+  { size: '4XL', chest: '48"' },
+  { size: '5XL', chest: '50"' },
 ];
 
 export const MerchShowcase: React.FC<MerchShowcaseProps> = ({ onOpenRegister, className = '' }) => {

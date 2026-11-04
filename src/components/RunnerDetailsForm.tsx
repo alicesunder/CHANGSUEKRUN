@@ -1,5 +1,6 @@
 import React from 'react';
 import { BLOOD_TYPES, GENDERS, PREFIXES, RELATIONSHIPS, ageFromBirthDate, type InsuranceInfo } from '../data/insurance';
+import { digitsOnly, formatThaiId, isValidThaiId } from '../data/shooting';
 import { SHIRT_SIZES as SHIRT_SIZE_IDS, type ShirtSize } from '../data/shirts';
 
 /**
@@ -12,6 +13,8 @@ export interface RunnerEntry {
   prefix: string;
   firstName: string;
   lastName: string;
+  /** 13-digit national ID, for the insurer */
+  idCard: string;
   gender: string;
   /** YYYY-MM-DD (ค.ศ.) */
   birthDate: string;
@@ -28,6 +31,7 @@ export const emptyRunner = (i: number): RunnerEntry => ({
   prefix: '',
   firstName: '',
   lastName: '',
+  idCard: '',
   gender: '',
   birthDate: '',
   bloodType: '',
@@ -54,6 +58,7 @@ export function runnerFromSaved(i: number, name: string, shirt: string | undefin
     prefix: ins.prefix,
     firstName: ins.firstName,
     lastName: ins.lastName,
+    idCard: ins.idCard || '',
     gender: ins.gender,
     birthDate: ins.birthDate,
     bloodType: ins.bloodType,
@@ -64,7 +69,7 @@ export function runnerFromSaved(i: number, name: string, shirt: string | undefin
   };
 }
 
-type Field = 'prefix' | 'firstName' | 'lastName' | 'gender' | 'birthDate' | 'bloodType' | 'emergencyName' | 'relationship';
+type Field = 'prefix' | 'firstName' | 'lastName' | 'idCard' | 'gender' | 'birthDate' | 'bloodType' | 'emergencyName' | 'relationship';
 
 /** Missing fields of one runner (empty = complete). */
 export function runnerProblems(r: RunnerEntry, i: number, insured: boolean): Field[] {
@@ -73,6 +78,7 @@ export function runnerProblems(r: RunnerEntry, i: number, insured: boolean): Fie
   if (!r.firstName.trim()) out.push('firstName');
   if (!r.lastName.trim()) out.push('lastName');
   if (!insured) return out;
+  if (!isValidThaiId(r.idCard)) out.push('idCard');
   if (!r.gender) out.push('gender');
   const age = ageFromBirthDate(r.birthDate);
   if (age === null || age < 0 || age > 110) out.push('birthDate');
@@ -91,6 +97,7 @@ export function toInsurance(r: RunnerEntry, main: RunnerEntry): InsuranceInfo {
     prefix: r.prefix,
     firstName: r.firstName.trim(),
     lastName: r.lastName.trim(),
+    idCard: r.idCard,
     gender: r.gender,
     birthDate: r.birthDate,
     age: ageFromBirthDate(r.birthDate) ?? 0,
@@ -102,7 +109,7 @@ export function toInsurance(r: RunnerEntry, main: RunnerEntry): InsuranceInfo {
 }
 
 const COLORS = ['#7C3AED', '#EC4899', '#0EA5E9', '#F59E0B', '#10B981', '#EF4444'];
-const CHEST: Record<string, string> = { XS: '34"', S: '36"', M: '38"', L: '40"', XL: '42"', '2XL': '44"', '3XL': '46"' };
+const CHEST: Record<string, string> = { XS: '34"', S: '36"', M: '38"', L: '40"', XL: '42"', '2XL': '44"', '3XL': '46"', '4XL': '48"', '5XL': '50"' };
 const todayIso = new Date().toISOString().slice(0, 10);
 
 const lbl = 'block text-xs font-extrabold text-[#2A1450] mb-1.5';
@@ -283,6 +290,22 @@ export const RunnerDetailsForm: React.FC<{
                       {age !== null && age >= 0 && age <= 110 ? `${age} ปี` : 'อายุ'}
                     </span>
                   </div>
+                </div>
+                <div className="sm:col-span-2">
+                  <label className={lbl} htmlFor={`r${i}-idcard`}>เลขบัตรประชาชน 13 หลัก *</label>
+                  <input
+                    id={`r${i}-idcard`}
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={17}
+                    autoComplete="off"
+                    value={formatThaiId(r.idCard)}
+                    onChange={(e) => set({ idCard: digitsOnly(e.target.value).slice(0, 13) })}
+                    placeholder="x-xxxx-xxxxx-xx-x"
+                    aria-invalid={bad('idCard')}
+                    className={`${box(bad('idCard'))} font-mono`}
+                  />
+                  <p className="mt-1 text-[11px] font-bold text-[#6B5A85]">ใช้ส่งบริษัทประกันเท่านั้น (เด็กที่ยังไม่มีบัตร ใช้เลขประจำตัวประชาชน 13 หลักในสูติบัตร)</p>
                 </div>
                 <div>
                   <label className={lbl} htmlFor={`r${i}-med`}>โรคประจำตัว / แพ้ยา</label>

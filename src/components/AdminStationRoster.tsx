@@ -334,6 +334,7 @@ export const OrderFullDetails: React.FC<{ order: ServerOrder }> = ({ order: o })
       items: o.insurance
         ? [
             ['ผู้เอาประกัน', `${o.insurance.prefix}${o.insurance.firstName} ${o.insurance.lastName}`],
+            ['เลขบัตรประชาชน', o.insurance.idCard || '-'],
             ['เพศ / อายุ', `${o.insurance.gender} · ${o.insurance.age} ปี (เกิด ${o.insurance.birthDate})`],
             ['กรุ๊ปเลือด', o.insurance.bloodType],
             ['โรคประจำตัว', o.insurance.medicalConditions],

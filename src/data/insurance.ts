@@ -1,6 +1,8 @@
 // Personal data collected for the event's accident insurance (every running distance).
 // Shared by the website (form) and the server (the server is the one that checks it).
 
+import { digitsOnly, isValidThaiId } from './shooting';
+
 export const INSURANCE_ROUTES = ['1km', '3km', '5km', '10km'] as const;
 export const needsInsurance = (routeId: string): boolean => (INSURANCE_ROUTES as readonly string[]).includes(routeId);
 
@@ -13,6 +15,8 @@ export interface InsuranceInfo {
   prefix: string;
   firstName: string;
   lastName: string;
+  /** 13-digit national ID (the insurer needs it); orders made before it was asked have none */
+  idCard?: string;
   gender: string;
   /** YYYY-MM-DD, Gregorian (ค.ศ.) */
   birthDate: string;
@@ -47,6 +51,7 @@ export function parseInsurance(raw: unknown, consent: unknown): { ok: true; valu
   const prefix = oneOf(r.prefix, PREFIXES);
   const firstName = clip(r.firstName, 60);
   const lastName = clip(r.lastName, 60);
+  const idCard = digitsOnly(r.idCard).slice(0, 13);
   const gender = oneOf(r.gender, GENDERS);
   const birthDate = typeof r.birthDate === 'string' ? r.birthDate : '';
   const age = ageFromBirthDate(birthDate);
@@ -59,6 +64,7 @@ export function parseInsurance(raw: unknown, consent: unknown): { ok: true; valu
   if (!prefix) errors.push('กรุณาเลือกคำนำหน้า');
   if (firstName.length < 1) errors.push('กรุณากรอกชื่อ');
   if (lastName.length < 1) errors.push('กรุณากรอกนามสกุล');
+  if (!isValidThaiId(idCard)) errors.push('เลขบัตรประชาชนผู้เอาประกันไม่ถูกต้อง (13 หลัก)');
   if (!gender) errors.push('กรุณาเลือกเพศ');
   if (age === null || age < 0 || age > 110) errors.push('วัน/เดือน/ปีเกิด (ค.ศ.) ไม่ถูกต้อง');
   if (!bloodType) errors.push('กรุณาเลือกกรุ๊ปเลือด');
@@ -69,6 +75,6 @@ export function parseInsurance(raw: unknown, consent: unknown): { ok: true; valu
 
   return {
     ok: true,
-    value: { prefix, firstName, lastName, gender, birthDate, age: age as number, bloodType, medicalConditions, emergencyName, relationship },
+    value: { prefix, firstName, lastName, idCard, gender, birthDate, age: age as number, bloodType, medicalConditions, emergencyName, relationship },
   };
 }

@@ -15,7 +15,8 @@
 import express from 'express';
 import crypto from 'crypto';
 import type { RouteId } from '../src/types';
-import { CONCERT_PASS_PRICE, MAX_VIP_TABLES, VIP_TABLE_PRICE, VIP_TABLE_SEATS, calcTicketTotal, isDogCategory, ticketById, ticketCategories } from '../src/data/eventData';
+import { parseDogProfile, type DogProfile } from '../src/data/dogProfile';
+import { MAX_VIP_TABLES, VIP_TABLE_SEATS, calcTicketTotal, concertPassPrice, vipTablePrice, isDogCategory, ticketById, ticketCategories } from '../src/data/eventData';
 import {
   rollbackNewOrder,
   restoreOrderChecked,
@@ -57,6 +58,8 @@ import {
   ROUTES,
   type StoredOrder,
   getSalesStatus,
+  getEarlyBird,
+  setEarlyBird,
   setSalesOpen,
   isVisitorId,
   recordVisit,
@@ -85,7 +88,7 @@ const PRIVACY_POLICY_VERSION = '2026-11-02';
 const TERMS_VERSION = '2026-11-01';
 
 const ROUTE_IDS: RouteId[] = ticketCategories.map((t) => t.id);
-const SHIRT_SIZES = ['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL'];
+const SHIRT_SIZES = ['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL', '4XL', '5XL'];
 const MAX_EXTRA = 9;
 const SPONSOR_INVALID_MSG = 'รหัสสปอนเซอร์ไม่ถูกต้อง หรือถูกใช้ครบสิทธิ์แล้ว';
 
@@ -163,10 +166,12 @@ async function nextBibPreview() {
 }
 
 async function publicConfig() {
-  const [s, nextBib, key, windUsed, sales] = await Promise.all([getSettings(), nextBibPreview(), getEasySlipKey(), windTunnelSeatsUsed(), getSalesStatus()]);
+  const [s, nextBib, key, windUsed, sales, early] = await Promise.all([getSettings(), nextBibPreview(), getEasySlipKey(), windTunnelSeatsUsed(), getSalesStatus(), getEarlyBird()]);
   return {
     /** the admin's open / close switch for ticket sales */
     salesOpen: sales.open,
+    /** the admin's early-bird switch (lower run / concert / VIP prices) */
+    earlyBird: early.on,
     windTunnelLimit: WIND_TUNNEL_LIMIT,
     windTunnelRemaining: Math.max(0, WIND_TUNNEL_LIMIT - windUsed),
     promptPayId: s.promptPayId,
@@ -363,6 +368,15 @@ export function createApp(): express.Express {
       else extraRunnersError = p.error;
     }
 
+    // The dog's details (the form sends them as one object; an older open page may still send only name + breed)
+    let dogProfile: DogProfile | undefined;
+    let dogError = '';
+    if (isDog && b.dogProfile) {
+      const p = parseDogProfile(b.dogProfile);
+      if (p.ok) dogProfile = p.value;
+      else dogError = p.error;
+    }
+
     // Runners of every distance are insured: the insurer needs their details (the name comes from these fields)
     let insurance: InsuranceInfo | undefined;
     let insuranceError = '';
@@ -403,6 +417,7 @@ export function createApp(): express.Express {
     }
     const errors: string[] = [];
     if (insuranceError) errors.push(insuranceError);
+    if (dogError) errors.push(dogError);
     if (waiverError) errors.push(waiverError);
     if (extraRunnersError) errors.push(extraRunnersError);
     if (parkingError) errors.push(parkingError);
@@ -429,15 +444,17 @@ export function createApp(): express.Express {
       sponsorName = used.sponsorName;
     }
 
-    const concertDiscount = concertQty * concertDiscountPerTicket(CONCERT_PASS_PRICE, !noRun && !sponsorCode);
-    const vipTotal = VIP_TABLE_PRICE * vipTables;
+    const earlyBird = (await getEarlyBird()).on;
+    const concertUnit = concertPassPrice(earlyBird);
+    const concertDiscount = concertQty * concertDiscountPerTicket(concertUnit, !noRun && !sponsorCode);
+    const vipTotal = vipTablePrice(earlyBird) * vipTables;
     const ticketTotal = isAddonOnly
       ? 0
       : isConcert
-        ? CONCERT_PASS_PRICE * concertQty + vipTotal
+        ? concertUnit * concertQty + vipTotal
         : sponsorCode
           ? 0
-          : calcTicketTotal(routeId, extraPeople, extraDogs) + CONCERT_PASS_PRICE * concertQty - concertDiscount + vipTotal;
+          : calcTicketTotal(routeId, extraPeople, extraDogs, earlyBird) + concertUnit * concertQty - concertDiscount + vipTotal;
     const total = testMode ? 1 : ticketTotal + addOnSum;
     const token = crypto.randomBytes(24).toString('base64url');
     const now = new Date();
@@ -460,6 +477,7 @@ export function createApp(): express.Express {
       ticketType: isAddonOnly ? 'ADDON' : isConcert ? 'CONCERT' : 'RUN',
       concertQty: concertQty > 0 ? concertQty : undefined,
       concertDiscount: concertDiscount > 0 ? concertDiscount : undefined,
+      ...(earlyBird ? { earlyBird: true } : {}),
       vipTables: vipTables > 0 ? vipTables : undefined,
       parkingPlates,
       shooting,
@@ -467,8 +485,9 @@ export function createApp(): express.Express {
       insurance,
       shirtSize,
       runningWithDog: isDog,
-      dogName: isDog ? clean(b.dogName, 80) : undefined,
-      dogBreed: isDog ? clean(b.dogBreed, 80) : undefined,
+      dogName: isDog ? dogProfile?.name || clean(b.dogName, 80) : undefined,
+      dogBreed: isDog ? dogProfile?.breed || clean(b.dogBreed, 80) : undefined,
+      dogProfile,
       extraPeople,
       extraDogs,
       extraRunners,
@@ -952,6 +971,18 @@ export function createApp(): express.Express {
 
   app.get('/api/admin/sales', requireAdmin, h(async (_req, res) => {
     res.json(await getSalesStatus());
+  }));
+
+  app.get('/api/admin/early-bird', requireAdmin, h(async (_req, res) => {
+    res.json(await getEarlyBird());
+  }));
+
+  app.put('/api/admin/early-bird', requireAdmin, smallJson, h(async (req, res) => {
+    if (typeof req.body?.on !== 'boolean') {
+      res.status(400).json({ error: 'on must be true or false' });
+      return;
+    }
+    res.json(await setEarlyBird(req.body.on));
   }));
 
   app.put('/api/admin/sales', requireAdmin, smallJson, h(async (req, res) => {

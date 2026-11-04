@@ -634,7 +634,7 @@ export const scheduleData: ScheduleDay[] = [
   {
     dateLabel: 'วันก่อนวันแข่งขัน (Expo & Bib Pickup)',
     title: 'วันรับอุปกรณ์และตรวจสอบเส้นทาง',
-    description: 'ณ ลานกิจกรรมอเนกประสงค์ ค่ายนเรศวร / หน้าโรงแรม Sea Sand Sun',
+    description: 'กิจกรรมทั้งหมด ณ Sea Sand Sun Hua Hin Resort',
     items: [
       {
         id: 's-1',
@@ -682,7 +682,7 @@ export const scheduleData: ScheduleDay[] = [
   {
     dateLabel: 'กำหนดการวันจัดงาน (Official Event Schedule)',
     title: 'กำหนดการแข่งขัน กิจกรรมสถานี และคอนเสิร์ต',
-    description: 'บริเวณชายหาดหน้าโรงแรม Sea Sand Sun ค่ายนเรศวร',
+    description: 'กิจกรรมทั้งหมด ณ Sea Sand Sun Hua Hin Resort',
     items: [
       {
         id: 's-6',
@@ -772,9 +772,17 @@ export const scheduleData: ScheduleDay[] = [
         highlight: true,
       },
       {
+        id: 's-14b',
+        day: 'race_day',
+        time: '17.30 น.',
+        title: 'Door Open',
+        description: 'เปิดประตูเข้าชมคอนเสิร์ต',
+        iconName: 'Sparkles',
+      },
+      {
         id: 's-15',
         day: 'race_day',
-        time: '17.30 น. เป็นต้นไป',
+        time: '18.00 น.',
         title: 'การแสดงดนตรีและคอนเสิร์ต',
         description: 'เปิดการแสดงโดยวงดนตรีตำรวจตระเวนชายแดน และการแสดงอื่น ๆ',
         iconName: 'Sparkles',
@@ -1274,8 +1282,18 @@ export const VIP_TABLE_PERKS = [
   'ตามเงื่อนไขของผู้จัดงาน',
 ];
 
+/**
+ * Early bird (admin switch): baht off each run ticket, each concert GA ticket and each VIP table.
+ * It comes off the list price first; the percentage discounts (concert bundle, add-on bundle) are then
+ * worked out on the early-bird price.
+ */
+export const EARLY_BIRD_OFF = { run: 100, concert: 200, vip: 2000 } as const;
+export const runBasePrice = (id: RouteId, earlyBird = false) => Math.max(0, ticketById(id).basePrice - (earlyBird ? EARLY_BIRD_OFF.run : 0));
+export const concertPassPrice = (earlyBird = false) => CONCERT_PASS_PRICE - (earlyBird ? EARLY_BIRD_OFF.concert : 0);
+export const vipTablePrice = (earlyBird = false) => VIP_TABLE_PRICE - (earlyBird ? EARLY_BIRD_OFF.vip : 0);
+
 // Dog Run tickets cover 1 runner + 1 dog; extra dogs are no longer sold (extraDogs is ignored).
-export const calcTicketTotal = (id: RouteId, extraPeople = 0, _extraDogs = 0) => {
+export const calcTicketTotal = (id: RouteId, extraPeople = 0, _extraDogs = 0, earlyBird = false) => {
   const t = ticketById(id);
-  return t.basePrice + extraPeople * (t.addPersonPrice ?? 0);
+  return runBasePrice(id, earlyBird) + extraPeople * (t.addPersonPrice ?? 0);
 };

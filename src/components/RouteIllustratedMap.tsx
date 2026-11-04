@@ -114,7 +114,6 @@ const CAMP: MapDef = {
       sub: 'กองบัญชาการ ตชด.',
       labelAbove: true,
       color: '#7C3AED',
-      sticker: { id: 'camp', src: '/images/map/sticker-bpp-school.webp', x: 1180, y: -55, w: 280, h: 284, rotate: 5 },
     },
   ],
   routes: {

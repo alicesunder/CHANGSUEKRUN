@@ -7,6 +7,7 @@ import type { InsuranceInfo } from '../data/insurance';
 import type { Shooter, ShootingInfo } from '../data/shooting';
 import type { ActivityWaiverInfo, WaiverActivity, WaiverParticipant } from '../data/activityWaivers';
 import type { ExtraRunner } from '../data/shirts';
+import type { DogProfile } from '../data/dogProfile';
 import { isTestModeOn, setTestMode } from './testMode';
 import type { ParkingPlate } from '../data/vipParking';
 import type { RouteId } from '../types';
@@ -28,6 +29,8 @@ export interface PublicConfig {
   emailReady?: boolean;
   /** the admin's open / close switch for ticket sales (missing = open) */
   salesOpen?: boolean;
+  /** the admin's early-bird switch (lower run / concert / VIP prices) */
+  earlyBird?: boolean;
 }
 
 export interface VisitStats {
@@ -40,6 +43,7 @@ export type ServerOrder = TicketOrder & {
   /** printable A4 documents (BIB, ticket, parking, insurance, waivers) once paid */
   documentsUrl?: string;
   ticketType?: 'RUN' | 'CONCERT' | 'ADDON';
+  dogProfile?: DogProfile;
   concertQty?: number;
   vipTables?: number;
   parkingPlates?: ParkingPlate[];
@@ -112,6 +116,7 @@ export interface CreateOrderInput {
   shirtSize: string;
   dogName?: string;
   dogBreed?: string;
+  dogProfile?: DogProfile;
   extraRunnerNames?: string;
   privacyConsent: boolean;
   /** RUN (default) = running ticket incl. concert; CONCERT = concert/entry pass only (no run, no BIB) */
@@ -307,6 +312,9 @@ export const adminApi = {
   getSales: () => adminFetch<{ open: boolean; updatedAt?: string }>('/api/admin/sales'),
   setSales: (open: boolean) =>
     adminFetch<{ open: boolean; updatedAt?: string }>('/api/admin/sales', { method: 'PUT', headers: jsonHeaders, body: JSON.stringify({ open }) }),
+  getEarlyBird: () => adminFetch<{ on: boolean; updatedAt?: string }>('/api/admin/early-bird'),
+  setEarlyBird: (on: boolean) =>
+    adminFetch<{ on: boolean; updatedAt?: string }>('/api/admin/early-bird', { method: 'PUT', headers: jsonHeaders, body: JSON.stringify({ on }) }),
   lookup: (q: string) => adminFetch<{ order: ServerOrder }>(`/api/admin/lookup?q=${encodeURIComponent(q)}`),
   getWinners: () => adminFetch<{ winners: Winner[] }>('/api/admin/winners'),
   saveWinners: (winners: Winner[]) =>
