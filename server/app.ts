@@ -461,8 +461,8 @@ export function createApp(): express.Express {
     const token = crypto.randomBytes(24).toString('base64url');
     const now = new Date();
     const settings = await getSettings();
-    // The transfer window is 5 minutes at most (an admin may shorten it, never lengthen it).
-    const timeoutMin = Math.min(5, Math.max(1, settings.paymentTimeoutMinutes || 5));
+    // The transfer window is 15 minutes at most (an admin may shorten it, never lengthen it).
+    const timeoutMin = Math.min(15, Math.max(1, settings.paymentTimeoutMinutes || 15));
 
     const order: StoredOrder = {
       orderId: testMode ? newTestOrderId() : await nextOrderId(),
@@ -1042,7 +1042,7 @@ export function createApp(): express.Express {
       accountName: clean(s.accountName, 150) || cur.accountName,
       bankLabel: clean(s.bankLabel, 80) || cur.bankLabel,
       bankAccountNo,
-      paymentTimeoutMinutes: Math.min(5, Math.max(1, Math.floor(Number(s.paymentTimeoutMinutes) || 5))),
+      paymentTimeoutMinutes: Math.min(15, Math.max(1, Math.floor(Number(s.paymentTimeoutMinutes) || 15))),
     });
     console.log(`[admin] ${(req as any).admin.username} updated settings`);
     res.json({ settings: await getSettings(), bibCounters: await getBibCounters() });

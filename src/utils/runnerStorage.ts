@@ -115,7 +115,7 @@ export const DEFAULT_PROMPTPAY_CONFIG: PromptPayConfig = {
   accountName: 'โครงการช้างศึกรันเห็นช้างวิ่งวิ่งตามช้าง (CHANGSUEK RUN 2026)',
   bankAccountNo: '0340291354',
   bankLabel: 'ธนาคารกรุงไทย',
-  paymentTimeoutMinutes: 5,
+  paymentTimeoutMinutes: 15,
   requireSlipVerification: true,
   adminUsername: 'admin',
   adminPassword: '',

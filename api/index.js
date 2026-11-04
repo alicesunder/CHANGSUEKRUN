@@ -33826,7 +33826,7 @@ var DEFAULT_SETTINGS = {
   accountName: process.env.PROMPTPAY_ACCOUNT_NAME || "\u0E42\u0E04\u0E23\u0E07\u0E01\u0E32\u0E23\u0E0A\u0E49\u0E32\u0E07\u0E28\u0E36\u0E01\u0E23\u0E31\u0E19\u0E40\u0E2B\u0E47\u0E19\u0E0A\u0E49\u0E32\u0E07\u0E27\u0E34\u0E48\u0E07\u0E27\u0E34\u0E48\u0E07\u0E15\u0E32\u0E21\u0E0A\u0E49\u0E32\u0E07 (CHANGSUEK RUN 2026)",
   bankLabel: process.env.BANK_LABEL || "\u0E18\u0E19\u0E32\u0E04\u0E32\u0E23\u0E01\u0E23\u0E38\u0E07\u0E44\u0E17\u0E22",
   bankAccountNo: process.env.BANK_ACCOUNT_NO || "0340291354",
-  paymentTimeoutMinutes: 5
+  paymentTimeoutMinutes: 15
 };
 var asObj = (v) => typeof v === "string" ? JSON.parse(v) : v;
 async function getSettings() {
@@ -47891,7 +47891,7 @@ function createApp() {
     const token = crypto10.randomBytes(24).toString("base64url");
     const now = /* @__PURE__ */ new Date();
     const settings = await getSettings();
-    const timeoutMin = Math.min(5, Math.max(1, settings.paymentTimeoutMinutes || 5));
+    const timeoutMin = Math.min(15, Math.max(1, settings.paymentTimeoutMinutes || 15));
     const order = {
       orderId: testMode ? newTestOrderId() : await nextOrderId(),
       ...testMode ? { isTest: true, testBy: testAdmin } : {},
@@ -48413,7 +48413,7 @@ function createApp() {
       accountName: clean(s.accountName, 150) || cur.accountName,
       bankLabel: clean(s.bankLabel, 80) || cur.bankLabel,
       bankAccountNo,
-      paymentTimeoutMinutes: Math.min(5, Math.max(1, Math.floor(Number(s.paymentTimeoutMinutes) || 5)))
+      paymentTimeoutMinutes: Math.min(15, Math.max(1, Math.floor(Number(s.paymentTimeoutMinutes) || 15)))
     });
     console.log(`[admin] ${req.admin.username} updated settings`);
     res.json({ settings: await getSettings(), bibCounters: await getBibCounters() });

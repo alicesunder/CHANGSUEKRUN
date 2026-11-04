@@ -129,7 +129,7 @@ const DEFAULT_SETTINGS: PublicSettings = {
     'โครงการช้างศึกรันเห็นช้างวิ่งวิ่งตามช้าง (CHANGSUEK RUN 2026)',
   bankLabel: process.env.BANK_LABEL || 'ธนาคารกรุงไทย',
   bankAccountNo: process.env.BANK_ACCOUNT_NO || '0340291354',
-  paymentTimeoutMinutes: 5,
+  paymentTimeoutMinutes: 15,
 };
 
 const asObj = <T>(v: unknown): T => (typeof v === 'string' ? JSON.parse(v) : (v as T));

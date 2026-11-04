@@ -57,6 +57,7 @@ export const PaymentStep: React.FC<{
 }> = ({ order, amount, bank, qrDataUrl, qrError, hasPromptPay, slipBusy, slipMessage, onSlipFile, onDownloadQr, onCancel }) => {
   const fileRef = useRef<HTMLInputElement | null>(null);
   const left = useSecondsLeft(order.expiresAt);
+  const windowMin = Math.max(1, Math.round((Date.parse(order.expiresAt) - Date.parse(order.createdAt)) / 60000)) || 15;
   const expired = left <= 0 && order.paymentStatus !== 'PAID';
   const mm = String(Math.floor(left / 60)).padStart(2, '0');
   const ss = String(left % 60).padStart(2, '0');
@@ -115,7 +116,7 @@ export const PaymentStep: React.FC<{
             </>
           ) : (
             <>
-              <h3 className="text-lg font-black text-[#2A1450] leading-tight">กรุณาโอนภายใน 5 นาที</h3>
+              <h3 className="text-lg font-black text-[#2A1450] leading-tight">กรุณาโอนภายใน {windowMin} นาที</h3>
               <p className="text-xs sm:text-sm font-bold text-[#4B2D78] mt-1">แล้วแนบสลิปด้านล่าง ระบบตรวจให้อัตโนมัติ ผ่านแล้วได้ตั๋วทันที</p>
             </>
           )}
