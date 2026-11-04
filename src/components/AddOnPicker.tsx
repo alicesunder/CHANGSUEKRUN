@@ -1,5 +1,5 @@
 import React from 'react';
-import { Check, Crosshair, ExternalLink, MapPin, Minus, Plus, Sparkles, Star, TowerControl, Wind } from 'lucide-react';
+import { Check, ExternalLink, MapPin, Minus, Plus, Sparkles, Star } from 'lucide-react';
 import { ACTIVITY_LOCATIONS, type ActivityLocation } from '../data/activityLocations';
 import { showActivitySticker } from './ActivitySticker';
 import {
@@ -33,38 +33,53 @@ interface AddOnPickerProps {
 
 const baht = (n: number) => `${formatBaht(n)} บาท`;
 
-/** Same colour family as the ticket cards: vivid gradient, pastel body, tinted glow. */
+/** One strong colour per activity: the sticker panel, the badge and the selected state all share it. */
 export const ADD_ON_THEMES = {
   tower: {
-    header: 'linear-gradient(135deg, #10B981 0%, #0EA5E9 100%)',
-    body: 'linear-gradient(165deg, #FFFFFF 0%, #F0FDF9 55%, #CCFBF1 100%)',
-    border: 'rgba(16, 185, 129, 0.38)',
-    borderActive: '#10B981',
-    shadow: '0 14px 28px -14px rgba(16, 185, 129, 0.3), 0 3px 10px -2px rgba(14, 165, 233, 0.1)',
-    shadowActive: '0 20px 38px -12px rgba(16, 185, 129, 0.55), 0 0 0 3px rgba(16, 185, 129, 0.25)',
-    ink: '#047857',
+    panel: 'linear-gradient(160deg, #34D399 0%, #10B981 45%, #0EA5E9 100%)',
+    soft: 'linear-gradient(165deg, #FFFFFF 0%, #ECFDF5 60%, #D1FAE5 100%)',
+    on: 'linear-gradient(165deg, #D1FAE5 0%, #A7F3D0 100%)',
+    border: '#6EE7B7',
+    borderActive: '#059669',
+    ink: '#065F46',
+    chip: '#D1FAE5',
+    button: 'linear-gradient(180deg, #34D399, #059669)',
+    glow: 'rgba(16, 185, 129, 0.5)',
+    ring: 'rgba(16, 185, 129, 0.22)',
   },
   gun: {
-    header: 'linear-gradient(135deg, #6366F1 0%, #9333EA 52%, #EC4899 100%)',
-    body: 'linear-gradient(165deg, #FFFFFF 0%, #F5F3FF 55%, #E9D5FF 100%)',
-    border: 'rgba(139, 92, 246, 0.36)',
-    borderActive: '#8B5CF6',
-    shadow: '0 14px 28px -14px rgba(139, 92, 246, 0.32), 0 3px 10px -2px rgba(236, 72, 153, 0.1)',
-    shadowActive: '0 20px 38px -12px rgba(139, 92, 246, 0.58), 0 0 0 3px rgba(139, 92, 246, 0.25)',
-    ink: '#6D28D9',
+    panel: 'linear-gradient(160deg, #818CF8 0%, #9333EA 50%, #EC4899 100%)',
+    soft: 'linear-gradient(165deg, #FFFFFF 0%, #F5F3FF 60%, #EDE9FE 100%)',
+    on: 'linear-gradient(165deg, #EDE9FE 0%, #DDD6FE 100%)',
+    border: '#C4B5FD',
+    borderActive: '#7C3AED',
+    ink: '#5B21B6',
+    chip: '#EDE9FE',
+    button: 'linear-gradient(180deg, #A78BFA, #7C3AED)',
+    glow: 'rgba(124, 58, 237, 0.45)',
+    ring: 'rgba(124, 58, 237, 0.22)',
   },
   wind: {
-    header: 'linear-gradient(135deg, #38BDF8 0%, #6366F1 100%)',
-    body: 'linear-gradient(165deg, #FFFFFF 0%, #F0F9FF 55%, #BAE6FD 100%)',
-    border: 'rgba(56, 189, 248, 0.42)',
-    borderActive: '#0EA5E9',
-    shadow: '0 14px 28px -14px rgba(14, 165, 233, 0.32), 0 3px 10px -2px rgba(99, 102, 241, 0.1)',
-    shadowActive: '0 20px 38px -12px rgba(14, 165, 233, 0.55), 0 0 0 3px rgba(14, 165, 233, 0.25)',
-    ink: '#0369A1',
+    panel: 'linear-gradient(160deg, #7DD3FC 0%, #38BDF8 45%, #6366F1 100%)',
+    soft: 'linear-gradient(165deg, #FFFFFF 0%, #F0F9FF 60%, #E0F2FE 100%)',
+    on: 'linear-gradient(165deg, #E0F2FE 0%, #BAE6FD 100%)',
+    border: '#7DD3FC',
+    borderActive: '#0284C7',
+    ink: '#075985',
+    chip: '#E0F2FE',
+    button: 'linear-gradient(180deg, #38BDF8, #0284C7)',
+    glow: 'rgba(14, 165, 233, 0.45)',
+    ring: 'rgba(14, 165, 233, 0.22)',
   },
 } as const;
 
 type ThemeKey = keyof typeof ADD_ON_THEMES;
+
+const STICKER: Record<ThemeKey, string> = {
+  tower: '/images/addons/sticker-tower.webp',
+  gun: '/images/addons/sticker-gun.webp',
+  wind: '/images/addons/sticker-wind.webp',
+};
 
 const Gloss: React.FC = () => (
   <>
@@ -73,90 +88,113 @@ const Gloss: React.FC = () => (
   </>
 );
 
-const Shimmer: React.FC = () => (
-  <span
-    aria-hidden="true"
-    className="pointer-events-none absolute inset-0 z-20 overflow-hidden rounded-[22px] opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-  >
-    <span className="absolute -inset-y-12 w-24 bg-gradient-to-r from-transparent via-white/60 to-transparent animate-ticket-shimmer" />
-  </span>
-);
-
-const TickDot: React.FC<{ on: boolean; ink: string }> = ({ on, ink }) => (
-  <span
-    aria-hidden="true"
-    className={`absolute top-2 right-2 z-10 w-6 h-6 rounded-full flex items-center justify-center transition-all ${
-      on ? 'bg-white scale-110 animate-pop shadow-[0_6px_12px_-2px_rgba(0,0,0,0.3)]' : 'bg-white/60 border-2 border-white'
-    }`}
-  >
-    {on && <Check className="w-3.5 h-3.5 stroke-[3.5]" style={{ color: ink }} />}
-  </span>
-);
-
-const IconBubble: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <span className="relative z-10 w-11 h-11 shrink-0 rounded-2xl bg-white/95 border-2 border-white shadow-[0_8px_16px_-6px_rgba(0,0,0,0.3)] flex items-center justify-center">
-    {children}
-  </span>
-);
-
-interface ChipProps {
+/** `vertical` stacks the sticker over the text once the box is wide enough for three columns. */
+const Card: React.FC<{
   theme: ThemeKey;
   title: string;
-  sub: string;
-  price: number;
-  /** regular price, struck through in front of `price` (early bird) */
-  listPrice?: number;
-  icon: React.ReactNode;
+  tagline: string;
+  perks: string[];
   active: boolean;
   disabled?: boolean;
-  note?: React.ReactNode;
-  onToggle: () => void;
-}
+  vertical: boolean;
+  badge?: React.ReactNode;
+  stickerSrc?: string;
+  children: React.ReactNode;
+}> = ({ theme, title, tagline, perks, active, disabled, vertical, badge, stickerSrc, children }) => {
+  const t = ADD_ON_THEMES[theme];
+  return (
+    <div
+      style={{
+        background: active ? t.on : t.soft,
+        borderColor: active ? t.borderActive : t.border,
+        boxShadow: active ? `0 18px 34px -14px ${t.glow}, 0 0 0 3px ${t.ring}` : '0 10px 22px -16px rgba(42,20,80,0.4)',
+      }}
+      className={`relative flex h-full overflow-hidden rounded-[26px] border-[3px] transition-all duration-300 ${vertical ? 'flex-row @[620px]:flex-col' : 'flex-row'} ${active ? '-translate-y-0.5' : ''} ${disabled ? 'opacity-60 grayscale' : ''}`}
+    >
+      {active && (
+        <span className="absolute top-2 right-2 z-10 inline-flex items-center gap-1 rounded-full bg-white px-2.5 py-1 text-[11px] font-black shadow-md" style={{ color: t.ink }}>
+          <Check className="w-3.5 h-3.5 stroke-[3.5]" aria-hidden="true" /> เลือกแล้ว
+        </span>
+      )}
+      {/* sticker panel */}
+      <div
+        style={{ background: t.panel }}
+        className={`relative shrink-0 flex items-center justify-center overflow-hidden ${vertical ? 'w-[112px] @[620px]:w-full @[620px]:h-[150px]' : 'w-[112px] sm:w-[132px]'}`}
+      >
+        <span aria-hidden="true" className="absolute -top-6 -left-6 w-24 h-24 rounded-full bg-white/25 blur-xl" />
+        <span aria-hidden="true" className="absolute -bottom-8 -right-4 w-28 h-28 rounded-full bg-white/20 blur-2xl" />
+        <img
+          src={stickerSrc || STICKER[theme]}
+          alt=""
+          loading="lazy"
+          decoding="async"
+          draggable={false}
+          className={`relative object-contain drop-shadow-[0_8px_10px_rgba(0,0,0,0.3)] ${vertical ? 'w-[92px] h-[92px] @[620px]:w-[128px] @[620px]:h-[128px]' : 'w-[96px] h-[96px] sm:w-[112px] sm:h-[112px]'}`}
+        />
+      </div>
+      {/* text */}
+      <div className="flex-1 min-w-0 p-3.5 sm:p-4 flex flex-col gap-2.5">
+        <div>
+          <h4 className="text-[22px] leading-tight font-black pr-24" style={{ color: t.ink }}>
+            {title}
+          </h4>
+          <p className="text-[13px] font-bold leading-snug text-[#4B2D78] mt-0.5">{tagline}</p>
+        </div>
+        <ul className="flex flex-wrap gap-1.5">
+          {perks.map((x) => (
+            <li key={x} className="rounded-full px-2.5 py-1 text-[11.5px] font-extrabold" style={{ background: t.chip, color: t.ink }}>
+              {x}
+            </li>
+          ))}
+        </ul>
+        {badge}
+        <div className="mt-auto flex flex-col gap-2.5">{children}</div>
+      </div>
+    </div>
+  );
+};
 
-/** One tap-to-toggle activity: lights up in its own colour when chosen. */
-const Chip: React.FC<ChipProps> = ({ theme, title, sub, price, listPrice, icon, active, disabled, note, onToggle }) => {
+const PriceTag: React.FC<{ price: number; listPrice?: number; ink: string }> = ({ price, listPrice, ink }) => (
+  <span className="flex items-baseline gap-1.5 flex-wrap">
+    {listPrice !== undefined && <s className="text-sm font-bold text-[#6B5A85]/80 decoration-2 decoration-rose-500">{formatBaht(listPrice)}</s>}
+    <span className="text-[30px] leading-none font-black tabular-nums" style={{ color: listPrice !== undefined ? '#E11D48' : ink }}>
+      {formatBaht(price)}
+    </span>
+    <span className="text-xs font-extrabold text-[#6B5A85]">บาท / คน</span>
+  </span>
+);
+
+/** The big tap target of an activity: says what a tap will do. */
+const PickButton: React.FC<{ theme: ThemeKey; active: boolean; disabled?: boolean; label: string; onClick: () => void }> = ({ theme, active, disabled, label, onClick }) => {
   const t = ADD_ON_THEMES[theme];
   return (
     <button
       type="button"
       role="switch"
       aria-checked={active}
+      aria-label={`${active ? 'ยกเลิก' : 'เลือก'}${label}`}
       disabled={disabled}
-      onClick={onToggle}
-      style={active ? { background: t.header, borderColor: t.borderActive, boxShadow: t.shadowActive } : { background: t.body, borderColor: t.border, boxShadow: t.shadow }}
-      className={`group relative text-left rounded-[22px] border-2 overflow-hidden transition-all duration-300 focus:outline-none focus-visible:ring-4 focus-visible:ring-[#7B3FC6]/50 ${
-        active ? '-translate-y-0.5' : 'hover:-translate-y-0.5'
-      } ${disabled ? 'opacity-60 cursor-not-allowed grayscale' : 'cursor-pointer'}`}
+      onClick={onClick}
+      style={active ? { background: '#fff', color: t.ink, borderColor: t.borderActive } : { background: t.button, color: '#fff', borderColor: '#2A1450', boxShadow: '0 4px 0 #2A1450' }}
+      className="w-full min-h-[52px] rounded-2xl border-[2.5px] text-base font-black flex items-center justify-center gap-2 cursor-pointer active:translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60 focus:outline-none focus-visible:ring-4 focus-visible:ring-[#7B3FC6]/50"
     >
-      <Shimmer />
-      {active && <Gloss />}
-      <TickDot on={active} ink={t.ink} />
-      {/* stacked, so the text never has to share a row with the price (the cards can be narrow) */}
-      <span className="relative flex flex-col gap-2 p-3">
-        <span className="flex items-center gap-2.5 pr-8">
-          <IconBubble>{icon}</IconBubble>
-          <span className={`min-w-0 text-base font-extrabold leading-tight ${active ? 'text-white drop-shadow-[0_2px_6px_rgba(0,0,0,0.2)]' : 'text-[#2A1450]'}`}>{title}</span>
-        </span>
-        <span className={`block text-[11.5px] font-semibold leading-snug ${active ? 'text-white/90' : 'text-[#4B2D78]/85'}`}>{sub}</span>
-        <span className="flex flex-wrap items-end justify-between gap-x-2 gap-y-1.5 mt-auto">
-          <span className="min-w-0">{note}</span>
-          <span className="ml-auto text-right shrink-0">
-            <span className={`block text-xl font-extrabold tabular-nums leading-none ${active ? 'text-white drop-shadow-[0_2px_6px_rgba(0,0,0,0.2)]' : ''}`} style={active ? undefined : { color: t.ink }}>
-              {listPrice !== undefined && <s className="mr-1 text-xs font-bold opacity-60">{formatBaht(listPrice)}</s>}
-              {formatBaht(price)}
-            </span>
-            <span className={`block text-[10px] font-bold ${active ? 'text-white/85' : 'text-[#6B5A85]'}`}>บาท / คน</span>
-          </span>
-        </span>
-      </span>
+      {active ? (
+        <>
+          <Check className="w-5 h-5 stroke-[3.5]" aria-hidden="true" /> เลือกแล้ว · แตะเพื่อยกเลิก
+        </>
+      ) : (
+        <>
+          <Plus className="w-5 h-5 stroke-[3.5]" aria-hidden="true" /> เลือกกิจกรรมนี้
+        </>
+      )}
     </button>
   );
 };
 
 // Tap a level to pick it, tap the picked level again to cancel (same as the other activities).
-const GUN_SEGMENTS: { id: Exclude<GunLevel, 'none'>; label: string; price: number }[] = [
-  { id: 'standard', label: 'Standard', price: 890 },
-  { id: 'premium', label: 'Premium', price: 1950 },
+const GUN_SEGMENTS: { id: Exclude<GunLevel, 'none'>; label: string; price: number; note: string }[] = [
+  { id: 'standard', label: 'Standard', price: 890, note: 'เลือกได้ 1 กระบอก' },
+  { id: 'premium', label: 'Premium', price: 1950, note: 'HK UMP / KRISS / MP5 SD' },
 ];
 
 export const PeopleStepper: React.FC<{ value: number; onChange: (n: number) => void; dark?: boolean }> = ({ value, onChange, dark }) => (
@@ -215,7 +253,7 @@ export const AddOnPicker: React.FC<AddOnPickerProps> = ({ value, onChange, windT
   const total = addOnTotal(value, discountCtx);
   const isFull = value.tower && value.gun === 'standard' && value.windTunnel;
   const gunOn = value.gun !== 'none';
-  const gun = ADD_ON_THEMES.gun;
+  const vertical = layout === 'grid';
 
   const windFull = windTunnelRemaining !== null && windTunnelRemaining <= 0;
   const windShort = windTunnelRemaining !== null && value.windTunnel && value.people > windTunnelRemaining && !windFull;
@@ -224,104 +262,105 @@ export const AddOnPicker: React.FC<AddOnPickerProps> = ({ value, onChange, windT
   return (
     <div className="space-y-3 @container">
       {/* three columns only when the box itself is wide enough (the box is narrow inside the booking window) */}
-      <div className={layout === 'rows' ? 'grid grid-cols-1 gap-2.5' : 'grid grid-cols-1 @[620px]:grid-cols-3 gap-3 sm:gap-4'}>
+      <div className={layout === 'rows' ? 'grid grid-cols-1 gap-3' : 'grid grid-cols-1 @[620px]:grid-cols-3 gap-3 sm:gap-4'}>
         <div className="flex flex-col gap-1">
-        <Chip
-          theme="tower"
-          title="หอสูง"
-          sub="มีครูฝึกดูแล · ได้ใบประกาศ/ปีก"
-          price={350 - off}
-          listPrice={off ? 350 : undefined}
-          active={value.tower}
-          onToggle={() => {
-            if (!value.tower) showActivitySticker('tower');
-            set({ tower: !value.tower });
-          }}
-          icon={<TowerControl className="w-5 h-5 text-[#047857]" aria-hidden="true" />}
-        />
-        <PinLink id="tower" />
+          <Card theme="tower" title="หอสูง" tagline="มีครูฝึกดูแลตลอดกิจกรรม" perks={['🧑‍🏫 ครูฝึกดูแล', '📜 ได้ใบประกาศ / ปีก']} active={value.tower} vertical={vertical}>
+            <PriceTag price={350 - off} listPrice={off ? 350 : undefined} ink={ADD_ON_THEMES.tower.ink} />
+            <PickButton
+              theme="tower"
+              label="หอสูง"
+              active={value.tower}
+              onClick={() => {
+                if (!value.tower) showActivitySticker('tower');
+                set({ tower: !value.tower });
+              }}
+            />
+          </Card>
+          <PinLink id="tower" />
         </div>
 
         {/* ยิงปืน: choose a level */}
         <div className="flex flex-col gap-1">
-        <div
-          role="radiogroup"
-          aria-label="ยิงปืน"
-          style={gunOn ? { background: gun.header, borderColor: gun.borderActive, boxShadow: gun.shadowActive } : { background: gun.body, borderColor: gun.border, boxShadow: gun.shadow }}
-          className={`group relative rounded-[22px] border-2 overflow-hidden transition-all duration-300 ${gunOn ? '-translate-y-0.5' : 'hover:-translate-y-0.5'}`}
-        >
-          <Shimmer />
-          {gunOn && <Gloss />}
-          <TickDot on={gunOn} ink={gun.ink} />
-          <div className="relative flex flex-col gap-2 p-3 pb-2">
-            <span className="flex items-center gap-2.5 pr-8">
-              <IconBubble>
-                <Crosshair className="w-5 h-5" style={{ color: gun.ink }} aria-hidden="true" />
-              </IconBubble>
-              <span className={`min-w-0 text-base font-extrabold leading-tight ${gunOn ? 'text-white drop-shadow-[0_2px_6px_rgba(0,0,0,0.2)]' : 'text-[#2A1450]'}`}>ยิงปืน</span>
-            </span>
-            <span className={`block text-[11.5px] font-semibold leading-snug ${gunOn ? 'text-white/90' : 'text-[#4B2D78]/85'}`}>ครูฝึกส่วนตัวดูแลใกล้ชิด · 10 นัด</span>
-          </div>
-          <div className="relative grid grid-cols-2 gap-1.5 px-3 pb-3">
-            {GUN_SEGMENTS.map((o) => {
-              const on = value.gun === o.id;
-              return (
-                <button
-                  key={o.id}
-                  type="button"
-                  role="radio"
-                  aria-checked={on}
-                  aria-label={on ? `ยิงปืน ${o.label} (แตะอีกครั้งเพื่อยกเลิก)` : `ยิงปืน ${o.label}`}
-                  onClick={() => {
-                    if (!on) showActivitySticker(o.id === 'premium' ? 'gunPremium' : 'gun', `ยิงปืน ${o.label} · เลือกแล้ว!`);
-                    set({ gun: on ? 'none' : o.id });
-                  }}
-                  className={`min-h-[46px] px-1.5 py-1 rounded-xl text-center leading-tight transition-all border-2 focus:outline-none focus-visible:ring-4 focus-visible:ring-[#7B3FC6]/50 cursor-pointer ${
-                    on
-                      ? 'bg-white text-[#2A1450] border-white shadow-[0_8px_14px_-6px_rgba(0,0,0,0.4)]'
-                      : gunOn
-                        ? 'bg-white/20 text-white border-white/40 hover:bg-white/30'
-                        : 'bg-white/80 text-[#2A1450] border-[#8B5CF6]/20 hover:border-[#8B5CF6]/60'
-                  }`}
-                >
-                  <span className="block text-[12.5px] font-extrabold">{on && '✓ '}{o.label}</span>
-                  <span className={`block text-[11px] font-bold tabular-nums ${on ? 'text-[#7C3AED]' : ''}`}>
-                    {formatBaht(o.price - off)}
-                    {off > 0 ? <span className="ml-1 text-[9.5px] line-through opacity-70">{formatBaht(o.price)}</span> : o.id === 'premium' && <span className="ml-1 text-[9.5px] line-through opacity-70">2,200</span>}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-        <PinLink id="gun" />
+          <Card
+            theme="gun"
+            title="ยิงปืน"
+            tagline="ครูฝึกส่วนตัวดูแลใกล้ชิด"
+            perks={['🎯 ยิง 10 นัด', '🧑‍🏫 ครูฝึกส่วนตัว']}
+            active={gunOn}
+            vertical={vertical}
+            stickerSrc={value.gun === 'premium' ? '/images/addons/sticker-gun-premium.webp' : undefined}
+          >
+            <div role="radiogroup" aria-label="ยิงปืน" className="grid grid-cols-1 gap-2">
+              {GUN_SEGMENTS.map((o) => {
+                const on = value.gun === o.id;
+                const g = ADD_ON_THEMES.gun;
+                return (
+                  <button
+                    key={o.id}
+                    type="button"
+                    role="radio"
+                    aria-checked={on}
+                    aria-label={on ? `ยิงปืน ${o.label} (แตะอีกครั้งเพื่อยกเลิก)` : `ยิงปืน ${o.label}`}
+                    onClick={() => {
+                      if (!on) showActivitySticker(o.id === 'premium' ? 'gunPremium' : 'gun', `ยิงปืน ${o.label} · เลือกแล้ว!`);
+                      set({ gun: on ? 'none' : o.id });
+                    }}
+                    style={on ? { background: g.button, color: '#fff', borderColor: '#2A1450', boxShadow: '0 4px 0 #2A1450' } : { background: '#fff', color: g.ink, borderColor: g.border }}
+                    className="min-h-[56px] px-3 py-1.5 rounded-2xl border-[2.5px] flex items-center justify-between gap-2 text-left cursor-pointer active:translate-y-0.5 focus:outline-none focus-visible:ring-4 focus-visible:ring-[#7B3FC6]/50"
+                  >
+                    <span className="min-w-0">
+                      <span className="block text-base font-black leading-tight">
+                        {on && '✓ '}
+                        {o.label}
+                      </span>
+                      <span className={`block text-[11.5px] font-bold leading-tight ${on ? 'text-white/90' : 'text-[#6B5A85]'}`}>{o.note}</span>
+                    </span>
+                    <span className="shrink-0 text-right tabular-nums">
+                      {off > 0 && <s className={`block text-[11px] font-bold ${on ? 'text-white/70' : 'text-[#6B5A85]/70'}`}>{formatBaht(o.price)}</s>}
+                      {off === 0 && o.id === 'premium' && <s className={`block text-[11px] font-bold ${on ? 'text-white/70' : 'text-[#6B5A85]/70'}`}>2,200</s>}
+                      <span className="block text-xl font-black leading-none">{formatBaht(o.price - off)}</span>
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+            <p className="text-xs font-extrabold text-[#6B5A85]">{gunOn ? 'แตะระดับที่เลือกอีกครั้งเพื่อยกเลิก' : 'เลือกระดับการยิง · ราคาต่อคน (บาท)'}</p>
+          </Card>
+          <PinLink id="gun" />
         </div>
 
         <div className="flex flex-col gap-1">
-        <Chip
-          theme="wind"
-          title="อุโมงค์ลม"
-          sub="เปิดรับสมัครล่วงหน้า"
-          price={990 - off}
-          listPrice={off ? 990 : undefined}
-          active={value.windTunnel && !windFull}
-          disabled={windFull}
-          onToggle={() => {
-            if (!value.windTunnel) showActivitySticker('wind');
-            set({ windTunnel: !value.windTunnel });
-          }}
-          icon={<Wind className="w-5 h-5 text-[#0369A1]" aria-hidden="true" />}
-          note={
-            <span
-              className={`mt-1 inline-block px-2.5 py-0.5 rounded-full text-[10.5px] font-extrabold shadow-[0_4px_10px_-4px_rgba(0,0,0,0.35)] ${
-                windFull ? 'bg-slate-300 text-slate-700' : windLow ? 'bg-gradient-to-r from-[#FF7A59] to-[#FF4E88] text-white' : 'bg-white/95 text-[#0369A1]'
-              }`}
-            >
-              {windFull ? 'เต็มแล้ว' : windTunnelRemaining === null ? `จำกัด ${WIND_TUNNEL_LIMIT} ท่าน` : `เหลือ ${windTunnelRemaining} / ${WIND_TUNNEL_LIMIT} ที่`}
-            </span>
-          }
-        />
-        <PinLink id="wind" />
+          <Card
+            theme="wind"
+            title="อุโมงค์ลม"
+            tagline="ลอยตัวกลางอุโมงค์ลม · เปิดรับสมัครล่วงหน้า"
+            perks={['🌪️ ลอยตัวในอุโมงค์ลม']}
+            active={value.windTunnel && !windFull}
+            disabled={windFull}
+            vertical={vertical}
+            badge={
+              <span
+                className={`self-start inline-block px-3 py-1 rounded-full text-xs font-black shadow-[0_4px_10px_-4px_rgba(0,0,0,0.35)] ${
+                  windFull ? 'bg-slate-300 text-slate-700' : windLow ? 'bg-gradient-to-r from-[#FF7A59] to-[#FF4E88] text-white' : 'bg-white text-[#075985] border-2 border-[#7DD3FC]'
+                }`}
+              >
+                {windFull ? 'เต็มแล้ว' : windTunnelRemaining === null ? `จำกัด ${WIND_TUNNEL_LIMIT} ท่าน` : `เหลือ ${windTunnelRemaining} / ${WIND_TUNNEL_LIMIT} ที่`}
+              </span>
+            }
+          >
+            <PriceTag price={990 - off} listPrice={off ? 990 : undefined} ink={ADD_ON_THEMES.wind.ink} />
+            <PickButton
+              theme="wind"
+              label="อุโมงค์ลม"
+              active={value.windTunnel && !windFull}
+              disabled={windFull}
+              onClick={() => {
+                if (!value.windTunnel) showActivitySticker('wind');
+                set({ windTunnel: !value.windTunnel });
+              }}
+            />
+          </Card>
+          <PinLink id="wind" />
         </div>
       </div>
 

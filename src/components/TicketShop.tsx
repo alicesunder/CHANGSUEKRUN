@@ -840,7 +840,7 @@ export const TicketShop: React.FC<TicketShopProps> = ({
                   </motion.span>
                 </div>
                 {checkoutBtn()}
-                <p className="mt-2.5 text-center text-xs font-bold text-[#6B5A85]">ชำระผ่าน PromptPay QR · ได้ตั๋วทันที</p>
+                <p className="mt-2.5 text-center text-xs font-bold text-[#6B5A85]">ชำระด้วย QR หรือโอนเข้าบัญชี · ได้ตั๋วทันที</p>
               </div>
             </div>
           </aside>
