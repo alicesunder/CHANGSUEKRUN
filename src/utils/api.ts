@@ -98,11 +98,19 @@ const jsonHeaders = { 'Content-Type': 'application/json' };
 // Public / runner
 // ---------------------------------------------------------------------------
 let cachedConfig: PublicConfig | null = null;
+let pendingConfig: Promise<PublicConfig> | null = null;
 
 export async function getPublicConfig(force = false): Promise<PublicConfig> {
   if (cachedConfig && !force) return cachedConfig;
-  cachedConfig = await request<PublicConfig>('/api/public-config');
-  return cachedConfig;
+  // components that ask at the same time share one request
+  if (!pendingConfig || force) {
+    pendingConfig = request<PublicConfig>('/api/public-config')
+      .then((c) => (cachedConfig = c))
+      .finally(() => {
+        pendingConfig = null;
+      });
+  }
+  return pendingConfig;
 }
 
 export interface CreateOrderInput {

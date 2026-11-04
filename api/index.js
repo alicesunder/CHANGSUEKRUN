@@ -47367,7 +47367,7 @@ async function buildTicketEmail(o) {
     if (o.shirtSize) rows.push(row("\u0E44\u0E0B\u0E2A\u0E4C\u0E40\u0E2A\u0E37\u0E49\u0E2D", esc2(o.shirtSize)));
     if (o.runningWithDog) rows.push(row("\u0E19\u0E49\u0E2D\u0E07\u0E2A\u0E38\u0E19\u0E31\u0E02", `\u{1F436} ${esc2(o.dogName || "-")}`));
   }
-  if (o.concertQty) rows.push(row("\u0E15\u0E31\u0E4B\u0E27\u0E04\u0E2D\u0E19\u0E40\u0E2A\u0E34\u0E23\u0E4C\u0E15 GA", `\u{1F3B6} ${o.concertQty} \u0E43\u0E1A \xB7 ${esc2(eventInfo.dateNotice)} \u0E2B\u0E25\u0E31\u0E07 17.30 \u0E19.`));
+  if (o.concertQty) rows.push(row("\u0E15\u0E31\u0E4B\u0E27\u0E04\u0E2D\u0E19\u0E40\u0E2A\u0E34\u0E23\u0E4C\u0E15 GA", `\u{1F3B6} ${o.concertQty} \u0E43\u0E1A \xB7 ${esc2(eventInfo.dateNotice)} Door Open 17.30 \u0E19. \xB7 \u0E40\u0E23\u0E34\u0E48\u0E21 18.00 \u0E19.`));
   if (o.vipTables) rows.push(row("VIP TABLE", `\u2B50 ${o.vipTables} \u0E42\u0E15\u0E4A\u0E30`));
   if (o.addOns)
     rows.push(

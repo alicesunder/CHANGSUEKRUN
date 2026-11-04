@@ -304,7 +304,7 @@ export const RouteAndScheduleSection: React.FC<RouteAndScheduleProps> = ({
                         กำหนดการ
                       </h3>
                       <span className="block text-[11px] font-mono font-extrabold text-[#7B3FC6] uppercase mt-0.5">
-                        09.00 – 17.30 น. เป็นต้นไป
+                        09.00 – 24.00 น.
                       </span>
                       <span className="block text-[11px] font-bold text-[#2A1450]/70 mt-0.5">
                         กิจกรรมทั้งหมด ณ Sea Sand Sun Hua Hin Resort

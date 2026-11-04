@@ -98,7 +98,7 @@ export async function buildTicketEmail(o: StoredOrder) {
     if (o.shirtSize) rows.push(row('ไซส์เสื้อ', esc(o.shirtSize)));
     if (o.runningWithDog) rows.push(row('น้องสุนัข', `🐶 ${esc(o.dogName || '-')}`));
   }
-  if (o.concertQty) rows.push(row('ตั๋วคอนเสิร์ต GA', `🎶 ${o.concertQty} ใบ · ${esc(eventInfo.dateNotice)} หลัง 17.30 น.`));
+  if (o.concertQty) rows.push(row('ตั๋วคอนเสิร์ต GA', `🎶 ${o.concertQty} ใบ · ${esc(eventInfo.dateNotice)} Door Open 17.30 น. · เริ่ม 18.00 น.`));
   if (o.vipTables) rows.push(row('VIP TABLE', `⭐ ${o.vipTables} โต๊ะ`));
   if (o.addOns)
     rows.push(
