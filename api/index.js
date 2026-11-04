@@ -34235,12 +34235,14 @@ var COMBO_PRICES = {
   PW: 2750,
   TPW: 3050
 };
+var EARLY_BIRD_ACTIVITY_OFF = 100;
 var hasAddOns = (s) => s.tower || s.gun !== "none" || s.windTunnel;
 function comboKey(s) {
   return (s.tower ? "T" : "") + (s.gun === "standard" ? "S" : s.gun === "premium" ? "P" : "") + (s.windTunnel ? "W" : "");
 }
-function addOnPricePerPerson(s) {
-  return COMBO_PRICES[comboKey(s)] ?? 0;
+function addOnPricePerPerson(s, earlyBird = false) {
+  const base2 = COMBO_PRICES[comboKey(s)] ?? 0;
+  return earlyBird && base2 > 0 ? Math.max(0, base2 - EARLY_BIRD_ACTIVITY_OFF * activityCount(s)) : base2;
 }
 var CONCERT_BUNDLE_RATE = 0.1;
 var ADDON_TWO_RATE = 0.1;
@@ -34264,10 +34266,10 @@ function addOnDiscountRate(s, ctx) {
 }
 function addOnBonusDiscount(s, ctx) {
   const rate = addOnDiscountRate(s, ctx);
-  return rate > 0 ? Math.round(addOnPricePerPerson(s) * s.people * rate) : 0;
+  return rate > 0 ? Math.round(addOnPricePerPerson(s, ctx.earlyBird) * s.people * rate) : 0;
 }
 function addOnTotal(s, ctx) {
-  return hasAddOns(s) ? addOnPricePerPerson(s) * s.people - addOnBonusDiscount(s, ctx) : 0;
+  return hasAddOns(s) ? addOnPricePerPerson(s, ctx.earlyBird) * s.people - addOnBonusDiscount(s, ctx) : 0;
 }
 function concertDiscountPerTicket(unitPrice, eligible) {
   return eligible ? Math.round(unitPrice * CONCERT_BUNDLE_RATE) : 0;
@@ -47745,7 +47747,8 @@ function createApp() {
     const wantedConcert = Math.min(9, Math.max(0, Math.floor(Number(b.concertQty) || 0)));
     const vipTables = concertAllowed ? Math.min(MAX_VIP_TABLES, Math.max(0, Math.floor(Number(b.vipTables) || 0))) : 0;
     const concertQty = isConcert ? vipTables > 0 ? wantedConcert : Math.max(1, wantedConcert) : concertAllowed ? wantedConcert : 0;
-    const discountCtx = { hasRun: !noRun, hasConcert: concertQty > 0 || vipTables > 0, sponsor: !!sponsorCode };
+    const earlyBird = (await getEarlyBird()).on;
+    const discountCtx = { hasRun: !noRun, hasConcert: concertQty > 0 || vipTables > 0, sponsor: !!sponsorCode, earlyBird };
     const addOnSum = addOnTotal(addOns, discountCtx);
     if ((!sponsorCode || addOnSum > 0) && !await getEasySlipKey()) {
       res.status(503).json({ error: "\u0E23\u0E30\u0E1A\u0E1A\u0E0A\u0E33\u0E23\u0E30\u0E40\u0E07\u0E34\u0E19\u0E22\u0E31\u0E07\u0E44\u0E21\u0E48\u0E40\u0E1B\u0E34\u0E14\u0E43\u0E0A\u0E49\u0E07\u0E32\u0E19 \u0E01\u0E23\u0E38\u0E13\u0E32\u0E15\u0E34\u0E14\u0E15\u0E48\u0E2D\u0E1C\u0E39\u0E49\u0E08\u0E31\u0E14\u0E07\u0E32\u0E19" });
@@ -47836,7 +47839,6 @@ function createApp() {
       }
       sponsorName = used.sponsorName;
     }
-    const earlyBird = (await getEarlyBird()).on;
     const concertUnit = concertPassPrice(earlyBird);
     const concertDiscount = concertQty * concertDiscountPerTicket(concertUnit, !noRun && !sponsorCode);
     const vipTotal = vipTablePrice(earlyBird) * vipTables;
@@ -47882,7 +47884,7 @@ function createApp() {
       paymentMethod: sponsorCode ? "SPONSOR_CODE" : "PROMPTPAY_QR",
       sponsorCode: sponsorCode || void 0,
       sponsorName: sponsorName || void 0,
-      addOns: hasAddOns(addOns) ? { ...addOns, pricePerPerson: addOnPricePerPerson(addOns), total: addOnSum, discount: addOnBonusDiscount(addOns, discountCtx), label: addOnLabel(addOns) } : void 0,
+      addOns: hasAddOns(addOns) ? { ...addOns, pricePerPerson: addOnPricePerPerson(addOns, earlyBird), total: addOnSum, discount: addOnBonusDiscount(addOns, discountCtx), label: addOnLabel(addOns) } : void 0,
       paymentStatus: "PENDING",
       paymentRef: "",
       senderBank: "",

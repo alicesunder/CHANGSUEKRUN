@@ -331,7 +331,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
   const shirtSize = runners[0]?.shirtSize || 'L';
   // Bundle discounts never stack with a sponsor code (rules in data/addOns.ts; the server decides the real price).
   const sponsorOn = Boolean(sponsor) && wantRun;
-  const discountCtx = { hasRun: wantRun, hasConcert: gaQty > 0 || vipTables > 0, sponsor: sponsorOn };
+  const discountCtx = { hasRun: wantRun, hasConcert: gaQty > 0 || vipTables > 0, sponsor: sponsorOn, earlyBird };
   const concertUnit = concertPassPrice(earlyBird);
   const vipUnit = vipTablePrice(earlyBird);
   const concertDiscount = gaQty * concertDiscountPerTicket(concertUnit, wantRun && !sponsorOn);

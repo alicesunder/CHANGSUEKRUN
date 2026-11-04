@@ -21,6 +21,7 @@ import { LabradorMascot } from './brand/LabradorMascot';
 import { BouncyText } from './BouncyText';
 import { useEarlyBird } from '../utils/earlyBird';
 import { EARLY_BIRD_OFF, formatBaht } from '../data/eventData';
+import { EARLY_BIRD_ACTIVITY_OFF } from '../data/addOns';
 
 interface HeroProps {
   onOpenArtworkModal: () => void;
@@ -50,7 +51,7 @@ const EarlyBirdBadge: React.FC<{ onClick: () => void; className?: string }> = ({
   >
     <span className="text-[13px] sm:text-sm font-black leading-tight">🐦 เปิดขาย Early Bird แล้ว!</span>
     <span className="text-[10.5px] sm:text-xs font-extrabold leading-tight text-[#FFE9A8]">
-      วิ่งลด {formatBaht(EARLY_BIRD_OFF.run)} · คอนเสิร์ต GA ลด {formatBaht(EARLY_BIRD_OFF.concert)} · VIP ลด {formatBaht(EARLY_BIRD_OFF.vip)}
+      วิ่งลด {formatBaht(EARLY_BIRD_OFF.run)} · คอนเสิร์ต GA ลด {formatBaht(EARLY_BIRD_OFF.concert)} · VIP ลด {formatBaht(EARLY_BIRD_OFF.vip)} · กิจกรรมเสริมลง {formatBaht(EARLY_BIRD_ACTIVITY_OFF)}
     </span>
   </button>
 );

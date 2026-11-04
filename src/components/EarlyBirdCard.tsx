@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Tag } from 'lucide-react';
 import { adminApi } from '../utils/api';
 import { EARLY_BIRD_OFF, formatBaht } from '../data/eventData';
+import { EARLY_BIRD_ACTIVITY_OFF } from '../data/addOns';
 
 /**
  * Admin card: early-bird switch. On = every run ticket, concert GA ticket and VIP table is cheaper by a fixed
@@ -26,7 +27,7 @@ export const EarlyBirdCard: React.FC = () => {
     if (
       !window.confirm(
         next
-          ? `เปิด Early Bird? บัตรวิ่งทุกบัตรลด ${formatBaht(EARLY_BIRD_OFF.run)} บาท · บัตรคอนเสิร์ต GA ลด ${formatBaht(EARLY_BIRD_OFF.concert)} บาท · VIP TABLE ลด ${formatBaht(EARLY_BIRD_OFF.vip)} บาท`
+          ? `เปิด Early Bird? บัตรวิ่งทุกบัตรลด ${formatBaht(EARLY_BIRD_OFF.run)} บาท · บัตรคอนเสิร์ต GA ลด ${formatBaht(EARLY_BIRD_OFF.concert)} บาท · VIP TABLE ลด ${formatBaht(EARLY_BIRD_OFF.vip)} บาท · กิจกรรมเสริมลงกิจกรรมละ ${formatBaht(EARLY_BIRD_ACTIVITY_OFF)} บาท/คน`
           : 'ปิด Early Bird? ราคากลับเป็นราคาปกติสำหรับคำสั่งซื้อใหม่ (คำสั่งซื้อที่สร้างแล้วคงราคาเดิม)'
       )
     )
@@ -59,7 +60,7 @@ export const EarlyBirdCard: React.FC = () => {
             Early Bird: {state === null ? '…' : on ? 'เปิดอยู่' : 'ปิดอยู่'}
           </h3>
           <p className="text-xs font-semibold text-slate-600">
-            เปิดแล้ว: บัตรวิ่งทุกบัตรลด {formatBaht(EARLY_BIRD_OFF.run)} บาท · คอนเสิร์ต GA ลด {formatBaht(EARLY_BIRD_OFF.concert)} บาท · VIP TABLE ลด {formatBaht(EARLY_BIRD_OFF.vip)} บาท (หักก่อน แล้วค่อยลด % ส่วนลดอื่น)
+            เปิดแล้ว: บัตรวิ่งทุกบัตรลด {formatBaht(EARLY_BIRD_OFF.run)} บาท · คอนเสิร์ต GA ลด {formatBaht(EARLY_BIRD_OFF.concert)} บาท · VIP TABLE ลด {formatBaht(EARLY_BIRD_OFF.vip)} บาท · กิจกรรมเสริมลดกิจกรรมละ {formatBaht(EARLY_BIRD_ACTIVITY_OFF)} บาท/คน (หักก่อน แล้วค่อยลด % ส่วนลดอื่น)
             {state?.updatedAt && ` · เปลี่ยนล่าสุด ${new Date(state.updatedAt).toLocaleString('th-TH')}`}
           </p>
           {error && (

@@ -10,6 +10,7 @@ import {
   WIND_TUNNEL_LIMIT,
   addOnLabel,
   addOnPricePerPerson,
+  EARLY_BIRD_ACTIVITY_OFF,
   addOnSavingPerPerson,
   addOnTotal,
   formatBaht,
@@ -103,6 +104,8 @@ interface ChipProps {
   title: string;
   sub: string;
   price: number;
+  /** regular price, struck through in front of `price` (early bird) */
+  listPrice?: number;
   icon: React.ReactNode;
   active: boolean;
   disabled?: boolean;
@@ -111,7 +114,7 @@ interface ChipProps {
 }
 
 /** One tap-to-toggle activity: lights up in its own colour when chosen. */
-const Chip: React.FC<ChipProps> = ({ theme, title, sub, price, icon, active, disabled, note, onToggle }) => {
+const Chip: React.FC<ChipProps> = ({ theme, title, sub, price, listPrice, icon, active, disabled, note, onToggle }) => {
   const t = ADD_ON_THEMES[theme];
   return (
     <button
@@ -139,6 +142,7 @@ const Chip: React.FC<ChipProps> = ({ theme, title, sub, price, icon, active, dis
           <span className="min-w-0">{note}</span>
           <span className="ml-auto text-right shrink-0">
             <span className={`block text-xl font-extrabold tabular-nums leading-none ${active ? 'text-white drop-shadow-[0_2px_6px_rgba(0,0,0,0.2)]' : ''}`} style={active ? undefined : { color: t.ink }}>
+              {listPrice !== undefined && <s className="mr-1 text-xs font-bold opacity-60">{formatBaht(listPrice)}</s>}
               {formatBaht(price)}
             </span>
             <span className={`block text-[10px] font-bold ${active ? 'text-white/85' : 'text-[#6B5A85]'}`}>บาท / คน</span>
@@ -205,7 +209,8 @@ const PinLink: React.FC<{ id: ActivityLocation['id'] }> = ({ id }) => {
 export const AddOnPicker: React.FC<AddOnPickerProps> = ({ value, onChange, windTunnelRemaining = null, showResult = true, layout = 'grid', discountCtx = NO_BUNDLE }) => {
   const set = (patch: Partial<AddOnSelection>) => onChange({ ...value, ...patch });
   const picked = hasAddOns(value);
-  const perPerson = addOnPricePerPerson(value);
+  const off = discountCtx.earlyBird ? EARLY_BIRD_ACTIVITY_OFF : 0;
+  const perPerson = addOnPricePerPerson(value, discountCtx.earlyBird);
   const saving = addOnSavingPerPerson(value);
   const total = addOnTotal(value, discountCtx);
   const isFull = value.tower && value.gun === 'standard' && value.windTunnel;
@@ -225,7 +230,8 @@ export const AddOnPicker: React.FC<AddOnPickerProps> = ({ value, onChange, windT
           theme="tower"
           title="หอสูง"
           sub="มีครูฝึกดูแล · ได้ใบประกาศ/ปีก"
-          price={350}
+          price={350 - off}
+          listPrice={off ? 350 : undefined}
           active={value.tower}
           onToggle={() => {
             if (!value.tower) showActivitySticker('tower');
@@ -280,8 +286,8 @@ export const AddOnPicker: React.FC<AddOnPickerProps> = ({ value, onChange, windT
                 >
                   <span className="block text-[12.5px] font-extrabold">{on && '✓ '}{o.label}</span>
                   <span className={`block text-[11px] font-bold tabular-nums ${on ? 'text-[#7C3AED]' : ''}`}>
-                    {formatBaht(o.price)}
-                    {o.id === 'premium' && <span className="ml-1 text-[9.5px] line-through opacity-70">2,200</span>}
+                    {formatBaht(o.price - off)}
+                    {off > 0 ? <span className="ml-1 text-[9.5px] line-through opacity-70">{formatBaht(o.price)}</span> : o.id === 'premium' && <span className="ml-1 text-[9.5px] line-through opacity-70">2,200</span>}
                   </span>
                 </button>
               );
@@ -296,7 +302,8 @@ export const AddOnPicker: React.FC<AddOnPickerProps> = ({ value, onChange, windT
           theme="wind"
           title="อุโมงค์ลม"
           sub="เปิดรับสมัครล่วงหน้า"
-          price={990}
+          price={990 - off}
+          listPrice={off ? 990 : undefined}
           active={value.windTunnel && !windFull}
           disabled={windFull}
           onToggle={() => {

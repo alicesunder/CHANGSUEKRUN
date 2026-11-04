@@ -339,7 +339,8 @@ export function createApp(): express.Express {
     const vipTables = concertAllowed ? Math.min(MAX_VIP_TABLES, Math.max(0, Math.floor(Number(b.vipTables) || 0))) : 0;
     const concertQty = isConcert ? (vipTables > 0 ? wantedConcert : Math.max(1, wantedConcert)) : concertAllowed ? wantedConcert : 0;
     // Bundle discounts never stack with a sponsor code; see src/data/addOns.ts for the rules.
-    const discountCtx = { hasRun: !noRun, hasConcert: concertQty > 0 || vipTables > 0, sponsor: !!sponsorCode };
+    const earlyBird = (await getEarlyBird()).on;
+    const discountCtx = { hasRun: !noRun, hasConcert: concertQty > 0 || vipTables > 0, sponsor: !!sponsorCode, earlyBird };
     const addOnSum = addOnTotal(addOns, discountCtx);
     // A fully free sponsor registration doesn't need the payment gateway.
     if ((!sponsorCode || addOnSum > 0) && !(await getEasySlipKey())) {
@@ -444,7 +445,6 @@ export function createApp(): express.Express {
       sponsorName = used.sponsorName;
     }
 
-    const earlyBird = (await getEarlyBird()).on;
     const concertUnit = concertPassPrice(earlyBird);
     const concertDiscount = concertQty * concertDiscountPerTicket(concertUnit, !noRun && !sponsorCode);
     const vipTotal = vipTablePrice(earlyBird) * vipTables;
@@ -501,7 +501,7 @@ export function createApp(): express.Express {
       sponsorCode: sponsorCode || undefined,
       sponsorName: sponsorName || undefined,
       addOns: hasAddOns(addOns)
-        ? { ...addOns, pricePerPerson: addOnPricePerPerson(addOns), total: addOnSum, discount: addOnBonusDiscount(addOns, discountCtx), label: addOnLabel(addOns) }
+        ? { ...addOns, pricePerPerson: addOnPricePerPerson(addOns, earlyBird), total: addOnSum, discount: addOnBonusDiscount(addOns, discountCtx), label: addOnLabel(addOns) }
         : undefined,
       paymentStatus: 'PENDING',
       paymentRef: '',

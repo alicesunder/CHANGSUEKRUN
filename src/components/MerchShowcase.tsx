@@ -81,7 +81,7 @@ const KIT: KitItem[] = [
     id: 'bowl',
     name: 'Race Pack',
     desc: 'ชุดอุปกรณ์สำหรับนักวิ่งและน้องหมา รับพร้อมเสื้อและเบอร์วิ่งในวันรับอุปกรณ์',
-    image: '/images/merch/kit-bowl.webp',
+    image: '/images/merch/kit-racepack.webp',
     group: 'dog',
   },
 ];

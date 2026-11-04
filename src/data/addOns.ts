@@ -160,6 +160,9 @@ const COMBO_PRICES: Record<string, number> = {
 
 const SINGLE_PRICES = { tower: 350, standard: 890, premium: 1950, windTunnel: 990 };
 
+/** Early bird (admin switch): baht off each chosen activity, per person; the % discounts below come after it. */
+export const EARLY_BIRD_ACTIVITY_OFF = 100;
+
 export const hasAddOns = (s: AddOnSelection): boolean => s.tower || s.gun !== 'none' || s.windTunnel;
 
 function comboKey(s: AddOnSelection): string {
@@ -167,8 +170,9 @@ function comboKey(s: AddOnSelection): string {
 }
 
 /** Per-person price (package price when the combination has one). */
-export function addOnPricePerPerson(s: AddOnSelection): number {
-  return COMBO_PRICES[comboKey(s)] ?? 0;
+export function addOnPricePerPerson(s: AddOnSelection, earlyBird = false): number {
+  const base = COMBO_PRICES[comboKey(s)] ?? 0;
+  return earlyBird && base > 0 ? Math.max(0, base - EARLY_BIRD_ACTIVITY_OFF * activityCount(s)) : base;
 }
 
 /** What the same activities would cost bought one by one, per person. */
@@ -206,6 +210,8 @@ export interface DiscountContext {
   hasConcert: boolean;
   /** a sponsor code turns every bundle discount off */
   sponsor?: boolean;
+  /** the admin's early-bird switch is on */
+  earlyBird?: boolean;
 }
 
 /** How many of the three activities are chosen (tower, shooting, wind tunnel). */
@@ -238,11 +244,11 @@ export function addOnDiscountRate(s: AddOnSelection, ctx: DiscountContext): numb
 /** Baht taken off the activities (whole baht). */
 export function addOnBonusDiscount(s: AddOnSelection, ctx: DiscountContext): number {
   const rate = addOnDiscountRate(s, ctx);
-  return rate > 0 ? Math.round(addOnPricePerPerson(s) * s.people * rate) : 0;
+  return rate > 0 ? Math.round(addOnPricePerPerson(s, ctx.earlyBird) * s.people * rate) : 0;
 }
 
 export function addOnTotal(s: AddOnSelection, ctx: DiscountContext): number {
-  return hasAddOns(s) ? addOnPricePerPerson(s) * s.people - addOnBonusDiscount(s, ctx) : 0;
+  return hasAddOns(s) ? addOnPricePerPerson(s, ctx.earlyBird) * s.people - addOnBonusDiscount(s, ctx) : 0;
 }
 
 /** Baht off ONE concert ticket when it is bought together with a run ticket. */

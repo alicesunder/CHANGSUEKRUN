@@ -456,7 +456,7 @@ export const TicketShop: React.FC<TicketShopProps> = ({
   // The GA concert discount needs a run ticket; the activity discounts follow the rules in data/addOns.ts.
   const eligible = !!run;
   const hasConcert = concertQty > 0 || vipTables > 0;
-  const discountCtx = { hasRun: eligible, hasConcert };
+  const discountCtx = { hasRun: eligible, hasConcert, earlyBird };
   const activityCount = countActivities(addOns);
   const addOnRate = addOnDiscountRate(addOns, discountCtx);
   const countRate = addOnCountRate(addOns, discountCtx);
@@ -513,7 +513,7 @@ export const TicketShop: React.FC<TicketShopProps> = ({
       emoji: '🎢',
       tint: '#E0F7FA',
       label: `${addOnLabel(addOns)} × ${addOns.people}`,
-      sub: bonus > 0 ? `ลด ${percentOf(addOnRate)}% แล้ว (−${formatBaht(bonus)})` : `${formatBaht(addOnPricePerPerson(addOns))} บาท/คน`,      price: addOnPrice,
+      sub: bonus > 0 ? `ลด ${percentOf(addOnRate)}% แล้ว (−${formatBaht(bonus)})` : `${formatBaht(addOnPricePerPerson(addOns, earlyBird))} บาท/คน`,      price: addOnPrice,
       onRemove: () => onAddOnsChange({ ...EMPTY_ADD_ONS }),
     });
   }

@@ -28,8 +28,8 @@ const DOG_SQUAD = {
 };
 
 const HEALTHY_IMG = {
-  src: '/images/contest/healthy.webp',
-  alt: 'สัตวแพทย์ใส่ชุดสีม่วงทองใช้หูฟังตรวจหัวใจน้องหมาชิบะที่เจ้าของกอดไว้อย่างอารมณ์ดี',
+  src: '/images/contest/healthy-vet.webp',
+  alt: 'สัตวแพทย์สวมหน้ากากกำลังพันผ้าให้น้องชิบะที่เจ้าของกอดไว้ มีทีมงานชุดม่วงทองยืนดูอยู่',
 };
 const OBEDIENCE_IMG = {
   src: '/images/contest/obedience.webp',
