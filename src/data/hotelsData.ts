@@ -2,7 +2,7 @@ import { Hotel } from '../types';
 
 /**
  * CHANGSUEK RUN - รายชื่อที่พักและจำนวนห้องว่าง (PET FRIENDLY STAY)
- * ข้อมูลจำนวนห้องว่างตามรายการที่กรอกล่าสุด - ทั้งหมด 41 แห่ง
+ * ข้อมูลจำนวนห้องว่างตามรายการที่กรอกล่าสุด - ทั้งหมด 42 แห่ง
  * เครื่องหมาย - = ไม่ระบุ | Baan Noppadol Hua Hin Loft = อันดับ 21
  */
 export const hotelsData: Hotel[] = [
@@ -1399,5 +1399,39 @@ export const hotelsData: Hotel[] = [
     addressSnippet: 'ห่างค่าย 27.0 กม. • หาดทรายน้อยเขาเต่า',
     recommendedFor: 'ผู้ที่ต้องการพักผ่อนแบบสโลว์ไลฟ์บนหาดทรายอันเงียบสงบที่สุดของหัวหิน',
     sourceBadge: 'อันดับ 41 (หาดเขาเต่า)',
+  },
+  {
+    id: 'centara-life-cha-am-beach-resort-hua-hin',
+    rank: 42,
+    name: 'Centara Life Cha-Am Beach Resort Hua Hin',
+    nameTh: 'เซ็นทารา ไลฟ์ ชะอำ บีช รีสอร์ท หัวหิน',
+    nameEn: 'Centara Life Cha-Am Beach Resort Hua Hin',
+    distanceKm: 4.2,
+    drivingTimeMinutes: 10,
+    priceStart: '฿2,600',
+    priceMin: 2600,
+    priceMax: 3400,
+    priceRange: '฿2,600 - ฿3,400',
+    priceNote: 'ห้องละ ฿2,600 · เพิ่มน้องหมา ฿3,400',
+    availableRooms: 'ไม่ระบุ',
+    availableRoomsCount: null,
+    phone: '-',
+    website: null,
+    facebook: null,
+    googleMaps: 'https://maps.app.goo.gl/zNoh7k9pPhb32MSaA',
+    latitude: 12.7340781,
+    longitude: 99.9645377,
+    type: 'Resort',
+    petFriendly: true,
+    petPolicy: 'รับสัตว์เลี้ยง · ห้องพักพร้อมน้องหมา ฿3,400',
+    petFriendlyDetails: 'รับสัตว์เลี้ยง · ราคาห้องละ ฿2,600 และ ฿3,400 เมื่อพักพร้อมน้องหมา',
+    conditions: 'จำนวนห้องว่าง: ไม่ระบุ กรุณาสอบถามที่พักก่อนจอง',
+    amenities: ['ริมหาดชะอำ', 'ต้อนรับสัตว์เลี้ยง'],
+    facilities: ['รีสอร์ตริมทะเล'],
+    description: 'รีสอร์ตเซ็นทารา ไลฟ์ ริมหาดชะอำ ห่างค่ายนเรศวรประมาณ 4.2 กม. รับน้องหมาเข้าพัก',
+    address: 'หาดชะอำ อ.ชะอำ จ.เพชรบุรี (ประมาณ 4.2 กม. จากค่ายนเรศวร)',
+    addressSnippet: 'ห่างค่าย ~4.2 กม. • ขับรถ ~10 นาที',
+    recommendedFor: 'นักวิ่งที่อยากพักรีสอร์ตริมหาดพร้อมน้องหมา',
+    sourceBadge: 'เพิ่มใหม่',
   },
 ];

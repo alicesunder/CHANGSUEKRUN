@@ -305,7 +305,7 @@ export const HotelExplorer: React.FC<HotelExplorerProps> = () => {
         </div>
 
         {/* ================================================================ */}
-        {/* EXPANDABLE FULL 41-HOTEL PET-FRIENDLY DIRECTORY & MAP            */}
+        {/* EXPANDABLE FULL 42-HOTEL PET-FRIENDLY DIRECTORY & MAP            */}
         {/* ================================================================ */}
         {directoryExpanded && (
           <div className="mt-8 bg-white rounded-[32px] p-5 sm:p-7 border border-purple-100 shadow-lg animate-in fade-in duration-200">

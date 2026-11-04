@@ -83,7 +83,7 @@ export const RunnerQuickActions: React.FC<RunnerQuickActionsProps> = ({
     {
       id: 'hotels',
       title: 'HOTELS',
-      sub: '41 ที่พักสัตว์เลี้ยงพักได้',
+      sub: '42 ที่พักสัตว์เลี้ยงพักได้',
       icon: Building,
       color: 'text-[#169BD5] bg-cyan-50 border-cyan-200',
       action: () => onNavigateSection('hotels'),

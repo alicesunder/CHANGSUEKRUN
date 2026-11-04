@@ -49,8 +49,8 @@ export const ACTIVITY_LOCATIONS: ActivityLocation[] = [
   {
     id: 'resort',
     name: 'Sea Sand Sun Hua Hin Resort',
-    lat: 12.6966,
-    lng: 99.9638,
+    lat: 12.68923,
+    lng: 99.962504,
     color: '#E11D48',
     mapsUrl: 'https://www.google.com/maps/search/?api=1&query=Sea+Sand+Sun+Hua+Hin+Resort',
   },
