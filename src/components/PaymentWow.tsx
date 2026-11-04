@@ -19,8 +19,8 @@ interface Bit {
 
 /**
  * Full-screen "wow" right after a payment goes through: confetti cannons from both bottom corners,
- * three firework bursts, spinning light rays and a big card with the mascot. Tap anywhere (or wait
- * ~4.5 s) and it fades away; it never blocks the ticket underneath for longer than that.
+ * three firework bursts, a clean card with the mascot. Tap anywhere (or wait
+ * ~3.5 s) and it fades away; it never blocks the ticket underneath for longer than that.
  */
 export const PaymentWow: React.FC<{ title: string; line: string; onDone: () => void }> = ({ title, line, onDone }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -34,7 +34,7 @@ export const PaymentWow: React.FC<{ title: string; line: string; onDone: () => v
   };
 
   useEffect(() => {
-    const t = window.setTimeout(close, 4500);
+    const t = window.setTimeout(close, 3500);
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && close();
     window.addEventListener('keydown', onKey);
     return () => {
@@ -142,13 +142,11 @@ export const PaymentWow: React.FC<{ title: string; line: string; onDone: () => v
 
   return createPortal(
     <div className={`pay-wow ${leaving ? 'leaving' : ''}`} role="status" aria-live="assertive" onClick={close}>
-      <span className="pay-wow-rays" aria-hidden="true" />
       <canvas ref={canvasRef} className="absolute inset-0 w-full h-full pointer-events-none" aria-hidden="true" />
       <div className="pay-wow-card">
         <div className="relative mx-auto w-28 h-28 sm:w-32 sm:h-32">
           <span className="pay-wow-ring" aria-hidden="true" />
           <img src={LABRADOR_SVG_PATH} alt="" className="pay-wow-dog relative w-full h-full object-contain" />
-          <span className="absolute -right-4 -top-2 text-4xl pay-wow-pop [animation-delay:.35s]" aria-hidden="true">🐘</span>
           <span className="absolute -left-5 top-2 text-3xl pay-wow-pop [animation-delay:.5s]" aria-hidden="true">🎉</span>
         </div>
         <p className="mt-3 text-[11px] sm:text-xs font-black tracking-[0.25em] text-[#7C3AED]">PAYMENT SUCCESS</p>

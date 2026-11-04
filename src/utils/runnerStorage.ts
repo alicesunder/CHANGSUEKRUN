@@ -110,11 +110,11 @@ export const PROMPTPAY_CONFIG_STORAGE_KEY = 'changsuek_promptpay_config_v1';
 export const ADMIN_AUTH_SESSION_KEY = 'changsuek_admin_auth_session_v1';
 
 export const DEFAULT_PROMPTPAY_CONFIG: PromptPayConfig = {
-  promptPayId: '004999254157786',
-  accountName: 'ช้างศึก รัน โดย นาย กัปปน์ณัฏฐ์ กชกรนันท์ธน และ นาย เอกพัชญ์ ตันสุวรรณรัตน์',
-  bankAccountNo: '2408677648',
-  bankLabel: 'ธนาคารกสิกรไทย',
-  paymentTimeoutMinutes: 15,
+  promptPayId: '',
+  accountName: 'โครงการช้างศึกรันเห็นช้างวิ่งวิ่งตามช้าง (CHANGSUEK RUN 2026)',
+  bankAccountNo: '0340291354',
+  bankLabel: 'ธนาคารกรุงไทย',
+  paymentTimeoutMinutes: 5,
   requireSlipVerification: true,
   adminUsername: 'admin',
   adminPassword: '',

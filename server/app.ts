@@ -459,7 +459,8 @@ export function createApp(): express.Express {
     const token = crypto.randomBytes(24).toString('base64url');
     const now = new Date();
     const settings = await getSettings();
-    const timeoutMin = Math.max(1, settings.paymentTimeoutMinutes || 15);
+    // The transfer window is 5 minutes at most (an admin may shorten it, never lengthen it).
+    const timeoutMin = Math.min(5, Math.max(1, settings.paymentTimeoutMinutes || 5));
 
     const order: StoredOrder = {
       orderId: testMode ? newTestOrderId() : await nextOrderId(),
@@ -1001,7 +1002,8 @@ export function createApp(): express.Express {
     const s = req.body?.settings || {};
     const counters = req.body?.bibCounters || {};
     const promptPayId = String(s.promptPayId || '').replace(/[^0-9]/g, '');
-    if (![10, 13, 15].includes(promptPayId.length)) {
+    // PromptPay is optional: without it the page shows the bank account only (no QR)
+    if (promptPayId && ![10, 13, 15].includes(promptPayId.length)) {
       res.status(400).json({ error: 'รหัสพร้อมเพย์ต้องเป็นเบอร์โทร 10 หลัก, เลขบัตร/เลขผู้เสียภาษี 13 หลัก หรือเลขอ้างอิง K PLUS 15 หลัก' });
       return;
     }
@@ -1031,7 +1033,7 @@ export function createApp(): express.Express {
       accountName: clean(s.accountName, 150) || cur.accountName,
       bankLabel: clean(s.bankLabel, 80) || cur.bankLabel,
       bankAccountNo,
-      paymentTimeoutMinutes: Math.min(120, Math.max(5, Math.floor(Number(s.paymentTimeoutMinutes) || 15))),
+      paymentTimeoutMinutes: Math.min(5, Math.max(1, Math.floor(Number(s.paymentTimeoutMinutes) || 5))),
     });
     console.log(`[admin] ${(req as any).admin.username} updated settings`);
     res.json({ settings: await getSettings(), bibCounters: await getBibCounters() });

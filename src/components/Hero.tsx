@@ -19,6 +19,8 @@ import { HeroCountdownTimer } from './HeroCountdownTimer';
 import { PawIcon } from './brand/DogDecor';
 import { LabradorMascot } from './brand/LabradorMascot';
 import { BouncyText } from './BouncyText';
+import { useEarlyBird } from '../utils/earlyBird';
+import { EARLY_BIRD_OFF, formatBaht } from '../data/eventData';
 
 interface HeroProps {
   onOpenArtworkModal: () => void;
@@ -38,12 +40,28 @@ const fadeMask: React.CSSProperties = {
   maskComposite: 'intersect',
 };
 
+/** Ribbon shown while the admin's early-bird switch is on; a tap opens the ticket shop. */
+const EarlyBirdBadge: React.FC<{ onClick: () => void; className?: string }> = ({ onClick, className = '' }) => (
+  <button
+    type="button"
+    onClick={onClick}
+    className={`inline-flex flex-col items-center rounded-2xl border-[2.5px] border-[#2A1450] bg-gradient-to-b from-[#FF5A6A] to-[#E11D48] px-4 py-1.5 text-white shadow-[0_4px_0_#2A1450] cursor-pointer active:translate-y-0.5 ${className}`}
+    aria-label="เปิดขาย Early Bird แล้ว กดเพื่อซื้อบัตร"
+  >
+    <span className="text-[13px] sm:text-sm font-black leading-tight">🐦 เปิดขาย Early Bird แล้ว!</span>
+    <span className="text-[10.5px] sm:text-xs font-extrabold leading-tight text-[#FFE9A8]">
+      วิ่งลด {formatBaht(EARLY_BIRD_OFF.run)} · คอนเสิร์ต GA ลด {formatBaht(EARLY_BIRD_OFF.concert)} · VIP ลด {formatBaht(EARLY_BIRD_OFF.vip)}
+    </span>
+  </button>
+);
+
 export const Hero: React.FC<HeroProps> = ({
   onOpenArtworkModal,
   onOpenRegisterModal,
   onSelectDistance,
 }) => {
   const reduceMotion = useReducedMotion();
+  const earlyBird = useEarlyBird();
   const scrollToSection = (id: string) => {
     const el = document.getElementById(id);
     if (el) {
@@ -184,6 +202,7 @@ export const Hero: React.FC<HeroProps> = ({
               <span className="inline-flex items-center gap-1.5 rounded-full bg-[#FFC928] text-[#2A1450] text-[11px] font-extrabold px-3 py-1 shadow-[0_3px_0_#2A1450]">
                 <Sparkles className="w-3 h-3" /> เปิดรับสมัครออนไลน์แล้ว
               </span>
+              {earlyBird && <EarlyBirdBadge onClick={onOpenRegisterModal} className="mt-2" />}
               <img
                 src="/images/brand/changsuek-run-logo.webp"
                 alt="CHANGSUEK RUN - เห็นช้างวิ่ง วิ่งตามช้าง"
@@ -269,6 +288,7 @@ export const Hero: React.FC<HeroProps> = ({
             transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
             className="max-w-[580px] text-center lg:text-left mx-auto lg:mx-0"
           >
+            {earlyBird && <EarlyBirdBadge onClick={onOpenRegisterModal} className="mb-3" />}
             {/* Brand Logo Lockup */}
             <div className="flex flex-col items-center lg:items-start">
               <img

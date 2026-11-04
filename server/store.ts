@@ -120,13 +120,13 @@ export const ROUTES: RouteId[] = ['10km', '5km', '3km', '1km'];
 export type BibCounters = Record<RouteId, number>;
 
 const DEFAULT_SETTINGS: PublicSettings = {
-  promptPayId: process.env.PROMPTPAY_ID || '004999254157786',
+  promptPayId: process.env.PROMPTPAY_ID || '',
   accountName:
     process.env.PROMPTPAY_ACCOUNT_NAME ||
-    'ช้างศึก รัน โดย นาย กัปปน์ณัฏฐ์ กชกรนันท์ธน และ นาย เอกพัชญ์ ตันสุวรรณรัตน์',
-  bankLabel: process.env.BANK_LABEL || 'ธนาคารกสิกรไทย',
-  bankAccountNo: process.env.BANK_ACCOUNT_NO || '2408677648',
-  paymentTimeoutMinutes: 15,
+    'โครงการช้างศึกรันเห็นช้างวิ่งวิ่งตามช้าง (CHANGSUEK RUN 2026)',
+  bankLabel: process.env.BANK_LABEL || 'ธนาคารกรุงไทย',
+  bankAccountNo: process.env.BANK_ACCOUNT_NO || '0340291354',
+  paymentTimeoutMinutes: 5,
 };
 
 const asObj = <T>(v: unknown): T => (typeof v === 'string' ? JSON.parse(v) : (v as T));

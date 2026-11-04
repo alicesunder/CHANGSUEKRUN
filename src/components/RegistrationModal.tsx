@@ -40,7 +40,6 @@ import {
   Crown,
 } from 'lucide-react';
 import { RouteId } from '../types';
-import { DogCharacter, ElephantCharacter } from './brand/BrandCharacters';
 import { PawIcon } from './brand/DogDecor';
 import { LABRADOR_SVG_PATH, LabradorMascot } from './brand/LabradorMascot';
 import { playVictoryCelebrationSound } from '../utils/ticketSoundFx';
@@ -84,6 +83,8 @@ import { AddOnPicker } from './AddOnPicker';
 import { needsInsurance } from '../data/insurance';
 import { digitsOnly, formatThaiId, isValidThaiId, type Shooter } from '../data/shooting';
 import { PaymentWow } from './PaymentWow';
+import { PaymentStep } from './PaymentStep';
+import { PaymentSuccess } from './PaymentSuccess';
 import { RaceBib, runnerBib } from './RaceBib';
 import { EarlyBirdPrice } from './EarlyBirdPrice';
 import { DogDetailsForm, dogExtraFromProfile, emptyDogExtra, type DogExtra } from './DogDetailsForm';
@@ -689,13 +690,13 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
     ? [
         { num: 1, title: 'เลือกระยะวิ่ง', sub: 'Package & Add-on' },
         { num: 2, title: 'ข้อมูลนักวิ่ง', sub: 'Runner & Shirt' },
-        { num: 3, title: 'สแกนจ่าย', sub: 'PromptPay QR' },
+        { num: 3, title: 'โอนเงิน', sub: 'โอน + แนบสลิป' },
         { num: 4, title: 'รับเลข BIB', sub: 'Auto E-BIB' },
       ]
     : [
         { num: 1, title: wantConcert ? 'เลือกบัตร' : 'เลือกกิจกรรม', sub: wantConcert ? 'Concert & VIP' : 'Activities' },
         { num: 2, title: wantConcert ? 'ข้อมูลผู้ซื้อ' : 'ข้อมูลผู้ร่วมกิจกรรม', sub: wantConcert ? 'Buyer details' : 'Participants' },
-        { num: 3, title: 'สแกนจ่าย', sub: 'PromptPay QR' },
+        { num: 3, title: 'โอนเงิน', sub: 'โอน + แนบสลิป' },
         { num: 4, title: 'รับบัตร', sub: 'E-Ticket' },
       ];
 
@@ -1641,7 +1642,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                           : 'กำลังสร้างคำสั่งซื้อ...'
                         : isFreeOrder
                           ? 'ยืนยันลงทะเบียนฟรี (รหัสสปอนเซอร์)'
-                          : `ไปหน้าสแกนจ่าย PromptPay (${formatBaht(chargeTotal)} บาท)`}
+                          : `ไปหน้าโอนเงิน (${formatBaht(chargeTotal)} บาท)`}
                     </span>
                   </button>
                 </div>
@@ -1653,188 +1654,19 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
           {/* STEP 3: COUNTDOWN TIMER + PROMPTPAY QR + SLIP VERIFIER     */}
           {/* ---------------------------------------------------------- */}
           {step === 3 && serverOrder && (
-            <div className="space-y-4">
-              {/* Order header */}
-              <div className="rounded-2xl border-2 p-3.5 sm:px-5 bg-[#180B30] text-white border-[#2A1450]">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 font-black bg-[#FFC928] text-[#180B30]">
-                    <Upload className="w-5 h-5 stroke-[2.5]" />
-                  </div>
-                  <div>
-                    <span className="text-[10px] font-mono font-extrabold uppercase tracking-wider text-[#FFC928]">
-                      คำสั่งซื้อ {serverOrder.orderId}
-                    </span>
-                    <p className="text-xs sm:text-sm font-extrabold text-white mt-0.5">
-                      โอนเงินผ่านพร้อมเพย์ แล้วแนบสลิป ระบบตรวจสลิปให้อัตโนมัติ ผ่านแล้วได้ตั๋วทันที
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
-                {/* Left: PromptPay QR */}
-                <div className="lg:col-span-5">
-                  <div className="rounded-[28px] border-[3px] border-[#113566] bg-white shadow-[0_10px_0_#113566] overflow-hidden">
-                    <div className="bg-[#113566] text-white px-5 py-3.5 flex items-center justify-between border-b-4 border-[#00A699]">
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-9 h-9 rounded-xl bg-white flex items-center justify-center text-[#113566] font-black text-xs shadow-xs">
-                          QR
-                        </div>
-                        <div>
-                          <div className="text-sm font-black tracking-wide uppercase">THAI QR PAYMENT</div>
-                          <div className="text-[10px] font-bold text-[#67E8F9] tracking-wider">
-                            PROMPTPAY · สแกนได้ทุกธนาคาร
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="p-4 sm:p-5 text-center space-y-3.5">
-                      <div className="inline-block p-3 rounded-3xl bg-white border-[3px] border-[#113566] shadow-md relative">
-                        {qrDataUrl ? (
-                          <img loading="lazy" decoding="async"
-                            src={qrDataUrl}
-                            alt={`PromptPay QR ${payAmount} บาท`}
-                            className="w-48 h-48 sm:w-56 sm:h-56 object-contain mx-auto select-none"
-                          />
-                        ) : (
-                          <div className="w-48 h-48 sm:w-56 sm:h-56 flex items-center justify-center text-xs font-bold text-slate-400 px-3">
-                            {qrError || 'กำลังสร้าง QR Code...'}
-                          </div>
-                        )}
-                        <div className="mt-2 pt-2 border-t border-slate-200 flex items-center justify-center gap-1.5 text-[11px] font-extrabold text-[#113566]">
-                          <ShieldCheck className="w-4 h-4 text-[#00A699]" />
-                          <span>
-                            ยอดชำระสุทธิ {payAmount.toLocaleString('th-TH', { minimumFractionDigits: 2 })} บาท
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="rounded-2xl bg-slate-50 border border-slate-200 p-3 text-left text-xs flex items-center justify-between gap-2">
-                        <span className="font-bold text-slate-500">เลขคำสั่งซื้อ</span>
-                        <div className="flex items-center gap-1.5">
-                          <span className="font-mono font-black text-sm text-[#2A1450]">{serverOrder.orderId}</span>
-                          <button
-                            type="button"
-                            onClick={handleCopyPromptPayId}
-                            className="px-2 py-0.5 rounded-lg bg-[#E0F2FE] hover:bg-[#BAE6FD] text-[#0369A1] text-[10px] font-extrabold flex items-center gap-1 cursor-pointer"
-                          >
-                            <Copy className="w-3 h-3" />
-                            <span>{copiedPromptPay ? 'คัดลอกแล้ว' : 'คัดลอก'}</span>
-                          </button>
-                        </div>
-                      </div>
-
-                      <button
-                        type="button"
-                        onClick={handleDownloadQrImage}
-                        disabled={!qrDataUrl}
-                        className="w-full py-2.5 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 disabled:opacity-40 text-[#113566] text-xs font-extrabold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
-                      >
-                        <Download className="w-3.5 h-3.5" />
-                        <span>ดาวน์โหลดรูป QR Code ลงมือถือ</span>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Right: payment status & slip upload */}
-                <div className="lg:col-span-7 space-y-4">
-                  <div className="rounded-3xl border-[3px] border-[#2A1450] bg-white p-4 sm:p-5 shadow-[0_8px_0_#2A1450] space-y-4">
-                    <div className="flex items-center gap-2.5 border-b border-[#2A1450]/10 pb-3">
-                      <div className="w-10 h-10 rounded-xl bg-emerald-100 border-2 border-emerald-600 text-emerald-800 flex items-center justify-center shrink-0">
-                        <ScanLine className="w-5 h-5" />
-                      </div>
-                      <div>
-                        <span className="text-[10px] font-mono font-extrabold uppercase tracking-wider text-emerald-700 block">
-                          ยืนยันการชำระเงิน
-                        </span>
-                        <h3 className="text-base sm:text-lg font-black text-[#2A1450]">
-                          โอนแล้วแนบสลิปที่นี่
-                        </h3>
-                      </div>
-                    </div>
-
-                    {serverOrder.verificationStatus === 'REJECTED' ? (
-                      <div role="alert" className="rounded-2xl bg-rose-50 border-2 border-rose-500 p-4 text-sm text-rose-900 space-y-1">
-                        <div className="font-black flex items-center gap-2">
-                          <AlertTriangle className="w-4 h-4" /> คำสั่งซื้อนี้ถูกยกเลิกโดยเจ้าหน้าที่
-                        </div>
-                        <p className="text-xs font-semibold">
-                          กรุณาติดต่อผู้จัดงานพร้อมเลขคำสั่งซื้อ <strong className="font-mono">{serverOrder.orderId}</strong>
-                        </p>
-                      </div>
-                    ) : (
-                      <>
-                        <ol className="rounded-2xl bg-[#FAF7FF] border border-[#2A1450]/15 p-3.5 text-xs text-[#4B2D78] font-semibold space-y-1.5 list-decimal list-inside">
-                          <li>เปิดแอปธนาคารแล้วสแกน QR (ถ้าใช้มือถือเครื่องเดียวกัน กด "ดาวน์โหลดรูป QR" แล้วสแกนจากรูปในแอปธนาคาร)</li>
-                          <li>โอนยอด <strong className="text-emerald-700">{payAmount.toLocaleString('th-TH', { minimumFractionDigits: 2 })} บาท</strong> ให้ตรงทุกสตางค์</li>
-                          <li>กดปุ่มด้านล่างแล้วเลือกรูปสลิปจากแอปธนาคาร ผ่านแล้วได้เลข BIB / ตั๋วทันที</li>
-                        </ol>
-                        {publicCfg?.bankAccountNo && (
-                          <div className="rounded-2xl bg-slate-50 border border-slate-200 p-3 text-xs text-slate-700 font-semibold space-y-0.5">
-                            <div className="font-extrabold text-slate-500">หรือโอนเข้าบัญชี (ยอดเท่ากัน)</div>
-                            <div className="font-black text-[#2A1450]">
-                              {publicCfg.bankLabel} <span className="font-mono">{formatThaiBankAccount(publicCfg.bankAccountNo)}</span>
-                            </div>
-                            <div>{publicCfg.accountName}</div>
-                          </div>
-                        )}
-
-                        <input
-                          ref={fileInputRef}
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
-                          onChange={(e) => handleSlipFile(e.target.files?.[0])}
-                        />
-                        <button
-                          type="button"
-                          onClick={() => fileInputRef.current?.click()}
-                          disabled={slipBusy || serverOrder.verificationStatus === 'PENDING_REVIEW'}
-                          className="w-full min-h-[56px] rounded-2xl border-[3px] border-[#2A1450] bg-gradient-to-b from-[#FFD84D] to-[#FFB300] text-[#180B30] text-base font-black flex items-center justify-center gap-2 shadow-[0_5px_0_#2A1450] active:translate-y-0.5 cursor-pointer disabled:opacity-60"
-                        >
-                          <Upload className="w-5 h-5" />
-                          <span>{slipBusy ? 'กำลังตรวจสลิป...' : 'แนบสลิปการโอน'}</span>
-                        </button>
-
-                        {serverOrder.verificationStatus === 'PENDING_REVIEW' ? (
-                          <div role="status" className="rounded-2xl bg-amber-50 border-2 border-amber-400 p-3.5 text-xs text-amber-900 font-bold">
-                            ได้รับสลิปแล้ว ระบบตรวจอัตโนมัติไม่ได้ เจ้าหน้าที่จะตรวจและยืนยันให้ หน้านี้จะขึ้นตั๋วเองเมื่อยืนยันแล้ว
-                          </div>
-                        ) : (
-                          slipMessage && (
-                            <div
-                              role={slipMessage.ok ? 'status' : 'alert'}
-                              className={`rounded-2xl border-2 p-3.5 text-xs font-bold flex items-start gap-2 ${
-                                slipMessage.ok ? 'bg-emerald-50 border-emerald-500 text-emerald-900' : 'bg-rose-50 border-rose-500 text-rose-900'
-                              }`}
-                            >
-                              {!slipMessage.ok && <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />}
-                              <span>{slipMessage.text}</span>
-                            </div>
-                          )
-                        )}
-                        <p className="text-[11px] font-semibold text-[#6B5A85]">
-                          ปิดหน้านี้ได้ เปิดหน้าสมัครอีกครั้งจากเครื่องนี้เพื่อแนบสลิปหรือดูสถานะ
-                        </p>
-                      </>
-                    )}
-
-                    <div className="flex items-center justify-between pt-1">
-                      <button
-                        type="button"
-                        onClick={handleCancelPendingOrder}
-                        className="inline-flex items-center gap-2 min-h-[46px] px-4 rounded-2xl bg-white border-[2.5px] border-[#2A1450] shadow-[0_3px_0_#2A1450] text-sm font-black text-[#2A1450] hover:bg-[#F3E8FF] cursor-pointer active:translate-y-0.5"
-                      >
-                        <ArrowLeft className="w-4 h-4 stroke-[3]" />
-                        <span>ยกเลิกและเริ่มสมัครใหม่</span>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <PaymentStep
+              order={serverOrder}
+              amount={payAmount}
+              bank={{ label: publicCfg?.bankLabel || '', accountNo: publicCfg?.bankAccountNo || '', accountName: publicCfg?.accountName || '' }}
+              qrDataUrl={qrDataUrl}
+              qrError={qrError}
+              hasPromptPay={Boolean(qrPromptPayId)}
+              slipBusy={slipBusy}
+              slipMessage={slipMessage}
+              onSlipFile={handleSlipFile}
+              onDownloadQr={handleDownloadQrImage}
+              onCancel={handleCancelPendingOrder}
+            />
           )}
 
           {/* ---------------------------------------------------------- */}
@@ -1848,539 +1680,33 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
             />
           )}
           {step === 4 && createdOrder && (
-            <div
-              key={`celebration-${celebrationKey}`}
-              className="relative max-w-3xl mx-auto space-y-5 py-2 overflow-hidden"
-            >
-              {/* ====================================================== */}
-              {/* CONFETTI CANNONS, RIBBONS & FIREWORK BURST OVERLAY     */}
-              {/* ====================================================== */}
-              <div
-                aria-hidden="true"
-                className="pointer-events-none absolute inset-0 z-30 overflow-hidden"
-              >
-                {[
-                  { left: '6%', dx: -30, dy: 220, rot: -140, color: '#FFC928', delay: 0, emoji: '🎉' },
-                  { left: '12%', dx: 45, dy: 260, rot: 180, color: '#A855F7', delay: 0.05, emoji: '✨' },
-                  { left: '18%', dx: -20, dy: 240, rot: -95, color: '#10B981', delay: 0.08, emoji: '🏅' },
-                  { left: '25%', dx: 35, dy: 290, rot: 145, color: '#F97316', delay: 0.02, emoji: '🎊' },
-                  { left: '33%', dx: -25, dy: 250, rot: -160, color: '#EC4899', delay: 0.1, emoji: '⭐' },
-                  { left: '42%', dx: 20, dy: 270, rot: 120, color: '#FFC928', delay: 0.04, emoji: '🏆' },
-                  { left: '50%', dx: 0, dy: 260, rot: 200, color: '#6D28D9', delay: 0.01, emoji: '🎉' },
-                  { left: '58%', dx: -30, dy: 280, rot: -130, color: '#34D399', delay: 0.07, emoji: '✨' },
-                  { left: '67%', dx: 28, dy: 245, rot: 160, color: '#B45309', delay: 0.03, emoji: '🏅' },
-                  { left: '75%', dx: -35, dy: 275, rot: -175, color: '#EC4899', delay: 0.09, emoji: '🎊' },
-                  { left: '83%', dx: 22, dy: 235, rot: 115, color: '#8B5CF6', delay: 0.06, emoji: '⭐' },
-                  { left: '92%', dx: -40, dy: 260, rot: -150, color: '#FFC928', delay: 0.02, emoji: '🎉' },
-                ].map((item, idx) => (
-                  <React.Fragment key={idx}>
-                    {/* Falling Emoji Particle */}
-                    <motion.span
-                      initial={{ opacity: 0, y: -20, x: 0, scale: 0.3, rotate: 0 }}
-                      animate={{
-                        opacity: [0, 1, 1, 0],
-                        y: [-10, 60, item.dy],
-                        x: [0, item.dx * 0.6, item.dx],
-                        scale: [0.4, 1.25, 0.9],
-                        rotate: item.rot,
-                      }}
-                      transition={{
-                        duration: 1.85,
-                        delay: item.delay,
-                        ease: 'easeOut',
-                      }}
-                      style={{ left: item.left }}
-                      className="absolute top-0 text-xl sm:text-2xl select-none drop-shadow-sm"
-                    >
-                      {item.emoji}
-                    </motion.span>
-
-                    {/* Falling Colored Ribbon Strip */}
-                    <motion.span
-                      initial={{ opacity: 1, y: -16, x: 0, rotate: 0, scale: 0.5 }}
-                      animate={{
-                        opacity: [1, 1, 0],
-                        y: [-16, item.dy + 40],
-                        x: [0, -item.dx],
-                        rotate: item.rot * 1.8,
-                        scale: [0.7, 1.1, 0.8],
-                      }}
-                      transition={{
-                        duration: 1.65,
-                        delay: item.delay + 0.04,
-                        ease: 'easeOut',
-                      }}
-                      style={{
-                        left: item.left,
-                        backgroundColor: item.color,
-                      }}
-                      className="absolute top-2 w-3 h-1.5 rounded-xs border border-[#2A1450]/40"
-                    />
-                  </React.Fragment>
-                ))}
-              </div>
-
-              {/* ====================================================== */}
-              {/* HERO CONGRATULATIONS BANNER WITH MASCOTS & TROPHY SLAM */}
-              {/* ====================================================== */}
-              <motion.div
-                initial={{ opacity: 0, scale: 0.88, y: 20 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                transition={{ type: 'spring', stiffness: 260, damping: 18 }}
-                className="relative rounded-[28px] border-[3px] border-[#2A1450] bg-gradient-to-r from-[#220E42] via-[#4C1D95] to-[#220E42] text-white p-5 sm:p-6 shadow-[0_8px_0_#2A1450] overflow-hidden"
-              >
-                {/* Expanding Golden Shockwave Ring */}
-                <motion.div
-                  initial={{ scale: 0.3, opacity: 0.85 }}
-                  animate={{ scale: 2.4, opacity: 0 }}
-                  transition={{ duration: 1.1, ease: 'easeOut' }}
-                  className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 rounded-full border-4 border-[#FFC928]"
-                />
-
-                <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-4 text-center md:text-left">
-                  {/* Left: Celebrating Elephant + Animated Labrador Mascot wearing the runner's actual BIB */}
-                  <motion.div
-                    initial={{ scale: 0, rotate: -18 }}
-                    animate={{ scale: 1, rotate: 0 }}
-                    transition={{ type: 'spring', stiffness: 280, damping: 14, delay: 0.08 }}
-                    className="shrink-0 flex items-center gap-2"
-                  >
-                    <div className="relative">
-                      <ElephantCharacter
-                        size={88}
-                        showBib={true}
-                        bibNumber={createdOrder.bibNumber}
-                        mood="celebrating"
-                      />
-                      <motion.span
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                        transition={{ delay: 0.3, type: 'spring', stiffness: 360 }}
-                        className="absolute -top-1 -right-1 w-8 h-8 rounded-full bg-[#FFC928] border-2 border-[#2A1450] flex items-center justify-center text-[#2A1450] shadow-md"
-                      >
-                        <Trophy className="w-4 h-4 stroke-[2.5]" />
-                      </motion.span>
-                    </div>
-                    <motion.div
-                      initial={{ scale: 0, y: 16 }}
-                      animate={{ scale: 1, y: 0 }}
-                      transition={{ delay: 0.18, type: 'spring' }}
-                    >
-                      <LabradorMascot
-                        size={56}
-                        glowColor="gold"
-                        badgeText={createdOrder.runningWithDog ? 'DOG PASS 🐾' : 'HOORAY! 🐾'}
-                        interactive={false}
-                      />
-                    </motion.div>
-                  </motion.div>
-
-                  {/* Center: Congratulations Headline & Verified Stamp */}
-                  <div className="flex-1 space-y-1.5">
-                    <div className="flex flex-wrap items-center justify-center md:justify-start gap-2">
-                      <motion.span
-                        initial={{ scale: 2, rotate: -14, opacity: 0 }}
-                        animate={{ scale: 1, rotate: -2, opacity: 1 }}
-                        transition={{ type: 'spring', stiffness: 360, damping: 14, delay: 0.15 }}
-                        className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FFC928] text-[#2A1450] border-2 border-[#2A1450] text-xs font-black uppercase tracking-wider shadow-[0_3px_0_#2A1450]"
-                      >
-                        <PartyPopper className="w-3.5 h-3.5 stroke-[2.5]" />
-                        <span>CONGRATULATIONS! ซื้อบัตรวิ่งสำเร็จ</span>
-                      </motion.span>
-
-                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500/25 border border-emerald-400/60 text-emerald-200 text-[11px] font-extrabold">
-                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-300" />
-                        <span>โอนสำเร็จใน {createdOrder.transferDurationSec} วินาที</span>
-                      </span>
-                    </div>
-
-                    <motion.h3
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.18 }}
-                      className="text-2xl sm:text-3xl font-black text-white leading-tight"
-                    >
-                      ขอแสดงความยินดีคุณ <span className="text-[#FFC928]">{createdOrder.fullName}</span>!
-                    </motion.h3>
-
-                    <p className="text-xs sm:text-sm font-bold text-white/85">
-                      {noRun ? 'คุณได้รับบัตรเข้าร่วมแล้ว' : 'คุณได้รับหมายเลข BIB ประจำตัวนักวิ่ง'}{' '}
-                      <span className="font-mono font-black text-[#FFC928]">
-                        #{createdOrder.bibNumber}
-                      </span>{' '}
-                      เรียบร้อยแล้ว · รหัสคำสั่งซื้อ{' '}
-                      <span className="font-mono text-white">{createdOrder.orderId}</span> · อ้างอิงการชำระเงิน{' '}
-                      <span className="font-mono text-emerald-300">{createdOrder.paymentRef}</span>
-                    </p>
-                  </div>
-
-                  {/* Right: Replay Celebration Fireworks Button */}
-                  <div className="shrink-0">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        playVictoryCelebrationSound(true);
-                        setCelebrationKey((prev) => prev + 1);
-                      }}
-                      className="px-3.5 py-2.5 rounded-2xl bg-white/15 hover:bg-[#FFC928] text-white hover:text-[#2A1450] border-2 border-white/30 hover:border-[#2A1450] text-xs font-black flex items-center gap-1.5 transition-all cursor-pointer shadow-sm"
-                    >
-                      <Sparkles className="w-4 h-4" />
-                      <span>จุดพลุฉลองอีกครั้ง</span>
-                    </button>
-                  </div>
-                </div>
-              </motion.div>
-
-              {/* ====================================================== */}
-              {/* AUTOMATED EMAIL DELIVERY NOTIFICATION BAR              */}
-              {/* ====================================================== */}
-              <motion.div
-                initial={{ opacity: 0, y: 14 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.12 }}
-                className="rounded-2xl bg-emerald-50 border-2 border-emerald-600 p-3.5 sm:px-5 flex flex-wrap items-center justify-between gap-3 shadow-xs"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0">
-                    <Mail className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <div className="text-xs sm:text-sm font-black text-emerald-950">
-                      ชำระเงินสำเร็จ! {noRun ? 'เลขบัตรของคุณคือ' : 'เลข BIB ของคุณคือ'} #{createdOrder.bibNumber}
-                    </div>
-                    <p className="text-xs font-bold text-emerald-800 mt-0.5">
-                      {publicCfg?.emailReady
-                        ? <>ส่งตั๋วไปที่อีเมล <strong>{createdOrder.email}</strong> แล้ว (ไม่เห็นให้ดูในโฟลเดอร์สแปม) · </>
-                        : null}
-                      กรุณาบันทึกรูปบัตรเก็บไว้ และจดเลขคำสั่งซื้อ{' '}
-                      <strong className="font-mono">{createdOrder.orderId}</strong> ไว้ใช้ตอนรับอุปกรณ์
-                    </p>
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    setPrintModalTab('print');
-                    setPrintModalOpen(true);
-                  }}
-                  className="px-3.5 py-2 rounded-xl bg-white hover:bg-emerald-100 text-emerald-900 border-2 border-emerald-700 text-xs font-black flex items-center gap-1.5 cursor-pointer"
-                >
-                  <Printer className="w-3.5 h-3.5" />
-                  <span>พิมพ์ / บันทึกบัตร</span>
-                </button>
-              </motion.div>
-
-              {/* ====================================================== */}
-              {/* OFFICIAL COLLECTIBLE E-BIB & E-TICKET PASS             */}
-              {/* ====================================================== */}
-              <motion.div
-                initial={{ opacity: 0, y: 28, scale: 0.94 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                transition={{ type: 'spring', stiffness: 240, damping: 18, delay: 0.16 }}
-                className="relative rounded-[28px] border-[3px] border-[#2A1450] bg-white shadow-[0_10px_0_#2A1450] overflow-hidden"
-              >
-                <div
-                  style={{ background: theme.headerGrad }}
-                  className="px-6 py-4 text-white border-b-[3px] border-[#2A1450] flex items-center justify-between"
-                >
-                  <div>
-                    <span className="text-[10px] font-mono font-extrabold uppercase tracking-[0.2em] text-[#FFC928] block">
-                      CHANGSUEK RUN 2027 · VERIFIED OFFICIAL E-TICKET & BIB PASS
-                    </span>
-                    <span className="text-lg font-black">{createdOrder.routeName}</span>
-                  </div>
-                  <span className="px-3.5 py-1 rounded-full bg-[#FFC928] text-[#2A1450] font-display font-black text-sm border-2 border-[#2A1450]">
-                    {isAddonOnly ? 'ACTIVITY' : isConcert ? 'CONCERT' : ticket.distanceLabel}
-                  </span>
-                </div>
-
-                <div className="p-6 bg-gradient-to-b from-[#FAF7FF] to-white relative overflow-hidden">
-                  <div className="grid grid-cols-1 md:grid-cols-12 gap-5 items-center">
-                    {/* Left 8 cols: BIB Number & Runner Details */}
-                    <div className="md:col-span-8 text-center md:text-left">
-                      <span className="text-[11px] font-extrabold uppercase tracking-[0.22em] text-[#6B5A85] block">
-                        {noRun ? 'PASS NUMBER / เลขบัตรของคุณ' : 'ASSIGNED SEQUENTIAL BIB NUMBER / หมายเลขประจำตัวนักวิ่งของคุณ'}
-                      </span>
-
-                      <motion.div
-                        initial={{ scale: 0.5, rotate: -6, opacity: 0 }}
-                        animate={{ scale: [0.5, 1.12, 1], rotate: [0, 2, 0], opacity: 1 }}
-                        transition={{ duration: 0.55, delay: 0.22, ease: 'easeOut' }}
-                        className="font-display text-6xl sm:text-7xl font-black text-[#2A1450] tracking-wider my-2 tabular-nums drop-shadow-[0_4px_0_#FFC928]"
-                      >
-                        #{createdOrder.bibNumber}
-                      </motion.div>
-
-                      <motion.div
-                        initial={{ scale: 1.8, opacity: 0, rotate: -12 }}
-                        animate={{ scale: 1, opacity: 1, rotate: -2 }}
-                        transition={{ type: 'spring', stiffness: 340, damping: 14, delay: 0.35 }}
-                        className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 border-2 border-emerald-700 text-emerald-900 text-[11px] font-black uppercase tracking-wider mb-2"
-                      >
-                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-700" />
-                        <span>OFFICIAL TICKET & BIB ISSUED · ชำระเงินและออกบัตรอัตโนมัติสำเร็จ</span>
-                      </motion.div>
-                    </div>
-
-                    {/* Right 4 cols: E-Ticket QR Code for Race Pack Check-in */}
-                    <div className="md:col-span-4 flex flex-col items-center justify-center p-3 rounded-2xl bg-white border-2 border-[#2A1450] shadow-[0_4px_0_#2A1450]">
-                      {ticketCheckInQrUrl ? (
-                        <img loading="lazy" decoding="async"
-                          src={ticketCheckInQrUrl}
-                          alt="E-Ticket Check-in QR Code"
-                          className="w-28 h-28 object-contain"
-                        />
-                      ) : (
-                        <div className="w-28 h-28 flex items-center justify-center text-xs text-slate-400">
-                          QR E-Ticket
-                        </div>
-                      )}
-                      <span className="text-[11px] font-black text-[#2A1450] mt-1">
-                        QR สแกนรับเสื้อวันงาน
-                      </span>
-                      <span className="text-[10px] font-mono font-bold text-[#6D28D9]">
-                        {createdOrder.orderId}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mt-4 text-left">
-                    <div className="p-3 rounded-2xl bg-white border-2 border-[#2A1450]/15">
-                      <span className="text-[10px] font-bold text-[#6B5A85] uppercase block">
-                        ชื่อนักวิ่ง
-                      </span>
-                      <span className="text-sm font-black text-[#2A1450] truncate block">
-                        {createdOrder.fullName}
-                      </span>
-                    </div>
-                    <div className="p-3 rounded-2xl bg-white border-2 border-[#2A1450]/15">
-                      <span className="text-[10px] font-bold text-[#6B5A85] uppercase block">
-                        เสื้อวิ่ง Jersey
-                      </span>
-                      <span className="text-sm font-black text-[#2A1450] block">
-                        Size {createdOrder.shirtSize} ({createdOrder.peopleCount} คน)
-                      </span>
-                    </div>
-                    <div className="p-3 rounded-2xl bg-white border-2 border-[#2A1450]/15">
-                      <span className="text-[10px] font-bold text-[#6B5A85] uppercase block">
-                        เวลาปล่อยตัว
-                      </span>
-                      <span className="text-sm font-black text-[#2A1450] block">
-                        {theme.startTime} (9 ม.ค. 70)
-                      </span>
-                    </div>
-                    <div className="p-3 rounded-2xl bg-emerald-50 border-2 border-emerald-500/40">
-                      <span className="text-[10px] font-bold text-emerald-700 uppercase block">
-                        {createdOrder.paymentMethod === 'SPONSOR_CODE' ? 'สิทธิ์สปอนเซอร์' : 'ตรวจสอบเงินเข้าอัตโนมัติ'}
-                      </span>
-                      <span className="text-sm font-black text-emerald-800 tabular-nums block">
-                        {createdOrder.paymentMethod === 'SPONSOR_CODE'
-                          ? `✓ วิ่ง + คอนเสิร์ต ฟรี${createdOrder.totalPrice > 0 ? ` · ชำระกิจกรรมเสริม ${formatBaht(createdOrder.totalPrice)} บาท` : ''}${createdOrder.sponsorName ? ` (${createdOrder.sponsorName})` : ''}`
-                          : `✓ ${formatBaht(createdOrder.totalPrice)} บาท`}
-                      </span>
-                    </div>
-                  </div>
-
-                  {createdOrder.addOns && (
-                    <div className="mt-3 p-3 rounded-2xl bg-[#FFF8DC] border-2 border-[#F5B800] text-xs font-extrabold text-[#2A1450] flex flex-wrap items-center justify-between gap-2">
-                      <span>🎉 กิจกรรมเสริม: {createdOrder.addOns.label} × {createdOrder.addOns.people} คน</span>
-                      <span className="tabular-nums">{formatBaht(createdOrder.addOns.total)} บาท</span>
-                    </div>
-                  )}
-
-                  {createdOrder.runningWithDog && (
-                    <div className="mt-3 p-3 rounded-2xl bg-[#F0FDF4] border-2 border-[#16A34A] flex items-center justify-between text-xs font-extrabold text-[#14532D]">
-                      <span className="flex items-center gap-2">
-                        <PawIcon size={16} color="#16A34A" />
-                        <span>
-                          น้องสุนัขร่วมวิ่ง: {createdOrder.dogName || 'น้องสุนัขคู่ใจ'} (
-                          {createdOrder.dogBreed || 'ไม่ระบุสายพันธุ์'}) · รวม {createdOrder.dogCount} ตัว
-                        </span>
-                      </span>
-                      <span className="px-2.5 py-0.5 rounded-full bg-white border border-[#16A34A]">
-                        K9 PASS VERIFIED
-                      </span>
-                    </div>
-                  )}
-                </div>
-              </motion.div>
-
-              {/* The race BIB in the organiser's design, one per runner, filled in automatically */}
-              {['1km', '3km', '5km', '10km'].includes(createdOrder.routeId) && createdOrder.bibNumber && (
-                <div className="rounded-[28px] border-[3px] border-[#2A1450] bg-gradient-to-br from-[#F5F0FF] via-white to-[#FFF7DB] p-4 sm:p-5 shadow-[0_8px_0_#2A1450] space-y-4">
-                  <div className="flex items-center gap-2.5">
-                    <span className="w-10 h-10 rounded-2xl bg-[#FFC928] border-2 border-[#2A1450] flex items-center justify-center text-lg" aria-hidden="true">🏃</span>
-                    <div>
-                      <h3 className="text-base sm:text-lg font-black text-[#2A1450] leading-tight">ป้าย BIB ของคุณ</h3>
-                      <p className="text-xs font-bold text-[#6B5A85]">เลข ชื่อ และ QR เติมให้อัตโนมัติ · ไฟล์ A4 สำหรับพิมพ์ส่งเข้าอีเมลแล้ว</p>
-                    </div>
-                  </div>
-                  {[
-                    { name: createdOrder.fullName, ins: (createdOrder as ServerOrder).insurance, shirt: createdOrder.shirtSize },
-                    ...((createdOrder as ServerOrder).extraRunners || []).map((r) => ({ name: r.name, ins: r.insurance, shirt: r.shirtSize })),
-                  ].map((r, i, all) => (
-                    <RaceBib
-                      key={i}
-                      bib={runnerBib(createdOrder.bibNumber, i)}
-                      routeId={createdOrder.routeId}
-                      name={r.name}
-                      orderId={createdOrder.orderId}
-                      gender={r.ins?.gender}
-                      age={r.ins?.age}
-                      dogName={createdOrder.runningWithDog ? createdOrder.dogName : undefined}
-                    />
-                  ))}
-                </div>
-              )}
-
-              {(createdOrder as ServerOrder).documentsUrl && (
-                <a
-                  href={(createdOrder as ServerOrder).documentsUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-2 min-h-[54px] px-5 rounded-2xl bg-gradient-to-r from-[#7C3AED] to-[#EC4899] text-white text-base font-black border-[3px] border-[#2A1450] shadow-[0_5px_0_#2A1450] active:translate-y-0.5"
-                >
-                  📄 เปิด / พิมพ์เอกสาร A4 (BIB · บัตร · ประกัน)
-                </a>
-              )}
-
-              <ParkingPasses
-                orderId={createdOrder.orderId}
-                vipTables={(createdOrder as ServerOrder).vipTables}
-                plates={(createdOrder as ServerOrder).parkingPlates}
-                paid={createdOrder.paymentStatus === 'PAID'}
+            <>
+              <PaymentSuccess
+                key={`celebration-${celebrationKey}`}
+                order={createdOrder as ServerOrder}
+                chipLabel={isAddonOnly ? 'ACTIVITY' : isConcert ? 'CONCERT' : ticket.distanceLabel}
+                headerGrad={theme.headerGrad}
+                startTime={theme.startTime}
+                qrUrl={ticketCheckInQrUrl}
+                emailReady={Boolean(publicCfg?.emailReady)}
+                noRun={noRun}
+                onPrint={(fmt) => {
+                  setSelectedPrintFormat(fmt);
+                  setPrintModalTab('print');
+                  setPrintModalOpen(true);
+                }}
+                onDownloadBib={() => downloadOfficialBibAsPng(createdOrder)}
+                onRunnerCenter={() => (onRegistrationSuccess ? onRegistrationSuccess() : onClose())}
+                onClose={onClose}
+                onOpenAdmin={
+                  onOpenAdminModal
+                    ? () => {
+                        onClose();
+                        onOpenAdminModal();
+                      }
+                    : undefined
+                }
               />
-
-              {/* ====================================================== */}
-              {/* SELECTABLE PRINT FORMATS PANEL (มีให้เลือกแบบ Print)    */}
-              {/* ====================================================== */}
-              <div className="rounded-3xl border-[3px] border-[#2A1450] bg-white p-4 sm:p-5 shadow-[0_8px_0_#2A1450] space-y-3.5">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div className="flex items-center gap-2">
-                    <Printer className="w-5 h-5 text-[#6D28D9]" />
-                    <div>
-                      <h4 className="text-sm sm:text-base font-black text-[#2A1450]">
-                        เลือกรูปแบบการพิมพ์บัตร (Print / บันทึก PDF) หรือดาวน์โหลดรูปภาพ
-                      </h4>
-                      <p className="text-xs font-bold text-[#6B5A85]">
-                        คลิกเลือกรูปแบบที่ต้องการเพื่อเปิดหน้าตัวอย่างก่อนสั่งพิมพ์ออกเครื่องปริ้นท์ขนาด A4
-                      </p>
-                    </div>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => downloadOfficialBibAsPng(createdOrder)}
-                    className="px-3.5 py-2 rounded-xl bg-[#F3E8FF] hover:bg-[#E9D5FF] text-[#4B2D78] border-2 border-[#2A1450] text-xs font-extrabold flex items-center gap-1.5 cursor-pointer"
-                  >
-                    <Download className="w-4 h-4" />
-                    <span>ดาวน์โหลดรูปป้าย BIB (.PNG)</span>
-                  </button>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  {[
-                    {
-                      id: 'bib_only' as PrintFormatOption,
-                      title: '1. พิมพ์เฉพาะป้ายหมายเลข BIB',
-                      sub: 'สำหรับติดเสื้อวิ่ง / เก็บสะสม',
-                      badge: 'Official BIB',
-                    },
-                    {
-                      id: 'eticket_pass' as PrintFormatOption,
-                      title: '2. พิมพ์บัตร E-Ticket & QR รับเสื้อ',
-                      sub: 'แสดง QR สแกนรับเสื้อและเหรียญ',
-                      badge: 'E-Ticket Pass',
-                    },
-                    {
-                      id: 'full_a4_receipt' as PrintFormatOption,
-                      title: '3. พิมพ์ใบเสร็จ + บัตร + ป้าย BIB (A4)',
-                      sub: 'ครบชุดในแผ่นเดียว พร้อมเส้นประตัดใช้งาน',
-                      badge: 'แนะนำ · ครบชุด A4',
-                    },
-                  ].map((fmt) => (
-                    <button
-                      key={fmt.id}
-                      type="button"
-                      onClick={() => {
-                        setSelectedPrintFormat(fmt.id);
-                        setPrintModalTab('print');
-                        setPrintModalOpen(true);
-                      }}
-                      className="group text-left p-3.5 rounded-2xl border-2 border-[#2A1450] bg-[#FAF7FF] hover:bg-[#FFC928] transition-all shadow-[0_4px_0_#2A1450] active:translate-y-0.5 cursor-pointer flex flex-col justify-between gap-2"
-                    >
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="px-2 py-0.5 rounded-full bg-[#2A1450] text-[#FFC928] text-[10px] font-extrabold">
-                          {fmt.badge}
-                        </span>
-                        <Printer className="w-4 h-4 text-[#2A1450]" />
-                      </div>
-                      <div>
-                        <div className="text-xs sm:text-sm font-black text-[#2A1450]">
-                          {fmt.title}
-                        </div>
-                        <div className="text-[11px] font-bold text-[#4B2D78] group-hover:text-[#2A1450] mt-0.5">
-                          {fmt.sub}
-                        </div>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSelectedPrintFormat('full_a4_receipt');
-                    setPrintModalTab('print');
-                    setPrintModalOpen(true);
-                  }}
-                  className="w-full sm:w-auto px-7 py-3.5 rounded-2xl bg-[#FFC928] hover:bg-[#FFD646] text-[#2A1450] font-black text-sm border-2 border-[#2A1450] shadow-[0_4px_0_#2A1450] flex items-center justify-center gap-2 cursor-pointer"
-                >
-                  <Printer className="w-4 h-4 stroke-[2.5]" />
-                  <span>เปิดหน้าสั่งพิมพ์ (Print / PDF) ทันที</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (onRegistrationSuccess) {
-                      onRegistrationSuccess();
-                    } else {
-                      onClose();
-                    }
-                  }}
-                  className="w-full sm:w-auto px-5 py-3.5 rounded-2xl bg-[#6D28D9] hover:bg-[#5B21B6] text-white font-extrabold text-sm border-2 border-[#2A1450] shadow-[0_4px_0_#2A1450] flex items-center justify-center gap-2 cursor-pointer"
-                >
-                  <Ticket className="w-4 h-4" />
-                  <span>ไปยังศูนย์นักวิ่ง (Runner Center)</span>
-                </button>
-
-                {onOpenAdminModal && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      onClose();
-                      onOpenAdminModal();
-                    }}
-                    className="w-full sm:w-auto px-5 py-3.5 rounded-2xl bg-[#2A1450] hover:bg-[#3B1870] text-[#FFC928] font-extrabold text-sm border-2 border-[#2A1450] flex items-center justify-center gap-2 cursor-pointer"
-                  >
-                    <CreditCard className="w-4 h-4" />
-                    <span>ดูรายการในระบบแอดมิน</span>
-                  </button>
-                )}
-
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className="w-full sm:w-auto px-5 py-3.5 rounded-2xl bg-white hover:bg-[#F3E8FF] text-[#2A1450] font-extrabold text-sm border-2 border-[#2A1450] cursor-pointer"
-                >
-                  ปิดหน้าต่าง
-                </button>
-              </div>
-
               {/* Dedicated Print & Email Preview Modal */}
               <TicketPrintEmailModal
                 isOpen={printModalOpen}
@@ -2389,7 +1715,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                 initialMode={printModalTab}
                 initialPrintFormat={selectedPrintFormat}
               />
-            </div>
+            </>
           )}
         </div>
 

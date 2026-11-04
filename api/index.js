@@ -33821,11 +33821,11 @@ function parseShooting(raw, people) {
 // server/store.ts
 var ROUTES = ["10km", "5km", "3km", "1km"];
 var DEFAULT_SETTINGS = {
-  promptPayId: process.env.PROMPTPAY_ID || "004999254157786",
-  accountName: process.env.PROMPTPAY_ACCOUNT_NAME || "\u0E0A\u0E49\u0E32\u0E07\u0E28\u0E36\u0E01 \u0E23\u0E31\u0E19 \u0E42\u0E14\u0E22 \u0E19\u0E32\u0E22 \u0E01\u0E31\u0E1B\u0E1B\u0E19\u0E4C\u0E13\u0E31\u0E0F\u0E10\u0E4C \u0E01\u0E0A\u0E01\u0E23\u0E19\u0E31\u0E19\u0E17\u0E4C\u0E18\u0E19 \u0E41\u0E25\u0E30 \u0E19\u0E32\u0E22 \u0E40\u0E2D\u0E01\u0E1E\u0E31\u0E0A\u0E0D\u0E4C \u0E15\u0E31\u0E19\u0E2A\u0E38\u0E27\u0E23\u0E23\u0E13\u0E23\u0E31\u0E15\u0E19\u0E4C",
-  bankLabel: process.env.BANK_LABEL || "\u0E18\u0E19\u0E32\u0E04\u0E32\u0E23\u0E01\u0E2A\u0E34\u0E01\u0E23\u0E44\u0E17\u0E22",
-  bankAccountNo: process.env.BANK_ACCOUNT_NO || "2408677648",
-  paymentTimeoutMinutes: 15
+  promptPayId: process.env.PROMPTPAY_ID || "",
+  accountName: process.env.PROMPTPAY_ACCOUNT_NAME || "\u0E42\u0E04\u0E23\u0E07\u0E01\u0E32\u0E23\u0E0A\u0E49\u0E32\u0E07\u0E28\u0E36\u0E01\u0E23\u0E31\u0E19\u0E40\u0E2B\u0E47\u0E19\u0E0A\u0E49\u0E32\u0E07\u0E27\u0E34\u0E48\u0E07\u0E27\u0E34\u0E48\u0E07\u0E15\u0E32\u0E21\u0E0A\u0E49\u0E32\u0E07 (CHANGSUEK RUN 2026)",
+  bankLabel: process.env.BANK_LABEL || "\u0E18\u0E19\u0E32\u0E04\u0E32\u0E23\u0E01\u0E23\u0E38\u0E07\u0E44\u0E17\u0E22",
+  bankAccountNo: process.env.BANK_ACCOUNT_NO || "0340291354",
+  paymentTimeoutMinutes: 5
 };
 var asObj = (v) => typeof v === "string" ? JSON.parse(v) : v;
 async function getSettings() {
@@ -47845,7 +47845,7 @@ function createApp() {
     const token = crypto10.randomBytes(24).toString("base64url");
     const now = /* @__PURE__ */ new Date();
     const settings = await getSettings();
-    const timeoutMin = Math.max(1, settings.paymentTimeoutMinutes || 15);
+    const timeoutMin = Math.min(5, Math.max(1, settings.paymentTimeoutMinutes || 5));
     const order = {
       orderId: testMode ? newTestOrderId() : await nextOrderId(),
       ...testMode ? { isTest: true, testBy: testAdmin } : {},
@@ -48331,7 +48331,7 @@ function createApp() {
     const s = req.body?.settings || {};
     const counters = req.body?.bibCounters || {};
     const promptPayId = String(s.promptPayId || "").replace(/[^0-9]/g, "");
-    if (![10, 13, 15].includes(promptPayId.length)) {
+    if (promptPayId && ![10, 13, 15].includes(promptPayId.length)) {
       res.status(400).json({ error: "\u0E23\u0E2B\u0E31\u0E2A\u0E1E\u0E23\u0E49\u0E2D\u0E21\u0E40\u0E1E\u0E22\u0E4C\u0E15\u0E49\u0E2D\u0E07\u0E40\u0E1B\u0E47\u0E19\u0E40\u0E1A\u0E2D\u0E23\u0E4C\u0E42\u0E17\u0E23 10 \u0E2B\u0E25\u0E31\u0E01, \u0E40\u0E25\u0E02\u0E1A\u0E31\u0E15\u0E23/\u0E40\u0E25\u0E02\u0E1C\u0E39\u0E49\u0E40\u0E2A\u0E35\u0E22\u0E20\u0E32\u0E29\u0E35 13 \u0E2B\u0E25\u0E31\u0E01 \u0E2B\u0E23\u0E37\u0E2D\u0E40\u0E25\u0E02\u0E2D\u0E49\u0E32\u0E07\u0E2D\u0E34\u0E07 K PLUS 15 \u0E2B\u0E25\u0E31\u0E01" });
       return;
     }
@@ -48361,7 +48361,7 @@ function createApp() {
       accountName: clean(s.accountName, 150) || cur.accountName,
       bankLabel: clean(s.bankLabel, 80) || cur.bankLabel,
       bankAccountNo,
-      paymentTimeoutMinutes: Math.min(120, Math.max(5, Math.floor(Number(s.paymentTimeoutMinutes) || 15)))
+      paymentTimeoutMinutes: Math.min(5, Math.max(1, Math.floor(Number(s.paymentTimeoutMinutes) || 5)))
     });
     console.log(`[admin] ${req.admin.username} updated settings`);
     res.json({ settings: await getSettings(), bibCounters: await getBibCounters() });
