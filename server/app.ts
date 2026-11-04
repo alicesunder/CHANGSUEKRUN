@@ -46,6 +46,7 @@ import {
   RefUsedError,
   toAdminView,
   toRunnerView,
+  toStaffView,
   tokenMatches,
   updateOrder,
   updateSponsorCode,
@@ -82,6 +83,8 @@ const runnerView = (o: StoredOrder) => ({
 });
 import { fetchVerifiedOmiseCharge, maskedAccountMatches, verifySlipWithEasySlip } from './payments';
 import { mailConfigured, maskEmail, sendTicketEmail } from './mailer';
+import { registerRunnerRoutes } from './runnerRoutes';
+import { lineConfigured, sessionFromRequest } from './runners';
 
 /** Must match PRIVACY_POLICY_VERSION in src/components/PrivacyNotice.tsx */
 const PRIVACY_POLICY_VERSION = '2026-11-02';
@@ -186,6 +189,8 @@ async function publicConfig() {
     paymentReady: Boolean(key),
     /** true when paid orders get their ticket by e-mail */
     emailReady: mailConfigured(),
+    /** true when LINE_CHANNEL_ID / LINE_CHANNEL_SECRET are set (the LINE login button works) */
+    lineLoginReady: lineConfigured(),
   };
 }
 
@@ -316,6 +321,13 @@ export function createApp(): express.Express {
         return;
       }
       testAdmin = session.username;
+    }
+    // Buying needs a runner account (the form is pre-filled from it and the order shows up in their Runner Center).
+    const buyer = sessionFromRequest(req);
+    const runnerId = buyer && buyer.role === 'runner' ? buyer.sub : '';
+    if (!testMode && !runnerId) {
+      res.status(401).json({ error: 'กรุณาเข้าสู่ระบบหรือสมัครสมาชิกก่อนสั่งซื้อ', needLogin: true });
+      return;
     }
     if (!testMode && !(await getSalesStatus()).open) {
       res.status(403).json({ error: 'ขณะนี้ปิดการขายบัตรชั่วคราว กรุณาติดตามประกาศจากผู้จัดงาน' });
@@ -468,6 +480,7 @@ export function createApp(): express.Express {
       orderId: testMode ? newTestOrderId() : await nextOrderId(),
       ...(testMode ? { isTest: true, testBy: testAdmin } : {}),
       accessTokenHash: hashToken(token),
+      ...(runnerId ? { runnerId } : {}),
       fullName,
       phone,
       email,
@@ -715,13 +728,28 @@ export function createApp(): express.Express {
   }));
 
   // Ticket scanner / BIB search: order id, BIB or concert-pass number
-  app.get('/api/admin/lookup', requireAdmin, h(async (req, res) => {
+  // Ticket scanner: the admin, or ticket-checking staff (who get a reduced view without contact details).
+  const adminOrStaff: express.RequestHandler = (req, res, next) => {
+    const header = req.headers.authorization || '';
+    if (verifyToken(header.startsWith('Bearer ') ? header.slice(7) : undefined)) {
+      (req as any).viewer = 'admin';
+      return next();
+    }
+    const s = sessionFromRequest(req);
+    if (s && s.role === 'staff') {
+      (req as any).viewer = 'staff';
+      return next();
+    }
+    res.status(401).json({ error: 'กรุณาเข้าสู่ระบบใหม่' });
+  };
+
+  app.get('/api/admin/lookup', adminOrStaff, h(async (req, res) => {
     const order = await findOrderByCode(String(req.query.q || '').slice(0, 80));
     if (!order) {
       res.status(404).json({ error: 'ไม่พบตั๋ว/เลข BIB นี้ในระบบ' });
       return;
     }
-    res.json({ order: toAdminView(order) });
+    res.json({ order: (req as any).viewer === 'staff' ? toStaffView(order) : toAdminView(order) });
   }));
 
   app.get('/api/admin/winners', requireAdmin, h(async (_req, res) => {
@@ -839,7 +867,7 @@ export function createApp(): express.Express {
     res.json({ image: order.slipFile });
   }));
 
-  app.post('/api/admin/orders/:orderId/kit', requireAdmin, h(async (req, res) => {
+  app.post('/api/admin/orders/:orderId/kit', adminOrStaff, h(async (req, res) => {
     const orderId = String(req.params.orderId);
     const order = await getOrder(orderId);
     if (!order) {
@@ -858,7 +886,7 @@ export function createApp(): express.Express {
       o.kitStatus = o.kitStatus === 'CHECKED_IN' ? 'PENDING_PICKUP' : 'CHECKED_IN';
       o.registrationStatus = o.kitStatus === 'CHECKED_IN' ? 'CHECKED_IN' : 'CONFIRMED';
     });
-    res.json({ order: toAdminView(updated!) });
+    res.json({ order: (req as any).viewer === 'staff' ? toStaffView(updated!) : toAdminView(updated!) });
   }));
 
   // Orders are never deleted. Cancelling keeps the buyer's data, frees any wind-tunnel seats and
@@ -1069,6 +1097,8 @@ export function createApp(): express.Express {
     console.log(`[admin] ${admin} set the EasySlip key`);
     res.json(await gatewayStatus());
   }));
+
+  registerRunnerRoutes(app, h, clientIp);
 
   // Any other /api path is a 404 (prevents the SPA fallback from answering API calls).
   app.use('/api', (_req, res) => {

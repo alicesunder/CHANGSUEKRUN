@@ -104,6 +104,8 @@ export interface StoredOrder {
   cancelledBy?: string;
   cancelReason?: string;
   paidAt?: string;
+  /** the runner account that bought it (set when the buyer was logged in, or an order was claimed later) */
+  runnerId?: string;
 }
 
 export interface PublicSettings {
@@ -604,6 +606,50 @@ export function toRunnerView(o: StoredOrder) {
     ? { ...activityWaiver, participants: activityWaiver.participants.map((p) => ({ ...p, idCard: maskThaiId(p.idCard) })) }
     : undefined;
   return { ...rest, shooting: shootingView, activityWaiver: waiverView, hasSlip: Boolean(slipFile) };
+}
+
+/** Orders bought by one runner account, newest first (slip images left out). */
+export async function listOrdersByRunner(runnerId: string): Promise<StoredOrder[]> {
+  const rows = await dbQuery<{ data: unknown }>(
+    `select case when data ? 'slipFile' then (data - 'slipFile') || '{"slipFile":"stored"}'::jsonb else data end as data
+     from csr.orders where data->>'runnerId' = $1 order by created_at desc, order_id desc`,
+    [runnerId]
+  );
+  return rows.map(rowToOrder);
+}
+
+/**
+ * What ticket-checking staff see: who the ticket is for and what it includes, enough to hand over a kit.
+ * No phone, e-mail, emergency contact, insurance / waiver details or prices.
+ */
+export function toStaffView(o: StoredOrder) {
+  return {
+    orderId: o.orderId,
+    fullName: o.fullName,
+    routeId: o.routeId,
+    routeName: o.routeName,
+    ticketType: o.ticketType,
+    bibNumber: o.bibNumber,
+    shirtSize: o.shirtSize,
+    runningWithDog: o.runningWithDog,
+    dogName: o.dogName,
+    peopleCount: o.peopleCount,
+    dogCount: o.dogCount,
+    extraRunnerNames: o.extraRunnerNames,
+    concertQty: o.concertQty,
+    vipTables: o.vipTables,
+    parkingPlates: o.parkingPlates,
+    shooting: o.shooting ? { shooters: o.shooting.shooters.map((s) => ({ fullName: s.fullName })) } : undefined,
+    addOns: o.addOns ? { label: o.addOns.label, people: o.addOns.people, total: 0 } : undefined,
+    paymentStatus: o.paymentStatus,
+    verificationStatus: o.verificationStatus,
+    kitStatus: o.kitStatus,
+    registrationStatus: o.registrationStatus,
+    cancelledAt: o.cancelledAt,
+    cancelReason: o.cancelReason,
+    createdAt: o.createdAt,
+    expiresAt: o.expiresAt,
+  };
 }
 
 /** What an authenticated admin sees (no token hash). */

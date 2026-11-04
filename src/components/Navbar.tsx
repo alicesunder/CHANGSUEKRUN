@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Menu, X, ChevronRight, User, ShieldCheck } from 'lucide-react';
+import { LangSwitch, useLang } from '../i18n/lang';
+import { useSession } from '../utils/runnerAuth';
 
 interface NavbarProps {
   onOpenArtworkModal: () => void;
@@ -15,6 +17,9 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenAdminModal,
   onEasterEggTrigger,
 }) => {
+  const { t } = useLang();
+  const session = useSession();
+  const accountLabel = session ? (session.role === 'staff' ? t('เจ้าหน้าที่', 'Staff') : session.user.name?.trim().split(/\s+/)[0] || t('ศูนย์นักวิ่ง', 'My center')) : t('เข้าสู่ระบบ', 'Log in');
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeHref, setActiveHref] = useState('#hero');
@@ -38,12 +43,12 @@ export const Navbar: React.FC<NavbarProps> = ({
   };
 
   const navLinks = [
-    { label: 'เกี่ยวกับงาน', href: '#objective' },
-    { label: 'ระยะ & ราคา', href: '#distances' },
-    { label: 'กิจกรรมเสริม', href: '#addons' },
-    { label: 'กำหนดการ & เส้นทาง', href: '#schedule-and-map' },
-    { label: 'ที่พัก', href: '#hotels' },
-    { label: 'ผู้สนับสนุน', href: '#sponsors' },
+    { label: t('เกี่ยวกับงาน', 'About'), href: '#objective' },
+    { label: t('ระยะ & ราคา', 'Distances & prices'), href: '#distances' },
+    { label: t('กิจกรรมเสริม', 'Activities'), href: '#addons' },
+    { label: t('กำหนดการ & เส้นทาง', 'Schedule & route'), href: '#schedule-and-map' },
+    { label: t('ที่พัก', 'Hotels'), href: '#hotels' },
+    { label: t('ผู้สนับสนุน', 'Sponsors'), href: '#sponsors' },
     { label: 'FAQ', href: '#faq' },
   ];
 
@@ -79,7 +84,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           {/* Zone 2: Navigation Links matching mockup */}
           <nav className="hidden lg:flex items-center gap-1 xl:gap-1.5">
             {navLinks.map((link) => {
-              const isActive = activeHref === link.href && link.label === 'หน้าแรก';
+              const isActive = false;
               return (
                 <a
                   key={link.label}
@@ -98,7 +103,8 @@ export const Navbar: React.FC<NavbarProps> = ({
           </nav>
 
           {/* Zone 3: Language Switch + Login/Runner Center + Yellow Register CTA */}
-          <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+            <LangSwitch />
 
             {/* เข้าสู่ระบบ / Runner Center Button matching mockup */}
             {onOpenRunnerCenter && (
@@ -108,7 +114,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 className="hidden md:inline-flex items-center gap-1.5 bg-white/10 hover:bg-white/20 text-white text-xs sm:text-[13px] font-bold px-3.5 py-1.5 rounded-full border border-white/45 backdrop-blur-xs transition-all cursor-pointer whitespace-nowrap"
               >
                 <User className="w-3.5 h-3.5 text-white" />
-                <span>ศูนย์นักวิ่ง</span>
+                <span>{accountLabel}</span>
               </button>
             )}
 
@@ -131,7 +137,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               className="attn jelly inline-flex items-center gap-1 bg-[#FFC928] hover:bg-[#FFD645] text-[#1F1035] text-xs sm:text-[13px] font-extrabold px-5 py-1.5 rounded-full shadow-md hover:shadow-lg transition-all transform hover:-translate-y-0.5 active:translate-y-0 cursor-pointer whitespace-nowrap"
             >
               <span aria-hidden="true">🐾</span>
-              ซื้อบัตร
+              {t('ซื้อบัตร', 'Buy tickets')}
             </button>
 
             {/* Mobile Hamburger Toggle */}
@@ -139,7 +145,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               type="button"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="lg:hidden p-2 rounded-xl text-white/85 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
-              aria-label="เมนูหลัก"
+              aria-label={t('เมนูหลัก', 'Main menu')}
             >
               {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
@@ -162,7 +168,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               >
                 <div className="flex items-center gap-2">
                   <User className="w-4 h-4 text-[#FFC928]" />
-                  <span>เข้าสู่ระบบ / ศูนย์นักวิ่ง (Digital BIB)</span>
+                  <span>{session ? t('ศูนย์นักวิ่ง', 'Runner Center') : t('เข้าสู่ระบบ / สมัครสมาชิก', 'Log in / Sign up')}</span>
                 </div>
                 <ChevronRight className="w-4 h-4 opacity-70" />
               </button>
@@ -208,7 +214,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               }}
               className="mt-3 w-full bg-[#FFC928] hover:bg-[#FFD645] text-[#1F1035] font-extrabold text-sm py-2.5 rounded-full shadow-md text-center cursor-pointer"
             >
-              ซื้อบัตรตอนนี้
+              {t('ซื้อบัตรตอนนี้', 'Buy tickets now')}
             </button>
           </nav>
         </div>

@@ -48,7 +48,10 @@ import { buildQrWithAmount, formatThaiBankAccount, generatePromptPayPayload } fr
 import { processUploadedSlipImage } from '../utils/slipVerifier';
 import { openPrivacyNotice } from './PrivacyNotice';
 import { openTerms } from './TermsSection';
+import { authApi, useSession } from '../utils/runnerAuth';
+import { SHIRT_SIZES } from '../data/shirts';
 import {
+  ApiError,
   PendingOrderRef,
   PublicConfig,
   ServerOrder,
@@ -116,6 +119,8 @@ interface RegistrationModalProps {
   initialVipTables?: number;
   onRegistrationSuccess?: () => void;
   onOpenAdminModal?: () => void;
+  /** the login expired while buying: the page asks the runner to log in again */
+  onNeedLogin?: () => void;
 }
 
 const ROUTE_THEME: Record<
@@ -235,7 +240,9 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
   initialVipTables = 0,
   onRegistrationSuccess,
   onOpenAdminModal,
+  onNeedLogin,
 }) => {
+  const session = useSession();
   const [selectedRoute, setSelectedRoute] = useState<RouteId>(initialRoute);
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
   // Three independent choices: any one, or any mix
@@ -323,11 +330,21 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
   const theme = ROUTE_THEME[selectedRoute] ?? ROUTE_THEME['5km'];
   const isDog = !noRun && isDogCategory(selectedRoute);
   const insured = !noRun && needsInsurance(selectedRoute);
-  const runners: RunnerEntry[] = Array.from({ length: noRun ? 0 : 1 + extraPeople }, (_, i) => runnersState[i] || emptyRunner(i));
+  // Runner 2+ start with runner 1's last name (family / same group); changing runner 1's last name carries over
+  // to the others until they type their own.
+  const newRunner = (i: number, first?: RunnerEntry): RunnerEntry => ({ ...emptyRunner(i), lastName: i > 0 ? first?.lastName || '' : '' });
+  const runners: RunnerEntry[] = Array.from({ length: noRun ? 0 : 1 + extraPeople }, (_, i) => runnersState[i] || newRunner(i, runnersState[0]));
   const updateRunner = (i: number, patch: Partial<RunnerEntry>) =>
     setRunnersState((rs) => {
       const next = [...rs];
-      next[i] = { ...(rs[i] || emptyRunner(i)), ...patch };
+      const before = rs[i] || newRunner(i, rs[0]);
+      next[i] = { ...before, ...patch };
+      if (i === 0 && patch.lastName !== undefined) {
+        for (let k = 1; k < 1 + extraPeople; k++) {
+          const other = next[k] || newRunner(k, rs[0]);
+          if (!other.lastName || other.lastName === before.lastName) next[k] = { ...other, lastName: patch.lastName };
+        }
+      }
       return next;
     });
   const shirtSize = runners[0]?.shirtSize || 'L';
@@ -356,7 +373,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
         fullName: shooterList[i]?.fullName || autoName(i),
         phone: i === 0 ? digitsOnly(phone) : '',
         birthDate: runners[i]?.birthDate || '',
-        idCard: '',
+        idCard: runners[i]?.idCard || '',
       },
       waiverEdits[i]
     )
@@ -431,6 +448,30 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
     setSponsorError(null);
     setCreatedOrder(null);
     setTicketCheckInQrUrl('');
+
+    // A logged-in runner starts with their saved details (they can still change anything).
+    if (session?.role === 'runner') {
+      const u = session.user;
+      const p = u.profile || {};
+      const [first = '', ...rest] = (u.name || '').trim().split(/\s+/);
+      setFullName(u.name || '');
+      setPhone(u.phone || '');
+      setEmail(u.email || '');
+      setEmergencyPhone(p.emergencyPhone || '');
+      setRunnersState([
+        {
+          ...emptyRunner(0),
+          firstName: p.firstName ?? first,
+          lastName: p.lastName ?? rest.join(' '),
+          gender: p.gender || '',
+          birthDate: p.birthDate || '',
+          bloodType: p.bloodType || '',
+          shirtSize: (SHIRT_SIZES as readonly string[]).includes(p.shirtSize || '') ? (p.shirtSize as (typeof SHIRT_SIZES)[number]) : 'L',
+          emergencyName: p.emergencyName || '',
+          relationship: p.relationship || '',
+        },
+      ]);
+    }
 
     getPublicConfig(true)
       .then((cfg) => !cancelled && setPublicCfg(cfg))
@@ -628,6 +669,29 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
         sponsorCode: wantRun ? sponsor?.code : undefined,
         addOns: hasAddOns(addOns) ? addOns : undefined,
       });
+      // Keep these details for the next order (no national ID is saved).
+      if (session?.role === 'runner') {
+        const r0 = runners[0];
+        authApi
+          .saveProfile({
+            phone: phone.trim(),
+            ...(session.user.email ? {} : { email: email.trim() }),
+            profile: r0
+              ? {
+                  firstName: r0.firstName.trim(),
+                  lastName: r0.lastName.trim(),
+                  shirtSize: r0.shirtSize,
+                  gender: r0.gender,
+                  birthDate: r0.birthDate,
+                  bloodType: r0.bloodType,
+                  emergencyName: r0.emergencyName.trim(),
+                  emergencyPhone: emergencyPhone.trim(),
+                  relationship: r0.relationship,
+                }
+              : { emergencyPhone: emergencyPhone.trim() },
+          })
+          .catch(() => {});
+      }
       // Sponsor registrations are confirmed on the spot: skip the payment step.
       if (res.order.paymentStatus === 'PAID') {
         await finalizePaidOrder(res.order);
@@ -641,6 +705,10 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
       setSlipMessage(null);
       setStep(3);
     } catch (err) {
+      if (err instanceof ApiError && err.status === 401) {
+        onNeedLogin?.();
+        return;
+      }
       setFormError(err instanceof Error ? err.message : 'สร้างคำสั่งซื้อไม่สำเร็จ กรุณาลองใหม่');
     } finally {
       setIsCreatingOrder(false);

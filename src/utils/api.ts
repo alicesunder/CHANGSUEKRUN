@@ -12,6 +12,7 @@ import { isTestModeOn, setTestMode } from './testMode';
 import type { ParkingPlate } from '../data/vipParking';
 import type { RouteId } from '../types';
 import type { TicketOrder } from './runnerStorage';
+import { getRunnerToken } from './runnerAuth';
 
 export interface PublicConfig {
   promptPayId: string;
@@ -33,6 +34,8 @@ export interface PublicConfig {
   salesOpen?: boolean;
   /** the admin's early-bird switch (lower run / concert / VIP prices) */
   earlyBird?: boolean;
+  /** LINE Login is set up on the server */
+  lineLoginReady?: boolean;
 }
 
 export interface VisitStats {
@@ -190,7 +193,12 @@ export async function createOrder(
     '/api/orders',
     {
       method: 'POST',
-      headers: adminToken ? { ...jsonHeaders, Authorization: `Bearer ${adminToken}` } : jsonHeaders,
+      headers: {
+        ...jsonHeaders,
+        ...(adminToken ? { Authorization: `Bearer ${adminToken}` } : {}),
+        // buying needs a logged-in runner; the server ties the order to this account
+        ...(getRunnerToken() ? { 'x-runner-token': getRunnerToken() as string } : {}),
+      },
       body: JSON.stringify(test ? { ...input, testMode: true } : input),
     }
   );

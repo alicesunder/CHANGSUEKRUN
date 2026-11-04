@@ -38,10 +38,15 @@ import { FAQSection } from './components/FAQSection';
 import { FollowFacebook } from './components/FollowFacebook';
 import { EventCtaBanner } from './components/EventCtaBanner';
 import { Footer } from './components/Footer';
+import { AuthModal } from './components/AuthModal';
+import { useLang } from './i18n/lang';
+import { authApi, consumeLineLogin, useSession, type Session } from './utils/runnerAuth';
+import type { BuyKind } from './components/RunnerHub';
 
 // Pop-ups are loaded only when first opened (keeps the first page load small).
 const AdminDashboardModal = lazy(() => import('./components/AdminDashboardModal').then((m) => ({ default: m.AdminDashboardModal })));
-const RunnerCenter = lazy(() => import('./components/RunnerCenter').then((m) => ({ default: m.RunnerCenter })));
+const RunnerHub = lazy(() => import('./components/RunnerHub').then((m) => ({ default: m.RunnerHub })));
+const StaffConsole = lazy(() => import('./components/StaffConsole').then((m) => ({ default: m.StaffConsole })));
 const RegistrationModal = lazy(() => import('./components/RegistrationModal').then((m) => ({ default: m.RegistrationModal })));
 const ArtworkViewerModal = lazy(() => import('./components/ArtworkViewerModal').then((m) => ({ default: m.ArtworkViewerModal })));
 const DistanceComparisonModal = lazy(() => import('./components/DistanceComparisonModal').then((m) => ({ default: m.DistanceComparisonModal })));
@@ -85,6 +90,14 @@ export default function App() {
   const [videoModalOpen, setVideoModalOpen] = useState(false);
   const [paceModalOpen, setPaceModalOpen] = useState(false);
   const [runnerCenterOpen, setRunnerCenterOpen] = useState(false);
+  // Runner / staff login: buying and the Runner Center need an account (staff get only the ticket scanner)
+  const session = useSession();
+  const { t } = useLang();
+  const [authOpen, setAuthOpen] = useState(false);
+  const [authReason, setAuthReason] = useState<'checkout' | 'center'>('center');
+  const pendingAfterLogin = React.useRef<(() => void) | null>(null);
+  const [staffOpen, setStaffOpen] = useState(false);
+  const [lineFailed, setLineFailed] = useState(false);
   const [adminModalOpen, setAdminModalOpen] = useState(false);
   const [easterEggActive, setEasterEggActive] = useState(false);
 
@@ -122,6 +135,45 @@ export default function App() {
     return () => window.removeEventListener('hashchange', check);
   }, []);
 
+  // Back from LINE Login (the server redirects to /#runner-auth=...), and refresh the account details at start-up
+  useEffect(() => {
+    consumeLineLogin().then((r) => {
+      if (r === 'ok') setRunnerCenterOpen(true);
+      else if (r === 'error') setLineFailed(true);
+    });
+    authApi.refresh();
+  }, []);
+
+  /** Runs `action` once a runner is logged in (asks to log in first). */
+  const requireRunner = (action: () => void, reason: 'checkout' | 'center' = 'checkout') => {
+    if (session?.role === 'runner') {
+      action();
+      return;
+    }
+    if (session?.role === 'staff') {
+      setStaffOpen(true);
+      return;
+    }
+    pendingAfterLogin.current = action;
+    setAuthReason(reason);
+    setAuthOpen(true);
+  };
+
+  const handleAuthed = (s: Session) => {
+    setAuthOpen(false);
+    if (s.role === 'staff') {
+      pendingAfterLogin.current = null;
+      setStaffOpen(true);
+      return;
+    }
+    const next = pendingAfterLogin.current;
+    pendingAfterLogin.current = null;
+    if (next) next();
+    else setRunnerCenterOpen(true);
+  };
+
+  const openRunnerCenter = () => requireRunner(() => setRunnerCenterOpen(true), 'center');
+
   const handleSelectDistance = (distance: RouteId) => {
     setSelectedRoute(distance);
     setShopRun(distance);
@@ -142,7 +194,10 @@ export default function App() {
     document.getElementById('distances')?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const handleOpenRegister = (distance?: RouteId, extras?: { people: number; dogs: number }, addOns?: AddOnSelection) => {
+  const handleOpenRegister = (distance?: RouteId, extras?: { people: number; dogs: number }, addOns?: AddOnSelection) =>
+    requireRunner(() => openRegisterNow(distance, extras, addOns));
+
+  const openRegisterNow = (distance?: RouteId, extras?: { people: number; dogs: number }, addOns?: AddOnSelection) => {
     setRegisterMode('RUN');
     setRegisterConcert(false);
     setRegisterConcertQty(1);
@@ -158,7 +213,25 @@ export default function App() {
   };
 
   // Checkout from the ticket shop: open the form with exactly what is in the basket
-  const handleShopCheckout = () => {
+  const handleShopCheckout = () => requireRunner(shopCheckoutNow);
+
+  // From the Runner Center "buy more": open the form for that kind of ticket
+  const handleHubBuy = (kind: BuyKind) => {
+    setRunnerCenterOpen(false);
+    if (kind === 'RUN') {
+      goToShop();
+      return;
+    }
+    setRegisterConcert(kind === 'CONCERT');
+    setRegisterConcertQty(1);
+    setRegisterVipTables(0);
+    setRegisterExtras({ people: 0, dogs: 0 });
+    setRegisterAddOns(undefined);
+    setRegisterMode(kind);
+    setRegisterModalOpen(true);
+  };
+
+  const shopCheckoutNow = () => {
     const addOnsPicked = hasAddOns(pageAddOns);
     const shopConcert = shopConcertQty > 0 || shopVipTables > 0;
     if (!shopRun && !shopConcert && !addOnsPicked) return;
@@ -200,7 +273,7 @@ export default function App() {
       <Navbar
         onOpenArtworkModal={() => setArtworkModalOpen(true)}
         onOpenRegisterModal={goToShop}
-        onOpenRunnerCenter={() => setRunnerCenterOpen(true)}
+        onOpenRunnerCenter={openRunnerCenter}
         onEasterEggTrigger={() => setEasterEggActive(true)}
       />
 
@@ -350,7 +423,7 @@ export default function App() {
       {/* Mobile Bottom Navigation */}
       <MobileBottomNav
         onOpenRegisterModal={goToShop}
-        onOpenRunnerCenter={() => setRunnerCenterOpen(true)}
+        onOpenRunnerCenter={openRunnerCenter}
         onOpenSimulation={() => handleOpenSimulation()}
       />
 
@@ -366,21 +439,24 @@ export default function App() {
         />
       </Deferred>
 
-      <Deferred open={runnerCenterOpen}>
-        <RunnerCenter
-          isOpen={runnerCenterOpen}
-          onClose={() => setRunnerCenterOpen(false)}
-          onOpenRegisterModal={() => {
-            setRunnerCenterOpen(false);
-            handleOpenRegister();
-          }}
-          onOpenSimulation={(routeId) => {
-            setRunnerCenterOpen(false);
-            handleOpenSimulation(routeId);
-          }}
-          onSelectRoute={setSelectedRoute}
-        />
+      <Deferred open={runnerCenterOpen && session?.role === 'runner'}>
+        {session?.role === 'runner' && (
+          <RunnerHub isOpen={runnerCenterOpen} session={session} onClose={() => setRunnerCenterOpen(false)} onBuy={handleHubBuy} />
+        )}
       </Deferred>
+
+      <Deferred open={staffOpen && session?.role === 'staff'}>
+        {session?.role === 'staff' && <StaffConsole isOpen={staffOpen} session={session} onClose={() => setStaffOpen(false)} />}
+      </Deferred>
+
+      <AuthModal isOpen={authOpen} onClose={() => setAuthOpen(false)} onAuthed={handleAuthed} reason={authReason} />
+
+      {lineFailed && (
+        <div role="alert" className="fixed left-1/2 top-20 z-[10200] -translate-x-1/2 rounded-2xl border-[3px] border-[#2A1450] bg-white px-4 py-3 text-sm font-extrabold text-[#2A1450] shadow-[0_5px_0_#2A1450]">
+          {t('เข้าสู่ระบบด้วย LINE ไม่สำเร็จ กรุณาลองใหม่หรือใช้อีเมล', 'LINE login failed — please try again or use e-mail')}
+          <button type="button" onClick={() => setLineFailed(false)} className="ml-3 rounded-lg bg-[#2A1450] px-2 py-0.5 text-xs text-white cursor-pointer">OK</button>
+        </div>
+      )}
 
       <Deferred open={registerModalOpen}>
         <RegistrationModal
@@ -397,6 +473,10 @@ export default function App() {
           onRegistrationSuccess={() => {
             setRegisterModalOpen(false);
             setRunnerCenterOpen(true);
+          }}
+          onNeedLogin={() => {
+            setRegisterModalOpen(false);
+            requireRunner(() => setRegisterModalOpen(true));
           }}
           onOpenAdminModal={() => {
             setRegisterModalOpen(false);
@@ -415,7 +495,7 @@ export default function App() {
           }}
           onOpenRunnerCenter={() => {
             setArtworkModalOpen(false);
-            setRunnerCenterOpen(true);
+            openRunnerCenter();
           }}
         />
       </Deferred>

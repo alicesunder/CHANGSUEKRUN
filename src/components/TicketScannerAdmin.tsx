@@ -54,8 +54,16 @@ function beep(ok: boolean) {
   }
 }
 
-/** Admin tab: scan a ticket QR (or type a BIB / order id) and see who it belongs to. */
-export const TicketScannerAdmin: React.FC = () => {
+type ScannerApi = {
+  lookup: (q: string) => Promise<{ order: ServerOrder }>;
+  toggleKit: (orderId: string) => Promise<{ order: ServerOrder }>;
+};
+
+/**
+ * Scan a ticket QR (or type a BIB / order id) and see who it belongs to.
+ * Used in the admin console (adminApi) and by ticket-checking staff (staffApi: reduced view).
+ */
+export const TicketScannerAdmin: React.FC<{ api?: ScannerApi }> = ({ api = adminApi }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const rafRef = useRef<number>(0);
@@ -86,7 +94,7 @@ export const TicketScannerAdmin: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await adminApi.lookup(code);
+      const res = await api.lookup(code);
       setOrder(res.order as ScanOrder);
       beep(true);
     } catch (e) {
@@ -145,7 +153,7 @@ export const TicketScannerAdmin: React.FC = () => {
     if (!order) return;
     setToggling(true);
     try {
-      const res = await adminApi.toggleKit(order.orderId);
+      const res = await api.toggleKit(order.orderId);
       setOrder(res.order as ScanOrder);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'บันทึกไม่สำเร็จ');
