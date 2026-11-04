@@ -34254,6 +34254,12 @@ function isValidQrPayload(payload) {
   const body = p.slice(0, p.length - 4);
   return crc16CcittFalse(body) === p.slice(-4);
 }
+function billerIdFromQr(payload) {
+  const top = readTlv((payload || "").trim());
+  const t30 = top?.find((t) => t.id === "30");
+  const inner = t30 ? readTlv(t30.value) : null;
+  return inner?.find((t) => t.id === "01")?.value || "";
+}
 
 // src/data/addOns.ts
 var EMPTY_ADD_ONS = { tower: false, gun: "none", windTunnel: false, people: 1 };
@@ -48040,7 +48046,7 @@ function createApp() {
         review = `\u0E15\u0E23\u0E27\u0E08\u0E2A\u0E25\u0E34\u0E1B\u0E2D\u0E31\u0E15\u0E42\u0E19\u0E21\u0E31\u0E15\u0E34\u0E44\u0E21\u0E48\u0E44\u0E14\u0E49 (${code}) \u0E23\u0E2D\u0E40\u0E08\u0E49\u0E32\u0E2B\u0E19\u0E49\u0E32\u0E17\u0E35\u0E48\u0E15\u0E23\u0E27\u0E08`;
       }
     } else {
-      problems = slipProblems(slip, order, [settings.bankAccountNo, settings.promptPayId]);
+      problems = slipProblems(slip, order, [settings.bankAccountNo, settings.promptPayId, billerIdFromQr(settings.qrPayload || "")]);
       if (!problems.length && await isRefUsed(slip.transRef || "")) problems = ["\u0E2A\u0E25\u0E34\u0E1B\u0E19\u0E35\u0E49\u0E16\u0E39\u0E01\u0E43\u0E0A\u0E49\u0E0A\u0E33\u0E23\u0E30\u0E04\u0E33\u0E2A\u0E31\u0E48\u0E07\u0E0B\u0E37\u0E49\u0E2D\u0E2D\u0E37\u0E48\u0E19\u0E44\u0E1B\u0E41\u0E25\u0E49\u0E27"];
       if (!problems.length && !slip.transRef) review = "\u0E2A\u0E25\u0E34\u0E1B\u0E44\u0E21\u0E48\u0E21\u0E35\u0E40\u0E25\u0E02\u0E17\u0E35\u0E48\u0E23\u0E32\u0E22\u0E01\u0E32\u0E23 \u0E23\u0E2D\u0E40\u0E08\u0E49\u0E32\u0E2B\u0E19\u0E49\u0E32\u0E17\u0E35\u0E48\u0E15\u0E23\u0E27\u0E08";
       if (!problems.length && !review && slip.isDuplicate) review = "EasySlip \u0E41\u0E08\u0E49\u0E07\u0E27\u0E48\u0E32\u0E40\u0E04\u0E22\u0E15\u0E23\u0E27\u0E08\u0E2A\u0E25\u0E34\u0E1B\u0E19\u0E35\u0E49\u0E41\u0E25\u0E49\u0E27 \u0E23\u0E2D\u0E40\u0E08\u0E49\u0E32\u0E2B\u0E19\u0E49\u0E32\u0E17\u0E35\u0E48\u0E15\u0E23\u0E27\u0E08";

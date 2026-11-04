@@ -65,7 +65,7 @@ import {
   recordVisit,
   visitStats,
 } from './store';
-import { isValidQrPayload } from '../src/utils/promptPay';
+import { billerIdFromQr, isValidQrPayload } from '../src/utils/promptPay';
 import { WIND_TUNNEL_LIMIT, addOnBonusDiscount, addOnLabel, addOnPricePerPerson, addOnTotal, concertDiscountPerTicket, hasAddOns, normalizeAddOns } from '../src/data/addOns';
 import { needsInsurance, parseInsurance, type InsuranceInfo } from '../src/data/insurance';
 import { parseShooting, type ShootingInfo } from '../src/data/shooting';
@@ -634,7 +634,8 @@ export function createApp(): express.Express {
         review = `ตรวจสลิปอัตโนมัติไม่ได้ (${code}) รอเจ้าหน้าที่ตรวจ`;
       }
     } else {
-      problems = slipProblems(slip, order, [settings.bankAccountNo, settings.promptPayId]);
+      // a bill-payment QR pays to a biller ID, which is what the bank prints (masked) as the receiver on the slip
+      problems = slipProblems(slip, order, [settings.bankAccountNo, settings.promptPayId, billerIdFromQr(settings.qrPayload || '')]);
       if (!problems.length && (await isRefUsed(slip.transRef || ''))) problems = ['สลิปนี้ถูกใช้ชำระคำสั่งซื้ออื่นไปแล้ว'];
       if (!problems.length && !slip.transRef) review = 'สลิปไม่มีเลขที่รายการ รอเจ้าหน้าที่ตรวจ';
       if (!problems.length && !review && slip.isDuplicate) review = 'EasySlip แจ้งว่าเคยตรวจสลิปนี้แล้ว รอเจ้าหน้าที่ตรวจ';

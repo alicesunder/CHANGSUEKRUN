@@ -131,3 +131,11 @@ export function buildQrWithAmount(staticPayload: string, amount?: number): strin
   const raw = `${parts.join('')}6304`;
   return `${raw}${crc16CcittFalse(raw)}`;
 }
+
+/** The biller / merchant ID inside a bill-payment QR (tag 30, sub-tag 01), or '' when there is none. */
+export function billerIdFromQr(payload: string): string {
+  const top = readTlv((payload || '').trim());
+  const t30 = top?.find((t) => t.id === '30');
+  const inner = t30 ? readTlv(t30.value) : null;
+  return inner?.find((t) => t.id === '01')?.value || '';
+}
