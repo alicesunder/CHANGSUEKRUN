@@ -26,8 +26,8 @@ import { WinnersSection } from './components/WinnersSection';
 import { EMPTY_ADD_ONS, hasAddOns, type AddOnSelection } from './data/addOns';
 import { RaceDistances } from './components/RaceDistances';
 import { SponsorsSection } from './components/SponsorsSection';
-import { PrivacyNotice } from './components/PrivacyNotice';
-import { TermsSection, TermsModal } from './components/TermsSection';
+import { PrivacyNotice, openPrivacyNotice } from './components/PrivacyNotice';
+import { TermsSection, TermsModal, openTerms } from './components/TermsSection';
 import { LazySection } from './components/LazySection';
 import { ConcertSection } from './components/ConcertSection';
 import { HotelExplorer } from './components/HotelExplorer';
@@ -135,6 +135,14 @@ export default function App() {
     check();
     window.addEventListener('hashchange', check);
     return () => window.removeEventListener('hashchange', check);
+  }, []);
+
+  // Public addresses for the privacy notice and the terms (asked for by Google / Facebook sign-in setup): /privacy and /terms
+  useEffect(() => {
+    const path = window.location.pathname.replace(/\/+$/, '');
+    if (path !== '/privacy' && path !== '/terms') return;
+    const t = window.setTimeout(() => (path === '/privacy' ? openPrivacyNotice() : openTerms()), 700);
+    return () => window.clearTimeout(t);
   }, []);
 
   // Back from LINE Login (the server redirects to /#runner-auth=...), and refresh the account details at start-up
