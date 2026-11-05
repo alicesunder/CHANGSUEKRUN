@@ -34,6 +34,7 @@ import {
   FileSpreadsheet,
   Activity,
   Gift,
+  Trash2,
 } from 'lucide-react';
 import { RouteId } from '../types';
 import { SponsorCodesAdmin } from './SponsorCodesAdmin';
@@ -518,6 +519,23 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
       refreshData();
     } catch (err) {
       showToast(err instanceof Error ? err.message : 'อัปเดตไม่สำเร็จ');
+    }
+  };
+
+  /** Permanent delete (owner only): the admin must type the order id; the server writes a summary to the audit log. */
+  const handleDeleteOrder = async (id: string, name: string) => {
+    const typed = window.prompt('ลบคำสั่งซื้อ ' + id + ' (' + name + ') ถาวร กู้คืนไม่ได้\n\nพิมพ์เลขคำสั่งซื้อให้ตรงเพื่อยืนยัน:');
+    if (typed === null) return;
+    setInspectBusy(true);
+    try {
+      await adminApi.deleteOrder(id, typed.trim());
+      setOrders((prev) => prev.filter((o) => o.orderId !== id));
+      setInspectingOrder((cur) => (cur && cur.orderId === id ? null : cur));
+      showToast('ลบคำสั่งซื้อ ' + id + ' แล้ว');
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : 'ลบไม่สำเร็จ');
+    } finally {
+      setInspectBusy(false);
     }
   };
 
@@ -1460,6 +1478,17 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
                                       <Ban className="w-4 h-4" />
                                     </button>
                                   )}
+                                  {isOwner && (
+                                    <button
+                                      type="button"
+                                      onClick={() => handleDeleteOrder(order.orderId, order.fullName)}
+                                      title="ลบคำสั่งซื้อถาวร (กู้คืนไม่ได้)"
+                                      aria-label={'ลบคำสั่งซื้อ ' + order.orderId + ' ถาวร'}
+                                      className="inline-flex items-center gap-1 rounded-xl border border-rose-300 px-2 py-1.5 text-[11px] font-extrabold text-rose-600 hover:bg-rose-600 hover:text-white cursor-pointer"
+                                    >
+                                      <Trash2 className="w-3.5 h-3.5" /> ลบถาวร
+                                    </button>
+                                  )}
                                 </div>
                               </td>
                             </tr>
@@ -2187,22 +2216,7 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
                   <button
                     type="button"
                     disabled={inspectBusy}
-                    onClick={async () => {
-                      const id = inspectingOrder.orderId;
-                      const typed = window.prompt('ลบคำสั่งซื้อ ' + id + ' (' + inspectingOrder.fullName + ') ถาวร กู้คืนไม่ได้\n\nพิมพ์เลขคำสั่งซื้อให้ตรงเพื่อยืนยัน:');
-                      if (typed === null) return;
-                      setInspectBusy(true);
-                      try {
-                        await adminApi.deleteOrder(id, typed.trim());
-                        setOrders((prev) => prev.filter((o) => o.orderId !== id));
-                        setInspectingOrder(null);
-                        showToast('ลบคำสั่งซื้อ ' + id + ' แล้ว');
-                      } catch (err) {
-                        showToast(err instanceof Error ? err.message : 'ลบไม่สำเร็จ');
-                      } finally {
-                        setInspectBusy(false);
-                      }
-                    }}
+                    onClick={() => handleDeleteOrder(inspectingOrder.orderId, inspectingOrder.fullName)}
                     className="rounded-xl bg-rose-600 px-3.5 py-2 text-xs font-black text-white cursor-pointer disabled:opacity-60"
                   >
                     🗑️ ลบคำสั่งซื้อถาวร
