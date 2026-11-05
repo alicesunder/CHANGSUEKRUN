@@ -99,6 +99,30 @@ alter table csr.runners add column if not exists facebook_id text;
 create unique index if not exists runners_google_uidx on csr.runners (google_id) where google_id is not null;
 create unique index if not exists runners_facebook_uidx on csr.runners (facebook_id) where facebook_id is not null;
 alter table csr.runners enable row level security;
+create table if not exists csr.audit_log (
+  id      bigserial primary key,
+  at      timestamptz not null default now(),
+  actor   text not null,
+  role    text not null default '',
+  action  text not null,
+  target  text not null default '',
+  detail  jsonb not null default '{}'::jsonb,
+  ip      text not null default ''
+);
+create index if not exists audit_log_at_idx on csr.audit_log (at desc);
+create table if not exists csr.admin_users (
+  username      text primary key,
+  display_name  text not null default '',
+  role          text not null,
+  password_hash text not null,
+  active        boolean not null default true,
+  token_version integer not null default 0,
+  created_at    timestamptz not null default now(),
+  last_login_at timestamptz
+);
+alter table csr.runners add column if not exists disabled_at timestamptz;
+alter table csr.audit_log enable row level security;
+alter table csr.admin_users enable row level security;
 
 alter table csr.orders          enable row level security;
 alter table csr.bib_counters    enable row level security;

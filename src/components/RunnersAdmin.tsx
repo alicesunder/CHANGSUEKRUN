@@ -22,6 +22,7 @@ export const RunnersAdmin: React.FC<Props> = ({ onOpenOrder }) => {
   const [onlyOrders, setOnlyOrders] = useState<'all' | 'with' | 'without'>('all');
   const [detail, setDetail] = useState<Detail | null>(null);
   const [detailBusy, setDetailBusy] = useState(false);
+  const [note, setNote] = useState<{ ok: boolean; text: string } | null>(null);
 
   const load = () => {
     setError(null);
@@ -57,19 +58,51 @@ export const RunnersAdmin: React.FC<Props> = ({ onOpenOrder }) => {
 
   const t = data?.totals;
 
+  const toggleDisabled = async (disable: boolean) => {
+    if (!detail) return;
+    if (disable && !window.confirm('ระงับบัญชีนี้? เจ้าของจะเข้าสู่ระบบและสั่งซื้อไม่ได้ (คำสั่งซื้อเดิมยังอยู่ครบ) เปิดคืนได้ภายหลัง')) return;
+    setDetailBusy(true);
+    setNote(null);
+    try {
+      await adminApi.setRunnerDisabled(detail.runner.id, disable);
+      setDetail({ ...detail, runner: { ...detail.runner, disabled: disable } });
+      setNote({ ok: true, text: disable ? 'ระงับบัญชีแล้ว' : 'เปิดบัญชีแล้ว' });
+      load();
+    } catch (e) {
+      setNote({ ok: false, text: e instanceof Error ? e.message : 'ทำรายการไม่สำเร็จ' });
+    } finally {
+      setDetailBusy(false);
+    }
+  };
+
+  const sendReset = async () => {
+    if (!detail) return;
+    if (!window.confirm('ส่งลิงก์ตั้งรหัสผ่านใหม่ไปที่อีเมลของบัญชีนี้?')) return;
+    setDetailBusy(true);
+    setNote(null);
+    try {
+      const r = await adminApi.sendRunnerResetEmail(detail.runner.id);
+      setNote({ ok: true, text: 'ส่งลิงก์ไปที่ ' + r.to + ' แล้ว (ใช้ได้ 1 ชั่วโมง)' });
+    } catch (e) {
+      setNote({ ok: false, text: e instanceof Error ? e.message : 'ส่งไม่สำเร็จ' });
+    } finally {
+      setDetailBusy(false);
+    }
+  };
+
   if (detail) {
     const d = detail.runner;
     const live = detail.orders.filter((o) => !o.cancelledAt && !o.isTest);
     const paid = live.filter((o) => o.paymentStatus === 'PAID');
     return (
       <div className="space-y-4">
-        <button type="button" onClick={() => setDetail(null)} className="text-sm font-extrabold text-[#5B20A8] underline underline-offset-2 cursor-pointer">
+        <button type="button" onClick={() => { setDetail(null); setNote(null); }} className="text-sm font-extrabold text-[#5B20A8] underline underline-offset-2 cursor-pointer">
           ← กลับไปรายชื่อบัญชีทั้งหมด
         </button>
         <div className="rounded-2xl border-2 border-[#180B30] bg-white p-4 shadow-[3px_3px_0_#180B30]">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
-              <h3 className="text-lg font-black text-[#180B30]">{d.name || '(ยังไม่ได้ใส่ชื่อ)'}</h3>
+              <h3 className="text-lg font-black text-[#180B30]">{d.name || '(ยังไม่ได้ใส่ชื่อ)'}{d.disabled ? <span className="ml-2 rounded-full bg-rose-100 px-2 py-0.5 align-middle text-[11px] font-extrabold text-rose-800">ถูกระงับ</span> : null}</h3>
               <p className="text-xs font-bold text-[#6B5A85]">รหัสบัญชี {d.id} · สมัครเมื่อ {fmtDate(d.createdAt)}</p>
             </div>
             <div className="flex gap-2 text-center">
@@ -92,6 +125,15 @@ export const RunnersAdmin: React.FC<Props> = ({ onOpenOrder }) => {
               <dd className="inline">{[d.hasPassword && METHOD_LABEL.password, ...d.social.map((s) => METHOD_LABEL[s] || s)].filter(Boolean).join(', ') || '—'}</dd>
             </div>
           </dl>
+          <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-[#E9DDF9] pt-3">
+            <button type="button" disabled={detailBusy} onClick={() => toggleDisabled(!d.disabled)} className={`rounded-xl border-2 px-3 py-1.5 text-xs font-extrabold cursor-pointer disabled:opacity-60 ${d.disabled ? 'border-emerald-600 text-emerald-700' : 'border-rose-600 text-rose-700'}`}>
+              {d.disabled ? 'เปิดบัญชีคืน' : 'ระงับบัญชี'}
+            </button>
+            <button type="button" disabled={detailBusy || !d.email || !d.hasPassword} onClick={sendReset} title={!d.email ? 'บัญชีนี้ไม่มีอีเมล' : !d.hasPassword ? 'บัญชีนี้เข้าสู่ระบบด้วย Google/LINE ไม่มีรหัสผ่าน' : ''} className="rounded-xl border-2 border-[#180B30] px-3 py-1.5 text-xs font-extrabold cursor-pointer disabled:opacity-40">
+              ส่งลิงก์ตั้งรหัสผ่านทางอีเมล
+            </button>
+            {note && <span className={`text-xs font-bold ${note.ok ? 'text-emerald-700' : 'text-rose-700'}`}>{note.text}</span>}
+          </div>
         </div>
 
         <div className="overflow-x-auto rounded-2xl border-2 border-[#180B30] bg-white">
@@ -201,7 +243,7 @@ export const RunnersAdmin: React.FC<Props> = ({ onOpenOrder }) => {
             {data && rows.length === 0 && <tr><td colSpan={7} className="px-3 py-6 text-center font-bold text-[#6B5A85]">ไม่พบบัญชีตามเงื่อนไขนี้</td></tr>}
             {rows.map((r) => (
               <tr key={r.id} onClick={() => !detailBusy && open(r)} className="cursor-pointer border-t border-[#E9DDF9] hover:bg-[#F4ECFF]">
-                <td className="px-3 py-2 font-bold">{r.name || '—'}</td>
+                <td className="px-3 py-2 font-bold">{r.name || '—'}{r.disabled ? <span className="ml-1.5 rounded-full bg-rose-100 px-1.5 py-0.5 text-[10px] font-extrabold text-rose-800">ระงับ</span> : null}</td>
                 <td className="px-3 py-2 text-xs">
                   <div>{r.email || '—'}{r.email && !r.emailVerified ? ' ⏳' : ''}</div>
                   {r.username ? <div className="text-[#6B5A85]">@{r.username}</div> : null}

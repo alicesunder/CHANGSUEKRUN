@@ -62,6 +62,17 @@ export type ServerOrder = TicketOrder & {
   /** 1-baht test order from admin test mode */
   isTest?: boolean;
   testBy?: string;
+  /** the server hid sensitive fields (ID number, health data); the full order comes from /orders/:id/full */
+  masked?: boolean;
+  kitCheckedInAt?: string;
+  kitCheckedInBy?: string;
+  /** last ticket e-mail result */
+  emailStatus?: { at: string; ok: boolean; error?: string };
+  /** refund recorded by an admin */
+  refundedAt?: string;
+  refundAmount?: number;
+  refundNote?: string;
+  refundBy?: string;
   /** cancelled by an admin (orders are never deleted) */
   cancelledAt?: string;
   cancelledBy?: string;
@@ -273,6 +284,19 @@ export function getAdminToken(): string | null {
   }
 }
 
+export type AdminRole = 'owner' | 'manager' | 'viewer';
+
+/** Role of the signed-in admin (the server decides what each role may do; this only hides buttons). */
+export function getAdminRole(): AdminRole {
+  try {
+    const raw = sessionStorage.getItem(ADMIN_TOKEN_KEY);
+    const r = raw ? JSON.parse(raw).role : '';
+    return r === 'manager' || r === 'viewer' ? r : 'owner';
+  } catch {
+    return 'owner';
+  }
+}
+
 export function clearAdminToken(): void {
   setTestMode(false); // logging out always ends test mode
   try {
@@ -283,13 +307,13 @@ export function clearAdminToken(): void {
 }
 
 export async function adminLogin(username: string, password: string): Promise<string> {
-  const res = await request<{ token: string; expiresAt: number; username: string }>('/api/admin/login', {
+  const res = await request<{ token: string; expiresAt: number; username: string; role?: AdminRole }>('/api/admin/login', {
     method: 'POST',
     headers: jsonHeaders,
     body: JSON.stringify({ username, password }),
   });
   try {
-    sessionStorage.setItem(ADMIN_TOKEN_KEY, JSON.stringify({ token: res.token, expiresAt: res.expiresAt }));
+    sessionStorage.setItem(ADMIN_TOKEN_KEY, JSON.stringify({ token: res.token, expiresAt: res.expiresAt, role: res.role || 'owner' }));
   } catch {
     // ignore
   }
@@ -329,6 +353,35 @@ export interface SponsorCodeRow {
   createdAt: string;
 }
 
+export interface EarlyBirdState {
+  on: boolean;
+  manual: boolean;
+  autoFrom?: string;
+  autoUntil?: string;
+  byTimer: boolean;
+  updatedAt?: string;
+}
+
+export interface AdminAccountRow {
+  username: string;
+  displayName: string;
+  role: 'manager' | 'viewer';
+  active: boolean;
+  createdAt: string;
+  lastLoginAt: string | null;
+}
+
+export interface AuditRow {
+  id: number;
+  at: string;
+  actor: string;
+  role: string;
+  action: string;
+  target: string;
+  detail: { body?: Record<string, unknown>; [k: string]: unknown };
+  ip: string;
+}
+
 export interface AdminRunnerSummary {
   id: string;
   name: string;
@@ -336,6 +389,7 @@ export interface AdminRunnerSummary {
   username: string;
   phone: string;
   emailVerified: boolean;
+  disabled?: boolean;
   methods: string[];
   createdAt: string;
   orders: number;
@@ -362,9 +416,11 @@ export const adminApi = {
   getSales: () => adminFetch<{ open: boolean; updatedAt?: string }>('/api/admin/sales'),
   setSales: (open: boolean) =>
     adminFetch<{ open: boolean; updatedAt?: string }>('/api/admin/sales', { method: 'PUT', headers: jsonHeaders, body: JSON.stringify({ open }) }),
-  getEarlyBird: () => adminFetch<{ on: boolean; updatedAt?: string }>('/api/admin/early-bird'),
+  getEarlyBird: () => adminFetch<EarlyBirdState>('/api/admin/early-bird'),
+  setEarlyBirdSchedule: (autoFrom: string | null, autoUntil: string | null) =>
+    adminFetch<EarlyBirdState>('/api/admin/early-bird', { method: 'PUT', headers: jsonHeaders, body: JSON.stringify({ autoFrom, autoUntil }) }),
   setEarlyBird: (on: boolean) =>
-    adminFetch<{ on: boolean; updatedAt?: string }>('/api/admin/early-bird', { method: 'PUT', headers: jsonHeaders, body: JSON.stringify({ on }) }),
+    adminFetch<EarlyBirdState>('/api/admin/early-bird', { method: 'PUT', headers: jsonHeaders, body: JSON.stringify({ on }) }),
   lookup: (q: string) => adminFetch<{ order: ServerOrder }>(`/api/admin/lookup?q=${encodeURIComponent(q)}`),
   getWinners: () => adminFetch<{ winners: Winner[] }>('/api/admin/winners'),
   saveWinners: (winners: Winner[]) =>
@@ -376,7 +432,7 @@ export const adminApi = {
   listRunners: () =>
     adminFetch<{ runners: AdminRunnerSummary[]; totals: { accounts: number; withOrders: number; password: number; google: number; line: number } }>('/api/admin/runners'),
   getRunner: (id: string) =>
-    adminFetch<{ runner: { id: string; name: string; email: string; username: string; phone: string; emailVerified: boolean; social: string[]; hasPassword: boolean; createdAt: string }; orders: ServerOrder[] }>(
+    adminFetch<{ runner: { id: string; name: string; email: string; username: string; phone: string; emailVerified: boolean; social: string[]; hasPassword: boolean; disabled?: boolean; createdAt: string }; orders: ServerOrder[] }>(
       `/api/admin/runners/${encodeURIComponent(id)}`
     ),
   listSponsorCodes: () => adminFetch<{ codes: SponsorCodeRow[] }>('/api/admin/sponsor-codes'),
@@ -404,8 +460,51 @@ export const adminApi = {
       headers: jsonHeaders,
       body: JSON.stringify({ status }),
     }),
-  toggleKit: (orderId: string) =>
-    adminFetch<{ order: ServerOrder }>(`/api/admin/orders/${encodeURIComponent(orderId)}/kit`, { method: 'POST' }),
+  /** action 'checkin' (default) only ever checks a ticket in; 'undo' (admins) takes the kit hand-over back */
+  toggleKit: (orderId: string, action: 'checkin' | 'undo' = 'checkin') =>
+    adminFetch<{ order: ServerOrder; alreadyCheckedIn?: boolean }>(`/api/admin/orders/${encodeURIComponent(orderId)}/kit`, {
+      method: 'POST',
+      headers: jsonHeaders,
+      body: JSON.stringify({ action }),
+    }),
+  /** the order with ID number / health data unmasked (written to the audit log) */
+  getFullOrder: (orderId: string) => adminFetch<{ order: ServerOrder }>(`/api/admin/orders/${encodeURIComponent(orderId)}/full`),
+  /** every order unmasked, for the full CSV and the insurance CSV (written to the audit log) */
+  exportOrders: (kind: string) => adminFetch<{ orders: ServerOrder[] }>(`/api/admin/export/orders?kind=${encodeURIComponent(kind)}`),
+  refundOrder: (orderId: string, input: { amount: number; note: string } | { clear: true }) =>
+    adminFetch<{ order: ServerOrder }>(`/api/admin/orders/${encodeURIComponent(orderId)}/refund`, {
+      method: 'POST',
+      headers: jsonHeaders,
+      body: JSON.stringify(input),
+    }),
+  me: () => adminFetch<{ username: string; role: AdminRole }>('/api/admin/me'),
+  changeMyPassword: (current: string, password: string) =>
+    adminFetch<{ ok: true; message: string }>('/api/admin/me/password', { method: 'POST', headers: jsonHeaders, body: JSON.stringify({ current, password }) }),
+  listAdmins: () => adminFetch<{ admins: AdminAccountRow[] }>('/api/admin/admins'),
+  createAdmin: (input: { username: string; displayName: string; role: 'manager' | 'viewer'; password: string }) =>
+    adminFetch<{ admins: AdminAccountRow[] }>('/api/admin/admins', { method: 'POST', headers: jsonHeaders, body: JSON.stringify(input) }),
+  updateAdmin: (username: string, patch: { role?: 'manager' | 'viewer'; active?: boolean; password?: string; displayName?: string; signOut?: boolean }) =>
+    adminFetch<{ admins: AdminAccountRow[] }>(`/api/admin/admins/${encodeURIComponent(username)}`, { method: 'PATCH', headers: jsonHeaders, body: JSON.stringify(patch) }),
+  signOutAll: () => adminFetch<{ ok: true }>('/api/admin/admins/sign-out-all', { method: 'POST' }),
+  listAudit: (q: { before?: number; action?: string; actor?: string; limit?: number } = {}) => {
+    const p = new URLSearchParams();
+    if (q.before) p.set('before', String(q.before));
+    if (q.action) p.set('action', q.action);
+    if (q.actor) p.set('actor', q.actor);
+    p.set('limit', String(q.limit || 100));
+    return adminFetch<{ rows: AuditRow[] }>(`/api/admin/audit?${p.toString()}`);
+  },
+  getLimits: () => adminFetch<{ limits: { tower: number; gun: number }; seatsLeft: { tower: number | null; gun: number | null } }>('/api/admin/limits'),
+  setLimits: (limits: { tower: number; gun: number }) =>
+    adminFetch<{ limits: { tower: number; gun: number }; seatsLeft: { tower: number | null; gun: number | null } }>('/api/admin/limits', {
+      method: 'PUT',
+      headers: jsonHeaders,
+      body: JSON.stringify(limits),
+    }),
+  setRunnerDisabled: (runnerId: string, disabled: boolean) =>
+    adminFetch<{ ok: true; disabled: boolean }>(`/api/admin/runners/${encodeURIComponent(runnerId)}/disable`, { method: 'POST', headers: jsonHeaders, body: JSON.stringify({ disabled }) }),
+  sendRunnerResetEmail: (runnerId: string) =>
+    adminFetch<{ ok: true; to: string }>(`/api/admin/runners/${encodeURIComponent(runnerId)}/reset-email`, { method: 'POST' }),
   cancelOrder: (orderId: string, reason: string) =>
     adminFetch<{ order: ServerOrder }>(`/api/admin/orders/${encodeURIComponent(orderId)}/cancel`, {
       method: 'POST',

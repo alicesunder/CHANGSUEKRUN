@@ -202,7 +202,8 @@ export const authApi = {
 /** Ticket scanner calls for staff (reduced view, no contact details). */
 export const staffApi = {
   lookup: (q: string) => call<{ order: ServerOrder }>(`/api/admin/lookup?q=${encodeURIComponent(q)}`),
-  toggleKit: (orderId: string) => call<{ order: ServerOrder }>(`/api/admin/orders/${encodeURIComponent(orderId)}/kit`, { method: 'POST' }),
+  toggleKit: (orderId: string, _action?: 'checkin' | 'undo') =>
+    call<{ order: ServerOrder; alreadyCheckedIn?: boolean }>(`/api/admin/orders/${encodeURIComponent(orderId)}/kit`, { method: 'POST', body: JSON.stringify({ action: 'checkin' }) }),
 };
 
 /**

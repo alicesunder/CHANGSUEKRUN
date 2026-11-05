@@ -56,14 +56,16 @@ function beep(ok: boolean) {
 
 type ScannerApi = {
   lookup: (q: string) => Promise<{ order: ServerOrder }>;
-  toggleKit: (orderId: string) => Promise<{ order: ServerOrder }>;
+  toggleKit: (orderId: string, action?: 'checkin' | 'undo') => Promise<{ order: ServerOrder; alreadyCheckedIn?: boolean }>;
 };
 
 /**
  * Scan a ticket QR (or type a BIB / order id) and see who it belongs to.
  * Used in the admin console (adminApi) and by ticket-checking staff (staffApi: reduced view).
  */
-export const TicketScannerAdmin: React.FC<{ api?: ScannerApi }> = ({ api = adminApi }) => {
+/** canUndo: admins may take a kit hand-over back; ticket-checking staff can only check tickets in. */
+export const TicketScannerAdmin: React.FC<{ api?: ScannerApi; canUndo?: boolean }> = ({ api = adminApi, canUndo = api === adminApi }) => {
+  const [already, setAlready] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const rafRef = useRef<number>(0);
@@ -96,6 +98,7 @@ export const TicketScannerAdmin: React.FC<{ api?: ScannerApi }> = ({ api = admin
     try {
       const res = await api.lookup(code);
       setOrder(res.order as ScanOrder);
+      setAlready(false);
       beep(true);
     } catch (e) {
       setOrder(null);
@@ -149,12 +152,14 @@ export const TicketScannerAdmin: React.FC<{ api?: ScannerApi }> = ({ api = admin
     }
   };
 
-  const toggleKit = async () => {
+  const toggleKit = async (action: 'checkin' | 'undo' = 'checkin') => {
     if (!order) return;
+    if (action === 'undo' && !window.confirm('ยกเลิกการรับชุดของคำสั่งซื้อนี้? (ใช้เมื่อกดเช็กอินผิดคนเท่านั้น — ระบบจะบันทึกว่าใครยกเลิก)')) return;
     setToggling(true);
     try {
-      const res = await api.toggleKit(order.orderId);
+      const res = await api.toggleKit(order.orderId, action);
       setOrder(res.order as ScanOrder);
+      setAlready(Boolean(res.alreadyCheckedIn));
     } catch (e) {
       setError(e instanceof Error ? e.message : 'บันทึกไม่สำเร็จ');
     } finally {
@@ -297,14 +302,37 @@ export const TicketScannerAdmin: React.FC<{ api?: ScannerApi }> = ({ api = admin
               </div>
             )}
           </div>
-          {paid && (
+          {paid && checkedIn && (
+            <div className={`rounded-2xl border-2 p-3 text-center ${already ? 'border-rose-500 bg-rose-50' : 'border-emerald-500 bg-emerald-50'}`}>
+              <p className={`text-base font-black ${already ? 'text-rose-800' : 'text-emerald-800'}`}>
+                {already ? '⚠️ ตั๋วนี้รับชุดไปแล้ว' : '✓ เช็กอินเรียบร้อย'}
+              </p>
+              {(order as ServerOrder).kitCheckedInAt && (
+                <p className="text-xs font-bold text-[#2A1450]">
+                  เมื่อ {new Date((order as ServerOrder).kitCheckedInAt!).toLocaleString('th-TH', { dateStyle: 'medium', timeStyle: 'short' })}
+                  {(order as ServerOrder).kitCheckedInBy ? ` · โดย ${(order as ServerOrder).kitCheckedInBy}` : ''}
+                </p>
+              )}
+              {canUndo && (
+                <button
+                  type="button"
+                  onClick={() => toggleKit('undo')}
+                  disabled={toggling}
+                  className="mt-2 text-xs font-extrabold text-rose-700 underline underline-offset-2 cursor-pointer disabled:opacity-60"
+                >
+                  ยกเลิกการรับชุด (เฉพาะแอดมิน)
+                </button>
+              )}
+            </div>
+          )}
+          {paid && !checkedIn && (
             <button
               type="button"
-              onClick={toggleKit}
+              onClick={() => toggleKit('checkin')}
               disabled={toggling}
-              className={`w-full min-h-[52px] rounded-2xl border-2 border-[#2A1450] text-base font-black cursor-pointer disabled:opacity-60 ${checkedIn ? 'bg-white text-[#2A1450]' : 'bg-[#FFC928] text-[#2A1450] shadow-[0_4px_0_#2A1450]'}`}
+              className="w-full min-h-[52px] rounded-2xl border-2 border-[#2A1450] bg-[#FFC928] text-base font-black text-[#2A1450] shadow-[0_4px_0_#2A1450] cursor-pointer disabled:opacity-60"
             >
-              {checkedIn ? '✓ เช็กอินแล้ว (แตะเพื่อยกเลิก)' : 'ยืนยันเช็กอิน / รับชุด'}
+              ยืนยันเช็กอิน / รับชุด
             </button>
           )}
         </div>

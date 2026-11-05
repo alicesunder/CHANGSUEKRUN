@@ -108,6 +108,16 @@ export interface StoredOrder {
   runnerId?: string;
   /** the runner asked for extra payment time once (+15 minutes) */
   extendedAt?: string;
+  /** when the kit was handed over and by whom (ticket-checking staff or admin) */
+  kitCheckedInAt?: string;
+  kitCheckedInBy?: string;
+  /** result of the last ticket e-mail (sent automatically after payment, or re-sent by an admin) */
+  emailStatus?: { at: string; ok: boolean; error?: string };
+  /** money given back to the buyer (recorded by an admin; the transfer itself is made in the bank) */
+  refundedAt?: string;
+  refundAmount?: number;
+  refundNote?: string;
+  refundBy?: string;
 }
 
 export interface PublicSettings {
@@ -171,21 +181,64 @@ export async function setSalesOpen(open: boolean): Promise<{ open: boolean; upda
   return value;
 }
 
-/** Early-bird switch (admin): when on, run / concert / VIP table prices are lowered (see EARLY_BIRD_OFF). */
-export async function getEarlyBird(): Promise<{ on: boolean; updatedAt?: string }> {
-  const rows = await dbQuery<{ value: unknown }>("select value from csr.settings where key = 'early_bird'");
-  const v = rows[0] ? asObj<{ on?: boolean; updatedAt?: string }>(rows[0].value) : {};
-  return { on: v.on === true, updatedAt: v.updatedAt };
+/**
+ * Early-bird prices. They are on when the admin switch is on, or while today falls inside the optional schedule
+ * (autoFrom..autoUntil, ISO date-times; a date alone means the whole Bangkok day).
+ */
+export interface EarlyBirdState {
+  /** effective: the prices in use right now */
+  on: boolean;
+  /** the manual switch */
+  manual: boolean;
+  autoFrom?: string;
+  autoUntil?: string;
+  /** true when the schedule (not the switch) is what turned it on */
+  byTimer: boolean;
+  updatedAt?: string;
 }
 
-export async function setEarlyBird(on: boolean): Promise<{ on: boolean; updatedAt: string }> {
-  const value = { on, updatedAt: new Date().toISOString() };
+const DATE_ONLY = /^\d{4}-\d{2}-\d{2}$/;
+const bkkStart = (d: string) => (DATE_ONLY.test(d) ? `${d}T00:00:00+07:00` : d);
+const bkkEnd = (d: string) => (DATE_ONLY.test(d) ? `${d}T23:59:59.999+07:00` : d);
+
+export function earlyBirdWindowActive(autoFrom?: string, autoUntil?: string, now = Date.now()): boolean {
+  if (!autoFrom && !autoUntil) return false;
+  const from = autoFrom ? Date.parse(bkkStart(autoFrom)) : -Infinity;
+  const until = autoUntil ? Date.parse(bkkEnd(autoUntil)) : Infinity;
+  if (Number.isNaN(from) || Number.isNaN(until)) return false;
+  return now >= from && now <= until;
+}
+
+async function readEarlyBird(): Promise<{ manual: boolean; autoFrom?: string; autoUntil?: string; updatedAt?: string }> {
+  const rows = await dbQuery<{ value: unknown }>("select value from csr.settings where key = 'early_bird'");
+  const v = rows[0] ? asObj<{ on?: boolean; updatedAt?: string; autoFrom?: string; autoUntil?: string }>(rows[0].value) : {};
+  return { manual: v.on === true, autoFrom: v.autoFrom || undefined, autoUntil: v.autoUntil || undefined, updatedAt: v.updatedAt };
+}
+
+export async function getEarlyBird(): Promise<EarlyBirdState> {
+  const v = await readEarlyBird();
+  const inWindow = earlyBirdWindowActive(v.autoFrom, v.autoUntil);
+  return { on: v.manual || inWindow, manual: v.manual, autoFrom: v.autoFrom, autoUntil: v.autoUntil, byTimer: !v.manual && inWindow, updatedAt: v.updatedAt };
+}
+
+async function writeEarlyBird(v: { manual: boolean; autoFrom?: string; autoUntil?: string }): Promise<EarlyBirdState> {
+  const value = { on: v.manual, autoFrom: v.autoFrom || null, autoUntil: v.autoUntil || null, updatedAt: new Date().toISOString() };
   await dbQuery(
     `insert into csr.settings (key, value) values ('early_bird', $1::jsonb)
      on conflict (key) do update set value = excluded.value, updated_at = now()`,
     [JSON.stringify(value)]
   );
-  return value;
+  return getEarlyBird();
+}
+
+export async function setEarlyBird(on: boolean): Promise<EarlyBirdState> {
+  const cur = await readEarlyBird();
+  return writeEarlyBird({ manual: on, autoFrom: cur.autoFrom, autoUntil: cur.autoUntil });
+}
+
+export async function setEarlyBirdSchedule(autoFrom: string | undefined, autoUntil: string | undefined): Promise<EarlyBirdState> {
+  const cur = await readEarlyBird();
+  return writeEarlyBird({ manual: cur.manual, autoFrom, autoUntil });
 }
 
 /** Omise secret key: a key saved from the admin page wins; otherwise the OMISE_SECRET_KEY env var. */
@@ -305,12 +358,36 @@ const GUN_USED_SQL = `select coalesce(sum((data->'addOns'->>'people')::int), 0):
     and (payment_status = 'PAID' or (data->>'expiresAt')::timestamptz > now())`;
 
 /** Optional seat limits for the tower and the shooting range (env TOWER_LIMIT / GUN_LIMIT; 0 or unset = no limit). */
-export const ACTIVITY_LIMITS = {
+const ENV_LIMITS = {
   tower: Math.max(0, Math.floor(Number(process.env.TOWER_LIMIT) || 0)),
   gun: Math.max(0, Math.floor(Number(process.env.GUN_LIMIT) || 0)),
 };
+/** Mutable on purpose: the admin can override the env values from the back office (see refreshActivityLimits). */
+export const ACTIVITY_LIMITS = { ...ENV_LIMITS };
+
+let limitsAt = 0;
+/** Loads the admin's saved limits (settings key 'activity_limits'); the env values apply when nothing is saved. */
+export async function refreshActivityLimits(force = false): Promise<typeof ACTIVITY_LIMITS> {
+  if (!force && Date.now() - limitsAt < 5000) return ACTIVITY_LIMITS;
+  const rows = await dbQuery<{ value: unknown }>("select value from csr.settings where key = 'activity_limits'");
+  const v = rows[0] ? asObj<{ tower?: number; gun?: number }>(rows[0].value) : {};
+  const n = (x: unknown, d: number) => (typeof x === 'number' && Number.isFinite(x) ? Math.max(0, Math.floor(x)) : d);
+  ACTIVITY_LIMITS.tower = n(v.tower, ENV_LIMITS.tower);
+  ACTIVITY_LIMITS.gun = n(v.gun, ENV_LIMITS.gun);
+  limitsAt = Date.now();
+  return ACTIVITY_LIMITS;
+}
+
+export async function saveActivityLimits(limits: { tower: number; gun: number }): Promise<typeof ACTIVITY_LIMITS> {
+  await dbQuery(
+    "insert into csr.settings (key, value) values ('activity_limits', $1::jsonb) on conflict (key) do update set value = excluded.value, updated_at = now()",
+    [JSON.stringify({ tower: Math.max(0, Math.floor(limits.tower)), gun: Math.max(0, Math.floor(limits.gun)) })]
+  );
+  return refreshActivityLimits(true);
+}
 
 export async function activitySeatsLeft(): Promise<{ tower: number | null; gun: number | null }> {
+  await refreshActivityLimits();
   const [t, g] = await Promise.all([
     ACTIVITY_LIMITS.tower ? dbQuery<{ n: string }>(TOWER_USED_SQL) : Promise.resolve(null),
     ACTIVITY_LIMITS.gun ? dbQuery<{ n: string }>(GUN_USED_SQL) : Promise.resolve(null),
@@ -325,6 +402,7 @@ export async function insertOrderChecked(
   o: StoredOrder,
   windTunnelLimit: number
 ): Promise<{ ok: true } | { ok: false; remaining: number; activity?: 'wind' | 'tower' | 'gun' }> {
+  await refreshActivityLimits();
   return dbTx(async (q) => {
     const wantsTower = o.addOns?.tower && ACTIVITY_LIMITS.tower > 0 && !o.isTest;
     const wantsGun = o.addOns && o.addOns.gun !== 'none' && ACTIVITY_LIMITS.gun > 0 && !o.isTest;
@@ -374,6 +452,17 @@ export async function rollbackNewOrder(orderId: string): Promise<void> {
 }
 
 /** Read-modify-write under a row lock, so two requests can't overwrite each other. */
+/** Remembers whether the last ticket e-mail went out (shown in the back office; never throws). */
+export async function recordEmailResult(orderId: string, r: { ok: boolean; error?: string }): Promise<void> {
+  try {
+    await updateOrder(orderId, (o) => {
+      o.emailStatus = { at: new Date().toISOString(), ok: r.ok, ...(r.ok ? {} : { error: String(r.error || 'unknown').slice(0, 200) }) };
+    });
+  } catch (err) {
+    console.error('[mail] could not record the result for', orderId, err instanceof Error ? err.message : err);
+  }
+}
+
 export async function updateOrder(orderId: string, mutator: (o: StoredOrder) => void): Promise<StoredOrder | undefined> {
   return dbTx(async (q) => {
     const rows = await q<{ data: unknown }>('select data from csr.orders where order_id = $1 for update', [orderId]);
@@ -683,6 +772,8 @@ export function toStaffView(o: StoredOrder) {
     paymentStatus: o.paymentStatus,
     verificationStatus: o.verificationStatus,
     kitStatus: o.kitStatus,
+    kitCheckedInAt: o.kitCheckedInAt,
+    kitCheckedInBy: o.kitCheckedInBy,
     registrationStatus: o.registrationStatus,
     cancelledAt: o.cancelledAt,
     cancelReason: o.cancelReason,
@@ -692,9 +783,25 @@ export function toStaffView(o: StoredOrder) {
 }
 
 /** What an authenticated admin sees (no token hash). */
-export function toAdminView(o: StoredOrder) {
+export function toAdminView(o: StoredOrder, opts: { full?: boolean } = {}) {
   const { accessTokenHash, slipFile, ...rest } = o;
-  return { ...rest, hasSlip: Boolean(slipFile) };
+  if (opts.full) return { ...rest, hasSlip: Boolean(slipFile) };
+  // Sensitive fields are masked by the server unless the admin explicitly asks for the full order
+  // (GET /api/admin/orders/:id/full, or the full exports) — and every such request is written to the audit log.
+  const hidden = '••• (กดแสดงข้อมูลเต็ม)';
+  const insurance = o.insurance
+    ? {
+        ...o.insurance,
+        idCard: o.insurance.idCard ? maskThaiId(o.insurance.idCard) : o.insurance.idCard,
+        bloodType: o.insurance.bloodType ? hidden : o.insurance.bloodType,
+        medicalConditions: o.insurance.medicalConditions ? hidden : o.insurance.medicalConditions,
+      }
+    : undefined;
+  const shooting = o.shooting ? { ...o.shooting, shooters: o.shooting.shooters.map((x) => ({ ...x, idCard: maskThaiId(x.idCard) })) } : undefined;
+  const activityWaiver = o.activityWaiver
+    ? { ...o.activityWaiver, participants: o.activityWaiver.participants.map((x) => ({ ...x, idCard: maskThaiId(x.idCard) })) }
+    : undefined;
+  return { ...rest, insurance, shooting, activityWaiver, masked: true, hasSlip: Boolean(slipFile) };
 }
 
 // ---------------------------------------------------------------------------

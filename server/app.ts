@@ -68,6 +68,10 @@ import {
   isVisitorId,
   recordVisit,
   visitStats,
+  recordEmailResult,
+  refreshActivityLimits,
+  saveActivityLimits,
+  setEarlyBirdSchedule,
 } from './store';
 import { billerIdFromQr, isValidQrPayload } from '../src/utils/promptPay';
 import { WIND_TUNNEL_LIMIT, addOnBonusDiscount, addOnLabel, addOnPricePerPerson, addOnTotal, concertDiscountPerTicket, hasAddOns, normalizeAddOns } from '../src/data/addOns';
@@ -76,7 +80,8 @@ import { parseShooting, type ShootingInfo } from '../src/data/shooting';
 import { parseActivityWaiver, waiversFor, type ActivityWaiverInfo } from '../src/data/activityWaivers';
 import { extraRunnersText, parseExtraRunners, type ExtraRunner } from '../src/data/shirts';
 import { parseParkingPlates, type ParkingPlate } from '../src/data/vipParking';
-import { checkCredentials, docsSignature, docsSignatureOk, issueToken, requireAdmin, verifyToken } from './auth';
+import { adminPolicy, checkCredentials, docsSignature, docsSignatureOk, issueSessionFor, requireAdmin, verifyAdminSession } from './auth';
+import { ROLE_RANK, checkAdminUserPassword, createAdminUser, listAdminUsers, listAudit, signOutEveryone, updateAdminUser, validAdminPassword, writeAudit, findAdminUser, isRole } from './adminOps';
 import { buildDocumentsHtml } from './documents';
 
 /** The buyer's own view of an order, plus the link to its A4 documents once paid. */
@@ -85,9 +90,9 @@ const runnerView = (o: StoredOrder) => ({
   documentsUrl: o.paymentStatus === 'PAID' && !o.cancelledAt ? `/api/orders/${encodeURIComponent(o.orderId)}/documents?s=${docsSignature(o.orderId)}` : undefined,
 });
 import { fetchVerifiedOmiseCharge, maskedAccountMatches, verifySlipWithEasySlip } from './payments';
-import { mailConfigured, maskEmail, sendTicketEmail } from './mailer';
+import { SITE_URL, mailConfigured, maskEmail, sendAccountMail, sendTicketEmail } from './mailer';
 import { registerRunnerRoutes } from './runnerRoutes';
-import { getRunner, listRunnersForAdmin, publicRunner, sessionFromRequest } from './runners';
+import { getRunner, isRunnerDisabled, issueActionToken, listRunnersForAdmin, passwordFingerprint, publicRunner, sessionFromRequest, setRunnerDisabled } from './runners';
 import { configuredProviders } from './socialLogin';
 
 /** Must match PRIVACY_POLICY_VERSION in src/components/PrivacyNotice.tsx */
@@ -132,6 +137,7 @@ async function loadOwnedOrder(req: express.Request, res: express.Response): Prom
 async function mailNewlyPaid(wasPaid: boolean, paid: StoredOrder | undefined): Promise<void> {
   if (wasPaid || !paid || paid.paymentStatus !== 'PAID') return;
   const r = await sendTicketEmail(paid);
+  await recordEmailResult(paid.orderId, r);
   console.log(`[mail] ${paid.orderId}: ${r.ok ? `ticket sent (${r.id})` : `not sent (${r.error})`}`);
 }
 
@@ -319,9 +325,8 @@ export function createApp(): express.Express {
     const testMode = b.testMode === true;
     let testAdmin = '';
     if (testMode) {
-      const header = req.headers.authorization || '';
-      const session = verifyToken(header.startsWith('Bearer ') ? header.slice(7) : undefined);
-      if (!session) {
+      const session = await verifyAdminSession(req);
+      if (!session || ROLE_RANK[session.role] < ROLE_RANK.manager) {
         res.status(401).json({ error: 'โหมดทดสอบ 1 บาทใช้ได้เฉพาะแอดมินที่ล็อกอินอยู่ กรุณาเข้าสู่ระบบแอดมินใหม่ หรือปิดโหมดทดสอบ' });
         return;
       }
@@ -334,6 +339,10 @@ export function createApp(): express.Express {
     // Buying needs a runner account (the form is pre-filled from it and the order shows up in their Runner Center).
     const buyer = sessionFromRequest(req);
     const runnerId = buyer && buyer.role === 'runner' ? buyer.sub : '';
+    if (runnerId && (await isRunnerDisabled(runnerId))) {
+      res.status(403).json({ error: 'บัญชีนี้ถูกระงับการใช้งาน กรุณาติดต่อผู้จัดงาน' });
+      return;
+    }
     if (!testMode && !runnerId) {
       res.status(401).json({ error: 'กรุณาเข้าสู่ระบบหรือสมัครสมาชิกก่อนสั่งซื้อ', needLogin: true });
       return;
@@ -628,6 +637,7 @@ export function createApp(): express.Express {
       return;
     }
     const r = await sendTicketEmail(order);
+    await recordEmailResult(order.orderId, r);
     if (!r.ok) {
       res.status(503).json({ error: 'ส่งอีเมลไม่สำเร็จในขณะนี้ กรุณาติดต่อผู้จัดงาน' });
       return;
@@ -741,15 +751,50 @@ export function createApp(): express.Express {
   }));
 
   // ---------------- Admin ----------------
+  // Role rules first (viewer / manager / owner), then an audit trail of everything that changes data.
+  app.use('/api/admin', adminPolicy);
+
+  const AUDIT_BODY_KEYS = ['status', 'reason', 'action', 'on', 'open', 'amount', 'note', 'role', 'active', 'maxUses', 'sponsorName', 'autoFrom', 'autoUntil', 'tower', 'gun', 'refunded', 'displayName', 'username', 'disabled', 'clear'];
+  const auditTrail: express.RequestHandler = (req, res, next) => {
+    if (req.method === 'GET' || req.path === '/login') return next();
+    // inside the mount req.path is relative to /api/admin; Express restores the full URL later, so capture it now
+    const subPath = req.path;
+    res.on('finish', () => {
+      if (res.statusCode >= 400) return;
+      const admin = (req as any).admin as { username: string; role: string } | undefined;
+      const staff = admin ? null : sessionFromRequest(req);
+      if (!admin && !(staff && staff.role === 'staff')) return;
+      const pattern = subPath
+        .replace(/^\/orders\/[^/]+/, '/orders/:id')
+        .replace(/^\/runners\/[^/]+/, '/runners/:id')
+        .replace(/^\/sponsor-codes\/[^/]+/, '/sponsor-codes/:code')
+        .replace(/^\/admins\/[^/]+/, '/admins/:user');
+      const target = decodeURIComponent((subPath.match(/^\/(?:orders|runners|sponsor-codes|admins)\/([^/]+)/) || [])[1] || '');
+      const body: Record<string, unknown> = {};
+      for (const k of AUDIT_BODY_KEYS) {
+        const v = (req.body || {})[k];
+        if (typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean') body[k] = typeof v === 'string' ? v.slice(0, 200) : v;
+      }
+      void writeAudit({ username: admin ? admin.username : staff!.sub, role: admin ? admin.role : 'staff', ip: clientIp(req) }, req.method + ' ' + pattern, target, Object.keys(body).length ? { body } : {});
+    });
+    next();
+  };
+  app.use('/api/admin', auditTrail);
+  const auditNow = (req: express.Request, action: string, target = '', detail: Record<string, unknown> = {}) => {
+    const admin = (req as any).admin as { username: string; role: string } | undefined;
+    void writeAudit({ username: admin?.username || 'unknown', role: admin?.role || '', ip: clientIp(req) }, action, target, detail);
+  };
+
   app.post('/api/admin/login', smallJson, h(async (req, res) => {
     const r = await checkCredentials(clientIp(req), req.body?.username, req.body?.password);
     if (r.ok) {
-      const username = String(req.body.username).trim();
-      console.log(`[admin] login ok: ${username} from ${clientIp(req)}`);
-      res.json({ ...issueToken(username), username });
+      console.log(`[admin] login ok: ${r.username} (${r.role}) from ${clientIp(req)}`);
+      void writeAudit({ username: r.username, role: r.role, ip: clientIp(req) }, 'LOGIN ok');
+      res.json({ ...(await issueSessionFor(r.username, r.role)), username: r.username, role: r.role });
       return;
     }
     console.warn(`[admin] login failed from ${clientIp(req)}`);
+    void writeAudit({ username: String(req.body?.username || '').slice(0, 60), role: '', ip: clientIp(req) }, r.lockedSeconds ? 'LOGIN locked' : 'LOGIN failed');
     res.status(r.lockedSeconds ? 429 : 401).json({
       error: r.lockedSeconds
         ? `ใส่รหัสผิดหลายครั้ง ระงับการเข้าสู่ระบบ ${Math.ceil(r.lockedSeconds / 60)} นาที`
@@ -761,17 +806,21 @@ export function createApp(): express.Express {
   // Ticket scanner / BIB search: order id, BIB or concert-pass number
   // Ticket scanner: the admin, or ticket-checking staff (who get a reduced view without contact details).
   const adminOrStaff: express.RequestHandler = (req, res, next) => {
-    const header = req.headers.authorization || '';
-    if (verifyToken(header.startsWith('Bearer ') ? header.slice(7) : undefined)) {
-      (req as any).viewer = 'admin';
-      return next();
-    }
-    const s = sessionFromRequest(req);
-    if (s && s.role === 'staff') {
-      (req as any).viewer = 'staff';
-      return next();
-    }
-    res.status(401).json({ error: 'กรุณาเข้าสู่ระบบใหม่' });
+    verifyAdminSession(req)
+      .then((admin) => {
+        if (admin) {
+          (req as any).admin = admin;
+          (req as any).viewer = 'admin';
+          return next();
+        }
+        const s = sessionFromRequest(req);
+        if (s && s.role === 'staff') {
+          (req as any).viewer = 'staff';
+          return next();
+        }
+        res.status(401).json({ error: 'กรุณาเข้าสู่ระบบใหม่' });
+      })
+      .catch(next);
   };
 
   app.get('/api/admin/lookup', adminOrStaff, h(async (req, res) => {
@@ -815,7 +864,7 @@ export function createApp(): express.Express {
       orders = await listOrders();
     }
     res.json({
-      orders: orders.map(toAdminView),
+      orders: orders.map((o) => toAdminView(o)),
       bibCounters: await getBibCounters(),
       nextBib: await nextBibPreview(),
     });
@@ -844,7 +893,7 @@ export function createApp(): express.Express {
       return;
     }
     const orders = await listOrdersByRunner(runner.runner_id);
-    res.json({ runner: { ...publicRunner(runner), hasPassword: Boolean(runner.password_hash) }, orders: orders.map(toAdminView) });
+    res.json({ runner: { ...publicRunner(runner), hasPassword: Boolean(runner.password_hash) }, orders: orders.map((o) => toAdminView(o)) });
   }));
 
   app.post('/api/admin/orders/:orderId/verification', requireAdmin, smallJson, h(async (req, res) => {
@@ -905,6 +954,7 @@ export function createApp(): express.Express {
       return;
     }
     const r = await sendTicketEmail(order);
+    await recordEmailResult(order.orderId, r);
     console.log(`[mail] ${(req as any).admin.username} resent ${order.orderId}: ${r.ok ? 'sent' : r.error}`);
     if (!r.ok) {
       res.status(r.error === 'MAIL_NOT_CONFIGURED' ? 503 : 502).json({ error: r.error === 'MAIL_NOT_CONFIGURED' ? 'ยังไม่ได้ตั้งค่าระบบส่งอีเมล (RESEND_API_KEY)' : `ส่งอีเมลไม่สำเร็จ: ${r.error}` });
@@ -924,7 +974,9 @@ export function createApp(): express.Express {
     res.json({ image: order.slipFile });
   }));
 
-  app.post('/api/admin/orders/:orderId/kit', adminOrStaff, h(async (req, res) => {
+  // Hand-over of the kit. Scanning only ever checks a ticket IN (a second scan just reports who already took it);
+  // taking it back ("undo") is for admins only. Every check-in records the time and who did it.
+  app.post('/api/admin/orders/:orderId/kit', adminOrStaff, smallJson, h(async (req, res) => {
     const orderId = String(req.params.orderId);
     const order = await getOrder(orderId);
     if (!order) {
@@ -936,14 +988,35 @@ export function createApp(): express.Express {
       return;
     }
     if (order.cancelledAt) {
-      res.status(400).json({ error: `คำสั่งซื้อนี้ถูกยกเลิกแล้ว (${order.cancelReason || '-'})` });
+      res.status(400).json({ error: 'คำสั่งซื้อนี้ถูกยกเลิกแล้ว (' + (order.cancelReason || '-') + ')' });
       return;
     }
+    const viewer = (req as any).viewer as 'admin' | 'staff';
+    const undo = req.body?.action === 'undo';
+    if (undo && viewer !== 'admin') {
+      res.status(403).json({ error: 'ยกเลิกการรับของได้เฉพาะแอดมิน' });
+      return;
+    }
+    const who = viewer === 'admin' ? ((req as any).admin?.username as string) : (sessionFromRequest(req)?.sub as string) || 'staff';
+    let already = false;
     const updated = await updateOrder(orderId, (o) => {
-      o.kitStatus = o.kitStatus === 'CHECKED_IN' ? 'PENDING_PICKUP' : 'CHECKED_IN';
-      o.registrationStatus = o.kitStatus === 'CHECKED_IN' ? 'CHECKED_IN' : 'CONFIRMED';
+      if (undo) {
+        o.kitStatus = 'PENDING_PICKUP';
+        o.registrationStatus = 'CONFIRMED';
+        delete o.kitCheckedInAt;
+        delete o.kitCheckedInBy;
+        return;
+      }
+      if (o.kitStatus === 'CHECKED_IN') {
+        already = true;
+        return;
+      }
+      o.kitStatus = 'CHECKED_IN';
+      o.registrationStatus = 'CHECKED_IN';
+      o.kitCheckedInAt = new Date().toISOString();
+      o.kitCheckedInBy = who;
     });
-    res.json({ order: (req as any).viewer === 'staff' ? toStaffView(updated!) : toAdminView(updated!) });
+    res.json({ order: viewer === 'staff' ? toStaffView(updated!) : toAdminView(updated!), alreadyCheckedIn: already });
   }));
 
   // Orders are never deleted. Cancelling keeps the buyer's data, frees any wind-tunnel seats and
@@ -1067,11 +1140,25 @@ export function createApp(): express.Express {
   }));
 
   app.put('/api/admin/early-bird', requireAdmin, smallJson, h(async (req, res) => {
-    if (typeof req.body?.on !== 'boolean') {
+    const b = req.body || {};
+    const hasSchedule = 'autoFrom' in b || 'autoUntil' in b;
+    if (typeof b.on !== 'boolean' && !hasSchedule) {
       res.status(400).json({ error: 'on must be true or false' });
       return;
     }
-    res.json(await setEarlyBird(req.body.on));
+    const okDate = (v: unknown) => v === null || v === '' || v === undefined || (typeof v === 'string' && /^\d{4}-\d{2}-\d{2}(T[0-9:.+Z-]+)?$/.test(v) && !Number.isNaN(Date.parse(v.length === 10 ? v + 'T00:00:00+07:00' : v)));
+    if (hasSchedule && (!okDate(b.autoFrom) || !okDate(b.autoUntil))) {
+      res.status(400).json({ error: 'รูปแบบวันที่ไม่ถูกต้อง (ใช้ ปี-เดือน-วัน เช่น 2026-11-09)' });
+      return;
+    }
+    if (hasSchedule && b.autoFrom && b.autoUntil && String(b.autoFrom).slice(0, 10) > String(b.autoUntil).slice(0, 10)) {
+      res.status(400).json({ error: 'วันเริ่มต้องไม่เกินวันสิ้นสุด' });
+      return;
+    }
+    let state = await getEarlyBird();
+    if (typeof b.on === 'boolean') state = await setEarlyBird(b.on);
+    if (hasSchedule) state = await setEarlyBirdSchedule(b.autoFrom ? String(b.autoFrom) : undefined, b.autoUntil ? String(b.autoUntil) : undefined);
+    res.json(state);
   }));
 
   app.put('/api/admin/sales', requireAdmin, smallJson, h(async (req, res) => {
@@ -1153,6 +1240,191 @@ export function createApp(): express.Express {
     await setEasySlipKey(key);
     console.log(`[admin] ${admin} set the EasySlip key`);
     res.json(await gatewayStatus());
+  }));
+
+  // ---- Who am I / change my own password ----------------------------------
+  app.get('/api/admin/me', requireAdmin, h(async (req, res) => {
+    res.json({ username: (req as any).admin.username, role: (req as any).admin.role });
+  }));
+
+  app.post('/api/admin/me/password', requireAdmin, smallJson, h(async (req, res) => {
+    const me = (req as any).admin as { username: string; role: string };
+    if (me.role === 'owner') {
+      res.status(400).json({ error: 'รหัสผ่านของบัญชีเจ้าของตั้งในตัวแปร ADMIN_PASSWORD บน Vercel' });
+      return;
+    }
+    const user = await findAdminUser(me.username);
+    if (!user || !(await checkAdminUserPassword(me.username, String(req.body?.current || '')))) {
+      res.status(400).json({ error: 'รหัสผ่านปัจจุบันไม่ถูกต้อง' });
+      return;
+    }
+    if (!validAdminPassword(String(req.body?.password || ''))) {
+      res.status(400).json({ error: 'รหัสผ่านใหม่ต้องยาวอย่างน้อย 10 ตัวอักษร' });
+      return;
+    }
+    await updateAdminUser(me.username, { password: String(req.body.password) });
+    auditNow(req, 'POST /me/password', me.username);
+    res.json({ ok: true, message: 'เปลี่ยนรหัสผ่านแล้ว กรุณาเข้าสู่ระบบใหม่' });
+  }));
+
+  // ---- Admin accounts (owner only) ------------------------------------------
+  app.get('/api/admin/admins', requireAdmin, h(async (_req, res) => {
+    res.json({ admins: await listAdminUsers() });
+  }));
+
+  app.post('/api/admin/admins', requireAdmin, smallJson, h(async (req, res) => {
+    const b = req.body || {};
+    const r = await createAdminUser({ username: String(b.username || ''), displayName: String(b.displayName || ''), role: isRole(b.role) ? b.role : 'viewer', password: String(b.password || '') });
+    if (!r.ok) {
+      res.status(400).json({ error: r.error });
+      return;
+    }
+    res.json({ admins: await listAdminUsers() });
+  }));
+
+  // sign every admin out (use when a password or a device may be compromised)
+  app.post('/api/admin/admins/sign-out-all', requireAdmin, h(async (req, res) => {
+    await signOutEveryone();
+    auditNow(req, 'POST /admins/sign-out-all');
+    res.json({ ok: true });
+  }));
+
+  app.patch('/api/admin/admins/:username', requireAdmin, smallJson, h(async (req, res) => {
+    const b = req.body || {};
+    const patch: Parameters<typeof updateAdminUser>[1] = {};
+    if (isRole(b.role)) patch.role = b.role;
+    if (typeof b.active === 'boolean') patch.active = b.active;
+    if (typeof b.displayName === 'string') patch.displayName = b.displayName;
+    if (typeof b.password === 'string' && b.password) patch.password = b.password;
+    if (b.signOut === true) patch.signOut = true;
+    const r = await updateAdminUser(String(req.params.username), patch);
+    if (!r.ok) {
+      res.status(400).json({ error: r.error });
+      return;
+    }
+    res.json({ admins: await listAdminUsers() });
+  }));
+
+  app.get('/api/admin/audit', requireAdmin, h(async (req, res) => {
+    const q = req.query;
+    res.json({
+      rows: await listAudit({
+        limit: Number(q.limit) || 100,
+        before: Number(q.before) || undefined,
+        action: typeof q.action === 'string' && q.action ? q.action.slice(0, 40) : undefined,
+        actor: typeof q.actor === 'string' && q.actor ? q.actor.slice(0, 60) : undefined,
+      }),
+    });
+  }));
+
+  // ---- Full (unmasked) orders: logged every time --------------------------------
+  app.get('/api/admin/orders/:orderId/full', requireAdmin, h(async (req, res) => {
+    const order = await getOrder(String(req.params.orderId));
+    if (!order) {
+      res.status(404).json({ error: 'ไม่พบคำสั่งซื้อ' });
+      return;
+    }
+    auditNow(req, 'GET /orders/:id/full', order.orderId, { reason: 'reveal sensitive fields' });
+    res.json({ order: toAdminView(order, { full: true }) });
+  }));
+
+  app.get('/api/admin/export/orders', requireAdmin, h(async (req, res) => {
+    const orders = await listOrders();
+    auditNow(req, 'GET /export/orders', '', { count: orders.length, kind: String(req.query.kind || 'full').slice(0, 20) });
+    res.json({ orders: orders.map((o) => toAdminView(o, { full: true })) });
+  }));
+
+  // ---- Refund record (the money itself is returned through the bank) -----------------
+  app.post('/api/admin/orders/:orderId/refund', requireAdmin, smallJson, h(async (req, res) => {
+    const id = String(req.params.orderId);
+    const order = await getOrder(id);
+    if (!order) {
+      res.status(404).json({ error: 'ไม่พบคำสั่งซื้อ' });
+      return;
+    }
+    const admin = (req as any).admin.username as string;
+    if (req.body?.clear === true) {
+      const cleared = await updateOrder(id, (o) => {
+        delete o.refundedAt;
+        delete o.refundAmount;
+        delete o.refundNote;
+        delete o.refundBy;
+      });
+      res.json({ order: toAdminView(cleared!) });
+      return;
+    }
+    if (order.paymentStatus !== 'PAID') {
+      res.status(400).json({ error: 'คำสั่งซื้อนี้ยังไม่ได้ชำระเงิน จึงไม่มีเงินให้คืน' });
+      return;
+    }
+    const amount = Math.round(Number(req.body?.amount) * 100) / 100;
+    if (!Number.isFinite(amount) || amount <= 0 || amount > order.totalPrice) {
+      res.status(400).json({ error: 'ยอดคืนต้องมากกว่า 0 และไม่เกินยอดที่ชำระ (' + order.totalPrice + ' บาท)' });
+      return;
+    }
+    const note = clean(req.body?.note, 300);
+    if (note.length < 3) {
+      res.status(400).json({ error: 'กรุณาระบุรายละเอียดการคืนเงิน (เช่น โอนคืนวันที่…)' });
+      return;
+    }
+    const updated = await updateOrder(id, (o) => {
+      o.refundedAt = new Date().toISOString();
+      o.refundAmount = amount;
+      o.refundNote = note;
+      o.refundBy = admin;
+    });
+    res.json({ order: toAdminView(updated!) });
+  }));
+
+  // ---- Seat limits for the tower / shooting range (overrides TOWER_LIMIT / GUN_LIMIT) ------
+  app.get('/api/admin/limits', requireAdmin, h(async (_req, res) => {
+    const limits = await refreshActivityLimits(true);
+    res.json({ limits: { tower: limits.tower, gun: limits.gun }, seatsLeft: await activitySeatsLeft() });
+  }));
+
+  app.put('/api/admin/limits', requireAdmin, smallJson, h(async (req, res) => {
+    const n = (v: unknown) => Math.floor(Number(v));
+    const tower = n(req.body?.tower);
+    const gun = n(req.body?.gun);
+    if (![tower, gun].every((x) => Number.isFinite(x) && x >= 0 && x <= 10000)) {
+      res.status(400).json({ error: 'จำนวนที่นั่งต้องเป็นตัวเลข 0 ขึ้นไป (0 = ไม่จำกัด)' });
+      return;
+    }
+    const limits = await saveActivityLimits({ tower, gun });
+    res.json({ limits: { tower: limits.tower, gun: limits.gun }, seatsLeft: await activitySeatsLeft() });
+  }));
+
+  // ---- Runner accounts: switch off / on, send a password-reset e-mail ---------------
+  app.post('/api/admin/runners/:runnerId/disable', requireAdmin, smallJson, h(async (req, res) => {
+    const ok = await setRunnerDisabled(String(req.params.runnerId), req.body?.disabled !== false);
+    if (!ok) {
+      res.status(404).json({ error: 'ไม่พบบัญชีนี้' });
+      return;
+    }
+    res.json({ ok: true, disabled: req.body?.disabled !== false });
+  }));
+
+  app.post('/api/admin/runners/:runnerId/reset-email', requireAdmin, h(async (req, res) => {
+    const runner = await getRunner(String(req.params.runnerId));
+    if (!runner) {
+      res.status(404).json({ error: 'ไม่พบบัญชีนี้' });
+      return;
+    }
+    if (!runner.email) {
+      res.status(400).json({ error: 'บัญชีนี้ไม่มีอีเมล (สมัครผ่าน LINE) จึงส่งลิงก์ตั้งรหัสผ่านไม่ได้' });
+      return;
+    }
+    if (!runner.password_hash) {
+      res.status(400).json({ error: 'บัญชีนี้เข้าสู่ระบบด้วย Google/LINE ไม่มีรหัสผ่านให้ตั้งใหม่' });
+      return;
+    }
+    const token = issueActionToken('reset', runner.runner_id, passwordFingerprint(runner.password_hash));
+    const r = await sendAccountMail(runner.email, 'ตั้งรหัสผ่านใหม่ · CHANGSUEK RUN', 'ตั้งรหัสผ่านใหม่', 'ผู้จัดงานส่งลิงก์ตั้งรหัสผ่านใหม่ให้บัญชีนักวิ่งของคุณ กดปุ่มด้านล่างเพื่อตั้งรหัสผ่านใหม่ ลิงก์ใช้ได้ 1 ชั่วโมงและใช้ได้ครั้งเดียว', 'ตั้งรหัสผ่านใหม่', SITE_URL + '/#reset=' + token);
+    if (!r.ok) {
+      res.status(r.error === 'MAIL_NOT_CONFIGURED' ? 503 : 502).json({ error: 'ส่งอีเมลไม่สำเร็จ: ' + r.error });
+      return;
+    }
+    res.json({ ok: true, to: maskEmail(runner.email) });
   }));
 
   registerRunnerRoutes(app, h, clientIp);

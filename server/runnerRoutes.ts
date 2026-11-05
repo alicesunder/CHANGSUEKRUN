@@ -12,7 +12,7 @@ import express from 'express';
 import type { Express, Request, RequestHandler, Response } from 'express';
 import { docsSignature } from './auth';
 import { SITE_URL, maskEmail, sendAccountMail, sendTicketEmail } from './mailer';
-import { findOrderByCode, listOrdersByRunner, rateLimited, toRunnerView, updateOrder, getOrder } from './store';
+import { findOrderByCode, listOrdersByRunner, rateLimited, recordEmailResult, toRunnerView, updateOrder, getOrder } from './store';
 import {
   type RunnerRow,
   checkStaff,
@@ -263,6 +263,7 @@ export function registerRunnerRoutes(app: Express, h: Wrap, clientIp: (req: Requ
       return;
     }
     const r = await sendTicketEmail(order);
+    await recordEmailResult(order.orderId, r);
     if (!r.ok) {
       res.status(503).json({ error: 'ส่งอีเมลไม่สำเร็จในขณะนี้ ลองใหม่ภายหลัง หรือเปิดเอกสาร A4 จากปุ่มด้านบนแทน' });
       return;

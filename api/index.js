@@ -29169,9 +29169,9 @@ var require_version = __commonJS({
     var G18 = 1 << 12 | 1 << 11 | 1 << 10 | 1 << 9 | 1 << 8 | 1 << 5 | 1 << 2 | 1 << 0;
     var G18_BCH = Utils.getBCHDigit(G18);
     function getBestVersionForDataLength(mode, length, errorCorrectionLevel) {
-      for (let currentVersion = 1; currentVersion <= 40; currentVersion++) {
-        if (length <= exports.getCapacity(currentVersion, errorCorrectionLevel, mode)) {
-          return currentVersion;
+      for (let currentVersion2 = 1; currentVersion2 <= 40; currentVersion2++) {
+        if (length <= exports.getCapacity(currentVersion2, errorCorrectionLevel, mode)) {
+          return currentVersion2;
         }
       }
       return void 0;
@@ -29188,10 +29188,10 @@ var require_version = __commonJS({
       return totalBits;
     }
     function getBestVersionForMixedData(segments, errorCorrectionLevel) {
-      for (let currentVersion = 1; currentVersion <= 40; currentVersion++) {
-        const length = getTotalBitsFromDataArray(segments, currentVersion);
-        if (length <= exports.getCapacity(currentVersion, errorCorrectionLevel, Mode.MIXED)) {
-          return currentVersion;
+      for (let currentVersion2 = 1; currentVersion2 <= 40; currentVersion2++) {
+        const length = getTotalBitsFromDataArray(segments, currentVersion2);
+        if (length <= exports.getCapacity(currentVersion2, errorCorrectionLevel, Mode.MIXED)) {
+          return currentVersion2;
         }
       }
       return void 0;
@@ -33724,6 +33724,30 @@ alter table csr.runners add column if not exists facebook_id text;
 create unique index if not exists runners_google_uidx on csr.runners (google_id) where google_id is not null;
 create unique index if not exists runners_facebook_uidx on csr.runners (facebook_id) where facebook_id is not null;
 alter table csr.runners enable row level security;
+create table if not exists csr.audit_log (
+  id      bigserial primary key,
+  at      timestamptz not null default now(),
+  actor   text not null,
+  role    text not null default '',
+  action  text not null,
+  target  text not null default '',
+  detail  jsonb not null default '{}'::jsonb,
+  ip      text not null default ''
+);
+create index if not exists audit_log_at_idx on csr.audit_log (at desc);
+create table if not exists csr.admin_users (
+  username      text primary key,
+  display_name  text not null default '',
+  role          text not null,
+  password_hash text not null,
+  active        boolean not null default true,
+  token_version integer not null default 0,
+  created_at    timestamptz not null default now(),
+  last_login_at timestamptz
+);
+alter table csr.runners add column if not exists disabled_at timestamptz;
+alter table csr.audit_log enable row level security;
+alter table csr.admin_users enable row level security;
 
 alter table csr.orders          enable row level security;
 alter table csr.bib_counters    enable row level security;
@@ -33880,19 +33904,42 @@ async function setSalesOpen(open) {
   );
   return value;
 }
-async function getEarlyBird() {
+var DATE_ONLY = /^\d{4}-\d{2}-\d{2}$/;
+var bkkStart = (d) => DATE_ONLY.test(d) ? `${d}T00:00:00+07:00` : d;
+var bkkEnd = (d) => DATE_ONLY.test(d) ? `${d}T23:59:59.999+07:00` : d;
+function earlyBirdWindowActive(autoFrom, autoUntil, now = Date.now()) {
+  if (!autoFrom && !autoUntil) return false;
+  const from = autoFrom ? Date.parse(bkkStart(autoFrom)) : -Infinity;
+  const until = autoUntil ? Date.parse(bkkEnd(autoUntil)) : Infinity;
+  if (Number.isNaN(from) || Number.isNaN(until)) return false;
+  return now >= from && now <= until;
+}
+async function readEarlyBird() {
   const rows = await dbQuery("select value from csr.settings where key = 'early_bird'");
   const v = rows[0] ? asObj(rows[0].value) : {};
-  return { on: v.on === true, updatedAt: v.updatedAt };
+  return { manual: v.on === true, autoFrom: v.autoFrom || void 0, autoUntil: v.autoUntil || void 0, updatedAt: v.updatedAt };
 }
-async function setEarlyBird(on) {
-  const value = { on, updatedAt: (/* @__PURE__ */ new Date()).toISOString() };
+async function getEarlyBird() {
+  const v = await readEarlyBird();
+  const inWindow = earlyBirdWindowActive(v.autoFrom, v.autoUntil);
+  return { on: v.manual || inWindow, manual: v.manual, autoFrom: v.autoFrom, autoUntil: v.autoUntil, byTimer: !v.manual && inWindow, updatedAt: v.updatedAt };
+}
+async function writeEarlyBird(v) {
+  const value = { on: v.manual, autoFrom: v.autoFrom || null, autoUntil: v.autoUntil || null, updatedAt: (/* @__PURE__ */ new Date()).toISOString() };
   await dbQuery(
     `insert into csr.settings (key, value) values ('early_bird', $1::jsonb)
      on conflict (key) do update set value = excluded.value, updated_at = now()`,
     [JSON.stringify(value)]
   );
-  return value;
+  return getEarlyBird();
+}
+async function setEarlyBird(on) {
+  const cur = await readEarlyBird();
+  return writeEarlyBird({ manual: on, autoFrom: cur.autoFrom, autoUntil: cur.autoUntil });
+}
+async function setEarlyBirdSchedule(autoFrom, autoUntil) {
+  const cur = await readEarlyBird();
+  return writeEarlyBird({ manual: cur.manual, autoFrom, autoUntil });
 }
 async function getOmiseKey() {
   const rows = await dbQuery("select value from csr.settings where key = 'gateway'");
@@ -33975,11 +34022,31 @@ var TOWER_USED_SQL = `select coalesce(sum((data->'addOns'->>'people')::int), 0):
 var GUN_USED_SQL = `select coalesce(sum((data->'addOns'->>'people')::int), 0)::text as n from csr.orders
   where data->'addOns'->>'gun' in ('standard', 'premium') and not (data ? 'cancelledAt') and not (data ? 'isTest')
     and (payment_status = 'PAID' or (data->>'expiresAt')::timestamptz > now())`;
-var ACTIVITY_LIMITS = {
+var ENV_LIMITS = {
   tower: Math.max(0, Math.floor(Number(process.env.TOWER_LIMIT) || 0)),
   gun: Math.max(0, Math.floor(Number(process.env.GUN_LIMIT) || 0))
 };
+var ACTIVITY_LIMITS = { ...ENV_LIMITS };
+var limitsAt = 0;
+async function refreshActivityLimits(force = false) {
+  if (!force && Date.now() - limitsAt < 5e3) return ACTIVITY_LIMITS;
+  const rows = await dbQuery("select value from csr.settings where key = 'activity_limits'");
+  const v = rows[0] ? asObj(rows[0].value) : {};
+  const n = (x, d) => typeof x === "number" && Number.isFinite(x) ? Math.max(0, Math.floor(x)) : d;
+  ACTIVITY_LIMITS.tower = n(v.tower, ENV_LIMITS.tower);
+  ACTIVITY_LIMITS.gun = n(v.gun, ENV_LIMITS.gun);
+  limitsAt = Date.now();
+  return ACTIVITY_LIMITS;
+}
+async function saveActivityLimits(limits) {
+  await dbQuery(
+    "insert into csr.settings (key, value) values ('activity_limits', $1::jsonb) on conflict (key) do update set value = excluded.value, updated_at = now()",
+    [JSON.stringify({ tower: Math.max(0, Math.floor(limits.tower)), gun: Math.max(0, Math.floor(limits.gun)) })]
+  );
+  return refreshActivityLimits(true);
+}
 async function activitySeatsLeft() {
+  await refreshActivityLimits();
   const [t, g] = await Promise.all([
     ACTIVITY_LIMITS.tower ? dbQuery(TOWER_USED_SQL) : Promise.resolve(null),
     ACTIVITY_LIMITS.gun ? dbQuery(GUN_USED_SQL) : Promise.resolve(null)
@@ -33990,6 +34057,7 @@ async function activitySeatsLeft() {
   };
 }
 async function insertOrderChecked(o, windTunnelLimit) {
+  await refreshActivityLimits();
   return dbTx(async (q) => {
     const wantsTower = o.addOns?.tower && ACTIVITY_LIMITS.tower > 0 && !o.isTest;
     const wantsGun = o.addOns && o.addOns.gun !== "none" && ACTIVITY_LIMITS.gun > 0 && !o.isTest;
@@ -34027,6 +34095,15 @@ async function listOrders() {
 }
 async function rollbackNewOrder(orderId) {
   await dbQuery("delete from csr.orders where order_id = $1 and payment_status <> 'PAID'", [orderId]);
+}
+async function recordEmailResult(orderId, r) {
+  try {
+    await updateOrder(orderId, (o) => {
+      o.emailStatus = { at: (/* @__PURE__ */ new Date()).toISOString(), ok: r.ok, ...r.ok ? {} : { error: String(r.error || "unknown").slice(0, 200) } };
+    });
+  } catch (err) {
+    console.error("[mail] could not record the result for", orderId, err instanceof Error ? err.message : err);
+  }
 }
 async function updateOrder(orderId, mutator) {
   return dbTx(async (q) => {
@@ -34247,6 +34324,8 @@ function toStaffView(o) {
     paymentStatus: o.paymentStatus,
     verificationStatus: o.verificationStatus,
     kitStatus: o.kitStatus,
+    kitCheckedInAt: o.kitCheckedInAt,
+    kitCheckedInBy: o.kitCheckedInBy,
     registrationStatus: o.registrationStatus,
     cancelledAt: o.cancelledAt,
     cancelReason: o.cancelReason,
@@ -34254,9 +34333,19 @@ function toStaffView(o) {
     expiresAt: o.expiresAt
   };
 }
-function toAdminView(o) {
+function toAdminView(o, opts = {}) {
   const { accessTokenHash, slipFile, ...rest } = o;
-  return { ...rest, hasSlip: Boolean(slipFile) };
+  if (opts.full) return { ...rest, hasSlip: Boolean(slipFile) };
+  const hidden = "\u2022\u2022\u2022 (\u0E01\u0E14\u0E41\u0E2A\u0E14\u0E07\u0E02\u0E49\u0E2D\u0E21\u0E39\u0E25\u0E40\u0E15\u0E47\u0E21)";
+  const insurance = o.insurance ? {
+    ...o.insurance,
+    idCard: o.insurance.idCard ? maskThaiId(o.insurance.idCard) : o.insurance.idCard,
+    bloodType: o.insurance.bloodType ? hidden : o.insurance.bloodType,
+    medicalConditions: o.insurance.medicalConditions ? hidden : o.insurance.medicalConditions
+  } : void 0;
+  const shooting = o.shooting ? { ...o.shooting, shooters: o.shooting.shooters.map((x) => ({ ...x, idCard: maskThaiId(x.idCard) })) } : void 0;
+  const activityWaiver = o.activityWaiver ? { ...o.activityWaiver, participants: o.activityWaiver.participants.map((x) => ({ ...x, idCard: maskThaiId(x.idCard) })) } : void 0;
+  return { ...rest, insurance, shooting, activityWaiver, masked: true, hasSlip: Boolean(slipFile) };
 }
 async function getWinners() {
   const rows = await dbQuery("select value from csr.settings where key = 'winners'");
@@ -34623,7 +34712,490 @@ function parkingQrPayload(orderId, p) {
 }
 
 // server/auth.ts
+import crypto3 from "crypto";
+
+// server/runners.ts
 import crypto2 from "crypto";
+var SECRET_SOURCE = process.env.RUNNER_SESSION_SECRET || process.env.ADMIN_SESSION_SECRET || process.env.ADMIN_PASSWORD || crypto2.randomBytes(24).toString("hex");
+var KEY = crypto2.createHash("sha256").update(`csr-runner-session|${SECRET_SOURCE}`).digest();
+var RUNNER_TTL_MS = 30 * 24 * 60 * 60 * 1e3;
+var STAFF_TTL_MS = 12 * 60 * 60 * 1e3;
+var b64 = (s) => Buffer.from(s).toString("base64url");
+var hmac = (s) => crypto2.createHmac("sha256", KEY).update(s).digest("base64url");
+function safeEqual(a, b) {
+  const ha = crypto2.createHash("sha256").update(a).digest();
+  const hb = crypto2.createHash("sha256").update(b).digest();
+  return crypto2.timingSafeEqual(ha, hb);
+}
+function issueSession(role, sub) {
+  const expiresAt = Date.now() + (role === "staff" ? STAFF_TTL_MS : RUNNER_TTL_MS);
+  const payload = b64(JSON.stringify({ k: role, s: sub, exp: expiresAt }));
+  return { token: `r1.${payload}.${hmac(`r1.${payload}`)}`, expiresAt };
+}
+function verifySession(token) {
+  if (!token) return null;
+  const [v, payload, sig] = token.split(".");
+  if (v !== "r1" || !payload || !sig || !safeEqual(sig, hmac(`r1.${payload}`))) return null;
+  try {
+    const d = JSON.parse(Buffer.from(payload, "base64url").toString("utf8"));
+    if (typeof d.exp !== "number" || Date.now() > d.exp) return null;
+    if (d.k !== "runner" && d.k !== "staff" || typeof d.s !== "string" || !d.s) return null;
+    return { role: d.k, sub: d.s };
+  } catch {
+    return null;
+  }
+}
+function sessionFromRequest(req) {
+  const raw = req.headers["x-runner-token"];
+  return verifySession(typeof raw === "string" ? raw : void 0);
+}
+function requireRunner(req, res, next) {
+  const s = sessionFromRequest(req);
+  if (!s || s.role !== "runner") {
+    res.status(401).json({ error: "\u0E01\u0E23\u0E38\u0E13\u0E32\u0E40\u0E02\u0E49\u0E32\u0E2A\u0E39\u0E48\u0E23\u0E30\u0E1A\u0E1A\u0E01\u0E48\u0E2D\u0E19", needLogin: true });
+    return;
+  }
+  req.runner = s;
+  isRunnerDisabled(s.sub).then((off) => {
+    if (off) {
+      res.status(403).json({ error: "\u0E1A\u0E31\u0E0D\u0E0A\u0E35\u0E19\u0E35\u0E49\u0E16\u0E39\u0E01\u0E23\u0E30\u0E07\u0E31\u0E1A\u0E01\u0E32\u0E23\u0E43\u0E0A\u0E49\u0E07\u0E32\u0E19 \u0E01\u0E23\u0E38\u0E13\u0E32\u0E15\u0E34\u0E14\u0E15\u0E48\u0E2D\u0E1C\u0E39\u0E49\u0E08\u0E31\u0E14\u0E07\u0E32\u0E19" });
+      return;
+    }
+    next();
+  }).catch(next);
+}
+async function isRunnerDisabled(runnerId) {
+  await ensureRunnerTables();
+  const rows = await dbQuery("select disabled_at from csr.runners where runner_id = $1", [runnerId]);
+  return Boolean(rows[0]?.disabled_at);
+}
+async function setRunnerDisabled(runnerId, disabled) {
+  await ensureRunnerTables();
+  const rows = await dbQuery(
+    disabled ? "update csr.runners set disabled_at = now() where runner_id = $1 returning runner_id" : "update csr.runners set disabled_at = null where runner_id = $1 returning runner_id",
+    [runnerId]
+  );
+  return rows.length > 0;
+}
+var fp = (s) => crypto2.createHash("sha256").update(s).digest("hex").slice(0, 16);
+var passwordFingerprint = (passwordHash) => fp(`pw|${passwordHash || ""}`);
+var emailFingerprint = (email) => fp(`em|${(email || "").toLowerCase()}`);
+function issueActionToken(kind, runnerId, fingerprint) {
+  const ttl = kind === "reset" ? 60 * 60 * 1e3 : 3 * 24 * 60 * 60 * 1e3;
+  const payload = b64(JSON.stringify({ k: kind, s: runnerId, f: fingerprint, exp: Date.now() + ttl }));
+  return `a1.${payload}.${hmac(`a1.${payload}`)}`;
+}
+function readActionToken(kind, token) {
+  const [v, payload, sig] = String(token || "").split(".");
+  if (v !== "a1" || !payload || !sig || !safeEqual(sig, hmac(`a1.${payload}`))) return null;
+  try {
+    const d = JSON.parse(Buffer.from(payload, "base64url").toString("utf8"));
+    if (d.k !== kind || typeof d.exp !== "number" || Date.now() > d.exp || typeof d.s !== "string" || typeof d.f !== "string") return null;
+    return { runnerId: d.s, fp: d.f };
+  } catch {
+    return null;
+  }
+}
+var SCRYPT_N = 16384;
+function hashPassword(password) {
+  const salt = crypto2.randomBytes(16);
+  const hash = crypto2.scryptSync(password, salt, 32, { N: SCRYPT_N, r: 8, p: 1 });
+  return `scrypt$${SCRYPT_N}$${salt.toString("hex")}$${hash.toString("hex")}`;
+}
+function verifyPassword(password, stored) {
+  const [alg, n, saltHex, hashHex] = String(stored || "").split("$");
+  if (alg !== "scrypt" || !n || !saltHex || !hashHex) return false;
+  try {
+    const expected = Buffer.from(hashHex, "hex");
+    const got = crypto2.scryptSync(password, Buffer.from(saltHex, "hex"), expected.length, { N: Number(n), r: 8, p: 1 });
+    return got.length === expected.length && crypto2.timingSafeEqual(got, expected);
+  } catch {
+    return false;
+  }
+}
+var STAFF_DEFAULT = [{ username: "chr27", hash: "scrypt$16384$a3209a2451591de5ec28d883098e4081$881ce08021687007749a09f11df239e1573e75362c3abeb19f6eb3c74c6c4b4e" }];
+function staffAccounts() {
+  const raw = process.env.STAFF_ACCOUNTS;
+  if (!raw) return STAFF_DEFAULT;
+  try {
+    const list = JSON.parse(raw);
+    if (Array.isArray(list)) {
+      const ok = list.filter((a) => a && typeof a.username === "string" && typeof a.hash === "string");
+      return [...STAFF_DEFAULT, ...ok];
+    }
+  } catch {
+    console.error("[runners] STAFF_ACCOUNTS is not valid JSON; using the built-in staff account only");
+  }
+  return STAFF_DEFAULT;
+}
+var DUMMY_HASH = hashPassword(crypto2.randomBytes(8).toString("hex"));
+function checkStaff(username, password) {
+  const name2 = String(username || "").trim().toLowerCase();
+  const acc = staffAccounts().find((a) => a.username.toLowerCase() === name2);
+  const ok = verifyPassword(String(password || ""), acc ? acc.hash : DUMMY_HASH);
+  return acc && ok ? acc.username : null;
+}
+var tablesReady = null;
+function ensureRunnerTables() {
+  if (!tablesReady) {
+    tablesReady = (async () => {
+      await dbQuery(`create table if not exists csr.runners (
+        runner_id     text primary key,
+        email         text,
+        username      text,
+        name          text not null default '',
+        phone         text not null default '',
+        password_hash text,
+        line_user_id  text,
+        profile       jsonb not null default '{}'::jsonb,
+        created_at    timestamptz not null default now(),
+        last_login_at timestamptz
+      )`);
+      await dbQuery("create unique index if not exists runners_email_uidx on csr.runners (email) where email is not null");
+      await dbQuery("create unique index if not exists runners_username_uidx on csr.runners (username) where username is not null");
+      await dbQuery("alter table csr.runners add column if not exists email_verified boolean not null default false");
+      await dbQuery("alter table csr.runners add column if not exists google_id text");
+      await dbQuery("alter table csr.runners add column if not exists facebook_id text");
+      await dbQuery("alter table csr.runners add column if not exists disabled_at timestamptz");
+      await dbQuery("create unique index if not exists runners_line_uidx on csr.runners (line_user_id) where line_user_id is not null");
+      await dbQuery("create unique index if not exists runners_google_uidx on csr.runners (google_id) where google_id is not null");
+      await dbQuery("create unique index if not exists runners_facebook_uidx on csr.runners (facebook_id) where facebook_id is not null");
+      await dbQuery("create index if not exists orders_runner_idx on csr.orders ((data->>'runnerId')) where data ? 'runnerId'");
+      await dbQuery("alter table csr.runners enable row level security");
+    })().catch((err) => {
+      tablesReady = null;
+      throw err;
+    });
+  }
+  return tablesReady;
+}
+var cleanText = (v, n) => typeof v === "string" ? v.replace(/[\u0000-\u001f<>]/g, " ").trim().slice(0, n) : "";
+var normEmail = (v) => cleanText(v, 120).toLowerCase();
+var normUsername = (v) => cleanText(v, 30).toLowerCase();
+var isEmail = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+var isUsername = (v) => /^[a-z0-9._-]{4,30}$/.test(v);
+function newRunnerId() {
+  return `R${crypto2.randomBytes(7).toString("base64url").replace(/[-_]/g, "x").slice(0, 10).toUpperCase()}`;
+}
+async function createRunner(input) {
+  await ensureRunnerTables();
+  const name2 = cleanText(input.name, 80);
+  const email = input.email ? normEmail(input.email) : "";
+  const username = input.username ? normUsername(input.username) : "";
+  const phone = cleanText(input.phone, 20).replace(/[^\d+\-\s]/g, "");
+  if (name2.length < 2) return { ok: false, error: "\u0E01\u0E23\u0E38\u0E13\u0E32\u0E01\u0E23\u0E2D\u0E01\u0E0A\u0E37\u0E48\u0E2D-\u0E19\u0E32\u0E21\u0E2A\u0E01\u0E38\u0E25" };
+  if (!email && !username) return { ok: false, error: "\u0E01\u0E23\u0E38\u0E13\u0E32\u0E01\u0E23\u0E2D\u0E01\u0E2D\u0E35\u0E40\u0E21\u0E25 \u0E2B\u0E23\u0E37\u0E2D\u0E15\u0E31\u0E49\u0E07\u0E0A\u0E37\u0E48\u0E2D\u0E1C\u0E39\u0E49\u0E43\u0E0A\u0E49" };
+  if (email && !isEmail(email)) return { ok: false, error: "\u0E2D\u0E35\u0E40\u0E21\u0E25\u0E44\u0E21\u0E48\u0E16\u0E39\u0E01\u0E15\u0E49\u0E2D\u0E07" };
+  if (username && !isUsername(username)) return { ok: false, error: "\u0E0A\u0E37\u0E48\u0E2D\u0E1C\u0E39\u0E49\u0E43\u0E0A\u0E49\u0E15\u0E49\u0E2D\u0E07\u0E40\u0E1B\u0E47\u0E19 a-z 0-9 . _ - \u0E22\u0E32\u0E27 4\u201330 \u0E15\u0E31\u0E27\u0E2D\u0E31\u0E01\u0E29\u0E23" };
+  if (username && staffAccounts().some((a) => a.username.toLowerCase() === username)) return { ok: false, error: "\u0E0A\u0E37\u0E48\u0E2D\u0E1C\u0E39\u0E49\u0E43\u0E0A\u0E49\u0E19\u0E35\u0E49\u0E16\u0E39\u0E01\u0E43\u0E0A\u0E49\u0E41\u0E25\u0E49\u0E27" };
+  if (String(input.password || "").length < 8) return { ok: false, error: "\u0E23\u0E2B\u0E31\u0E2A\u0E1C\u0E48\u0E32\u0E19\u0E15\u0E49\u0E2D\u0E07\u0E22\u0E32\u0E27\u0E2D\u0E22\u0E48\u0E32\u0E07\u0E19\u0E49\u0E2D\u0E22 8 \u0E15\u0E31\u0E27\u0E2D\u0E31\u0E01\u0E29\u0E23" };
+  if (String(input.password).length > 200) return { ok: false, error: "\u0E23\u0E2B\u0E31\u0E2A\u0E1C\u0E48\u0E32\u0E19\u0E22\u0E32\u0E27\u0E40\u0E01\u0E34\u0E19\u0E44\u0E1B" };
+  if (email && (await dbQuery("select 1 from csr.runners where email = $1", [email])).length) return { ok: false, error: "\u0E2D\u0E35\u0E40\u0E21\u0E25\u0E19\u0E35\u0E49\u0E2A\u0E21\u0E31\u0E04\u0E23\u0E44\u0E27\u0E49\u0E41\u0E25\u0E49\u0E27 \u0E01\u0E23\u0E38\u0E13\u0E32\u0E40\u0E02\u0E49\u0E32\u0E2A\u0E39\u0E48\u0E23\u0E30\u0E1A\u0E1A" };
+  if (username && (await dbQuery("select 1 from csr.runners where username = $1", [username])).length) return { ok: false, error: "\u0E0A\u0E37\u0E48\u0E2D\u0E1C\u0E39\u0E49\u0E43\u0E0A\u0E49\u0E19\u0E35\u0E49\u0E16\u0E39\u0E01\u0E43\u0E0A\u0E49\u0E41\u0E25\u0E49\u0E27" };
+  const id = newRunnerId();
+  try {
+    const rows = await dbQuery(
+      `insert into csr.runners (runner_id, email, username, name, phone, password_hash) values ($1, $2, $3, $4, $5, $6) returning *`,
+      [id, email || null, username || null, name2, phone, hashPassword(String(input.password))]
+    );
+    return { ok: true, runner: rows[0] };
+  } catch (err) {
+    if (String(err?.message || "").includes("duplicate")) return { ok: false, error: "\u0E2D\u0E35\u0E40\u0E21\u0E25\u0E2B\u0E23\u0E37\u0E2D\u0E0A\u0E37\u0E48\u0E2D\u0E1C\u0E39\u0E49\u0E43\u0E0A\u0E49\u0E19\u0E35\u0E49\u0E16\u0E39\u0E01\u0E43\u0E0A\u0E49\u0E41\u0E25\u0E49\u0E27" };
+    throw err;
+  }
+}
+async function loginRunner(identifier, password) {
+  await ensureRunnerTables();
+  const id = cleanText(identifier, 120).toLowerCase();
+  const rows = await dbQuery("select * from csr.runners where email = $1 or username = $1", [id]);
+  const row2 = rows[0];
+  const ok = verifyPassword(String(password || ""), row2?.password_hash || DUMMY_HASH);
+  if (!row2 || !row2.password_hash || !ok || row2.disabled_at) return null;
+  await dbQuery("update csr.runners set last_login_at = now() where runner_id = $1", [row2.runner_id]);
+  return row2;
+}
+async function getRunner(runnerId) {
+  await ensureRunnerTables();
+  const rows = await dbQuery("select * from csr.runners where runner_id = $1", [runnerId]);
+  return rows[0];
+}
+var PROFILE_KEYS = ["firstName", "lastName", "shirtSize", "gender", "birthDate", "bloodType", "emergencyName", "emergencyPhone", "relationship"];
+async function updateRunnerProfile(runnerId, patch) {
+  const row2 = await getRunner(runnerId);
+  if (!row2) return { ok: false, error: "\u0E44\u0E21\u0E48\u0E1E\u0E1A\u0E1A\u0E31\u0E0D\u0E0A\u0E35" };
+  const name2 = patch.name !== void 0 ? cleanText(patch.name, 80) : row2.name;
+  const phone = patch.phone !== void 0 ? cleanText(patch.phone, 20).replace(/[^\d+\-\s]/g, "") : row2.phone;
+  let email = row2.email;
+  if (patch.email !== void 0) {
+    const e = normEmail(patch.email);
+    if (e && !isEmail(e)) return { ok: false, error: "\u0E2D\u0E35\u0E40\u0E21\u0E25\u0E44\u0E21\u0E48\u0E16\u0E39\u0E01\u0E15\u0E49\u0E2D\u0E07" };
+    if (e && e !== row2.email && (await dbQuery("select 1 from csr.runners where email = $1 and runner_id <> $2", [e, runnerId])).length) {
+      return { ok: false, error: "\u0E2D\u0E35\u0E40\u0E21\u0E25\u0E19\u0E35\u0E49\u0E16\u0E39\u0E01\u0E43\u0E0A\u0E49\u0E42\u0E14\u0E22\u0E1A\u0E31\u0E0D\u0E0A\u0E35\u0E2D\u0E37\u0E48\u0E19\u0E41\u0E25\u0E49\u0E27" };
+    }
+    email = e || null;
+  }
+  const profile = { ...row2.profile || {} };
+  if (patch.profile && typeof patch.profile === "object") {
+    for (const k of PROFILE_KEYS) {
+      const v = patch.profile[k];
+      if (typeof v === "string") profile[k] = cleanText(v, 80);
+    }
+  }
+  if (name2.length < 2) return { ok: false, error: "\u0E01\u0E23\u0E38\u0E13\u0E32\u0E01\u0E23\u0E2D\u0E01\u0E0A\u0E37\u0E48\u0E2D" };
+  const rows = await dbQuery(
+    "update csr.runners set name = $2, phone = $3, email = $4, profile = $5::jsonb, email_verified = (email_verified and email is not distinct from $4) where runner_id = $1 returning *",
+    [runnerId, name2, phone, email, JSON.stringify(profile)]
+  );
+  return { ok: true, runner: rows[0] };
+}
+var SOCIAL_COLUMN = { line: "line_user_id", google: "google_id" };
+async function upsertSocialRunner(provider, p) {
+  await ensureRunnerTables();
+  const col = SOCIAL_COLUMN[provider];
+  const byId = await dbQuery(`select * from csr.runners where ${col} = $1`, [p.id]);
+  if (byId[0]) {
+    await dbQuery("update csr.runners set last_login_at = now() where runner_id = $1", [byId[0].runner_id]);
+    return byId[0];
+  }
+  const email = p.email ? normEmail(p.email) : "";
+  const byEmail = email && isEmail(email) ? await dbQuery("select * from csr.runners where email = $1", [email]) : [];
+  if (byEmail[0] && p.emailVerified) {
+    const rows2 = await dbQuery(`update csr.runners set ${col} = $2, email_verified = true, last_login_at = now() where runner_id = $1 returning *`, [byEmail[0].runner_id, p.id]);
+    return rows2[0];
+  }
+  const rows = await dbQuery(
+    `insert into csr.runners (runner_id, name, email, ${col}, email_verified, last_login_at) values ($1, $2, $3, $4, $5, now()) returning *`,
+    [newRunnerId(), cleanText(p.name, 80) || (provider === "line" ? "\u0E19\u0E31\u0E01\u0E27\u0E34\u0E48\u0E07 LINE" : "\u0E19\u0E31\u0E01\u0E27\u0E34\u0E48\u0E07"), email && isEmail(email) && !byEmail[0] ? email : null, p.id, Boolean(p.emailVerified && email && isEmail(email) && !byEmail[0])]
+  );
+  return rows[0];
+}
+function publicRunner(r) {
+  return {
+    id: r.runner_id,
+    name: r.name,
+    email: r.email || "",
+    username: r.username || "",
+    phone: r.phone || "",
+    emailVerified: Boolean(r.email_verified),
+    lineLinked: Boolean(r.line_user_id),
+    social: [r.line_user_id && "line", r.google_id && "google"].filter(Boolean),
+    disabled: Boolean(r.disabled_at),
+    profile: r.profile || {},
+    createdAt: r.created_at
+  };
+}
+async function listRunnersForAdmin() {
+  await ensureRunnerTables();
+  const rows = await dbQuery(
+    `select r.*,
+        count(o.order_id) filter (where not (o.data ? 'cancelledAt') and not (o.data ? 'isTest')) as orders,
+        count(o.order_id) filter (where o.data->>'paymentStatus' = 'PAID' and not (o.data ? 'cancelledAt') and not (o.data ? 'isTest')) as paid_orders,
+        coalesce(sum((o.data->>'totalPrice')::numeric) filter (where o.data->>'paymentStatus' = 'PAID' and not (o.data ? 'cancelledAt') and not (o.data ? 'isTest')), 0) as paid_total,
+        max(o.created_at) filter (where not (o.data ? 'isTest')) as last_order_at
+       from csr.runners r
+       left join csr.orders o on o.data->>'runnerId' = r.runner_id
+      group by r.runner_id
+      order by r.created_at desc`
+  );
+  return rows.map((r) => ({
+    id: r.runner_id,
+    name: r.name || "",
+    email: r.email || "",
+    username: r.username || "",
+    phone: r.phone || "",
+    emailVerified: Boolean(r.email_verified),
+    disabled: Boolean(r.disabled_at),
+    methods: [r.password_hash && "password", r.google_id && "google", r.line_user_id && "line"].filter(Boolean),
+    createdAt: new Date(r.created_at).toISOString(),
+    orders: Number(r.orders) || 0,
+    paidOrders: Number(r.paid_orders) || 0,
+    paidTotal: Number(r.paid_total) || 0,
+    lastOrderAt: r.last_order_at ? new Date(r.last_order_at).toISOString() : null
+  }));
+}
+
+// server/adminOps.ts
+var ROLE_RANK = { viewer: 1, manager: 2, owner: 3 };
+var isRole = (v) => v === "owner" || v === "manager" || v === "viewer";
+var ready = null;
+function ensureAdminTables() {
+  if (!ready) {
+    ready = (async () => {
+      await dbQuery(`create table if not exists csr.audit_log (
+        id      bigserial primary key,
+        at      timestamptz not null default now(),
+        actor   text not null,
+        role    text not null default '',
+        action  text not null,
+        target  text not null default '',
+        detail  jsonb not null default '{}'::jsonb,
+        ip      text not null default ''
+      )`);
+      await dbQuery("create index if not exists audit_log_at_idx on csr.audit_log (at desc)");
+      await dbQuery(`create table if not exists csr.admin_users (
+        username      text primary key,
+        display_name  text not null default '',
+        role          text not null,
+        password_hash text not null,
+        active        boolean not null default true,
+        token_version integer not null default 0,
+        created_at    timestamptz not null default now(),
+        last_login_at timestamptz
+      )`);
+      await dbQuery("alter table csr.audit_log enable row level security");
+      await dbQuery("alter table csr.admin_users enable row level security");
+    })().catch((err) => {
+      ready = null;
+      throw err;
+    });
+  }
+  return ready;
+}
+var cut = (v, n) => (typeof v === "string" ? v : String(v ?? "")).slice(0, n);
+async function writeAudit(actor, action, target = "", detail = {}) {
+  try {
+    await ensureAdminTables();
+    await dbQuery("insert into csr.audit_log (actor, role, action, target, detail, ip) values ($1, $2, $3, $4, $5::jsonb, $6)", [
+      cut(actor.username, 60),
+      cut(actor.role, 20),
+      cut(action, 60),
+      cut(target, 120),
+      JSON.stringify(detail).slice(0, 4e3),
+      cut(actor.ip, 80)
+    ]);
+  } catch (err) {
+    console.error("[audit] could not write", action, err instanceof Error ? err.message : err);
+  }
+}
+async function listAudit(opts = {}) {
+  await ensureAdminTables();
+  const limit = Math.min(500, Math.max(1, Math.floor(opts.limit || 100)));
+  const where = [];
+  const args = [];
+  if (opts.before) {
+    args.push(opts.before);
+    where.push(`id < $${args.length}`);
+  }
+  if (opts.action) {
+    args.push(`${opts.action}%`);
+    where.push(`action like $${args.length}`);
+  }
+  if (opts.actor) {
+    args.push(opts.actor);
+    where.push(`actor = $${args.length}`);
+  }
+  args.push(limit);
+  const rows = await dbQuery(
+    `select id, at, actor, role, action, target, detail, ip from csr.audit_log ${where.length ? "where " + where.join(" and ") : ""} order by id desc limit $${args.length}`,
+    args
+  );
+  return rows.map((r) => ({ ...r, id: Number(r.id), at: new Date(r.at).toISOString() }));
+}
+var normAdminUsername = (v) => cut(v, 30).trim().toLowerCase();
+var validAdminUsername = (v) => /^[a-z0-9._-]{3,30}$/.test(v);
+var validAdminPassword = (v) => typeof v === "string" && v.length >= 10 && v.length <= 200;
+async function findAdminUser(username) {
+  await ensureAdminTables();
+  const rows = await dbQuery("select * from csr.admin_users where username = $1", [normAdminUsername(username)]);
+  return rows[0];
+}
+async function checkAdminUserPassword(username, password) {
+  const u = await findAdminUser(username);
+  const ok = verifyPassword(String(password || ""), u?.password_hash || "scrypt$16384$00$00");
+  return u && u.active && ok ? u : null;
+}
+async function listAdminUsers() {
+  await ensureAdminTables();
+  const rows = await dbQuery("select * from csr.admin_users order by created_at");
+  return rows.map((r) => ({
+    username: r.username,
+    displayName: r.display_name,
+    role: r.role,
+    active: r.active,
+    createdAt: new Date(r.created_at).toISOString(),
+    lastLoginAt: r.last_login_at ? new Date(r.last_login_at).toISOString() : null
+  }));
+}
+async function createAdminUser(input) {
+  await ensureAdminTables();
+  const username = normAdminUsername(input.username);
+  if (!validAdminUsername(username)) return { ok: false, error: "\u0E0A\u0E37\u0E48\u0E2D\u0E1C\u0E39\u0E49\u0E43\u0E0A\u0E49\u0E15\u0E49\u0E2D\u0E07\u0E40\u0E1B\u0E47\u0E19 a-z 0-9 . _ - \u0E22\u0E32\u0E27 3\u201330 \u0E15\u0E31\u0E27" };
+  if (!validAdminPassword(input.password)) return { ok: false, error: "\u0E23\u0E2B\u0E31\u0E2A\u0E1C\u0E48\u0E32\u0E19\u0E15\u0E49\u0E2D\u0E07\u0E22\u0E32\u0E27\u0E2D\u0E22\u0E48\u0E32\u0E07\u0E19\u0E49\u0E2D\u0E22 10 \u0E15\u0E31\u0E27\u0E2D\u0E31\u0E01\u0E29\u0E23" };
+  if (input.role === "owner") return { ok: false, error: "\u0E1A\u0E31\u0E0D\u0E0A\u0E35\u0E40\u0E08\u0E49\u0E32\u0E02\u0E2D\u0E07\u0E21\u0E35\u0E44\u0E14\u0E49\u0E1A\u0E31\u0E0D\u0E0A\u0E35\u0E40\u0E14\u0E35\u0E22\u0E27 (\u0E15\u0E31\u0E49\u0E07\u0E43\u0E19 Vercel) \u0E2A\u0E23\u0E49\u0E32\u0E07\u0E44\u0E14\u0E49\u0E40\u0E09\u0E1E\u0E32\u0E30 manager \u0E2B\u0E23\u0E37\u0E2D viewer" };
+  if (!isRole(input.role)) return { ok: false, error: "\u0E2A\u0E34\u0E17\u0E18\u0E34\u0E4C\u0E44\u0E21\u0E48\u0E16\u0E39\u0E01\u0E15\u0E49\u0E2D\u0E07" };
+  const taken = await findAdminUser(username);
+  if (taken) return { ok: false, error: "\u0E21\u0E35\u0E0A\u0E37\u0E48\u0E2D\u0E1C\u0E39\u0E49\u0E43\u0E0A\u0E49\u0E19\u0E35\u0E49\u0E41\u0E25\u0E49\u0E27" };
+  await dbQuery("insert into csr.admin_users (username, display_name, role, password_hash) values ($1, $2, $3, $4)", [
+    username,
+    cut(input.displayName, 80).trim() || username,
+    input.role,
+    hashPassword(input.password)
+  ]);
+  return { ok: true };
+}
+async function updateAdminUser(username, patch) {
+  const u = await findAdminUser(username);
+  if (!u) return { ok: false, error: "\u0E44\u0E21\u0E48\u0E1E\u0E1A\u0E1A\u0E31\u0E0D\u0E0A\u0E35\u0E19\u0E35\u0E49" };
+  const sets = [];
+  const args = [u.username];
+  const add = (col, v) => {
+    args.push(v);
+    sets.push(`${col} = $${args.length}`);
+  };
+  if (patch.role !== void 0) {
+    if (patch.role === "owner" || !isRole(patch.role)) return { ok: false, error: "\u0E2A\u0E34\u0E17\u0E18\u0E34\u0E4C\u0E44\u0E21\u0E48\u0E16\u0E39\u0E01\u0E15\u0E49\u0E2D\u0E07" };
+    add("role", patch.role);
+  }
+  if (patch.displayName !== void 0) add("display_name", cut(patch.displayName, 80).trim() || u.username);
+  if (patch.active !== void 0) add("active", patch.active);
+  if (patch.password !== void 0) {
+    if (!validAdminPassword(patch.password)) return { ok: false, error: "\u0E23\u0E2B\u0E31\u0E2A\u0E1C\u0E48\u0E32\u0E19\u0E15\u0E49\u0E2D\u0E07\u0E22\u0E32\u0E27\u0E2D\u0E22\u0E48\u0E32\u0E07\u0E19\u0E49\u0E2D\u0E22 10 \u0E15\u0E31\u0E27\u0E2D\u0E31\u0E01\u0E29\u0E23" };
+    add("password_hash", hashPassword(patch.password));
+  }
+  if (patch.signOut || patch.role !== void 0 || patch.active === false || patch.password !== void 0) sets.push("token_version = token_version + 1");
+  if (!sets.length) return { ok: true };
+  await dbQuery(`update csr.admin_users set ${sets.join(", ")} where username = $1`, args);
+  return { ok: true };
+}
+async function touchAdminLogin(username) {
+  await dbQuery("update csr.admin_users set last_login_at = now() where username = $1", [normAdminUsername(username)]).catch(() => {
+  });
+}
+var epochCache = null;
+async function ownerEpoch() {
+  if (epochCache && Date.now() - epochCache.at < 5e3) return epochCache.n;
+  await ensureAdminTables();
+  const rows = await dbQuery("select value from csr.settings where key = 'admin_epoch'");
+  const n = Number(rows[0]?.value?.n) || 0;
+  epochCache = { n, at: Date.now() };
+  return n;
+}
+async function bumpOwnerEpoch() {
+  const n = await ownerEpoch() + 1;
+  await dbQuery(
+    "insert into csr.settings (key, value) values ('admin_epoch', $1::jsonb) on conflict (key) do update set value = excluded.value",
+    [JSON.stringify({ n })]
+  );
+  epochCache = { n, at: Date.now() };
+  return n;
+}
+async function currentVersion(username, role) {
+  if (role === "owner") return ownerEpoch();
+  const u = await findAdminUser(username);
+  return u?.token_version ?? 0;
+}
+async function sessionStillValid(username, role, version2) {
+  if (role === "owner") return { ok: version2 === await ownerEpoch(), role };
+  const u = await findAdminUser(username);
+  if (!u || !u.active || u.token_version !== version2) return { ok: false, role };
+  return { ok: true, role: u.role };
+}
+async function signOutEveryone() {
+  await bumpOwnerEpoch();
+  await dbQuery("update csr.admin_users set token_version = token_version + 1");
+}
+
+// server/auth.ts
 var ADMIN_USERNAME = (process.env.ADMIN_USERNAME || "admin").trim();
 var hosted = Boolean(process.env.VERCEL) || process.env.NODE_ENV === "production";
 var ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "";
@@ -34633,7 +35205,7 @@ if (!ADMIN_PASSWORD) {
     adminEnabled = false;
     console.error("[SECURITY] ADMIN_PASSWORD is not set \u2014 admin login is disabled until it is set.");
   } else {
-    ADMIN_PASSWORD = crypto2.randomBytes(9).toString("base64url");
+    ADMIN_PASSWORD = crypto3.randomBytes(9).toString("base64url");
     console.warn(
       `
 [SECURITY] ADMIN_PASSWORD is not set. Generated a temporary admin password for this run:
@@ -34648,38 +35220,38 @@ if (!ADMIN_PASSWORD) {
 }
 var SESSION_SECRET = process.env.ADMIN_SESSION_SECRET || "";
 if (!SESSION_SECRET) {
-  SESSION_SECRET = crypto2.createHash("sha256").update(`csr-session|${ADMIN_USERNAME}|${ADMIN_PASSWORD}`).digest("hex");
+  SESSION_SECRET = crypto3.createHash("sha256").update(`csr-session|${ADMIN_USERNAME}|${ADMIN_PASSWORD}`).digest("hex");
   if (hosted) console.warn("[SECURITY] ADMIN_SESSION_SECRET is not set; derived from the admin password. Set it explicitly.");
 }
 var TOKEN_TTL_MS = 8 * 60 * 60 * 1e3;
-function safeEqual(a, b) {
-  const ha = crypto2.createHash("sha256").update(a).digest();
-  const hb = crypto2.createHash("sha256").update(b).digest();
-  return crypto2.timingSafeEqual(ha, hb);
+function safeEqual2(a, b) {
+  const ha = crypto3.createHash("sha256").update(a).digest();
+  const hb = crypto3.createHash("sha256").update(b).digest();
+  return crypto3.timingSafeEqual(ha, hb);
 }
 function sign(payload) {
-  return crypto2.createHmac("sha256", SESSION_SECRET).update(payload).digest("base64url");
+  return crypto3.createHmac("sha256", SESSION_SECRET).update(payload).digest("base64url");
 }
 var DOCS_SECRET = process.env.DOCS_LINK_SECRET || SESSION_SECRET;
 function docsSignature(orderId) {
-  return crypto2.createHmac("sha256", DOCS_SECRET).update(`docs|${orderId}`).digest("base64url").slice(0, 32);
+  return crypto3.createHmac("sha256", DOCS_SECRET).update(`docs|${orderId}`).digest("base64url").slice(0, 32);
 }
 function docsSignatureOk(orderId, sig) {
-  return typeof sig === "string" && sig.length === 32 && safeEqual(sig, docsSignature(orderId));
+  return typeof sig === "string" && sig.length === 32 && safeEqual2(sig, docsSignature(orderId));
 }
-function issueToken(username) {
+function issueToken(username, role = "owner", version2 = 0) {
   const expiresAt = Date.now() + TOKEN_TTL_MS;
-  const payload = Buffer.from(JSON.stringify({ u: username, exp: expiresAt })).toString("base64url");
+  const payload = Buffer.from(JSON.stringify({ u: username, r: role, v: version2, exp: expiresAt })).toString("base64url");
   return { token: `${payload}.${sign(payload)}`, expiresAt };
 }
 function verifyToken(token) {
   if (!token || !adminEnabled) return null;
   const [payload, sig] = token.split(".");
-  if (!payload || !sig || !safeEqual(sig, sign(payload))) return null;
+  if (!payload || !sig || !safeEqual2(sig, sign(payload))) return null;
   try {
     const data = JSON.parse(Buffer.from(payload, "base64url").toString("utf8"));
     if (typeof data.exp !== "number" || Date.now() > data.exp) return null;
-    return { username: String(data.u) };
+    return { username: String(data.u), role: isRole(data.r) ? data.r : "owner", version: Number(data.v) || 0 };
   } catch {
     return null;
   }
@@ -34688,8 +35260,13 @@ var MAX_FAILS = 5;
 var LOCK_MS = 15 * 60 * 1e3;
 async function checkCredentials(ip, username, password) {
   if (!adminEnabled) return { ok: false, remaining: 0 };
-  const userOk = safeEqual(String(username || "").trim(), ADMIN_USERNAME);
-  const passOk = safeEqual(String(password || ""), ADMIN_PASSWORD);
+  const userOk = safeEqual2(String(username || "").trim(), ADMIN_USERNAME);
+  const passOk = safeEqual2(String(password || ""), ADMIN_PASSWORD);
+  let who = userOk && passOk ? { username: ADMIN_USERNAME, role: "owner" } : null;
+  if (!who) {
+    const u = await checkAdminUserPassword(String(username || ""), String(password || ""));
+    if (u) who = { username: u.username, role: u.role };
+  }
   return dbTx(async (q) => {
     const now = Date.now();
     const rows = await q(
@@ -34700,9 +35277,9 @@ async function checkCredentials(ip, username, password) {
     if (rec?.locked_until && new Date(rec.locked_until).getTime() > now) {
       return { ok: false, lockedSeconds: Math.ceil((new Date(rec.locked_until).getTime() - now) / 1e3) };
     }
-    if (userOk && passOk) {
+    if (who) {
       await q("delete from csr.login_failures where ip = $1", [ip]);
-      return { ok: true };
+      return { ok: true, username: who.username, role: who.role };
     }
     const inWindow = rec && now - new Date(rec.first_at).getTime() < LOCK_MS;
     const fails = inWindow ? rec.fails + 1 : 1;
@@ -34723,16 +35300,52 @@ async function checkCredentials(ip, username, password) {
     return { ok: false, remaining: MAX_FAILS - fails };
   });
 }
-function requireAdmin(req, res, next) {
+async function verifyAdminSession(req) {
   const header = req.headers.authorization || "";
-  const token = header.startsWith("Bearer ") ? header.slice(7) : void 0;
-  const session = verifyToken(token);
-  if (!session) {
-    res.status(401).json({ error: "\u0E01\u0E23\u0E38\u0E13\u0E32\u0E40\u0E02\u0E49\u0E32\u0E2A\u0E39\u0E48\u0E23\u0E30\u0E1A\u0E1A\u0E41\u0E2D\u0E14\u0E21\u0E34\u0E19\u0E43\u0E2B\u0E21\u0E48" });
-    return;
-  }
-  req.admin = session;
-  next();
+  const t = verifyToken(header.startsWith("Bearer ") ? header.slice(7) : void 0);
+  if (!t) return null;
+  const v = await sessionStillValid(t.username, t.role, t.version);
+  return v.ok ? { username: t.username, role: v.role } : null;
+}
+async function issueSessionFor(username, role) {
+  await touchAdminLogin(username);
+  return issueToken(username, role, await currentVersion(username, role));
+}
+function requireAdmin(req, res, next) {
+  verifyAdminSession(req).then((session) => {
+    if (!session) {
+      res.status(401).json({ error: "\u0E01\u0E23\u0E38\u0E13\u0E32\u0E40\u0E02\u0E49\u0E32\u0E2A\u0E39\u0E48\u0E23\u0E30\u0E1A\u0E1A\u0E41\u0E2D\u0E14\u0E21\u0E34\u0E19\u0E43\u0E2B\u0E21\u0E48" });
+      return;
+    }
+    req.admin = session;
+    next();
+  }).catch(next);
+}
+function minRoleFor(method, path4) {
+  const p = path4.replace(/\/+$/, "");
+  if (p === "/login" || p === "/lookup") return null;
+  if (/^\/(admins|audit|payment-gateway|settings|limits)(\/|$)/.test(p)) return "owner";
+  if (method !== "GET" && /^\/(early-bird|sales)$/.test(p)) return "owner";
+  if (/^\/me(\/|$)/.test(p)) return "viewer";
+  if (method !== "GET") return "manager";
+  if (/^\/export(\/|$)/.test(p) || /^\/orders\/[^/]+\/(full|slip)$/.test(p)) return "manager";
+  return "viewer";
+}
+function adminPolicy(req, res, next) {
+  const need = minRoleFor(req.method, req.path);
+  const header = req.headers.authorization || "";
+  if (!need || !verifyToken(header.startsWith("Bearer ") ? header.slice(7) : void 0)) return next();
+  verifyAdminSession(req).then((session) => {
+    if (!session) {
+      res.status(401).json({ error: "\u0E01\u0E23\u0E38\u0E13\u0E32\u0E40\u0E02\u0E49\u0E32\u0E2A\u0E39\u0E48\u0E23\u0E30\u0E1A\u0E1A\u0E41\u0E2D\u0E14\u0E21\u0E34\u0E19\u0E43\u0E2B\u0E21\u0E48" });
+      return;
+    }
+    if (ROLE_RANK[session.role] < ROLE_RANK[need]) {
+      res.status(403).json({ error: "\u0E1A\u0E31\u0E0D\u0E0A\u0E35\u0E19\u0E35\u0E49\u0E44\u0E21\u0E48\u0E21\u0E35\u0E2A\u0E34\u0E17\u0E18\u0E34\u0E4C\u0E17\u0E33\u0E23\u0E32\u0E22\u0E01\u0E32\u0E23\u0E19\u0E35\u0E49" });
+      return;
+    }
+    next();
+  }).catch(next);
 }
 
 // server/documents.tsx
@@ -38666,7 +39279,7 @@ function detectExtension(mimeType) {
 }
 
 // node_modules/nodemailer/dist/esm/mime-node/index.js
-import crypto3 from "node:crypto";
+import crypto4 from "node:crypto";
 import fs3 from "node:fs";
 import { PassThrough as PassThrough2, finished as finished2, pipeline } from "node:stream";
 import urlModule from "node:url";
@@ -40045,7 +40658,7 @@ var MimeNode = class _MimeNode {
   constructor(contentType, options) {
     this.nodeCounter = 0;
     options = options || {};
-    this.baseBoundary = _stripBoundaryControls(options.baseBoundary || crypto3.randomBytes(8).toString("hex"));
+    this.baseBoundary = _stripBoundaryControls(options.baseBoundary || crypto4.randomBytes(8).toString("hex"));
     this.boundaryPrefix = _stripBoundaryControls(options.boundaryPrefix || "--_NmP");
     this.disableFileAccess = !!options.disableFileAccess;
     this.disableUrlAccess = !!options.disableUrlAccess;
@@ -41177,8 +41790,8 @@ var MimeNode = class _MimeNode {
   _generateMessageId() {
     return "<" + [2, 2, 2, 6].reduce(
       // crux to generate UUID-like random strings
-      (prev, len) => prev + "-" + crypto3.randomBytes(len).toString("hex"),
-      crypto3.randomBytes(4).toString("hex")
+      (prev, len) => prev + "-" + crypto4.randomBytes(len).toString("hex"),
+      crypto4.randomBytes(4).toString("hex")
     ) + "@" + // try to use the domain of the FROM address or fallback to server hostname
     (this.getEnvelope().from || this.hostname || "localhost").split("@").pop() + ">";
   }
@@ -41811,7 +42424,7 @@ var message_parser_default = MessageParser;
 
 // node_modules/nodemailer/dist/esm/dkim/relaxed-body.js
 import { Transform as Transform7 } from "node:stream";
-import crypto4 from "node:crypto";
+import crypto5 from "node:crypto";
 var CHAR_CR = 13;
 var CHAR_LF = 10;
 var CHAR_SPACE = 32;
@@ -41822,7 +42435,7 @@ var RelaxedBody = class extends Transform7 {
   constructor(options) {
     super();
     options = options || {};
-    this.bodyHash = crypto4.createHash(options.hashAlgo || "sha256");
+    this.bodyHash = crypto5.createHash(options.hashAlgo || "sha256");
     this.byteLength = 0;
     this.debug = options.debug;
     this._debugBody = options.debug ? [] : false;
@@ -41932,7 +42545,7 @@ var RelaxedBody = class extends Transform7 {
 var relaxed_body_default = RelaxedBody;
 
 // node_modules/nodemailer/dist/esm/dkim/sign.js
-import crypto5 from "node:crypto";
+import crypto6 from "node:crypto";
 function unsupportedHashAlgoError(hashAlgo) {
   const err = new Error('Unsupported DKIM hash algorithm "' + hashAlgo + '"');
   err.code = ECONFIG;
@@ -41947,7 +42560,7 @@ function sign2(headers, hashAlgo, bodyHash, options) {
   canonicalizedHeaderData.headers += "dkim-signature:" + relaxedHeaderLine(dkimHeader);
   let signer;
   try {
-    signer = crypto5.createSign(("rsa-" + hashAlgo).toUpperCase());
+    signer = crypto6.createSign(("rsa-" + hashAlgo).toUpperCase());
   } catch (_E) {
     throw unsupportedHashAlgoError(hashAlgo);
   }
@@ -42014,7 +42627,7 @@ function relaxedHeaderLine(line) {
 import { PassThrough as PassThrough3 } from "node:stream";
 import fs4 from "node:fs";
 import path3 from "node:path";
-import crypto6 from "node:crypto";
+import crypto7 from "node:crypto";
 var DKIM_ALGO = "sha256";
 var MAX_MESSAGE_SIZE = 10 * 1024 * 1024;
 var DKIMSigner = class {
@@ -42027,7 +42640,7 @@ var DKIMSigner = class {
     this.chunks = [];
     this.chunklen = 0;
     this.readPos = 0;
-    this.cachePath = this.cacheDir ? path3.join(this.cacheDir, "message." + Date.now() + "-" + crypto6.randomBytes(14).toString("hex")) : false;
+    this.cachePath = this.cacheDir ? path3.join(this.cacheDir, "message." + Date.now() + "-" + crypto7.randomBytes(14).toString("hex")) : false;
     this.cache = false;
     this.headers = false;
     this.bodyHash = false;
@@ -42635,7 +43248,7 @@ var MailMessage = class {
 // node_modules/nodemailer/dist/esm/mailer/index.js
 import net6 from "node:net";
 import dns2 from "node:dns";
-import crypto7 from "node:crypto";
+import crypto8 from "node:crypto";
 var DEFAULT_MAX_RECIPIENTS = 1e5;
 var Mail = class extends EventEmitter {
   constructor(transporter, options, defaults2) {
@@ -42953,7 +43566,7 @@ var Mail = class extends EventEmitter {
       }
       let cidCounter = 0;
       html = (html || "").toString().replace(/(<img\b[^<>]{0,1024} src\s{0,20}=[\s"']{0,20})(data:([^;]+);[^"'>\s]+)/gi, (match, prefix, dataUri, mimeType) => {
-        const cid = crypto7.randomBytes(10).toString("hex") + "@localhost";
+        const cid = crypto8.randomBytes(10).toString("hex") + "@localhost";
         if (!mail.data.attachments) {
           mail.data.attachments = [];
         }
@@ -42988,7 +43601,7 @@ import { EventEmitter as EventEmitter2 } from "node:events";
 import net7 from "node:net";
 import tls2 from "node:tls";
 import os2 from "node:os";
-import crypto8 from "node:crypto";
+import crypto9 from "node:crypto";
 
 // node_modules/nodemailer/dist/esm/smtp-connection/data-stream.js
 import { Transform as Transform8 } from "node:stream";
@@ -43116,7 +43729,7 @@ function isPartialLine(line) {
 var SMTPConnection = class extends EventEmitter2 {
   constructor(options) {
     super(options);
-    this.id = crypto8.randomBytes(8).toString("base64").replace(/\W/g, "");
+    this.id = crypto9.randomBytes(8).toString("base64").replace(/\W/g, "");
     this.stage = "init";
     this.options = options || {};
     if (this.options.requireTLS && (this.options.ignoreTLS || this.options.opportunisticTLS)) {
@@ -44455,7 +45068,7 @@ var SMTPConnection = class extends EventEmitter2 {
       return callback(this._formatError("Invalid login sequence while waiting for server challenge string", "EAUTH", str, "AUTH CRAM-MD5"));
     }
     const base64decoded = Buffer.from(challengeMatch[1], "base64").toString("ascii");
-    const hmacMD5 = crypto8.createHmac("md5", this._auth.credentials.pass);
+    const hmacMD5 = crypto9.createHmac("md5", this._auth.credentials.pass);
     hmacMD5.update(base64decoded);
     const prepended = this._auth.credentials.user + " " + hmacMD5.digest("hex");
     this._responseActions.push((str2) => {
@@ -44789,7 +45402,7 @@ var smtp_connection_default = SMTPConnection;
 
 // node_modules/nodemailer/dist/esm/xoauth2/index.js
 import { Stream } from "node:stream";
-import crypto9 from "node:crypto";
+import crypto10 from "node:crypto";
 var XOAuth2 = class extends Stream {
   constructor(options, logger) {
     super();
@@ -45108,7 +45721,7 @@ var XOAuth2 = class extends Stream {
    */
   jwtSignRS256(payload) {
     const signedPayload = ['{"alg":"RS256","typ":"JWT"}', JSON.stringify(payload)].map((val) => this.toBase64URL(val)).join(".");
-    const signature = crypto9.createSign("RSA-SHA256").update(signedPayload).sign(this.options.privateKey);
+    const signature = crypto10.createSign("RSA-SHA256").update(signedPayload).sign(this.options.privateKey);
     return signedPayload + "." + this.toBase64URL(signature);
   }
 };
@@ -47768,284 +48381,6 @@ async function sendTicketEmail(o) {
 // server/runnerRoutes.ts
 var import_express = __toESM(require_express2(), 1);
 
-// server/runners.ts
-import crypto10 from "crypto";
-var SECRET_SOURCE = process.env.RUNNER_SESSION_SECRET || process.env.ADMIN_SESSION_SECRET || process.env.ADMIN_PASSWORD || crypto10.randomBytes(24).toString("hex");
-var KEY = crypto10.createHash("sha256").update(`csr-runner-session|${SECRET_SOURCE}`).digest();
-var RUNNER_TTL_MS = 30 * 24 * 60 * 60 * 1e3;
-var STAFF_TTL_MS = 12 * 60 * 60 * 1e3;
-var b64 = (s) => Buffer.from(s).toString("base64url");
-var hmac = (s) => crypto10.createHmac("sha256", KEY).update(s).digest("base64url");
-function safeEqual2(a, b) {
-  const ha = crypto10.createHash("sha256").update(a).digest();
-  const hb = crypto10.createHash("sha256").update(b).digest();
-  return crypto10.timingSafeEqual(ha, hb);
-}
-function issueSession(role, sub) {
-  const expiresAt = Date.now() + (role === "staff" ? STAFF_TTL_MS : RUNNER_TTL_MS);
-  const payload = b64(JSON.stringify({ k: role, s: sub, exp: expiresAt }));
-  return { token: `r1.${payload}.${hmac(`r1.${payload}`)}`, expiresAt };
-}
-function verifySession(token) {
-  if (!token) return null;
-  const [v, payload, sig] = token.split(".");
-  if (v !== "r1" || !payload || !sig || !safeEqual2(sig, hmac(`r1.${payload}`))) return null;
-  try {
-    const d = JSON.parse(Buffer.from(payload, "base64url").toString("utf8"));
-    if (typeof d.exp !== "number" || Date.now() > d.exp) return null;
-    if (d.k !== "runner" && d.k !== "staff" || typeof d.s !== "string" || !d.s) return null;
-    return { role: d.k, sub: d.s };
-  } catch {
-    return null;
-  }
-}
-function sessionFromRequest(req) {
-  const raw = req.headers["x-runner-token"];
-  return verifySession(typeof raw === "string" ? raw : void 0);
-}
-function requireRunner(req, res, next) {
-  const s = sessionFromRequest(req);
-  if (!s || s.role !== "runner") {
-    res.status(401).json({ error: "\u0E01\u0E23\u0E38\u0E13\u0E32\u0E40\u0E02\u0E49\u0E32\u0E2A\u0E39\u0E48\u0E23\u0E30\u0E1A\u0E1A\u0E01\u0E48\u0E2D\u0E19", needLogin: true });
-    return;
-  }
-  req.runner = s;
-  next();
-}
-var fp = (s) => crypto10.createHash("sha256").update(s).digest("hex").slice(0, 16);
-var passwordFingerprint = (passwordHash) => fp(`pw|${passwordHash || ""}`);
-var emailFingerprint = (email) => fp(`em|${(email || "").toLowerCase()}`);
-function issueActionToken(kind, runnerId, fingerprint) {
-  const ttl = kind === "reset" ? 60 * 60 * 1e3 : 3 * 24 * 60 * 60 * 1e3;
-  const payload = b64(JSON.stringify({ k: kind, s: runnerId, f: fingerprint, exp: Date.now() + ttl }));
-  return `a1.${payload}.${hmac(`a1.${payload}`)}`;
-}
-function readActionToken(kind, token) {
-  const [v, payload, sig] = String(token || "").split(".");
-  if (v !== "a1" || !payload || !sig || !safeEqual2(sig, hmac(`a1.${payload}`))) return null;
-  try {
-    const d = JSON.parse(Buffer.from(payload, "base64url").toString("utf8"));
-    if (d.k !== kind || typeof d.exp !== "number" || Date.now() > d.exp || typeof d.s !== "string" || typeof d.f !== "string") return null;
-    return { runnerId: d.s, fp: d.f };
-  } catch {
-    return null;
-  }
-}
-var SCRYPT_N = 16384;
-function hashPassword(password) {
-  const salt = crypto10.randomBytes(16);
-  const hash = crypto10.scryptSync(password, salt, 32, { N: SCRYPT_N, r: 8, p: 1 });
-  return `scrypt$${SCRYPT_N}$${salt.toString("hex")}$${hash.toString("hex")}`;
-}
-function verifyPassword(password, stored) {
-  const [alg, n, saltHex, hashHex] = String(stored || "").split("$");
-  if (alg !== "scrypt" || !n || !saltHex || !hashHex) return false;
-  try {
-    const expected = Buffer.from(hashHex, "hex");
-    const got = crypto10.scryptSync(password, Buffer.from(saltHex, "hex"), expected.length, { N: Number(n), r: 8, p: 1 });
-    return got.length === expected.length && crypto10.timingSafeEqual(got, expected);
-  } catch {
-    return false;
-  }
-}
-var STAFF_DEFAULT = [{ username: "chr27", hash: "scrypt$16384$a3209a2451591de5ec28d883098e4081$881ce08021687007749a09f11df239e1573e75362c3abeb19f6eb3c74c6c4b4e" }];
-function staffAccounts() {
-  const raw = process.env.STAFF_ACCOUNTS;
-  if (!raw) return STAFF_DEFAULT;
-  try {
-    const list = JSON.parse(raw);
-    if (Array.isArray(list)) {
-      const ok = list.filter((a) => a && typeof a.username === "string" && typeof a.hash === "string");
-      return [...STAFF_DEFAULT, ...ok];
-    }
-  } catch {
-    console.error("[runners] STAFF_ACCOUNTS is not valid JSON; using the built-in staff account only");
-  }
-  return STAFF_DEFAULT;
-}
-var DUMMY_HASH = hashPassword(crypto10.randomBytes(8).toString("hex"));
-function checkStaff(username, password) {
-  const name2 = String(username || "").trim().toLowerCase();
-  const acc = staffAccounts().find((a) => a.username.toLowerCase() === name2);
-  const ok = verifyPassword(String(password || ""), acc ? acc.hash : DUMMY_HASH);
-  return acc && ok ? acc.username : null;
-}
-var tablesReady = null;
-function ensureRunnerTables() {
-  if (!tablesReady) {
-    tablesReady = (async () => {
-      await dbQuery(`create table if not exists csr.runners (
-        runner_id     text primary key,
-        email         text,
-        username      text,
-        name          text not null default '',
-        phone         text not null default '',
-        password_hash text,
-        line_user_id  text,
-        profile       jsonb not null default '{}'::jsonb,
-        created_at    timestamptz not null default now(),
-        last_login_at timestamptz
-      )`);
-      await dbQuery("create unique index if not exists runners_email_uidx on csr.runners (email) where email is not null");
-      await dbQuery("create unique index if not exists runners_username_uidx on csr.runners (username) where username is not null");
-      await dbQuery("alter table csr.runners add column if not exists email_verified boolean not null default false");
-      await dbQuery("alter table csr.runners add column if not exists google_id text");
-      await dbQuery("alter table csr.runners add column if not exists facebook_id text");
-      await dbQuery("create unique index if not exists runners_line_uidx on csr.runners (line_user_id) where line_user_id is not null");
-      await dbQuery("create unique index if not exists runners_google_uidx on csr.runners (google_id) where google_id is not null");
-      await dbQuery("create unique index if not exists runners_facebook_uidx on csr.runners (facebook_id) where facebook_id is not null");
-      await dbQuery("create index if not exists orders_runner_idx on csr.orders ((data->>'runnerId')) where data ? 'runnerId'");
-      await dbQuery("alter table csr.runners enable row level security");
-    })().catch((err) => {
-      tablesReady = null;
-      throw err;
-    });
-  }
-  return tablesReady;
-}
-var cleanText = (v, n) => typeof v === "string" ? v.replace(/[\u0000-\u001f<>]/g, " ").trim().slice(0, n) : "";
-var normEmail = (v) => cleanText(v, 120).toLowerCase();
-var normUsername = (v) => cleanText(v, 30).toLowerCase();
-var isEmail = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
-var isUsername = (v) => /^[a-z0-9._-]{4,30}$/.test(v);
-function newRunnerId() {
-  return `R${crypto10.randomBytes(7).toString("base64url").replace(/[-_]/g, "x").slice(0, 10).toUpperCase()}`;
-}
-async function createRunner(input) {
-  await ensureRunnerTables();
-  const name2 = cleanText(input.name, 80);
-  const email = input.email ? normEmail(input.email) : "";
-  const username = input.username ? normUsername(input.username) : "";
-  const phone = cleanText(input.phone, 20).replace(/[^\d+\-\s]/g, "");
-  if (name2.length < 2) return { ok: false, error: "\u0E01\u0E23\u0E38\u0E13\u0E32\u0E01\u0E23\u0E2D\u0E01\u0E0A\u0E37\u0E48\u0E2D-\u0E19\u0E32\u0E21\u0E2A\u0E01\u0E38\u0E25" };
-  if (!email && !username) return { ok: false, error: "\u0E01\u0E23\u0E38\u0E13\u0E32\u0E01\u0E23\u0E2D\u0E01\u0E2D\u0E35\u0E40\u0E21\u0E25 \u0E2B\u0E23\u0E37\u0E2D\u0E15\u0E31\u0E49\u0E07\u0E0A\u0E37\u0E48\u0E2D\u0E1C\u0E39\u0E49\u0E43\u0E0A\u0E49" };
-  if (email && !isEmail(email)) return { ok: false, error: "\u0E2D\u0E35\u0E40\u0E21\u0E25\u0E44\u0E21\u0E48\u0E16\u0E39\u0E01\u0E15\u0E49\u0E2D\u0E07" };
-  if (username && !isUsername(username)) return { ok: false, error: "\u0E0A\u0E37\u0E48\u0E2D\u0E1C\u0E39\u0E49\u0E43\u0E0A\u0E49\u0E15\u0E49\u0E2D\u0E07\u0E40\u0E1B\u0E47\u0E19 a-z 0-9 . _ - \u0E22\u0E32\u0E27 4\u201330 \u0E15\u0E31\u0E27\u0E2D\u0E31\u0E01\u0E29\u0E23" };
-  if (username && staffAccounts().some((a) => a.username.toLowerCase() === username)) return { ok: false, error: "\u0E0A\u0E37\u0E48\u0E2D\u0E1C\u0E39\u0E49\u0E43\u0E0A\u0E49\u0E19\u0E35\u0E49\u0E16\u0E39\u0E01\u0E43\u0E0A\u0E49\u0E41\u0E25\u0E49\u0E27" };
-  if (String(input.password || "").length < 8) return { ok: false, error: "\u0E23\u0E2B\u0E31\u0E2A\u0E1C\u0E48\u0E32\u0E19\u0E15\u0E49\u0E2D\u0E07\u0E22\u0E32\u0E27\u0E2D\u0E22\u0E48\u0E32\u0E07\u0E19\u0E49\u0E2D\u0E22 8 \u0E15\u0E31\u0E27\u0E2D\u0E31\u0E01\u0E29\u0E23" };
-  if (String(input.password).length > 200) return { ok: false, error: "\u0E23\u0E2B\u0E31\u0E2A\u0E1C\u0E48\u0E32\u0E19\u0E22\u0E32\u0E27\u0E40\u0E01\u0E34\u0E19\u0E44\u0E1B" };
-  if (email && (await dbQuery("select 1 from csr.runners where email = $1", [email])).length) return { ok: false, error: "\u0E2D\u0E35\u0E40\u0E21\u0E25\u0E19\u0E35\u0E49\u0E2A\u0E21\u0E31\u0E04\u0E23\u0E44\u0E27\u0E49\u0E41\u0E25\u0E49\u0E27 \u0E01\u0E23\u0E38\u0E13\u0E32\u0E40\u0E02\u0E49\u0E32\u0E2A\u0E39\u0E48\u0E23\u0E30\u0E1A\u0E1A" };
-  if (username && (await dbQuery("select 1 from csr.runners where username = $1", [username])).length) return { ok: false, error: "\u0E0A\u0E37\u0E48\u0E2D\u0E1C\u0E39\u0E49\u0E43\u0E0A\u0E49\u0E19\u0E35\u0E49\u0E16\u0E39\u0E01\u0E43\u0E0A\u0E49\u0E41\u0E25\u0E49\u0E27" };
-  const id = newRunnerId();
-  try {
-    const rows = await dbQuery(
-      `insert into csr.runners (runner_id, email, username, name, phone, password_hash) values ($1, $2, $3, $4, $5, $6) returning *`,
-      [id, email || null, username || null, name2, phone, hashPassword(String(input.password))]
-    );
-    return { ok: true, runner: rows[0] };
-  } catch (err) {
-    if (String(err?.message || "").includes("duplicate")) return { ok: false, error: "\u0E2D\u0E35\u0E40\u0E21\u0E25\u0E2B\u0E23\u0E37\u0E2D\u0E0A\u0E37\u0E48\u0E2D\u0E1C\u0E39\u0E49\u0E43\u0E0A\u0E49\u0E19\u0E35\u0E49\u0E16\u0E39\u0E01\u0E43\u0E0A\u0E49\u0E41\u0E25\u0E49\u0E27" };
-    throw err;
-  }
-}
-async function loginRunner(identifier, password) {
-  await ensureRunnerTables();
-  const id = cleanText(identifier, 120).toLowerCase();
-  const rows = await dbQuery("select * from csr.runners where email = $1 or username = $1", [id]);
-  const row2 = rows[0];
-  const ok = verifyPassword(String(password || ""), row2?.password_hash || DUMMY_HASH);
-  if (!row2 || !row2.password_hash || !ok) return null;
-  await dbQuery("update csr.runners set last_login_at = now() where runner_id = $1", [row2.runner_id]);
-  return row2;
-}
-async function getRunner(runnerId) {
-  await ensureRunnerTables();
-  const rows = await dbQuery("select * from csr.runners where runner_id = $1", [runnerId]);
-  return rows[0];
-}
-var PROFILE_KEYS = ["firstName", "lastName", "shirtSize", "gender", "birthDate", "bloodType", "emergencyName", "emergencyPhone", "relationship"];
-async function updateRunnerProfile(runnerId, patch) {
-  const row2 = await getRunner(runnerId);
-  if (!row2) return { ok: false, error: "\u0E44\u0E21\u0E48\u0E1E\u0E1A\u0E1A\u0E31\u0E0D\u0E0A\u0E35" };
-  const name2 = patch.name !== void 0 ? cleanText(patch.name, 80) : row2.name;
-  const phone = patch.phone !== void 0 ? cleanText(patch.phone, 20).replace(/[^\d+\-\s]/g, "") : row2.phone;
-  let email = row2.email;
-  if (patch.email !== void 0) {
-    const e = normEmail(patch.email);
-    if (e && !isEmail(e)) return { ok: false, error: "\u0E2D\u0E35\u0E40\u0E21\u0E25\u0E44\u0E21\u0E48\u0E16\u0E39\u0E01\u0E15\u0E49\u0E2D\u0E07" };
-    if (e && e !== row2.email && (await dbQuery("select 1 from csr.runners where email = $1 and runner_id <> $2", [e, runnerId])).length) {
-      return { ok: false, error: "\u0E2D\u0E35\u0E40\u0E21\u0E25\u0E19\u0E35\u0E49\u0E16\u0E39\u0E01\u0E43\u0E0A\u0E49\u0E42\u0E14\u0E22\u0E1A\u0E31\u0E0D\u0E0A\u0E35\u0E2D\u0E37\u0E48\u0E19\u0E41\u0E25\u0E49\u0E27" };
-    }
-    email = e || null;
-  }
-  const profile = { ...row2.profile || {} };
-  if (patch.profile && typeof patch.profile === "object") {
-    for (const k of PROFILE_KEYS) {
-      const v = patch.profile[k];
-      if (typeof v === "string") profile[k] = cleanText(v, 80);
-    }
-  }
-  if (name2.length < 2) return { ok: false, error: "\u0E01\u0E23\u0E38\u0E13\u0E32\u0E01\u0E23\u0E2D\u0E01\u0E0A\u0E37\u0E48\u0E2D" };
-  const rows = await dbQuery(
-    "update csr.runners set name = $2, phone = $3, email = $4, profile = $5::jsonb, email_verified = (email_verified and email is not distinct from $4) where runner_id = $1 returning *",
-    [runnerId, name2, phone, email, JSON.stringify(profile)]
-  );
-  return { ok: true, runner: rows[0] };
-}
-var SOCIAL_COLUMN = { line: "line_user_id", google: "google_id" };
-async function upsertSocialRunner(provider, p) {
-  await ensureRunnerTables();
-  const col = SOCIAL_COLUMN[provider];
-  const byId = await dbQuery(`select * from csr.runners where ${col} = $1`, [p.id]);
-  if (byId[0]) {
-    await dbQuery("update csr.runners set last_login_at = now() where runner_id = $1", [byId[0].runner_id]);
-    return byId[0];
-  }
-  const email = p.email ? normEmail(p.email) : "";
-  const byEmail = email && isEmail(email) ? await dbQuery("select * from csr.runners where email = $1", [email]) : [];
-  if (byEmail[0] && p.emailVerified) {
-    const rows2 = await dbQuery(`update csr.runners set ${col} = $2, email_verified = true, last_login_at = now() where runner_id = $1 returning *`, [byEmail[0].runner_id, p.id]);
-    return rows2[0];
-  }
-  const rows = await dbQuery(
-    `insert into csr.runners (runner_id, name, email, ${col}, email_verified, last_login_at) values ($1, $2, $3, $4, $5, now()) returning *`,
-    [newRunnerId(), cleanText(p.name, 80) || (provider === "line" ? "\u0E19\u0E31\u0E01\u0E27\u0E34\u0E48\u0E07 LINE" : "\u0E19\u0E31\u0E01\u0E27\u0E34\u0E48\u0E07"), email && isEmail(email) && !byEmail[0] ? email : null, p.id, Boolean(p.emailVerified && email && isEmail(email) && !byEmail[0])]
-  );
-  return rows[0];
-}
-function publicRunner(r) {
-  return {
-    id: r.runner_id,
-    name: r.name,
-    email: r.email || "",
-    username: r.username || "",
-    phone: r.phone || "",
-    emailVerified: Boolean(r.email_verified),
-    lineLinked: Boolean(r.line_user_id),
-    social: [r.line_user_id && "line", r.google_id && "google"].filter(Boolean),
-    profile: r.profile || {},
-    createdAt: r.created_at
-  };
-}
-async function listRunnersForAdmin() {
-  await ensureRunnerTables();
-  const rows = await dbQuery(
-    `select r.*,
-        count(o.order_id) filter (where not (o.data ? 'cancelledAt') and not (o.data ? 'isTest')) as orders,
-        count(o.order_id) filter (where o.data->>'paymentStatus' = 'PAID' and not (o.data ? 'cancelledAt') and not (o.data ? 'isTest')) as paid_orders,
-        coalesce(sum((o.data->>'totalPrice')::numeric) filter (where o.data->>'paymentStatus' = 'PAID' and not (o.data ? 'cancelledAt') and not (o.data ? 'isTest')), 0) as paid_total,
-        max(o.created_at) filter (where not (o.data ? 'isTest')) as last_order_at
-       from csr.runners r
-       left join csr.orders o on o.data->>'runnerId' = r.runner_id
-      group by r.runner_id
-      order by r.created_at desc`
-  );
-  return rows.map((r) => ({
-    id: r.runner_id,
-    name: r.name || "",
-    email: r.email || "",
-    username: r.username || "",
-    phone: r.phone || "",
-    emailVerified: Boolean(r.email_verified),
-    methods: [r.password_hash && "password", r.google_id && "google", r.line_user_id && "line"].filter(Boolean),
-    createdAt: new Date(r.created_at).toISOString(),
-    orders: Number(r.orders) || 0,
-    paidOrders: Number(r.paid_orders) || 0,
-    paidTotal: Number(r.paid_total) || 0,
-    lastOrderAt: r.last_order_at ? new Date(r.last_order_at).toISOString() : null
-  }));
-}
-
 // server/socialLogin.ts
 import crypto11 from "crypto";
 var PROVIDERS = ["line", "google"];
@@ -48312,6 +48647,7 @@ function registerRunnerRoutes(app2, h2, clientIp2) {
       return;
     }
     const r = await sendTicketEmail(order);
+    await recordEmailResult(order.orderId, r);
     if (!r.ok) {
       res.status(503).json({ error: "\u0E2A\u0E48\u0E07\u0E2D\u0E35\u0E40\u0E21\u0E25\u0E44\u0E21\u0E48\u0E2A\u0E33\u0E40\u0E23\u0E47\u0E08\u0E43\u0E19\u0E02\u0E13\u0E30\u0E19\u0E35\u0E49 \u0E25\u0E2D\u0E07\u0E43\u0E2B\u0E21\u0E48\u0E20\u0E32\u0E22\u0E2B\u0E25\u0E31\u0E07 \u0E2B\u0E23\u0E37\u0E2D\u0E40\u0E1B\u0E34\u0E14\u0E40\u0E2D\u0E01\u0E2A\u0E32\u0E23 A4 \u0E08\u0E32\u0E01\u0E1B\u0E38\u0E48\u0E21\u0E14\u0E49\u0E32\u0E19\u0E1A\u0E19\u0E41\u0E17\u0E19" });
       return;
@@ -48392,6 +48728,7 @@ async function loadOwnedOrder(req, res) {
 async function mailNewlyPaid(wasPaid, paid) {
   if (wasPaid || !paid || paid.paymentStatus !== "PAID") return;
   const r = await sendTicketEmail(paid);
+  await recordEmailResult(paid.orderId, r);
   console.log(`[mail] ${paid.orderId}: ${r.ok ? `ticket sent (${r.id})` : `not sent (${r.error})`}`);
 }
 async function settleFromOmise(order, chargeId = order.omiseChargeId) {
@@ -48542,9 +48879,8 @@ function createApp() {
     const testMode = b.testMode === true;
     let testAdmin = "";
     if (testMode) {
-      const header = req.headers.authorization || "";
-      const session = verifyToken(header.startsWith("Bearer ") ? header.slice(7) : void 0);
-      if (!session) {
+      const session = await verifyAdminSession(req);
+      if (!session || ROLE_RANK[session.role] < ROLE_RANK.manager) {
         res.status(401).json({ error: "\u0E42\u0E2B\u0E21\u0E14\u0E17\u0E14\u0E2A\u0E2D\u0E1A 1 \u0E1A\u0E32\u0E17\u0E43\u0E0A\u0E49\u0E44\u0E14\u0E49\u0E40\u0E09\u0E1E\u0E32\u0E30\u0E41\u0E2D\u0E14\u0E21\u0E34\u0E19\u0E17\u0E35\u0E48\u0E25\u0E47\u0E2D\u0E01\u0E2D\u0E34\u0E19\u0E2D\u0E22\u0E39\u0E48 \u0E01\u0E23\u0E38\u0E13\u0E32\u0E40\u0E02\u0E49\u0E32\u0E2A\u0E39\u0E48\u0E23\u0E30\u0E1A\u0E1A\u0E41\u0E2D\u0E14\u0E21\u0E34\u0E19\u0E43\u0E2B\u0E21\u0E48 \u0E2B\u0E23\u0E37\u0E2D\u0E1B\u0E34\u0E14\u0E42\u0E2B\u0E21\u0E14\u0E17\u0E14\u0E2A\u0E2D\u0E1A" });
         return;
       }
@@ -48556,6 +48892,10 @@ function createApp() {
     }
     const buyer = sessionFromRequest(req);
     const runnerId = buyer && buyer.role === "runner" ? buyer.sub : "";
+    if (runnerId && await isRunnerDisabled(runnerId)) {
+      res.status(403).json({ error: "\u0E1A\u0E31\u0E0D\u0E0A\u0E35\u0E19\u0E35\u0E49\u0E16\u0E39\u0E01\u0E23\u0E30\u0E07\u0E31\u0E1A\u0E01\u0E32\u0E23\u0E43\u0E0A\u0E49\u0E07\u0E32\u0E19 \u0E01\u0E23\u0E38\u0E13\u0E32\u0E15\u0E34\u0E14\u0E15\u0E48\u0E2D\u0E1C\u0E39\u0E49\u0E08\u0E31\u0E14\u0E07\u0E32\u0E19" });
+      return;
+    }
     if (!testMode && !runnerId) {
       res.status(401).json({ error: "\u0E01\u0E23\u0E38\u0E13\u0E32\u0E40\u0E02\u0E49\u0E32\u0E2A\u0E39\u0E48\u0E23\u0E30\u0E1A\u0E1A\u0E2B\u0E23\u0E37\u0E2D\u0E2A\u0E21\u0E31\u0E04\u0E23\u0E2A\u0E21\u0E32\u0E0A\u0E34\u0E01\u0E01\u0E48\u0E2D\u0E19\u0E2A\u0E31\u0E48\u0E07\u0E0B\u0E37\u0E49\u0E2D", needLogin: true });
       return;
@@ -48806,6 +49146,7 @@ function createApp() {
       return;
     }
     const r = await sendTicketEmail(order);
+    await recordEmailResult(order.orderId, r);
     if (!r.ok) {
       res.status(503).json({ error: "\u0E2A\u0E48\u0E07\u0E2D\u0E35\u0E40\u0E21\u0E25\u0E44\u0E21\u0E48\u0E2A\u0E33\u0E40\u0E23\u0E47\u0E08\u0E43\u0E19\u0E02\u0E13\u0E30\u0E19\u0E35\u0E49 \u0E01\u0E23\u0E38\u0E13\u0E32\u0E15\u0E34\u0E14\u0E15\u0E48\u0E2D\u0E1C\u0E39\u0E49\u0E08\u0E31\u0E14\u0E07\u0E32\u0E19" });
       return;
@@ -48905,32 +49246,61 @@ function createApp() {
     }
     res.json({ received: true });
   }));
+  app2.use("/api/admin", adminPolicy);
+  const AUDIT_BODY_KEYS = ["status", "reason", "action", "on", "open", "amount", "note", "role", "active", "maxUses", "sponsorName", "autoFrom", "autoUntil", "tower", "gun", "refunded", "displayName", "username", "disabled", "clear"];
+  const auditTrail = (req, res, next) => {
+    if (req.method === "GET" || req.path === "/login") return next();
+    const subPath = req.path;
+    res.on("finish", () => {
+      if (res.statusCode >= 400) return;
+      const admin = req.admin;
+      const staff = admin ? null : sessionFromRequest(req);
+      if (!admin && !(staff && staff.role === "staff")) return;
+      const pattern = subPath.replace(/^\/orders\/[^/]+/, "/orders/:id").replace(/^\/runners\/[^/]+/, "/runners/:id").replace(/^\/sponsor-codes\/[^/]+/, "/sponsor-codes/:code").replace(/^\/admins\/[^/]+/, "/admins/:user");
+      const target = decodeURIComponent((subPath.match(/^\/(?:orders|runners|sponsor-codes|admins)\/([^/]+)/) || [])[1] || "");
+      const body = {};
+      for (const k of AUDIT_BODY_KEYS) {
+        const v = (req.body || {})[k];
+        if (typeof v === "string" || typeof v === "number" || typeof v === "boolean") body[k] = typeof v === "string" ? v.slice(0, 200) : v;
+      }
+      void writeAudit({ username: admin ? admin.username : staff.sub, role: admin ? admin.role : "staff", ip: clientIp(req) }, req.method + " " + pattern, target, Object.keys(body).length ? { body } : {});
+    });
+    next();
+  };
+  app2.use("/api/admin", auditTrail);
+  const auditNow = (req, action, target = "", detail = {}) => {
+    const admin = req.admin;
+    void writeAudit({ username: admin?.username || "unknown", role: admin?.role || "", ip: clientIp(req) }, action, target, detail);
+  };
   app2.post("/api/admin/login", smallJson, h(async (req, res) => {
     const r = await checkCredentials(clientIp(req), req.body?.username, req.body?.password);
     if (r.ok) {
-      const username = String(req.body.username).trim();
-      console.log(`[admin] login ok: ${username} from ${clientIp(req)}`);
-      res.json({ ...issueToken(username), username });
+      console.log(`[admin] login ok: ${r.username} (${r.role}) from ${clientIp(req)}`);
+      void writeAudit({ username: r.username, role: r.role, ip: clientIp(req) }, "LOGIN ok");
+      res.json({ ...await issueSessionFor(r.username, r.role), username: r.username, role: r.role });
       return;
     }
     console.warn(`[admin] login failed from ${clientIp(req)}`);
+    void writeAudit({ username: String(req.body?.username || "").slice(0, 60), role: "", ip: clientIp(req) }, r.lockedSeconds ? "LOGIN locked" : "LOGIN failed");
     res.status(r.lockedSeconds ? 429 : 401).json({
       error: r.lockedSeconds ? `\u0E43\u0E2A\u0E48\u0E23\u0E2B\u0E31\u0E2A\u0E1C\u0E34\u0E14\u0E2B\u0E25\u0E32\u0E22\u0E04\u0E23\u0E31\u0E49\u0E07 \u0E23\u0E30\u0E07\u0E31\u0E1A\u0E01\u0E32\u0E23\u0E40\u0E02\u0E49\u0E32\u0E2A\u0E39\u0E48\u0E23\u0E30\u0E1A\u0E1A ${Math.ceil(r.lockedSeconds / 60)} \u0E19\u0E32\u0E17\u0E35` : `\u0E0A\u0E37\u0E48\u0E2D\u0E1C\u0E39\u0E49\u0E43\u0E0A\u0E49\u0E2B\u0E23\u0E37\u0E2D\u0E23\u0E2B\u0E31\u0E2A\u0E1C\u0E48\u0E32\u0E19\u0E44\u0E21\u0E48\u0E16\u0E39\u0E01\u0E15\u0E49\u0E2D\u0E07 (\u0E40\u0E2B\u0E25\u0E37\u0E2D\u0E2D\u0E35\u0E01 ${r.remaining} \u0E04\u0E23\u0E31\u0E49\u0E07)`,
       lockedSeconds: r.lockedSeconds
     });
   }));
   const adminOrStaff = (req, res, next) => {
-    const header = req.headers.authorization || "";
-    if (verifyToken(header.startsWith("Bearer ") ? header.slice(7) : void 0)) {
-      req.viewer = "admin";
-      return next();
-    }
-    const s = sessionFromRequest(req);
-    if (s && s.role === "staff") {
-      req.viewer = "staff";
-      return next();
-    }
-    res.status(401).json({ error: "\u0E01\u0E23\u0E38\u0E13\u0E32\u0E40\u0E02\u0E49\u0E32\u0E2A\u0E39\u0E48\u0E23\u0E30\u0E1A\u0E1A\u0E43\u0E2B\u0E21\u0E48" });
+    verifyAdminSession(req).then((admin) => {
+      if (admin) {
+        req.admin = admin;
+        req.viewer = "admin";
+        return next();
+      }
+      const s = sessionFromRequest(req);
+      if (s && s.role === "staff") {
+        req.viewer = "staff";
+        return next();
+      }
+      res.status(401).json({ error: "\u0E01\u0E23\u0E38\u0E13\u0E32\u0E40\u0E02\u0E49\u0E32\u0E2A\u0E39\u0E48\u0E23\u0E30\u0E1A\u0E1A\u0E43\u0E2B\u0E21\u0E48" });
+    }).catch(next);
   };
   app2.get("/api/admin/lookup", adminOrStaff, h(async (req, res) => {
     const order = await findOrderByCode(String(req.query.q || "").slice(0, 80));
@@ -48969,7 +49339,7 @@ function createApp() {
       orders = await listOrders();
     }
     res.json({
-      orders: orders.map(toAdminView),
+      orders: orders.map((o) => toAdminView(o)),
       bibCounters: await getBibCounters(),
       nextBib: await nextBibPreview()
     });
@@ -48995,7 +49365,7 @@ function createApp() {
       return;
     }
     const orders = await listOrdersByRunner(runner.runner_id);
-    res.json({ runner: { ...publicRunner(runner), hasPassword: Boolean(runner.password_hash) }, orders: orders.map(toAdminView) });
+    res.json({ runner: { ...publicRunner(runner), hasPassword: Boolean(runner.password_hash) }, orders: orders.map((o) => toAdminView(o)) });
   }));
   app2.post("/api/admin/orders/:orderId/verification", requireAdmin, smallJson, h(async (req, res) => {
     const orderId = String(req.params.orderId);
@@ -49053,6 +49423,7 @@ function createApp() {
       return;
     }
     const r = await sendTicketEmail(order);
+    await recordEmailResult(order.orderId, r);
     console.log(`[mail] ${req.admin.username} resent ${order.orderId}: ${r.ok ? "sent" : r.error}`);
     if (!r.ok) {
       res.status(r.error === "MAIL_NOT_CONFIGURED" ? 503 : 502).json({ error: r.error === "MAIL_NOT_CONFIGURED" ? "\u0E22\u0E31\u0E07\u0E44\u0E21\u0E48\u0E44\u0E14\u0E49\u0E15\u0E31\u0E49\u0E07\u0E04\u0E48\u0E32\u0E23\u0E30\u0E1A\u0E1A\u0E2A\u0E48\u0E07\u0E2D\u0E35\u0E40\u0E21\u0E25 (RESEND_API_KEY)" : `\u0E2A\u0E48\u0E07\u0E2D\u0E35\u0E40\u0E21\u0E25\u0E44\u0E21\u0E48\u0E2A\u0E33\u0E40\u0E23\u0E47\u0E08: ${r.error}` });
@@ -49069,7 +49440,7 @@ function createApp() {
     res.setHeader("Cache-Control", "private, no-store");
     res.json({ image: order.slipFile });
   }));
-  app2.post("/api/admin/orders/:orderId/kit", adminOrStaff, h(async (req, res) => {
+  app2.post("/api/admin/orders/:orderId/kit", adminOrStaff, smallJson, h(async (req, res) => {
     const orderId = String(req.params.orderId);
     const order = await getOrder(orderId);
     if (!order) {
@@ -49081,14 +49452,35 @@ function createApp() {
       return;
     }
     if (order.cancelledAt) {
-      res.status(400).json({ error: `\u0E04\u0E33\u0E2A\u0E31\u0E48\u0E07\u0E0B\u0E37\u0E49\u0E2D\u0E19\u0E35\u0E49\u0E16\u0E39\u0E01\u0E22\u0E01\u0E40\u0E25\u0E34\u0E01\u0E41\u0E25\u0E49\u0E27 (${order.cancelReason || "-"})` });
+      res.status(400).json({ error: "\u0E04\u0E33\u0E2A\u0E31\u0E48\u0E07\u0E0B\u0E37\u0E49\u0E2D\u0E19\u0E35\u0E49\u0E16\u0E39\u0E01\u0E22\u0E01\u0E40\u0E25\u0E34\u0E01\u0E41\u0E25\u0E49\u0E27 (" + (order.cancelReason || "-") + ")" });
       return;
     }
+    const viewer = req.viewer;
+    const undo = req.body?.action === "undo";
+    if (undo && viewer !== "admin") {
+      res.status(403).json({ error: "\u0E22\u0E01\u0E40\u0E25\u0E34\u0E01\u0E01\u0E32\u0E23\u0E23\u0E31\u0E1A\u0E02\u0E2D\u0E07\u0E44\u0E14\u0E49\u0E40\u0E09\u0E1E\u0E32\u0E30\u0E41\u0E2D\u0E14\u0E21\u0E34\u0E19" });
+      return;
+    }
+    const who = viewer === "admin" ? req.admin?.username : sessionFromRequest(req)?.sub || "staff";
+    let already = false;
     const updated = await updateOrder(orderId, (o) => {
-      o.kitStatus = o.kitStatus === "CHECKED_IN" ? "PENDING_PICKUP" : "CHECKED_IN";
-      o.registrationStatus = o.kitStatus === "CHECKED_IN" ? "CHECKED_IN" : "CONFIRMED";
+      if (undo) {
+        o.kitStatus = "PENDING_PICKUP";
+        o.registrationStatus = "CONFIRMED";
+        delete o.kitCheckedInAt;
+        delete o.kitCheckedInBy;
+        return;
+      }
+      if (o.kitStatus === "CHECKED_IN") {
+        already = true;
+        return;
+      }
+      o.kitStatus = "CHECKED_IN";
+      o.registrationStatus = "CHECKED_IN";
+      o.kitCheckedInAt = (/* @__PURE__ */ new Date()).toISOString();
+      o.kitCheckedInBy = who;
     });
-    res.json({ order: req.viewer === "staff" ? toStaffView(updated) : toAdminView(updated) });
+    res.json({ order: viewer === "staff" ? toStaffView(updated) : toAdminView(updated), alreadyCheckedIn: already });
   }));
   app2.post("/api/admin/orders/:orderId/cancel", requireAdmin, smallJson, h(async (req, res) => {
     const id = String(req.params.orderId);
@@ -49199,11 +49591,25 @@ function createApp() {
     res.json(await getEarlyBird());
   }));
   app2.put("/api/admin/early-bird", requireAdmin, smallJson, h(async (req, res) => {
-    if (typeof req.body?.on !== "boolean") {
+    const b = req.body || {};
+    const hasSchedule = "autoFrom" in b || "autoUntil" in b;
+    if (typeof b.on !== "boolean" && !hasSchedule) {
       res.status(400).json({ error: "on must be true or false" });
       return;
     }
-    res.json(await setEarlyBird(req.body.on));
+    const okDate = (v) => v === null || v === "" || v === void 0 || typeof v === "string" && /^\d{4}-\d{2}-\d{2}(T[0-9:.+Z-]+)?$/.test(v) && !Number.isNaN(Date.parse(v.length === 10 ? v + "T00:00:00+07:00" : v));
+    if (hasSchedule && (!okDate(b.autoFrom) || !okDate(b.autoUntil))) {
+      res.status(400).json({ error: "\u0E23\u0E39\u0E1B\u0E41\u0E1A\u0E1A\u0E27\u0E31\u0E19\u0E17\u0E35\u0E48\u0E44\u0E21\u0E48\u0E16\u0E39\u0E01\u0E15\u0E49\u0E2D\u0E07 (\u0E43\u0E0A\u0E49 \u0E1B\u0E35-\u0E40\u0E14\u0E37\u0E2D\u0E19-\u0E27\u0E31\u0E19 \u0E40\u0E0A\u0E48\u0E19 2026-11-09)" });
+      return;
+    }
+    if (hasSchedule && b.autoFrom && b.autoUntil && String(b.autoFrom).slice(0, 10) > String(b.autoUntil).slice(0, 10)) {
+      res.status(400).json({ error: "\u0E27\u0E31\u0E19\u0E40\u0E23\u0E34\u0E48\u0E21\u0E15\u0E49\u0E2D\u0E07\u0E44\u0E21\u0E48\u0E40\u0E01\u0E34\u0E19\u0E27\u0E31\u0E19\u0E2A\u0E34\u0E49\u0E19\u0E2A\u0E38\u0E14" });
+      return;
+    }
+    let state = await getEarlyBird();
+    if (typeof b.on === "boolean") state = await setEarlyBird(b.on);
+    if (hasSchedule) state = await setEarlyBirdSchedule(b.autoFrom ? String(b.autoFrom) : void 0, b.autoUntil ? String(b.autoUntil) : void 0);
+    res.json(state);
   }));
   app2.put("/api/admin/sales", requireAdmin, smallJson, h(async (req, res) => {
     if (typeof req.body?.open !== "boolean") {
@@ -49279,6 +49685,170 @@ function createApp() {
     await setEasySlipKey(key);
     console.log(`[admin] ${admin} set the EasySlip key`);
     res.json(await gatewayStatus());
+  }));
+  app2.get("/api/admin/me", requireAdmin, h(async (req, res) => {
+    res.json({ username: req.admin.username, role: req.admin.role });
+  }));
+  app2.post("/api/admin/me/password", requireAdmin, smallJson, h(async (req, res) => {
+    const me = req.admin;
+    if (me.role === "owner") {
+      res.status(400).json({ error: "\u0E23\u0E2B\u0E31\u0E2A\u0E1C\u0E48\u0E32\u0E19\u0E02\u0E2D\u0E07\u0E1A\u0E31\u0E0D\u0E0A\u0E35\u0E40\u0E08\u0E49\u0E32\u0E02\u0E2D\u0E07\u0E15\u0E31\u0E49\u0E07\u0E43\u0E19\u0E15\u0E31\u0E27\u0E41\u0E1B\u0E23 ADMIN_PASSWORD \u0E1A\u0E19 Vercel" });
+      return;
+    }
+    const user = await findAdminUser(me.username);
+    if (!user || !await checkAdminUserPassword(me.username, String(req.body?.current || ""))) {
+      res.status(400).json({ error: "\u0E23\u0E2B\u0E31\u0E2A\u0E1C\u0E48\u0E32\u0E19\u0E1B\u0E31\u0E08\u0E08\u0E38\u0E1A\u0E31\u0E19\u0E44\u0E21\u0E48\u0E16\u0E39\u0E01\u0E15\u0E49\u0E2D\u0E07" });
+      return;
+    }
+    if (!validAdminPassword(String(req.body?.password || ""))) {
+      res.status(400).json({ error: "\u0E23\u0E2B\u0E31\u0E2A\u0E1C\u0E48\u0E32\u0E19\u0E43\u0E2B\u0E21\u0E48\u0E15\u0E49\u0E2D\u0E07\u0E22\u0E32\u0E27\u0E2D\u0E22\u0E48\u0E32\u0E07\u0E19\u0E49\u0E2D\u0E22 10 \u0E15\u0E31\u0E27\u0E2D\u0E31\u0E01\u0E29\u0E23" });
+      return;
+    }
+    await updateAdminUser(me.username, { password: String(req.body.password) });
+    auditNow(req, "POST /me/password", me.username);
+    res.json({ ok: true, message: "\u0E40\u0E1B\u0E25\u0E35\u0E48\u0E22\u0E19\u0E23\u0E2B\u0E31\u0E2A\u0E1C\u0E48\u0E32\u0E19\u0E41\u0E25\u0E49\u0E27 \u0E01\u0E23\u0E38\u0E13\u0E32\u0E40\u0E02\u0E49\u0E32\u0E2A\u0E39\u0E48\u0E23\u0E30\u0E1A\u0E1A\u0E43\u0E2B\u0E21\u0E48" });
+  }));
+  app2.get("/api/admin/admins", requireAdmin, h(async (_req, res) => {
+    res.json({ admins: await listAdminUsers() });
+  }));
+  app2.post("/api/admin/admins", requireAdmin, smallJson, h(async (req, res) => {
+    const b = req.body || {};
+    const r = await createAdminUser({ username: String(b.username || ""), displayName: String(b.displayName || ""), role: isRole(b.role) ? b.role : "viewer", password: String(b.password || "") });
+    if (!r.ok) {
+      res.status(400).json({ error: r.error });
+      return;
+    }
+    res.json({ admins: await listAdminUsers() });
+  }));
+  app2.post("/api/admin/admins/sign-out-all", requireAdmin, h(async (req, res) => {
+    await signOutEveryone();
+    auditNow(req, "POST /admins/sign-out-all");
+    res.json({ ok: true });
+  }));
+  app2.patch("/api/admin/admins/:username", requireAdmin, smallJson, h(async (req, res) => {
+    const b = req.body || {};
+    const patch = {};
+    if (isRole(b.role)) patch.role = b.role;
+    if (typeof b.active === "boolean") patch.active = b.active;
+    if (typeof b.displayName === "string") patch.displayName = b.displayName;
+    if (typeof b.password === "string" && b.password) patch.password = b.password;
+    if (b.signOut === true) patch.signOut = true;
+    const r = await updateAdminUser(String(req.params.username), patch);
+    if (!r.ok) {
+      res.status(400).json({ error: r.error });
+      return;
+    }
+    res.json({ admins: await listAdminUsers() });
+  }));
+  app2.get("/api/admin/audit", requireAdmin, h(async (req, res) => {
+    const q = req.query;
+    res.json({
+      rows: await listAudit({
+        limit: Number(q.limit) || 100,
+        before: Number(q.before) || void 0,
+        action: typeof q.action === "string" && q.action ? q.action.slice(0, 40) : void 0,
+        actor: typeof q.actor === "string" && q.actor ? q.actor.slice(0, 60) : void 0
+      })
+    });
+  }));
+  app2.get("/api/admin/orders/:orderId/full", requireAdmin, h(async (req, res) => {
+    const order = await getOrder(String(req.params.orderId));
+    if (!order) {
+      res.status(404).json({ error: "\u0E44\u0E21\u0E48\u0E1E\u0E1A\u0E04\u0E33\u0E2A\u0E31\u0E48\u0E07\u0E0B\u0E37\u0E49\u0E2D" });
+      return;
+    }
+    auditNow(req, "GET /orders/:id/full", order.orderId, { reason: "reveal sensitive fields" });
+    res.json({ order: toAdminView(order, { full: true }) });
+  }));
+  app2.get("/api/admin/export/orders", requireAdmin, h(async (req, res) => {
+    const orders = await listOrders();
+    auditNow(req, "GET /export/orders", "", { count: orders.length, kind: String(req.query.kind || "full").slice(0, 20) });
+    res.json({ orders: orders.map((o) => toAdminView(o, { full: true })) });
+  }));
+  app2.post("/api/admin/orders/:orderId/refund", requireAdmin, smallJson, h(async (req, res) => {
+    const id = String(req.params.orderId);
+    const order = await getOrder(id);
+    if (!order) {
+      res.status(404).json({ error: "\u0E44\u0E21\u0E48\u0E1E\u0E1A\u0E04\u0E33\u0E2A\u0E31\u0E48\u0E07\u0E0B\u0E37\u0E49\u0E2D" });
+      return;
+    }
+    const admin = req.admin.username;
+    if (req.body?.clear === true) {
+      const cleared = await updateOrder(id, (o) => {
+        delete o.refundedAt;
+        delete o.refundAmount;
+        delete o.refundNote;
+        delete o.refundBy;
+      });
+      res.json({ order: toAdminView(cleared) });
+      return;
+    }
+    if (order.paymentStatus !== "PAID") {
+      res.status(400).json({ error: "\u0E04\u0E33\u0E2A\u0E31\u0E48\u0E07\u0E0B\u0E37\u0E49\u0E2D\u0E19\u0E35\u0E49\u0E22\u0E31\u0E07\u0E44\u0E21\u0E48\u0E44\u0E14\u0E49\u0E0A\u0E33\u0E23\u0E30\u0E40\u0E07\u0E34\u0E19 \u0E08\u0E36\u0E07\u0E44\u0E21\u0E48\u0E21\u0E35\u0E40\u0E07\u0E34\u0E19\u0E43\u0E2B\u0E49\u0E04\u0E37\u0E19" });
+      return;
+    }
+    const amount = Math.round(Number(req.body?.amount) * 100) / 100;
+    if (!Number.isFinite(amount) || amount <= 0 || amount > order.totalPrice) {
+      res.status(400).json({ error: "\u0E22\u0E2D\u0E14\u0E04\u0E37\u0E19\u0E15\u0E49\u0E2D\u0E07\u0E21\u0E32\u0E01\u0E01\u0E27\u0E48\u0E32 0 \u0E41\u0E25\u0E30\u0E44\u0E21\u0E48\u0E40\u0E01\u0E34\u0E19\u0E22\u0E2D\u0E14\u0E17\u0E35\u0E48\u0E0A\u0E33\u0E23\u0E30 (" + order.totalPrice + " \u0E1A\u0E32\u0E17)" });
+      return;
+    }
+    const note = clean(req.body?.note, 300);
+    if (note.length < 3) {
+      res.status(400).json({ error: "\u0E01\u0E23\u0E38\u0E13\u0E32\u0E23\u0E30\u0E1A\u0E38\u0E23\u0E32\u0E22\u0E25\u0E30\u0E40\u0E2D\u0E35\u0E22\u0E14\u0E01\u0E32\u0E23\u0E04\u0E37\u0E19\u0E40\u0E07\u0E34\u0E19 (\u0E40\u0E0A\u0E48\u0E19 \u0E42\u0E2D\u0E19\u0E04\u0E37\u0E19\u0E27\u0E31\u0E19\u0E17\u0E35\u0E48\u2026)" });
+      return;
+    }
+    const updated = await updateOrder(id, (o) => {
+      o.refundedAt = (/* @__PURE__ */ new Date()).toISOString();
+      o.refundAmount = amount;
+      o.refundNote = note;
+      o.refundBy = admin;
+    });
+    res.json({ order: toAdminView(updated) });
+  }));
+  app2.get("/api/admin/limits", requireAdmin, h(async (_req, res) => {
+    const limits = await refreshActivityLimits(true);
+    res.json({ limits: { tower: limits.tower, gun: limits.gun }, seatsLeft: await activitySeatsLeft() });
+  }));
+  app2.put("/api/admin/limits", requireAdmin, smallJson, h(async (req, res) => {
+    const n = (v) => Math.floor(Number(v));
+    const tower = n(req.body?.tower);
+    const gun = n(req.body?.gun);
+    if (![tower, gun].every((x) => Number.isFinite(x) && x >= 0 && x <= 1e4)) {
+      res.status(400).json({ error: "\u0E08\u0E33\u0E19\u0E27\u0E19\u0E17\u0E35\u0E48\u0E19\u0E31\u0E48\u0E07\u0E15\u0E49\u0E2D\u0E07\u0E40\u0E1B\u0E47\u0E19\u0E15\u0E31\u0E27\u0E40\u0E25\u0E02 0 \u0E02\u0E36\u0E49\u0E19\u0E44\u0E1B (0 = \u0E44\u0E21\u0E48\u0E08\u0E33\u0E01\u0E31\u0E14)" });
+      return;
+    }
+    const limits = await saveActivityLimits({ tower, gun });
+    res.json({ limits: { tower: limits.tower, gun: limits.gun }, seatsLeft: await activitySeatsLeft() });
+  }));
+  app2.post("/api/admin/runners/:runnerId/disable", requireAdmin, smallJson, h(async (req, res) => {
+    const ok = await setRunnerDisabled(String(req.params.runnerId), req.body?.disabled !== false);
+    if (!ok) {
+      res.status(404).json({ error: "\u0E44\u0E21\u0E48\u0E1E\u0E1A\u0E1A\u0E31\u0E0D\u0E0A\u0E35\u0E19\u0E35\u0E49" });
+      return;
+    }
+    res.json({ ok: true, disabled: req.body?.disabled !== false });
+  }));
+  app2.post("/api/admin/runners/:runnerId/reset-email", requireAdmin, h(async (req, res) => {
+    const runner = await getRunner(String(req.params.runnerId));
+    if (!runner) {
+      res.status(404).json({ error: "\u0E44\u0E21\u0E48\u0E1E\u0E1A\u0E1A\u0E31\u0E0D\u0E0A\u0E35\u0E19\u0E35\u0E49" });
+      return;
+    }
+    if (!runner.email) {
+      res.status(400).json({ error: "\u0E1A\u0E31\u0E0D\u0E0A\u0E35\u0E19\u0E35\u0E49\u0E44\u0E21\u0E48\u0E21\u0E35\u0E2D\u0E35\u0E40\u0E21\u0E25 (\u0E2A\u0E21\u0E31\u0E04\u0E23\u0E1C\u0E48\u0E32\u0E19 LINE) \u0E08\u0E36\u0E07\u0E2A\u0E48\u0E07\u0E25\u0E34\u0E07\u0E01\u0E4C\u0E15\u0E31\u0E49\u0E07\u0E23\u0E2B\u0E31\u0E2A\u0E1C\u0E48\u0E32\u0E19\u0E44\u0E21\u0E48\u0E44\u0E14\u0E49" });
+      return;
+    }
+    if (!runner.password_hash) {
+      res.status(400).json({ error: "\u0E1A\u0E31\u0E0D\u0E0A\u0E35\u0E19\u0E35\u0E49\u0E40\u0E02\u0E49\u0E32\u0E2A\u0E39\u0E48\u0E23\u0E30\u0E1A\u0E1A\u0E14\u0E49\u0E27\u0E22 Google/LINE \u0E44\u0E21\u0E48\u0E21\u0E35\u0E23\u0E2B\u0E31\u0E2A\u0E1C\u0E48\u0E32\u0E19\u0E43\u0E2B\u0E49\u0E15\u0E31\u0E49\u0E07\u0E43\u0E2B\u0E21\u0E48" });
+      return;
+    }
+    const token = issueActionToken("reset", runner.runner_id, passwordFingerprint(runner.password_hash));
+    const r = await sendAccountMail(runner.email, "\u0E15\u0E31\u0E49\u0E07\u0E23\u0E2B\u0E31\u0E2A\u0E1C\u0E48\u0E32\u0E19\u0E43\u0E2B\u0E21\u0E48 \xB7 CHANGSUEK RUN", "\u0E15\u0E31\u0E49\u0E07\u0E23\u0E2B\u0E31\u0E2A\u0E1C\u0E48\u0E32\u0E19\u0E43\u0E2B\u0E21\u0E48", "\u0E1C\u0E39\u0E49\u0E08\u0E31\u0E14\u0E07\u0E32\u0E19\u0E2A\u0E48\u0E07\u0E25\u0E34\u0E07\u0E01\u0E4C\u0E15\u0E31\u0E49\u0E07\u0E23\u0E2B\u0E31\u0E2A\u0E1C\u0E48\u0E32\u0E19\u0E43\u0E2B\u0E21\u0E48\u0E43\u0E2B\u0E49\u0E1A\u0E31\u0E0D\u0E0A\u0E35\u0E19\u0E31\u0E01\u0E27\u0E34\u0E48\u0E07\u0E02\u0E2D\u0E07\u0E04\u0E38\u0E13 \u0E01\u0E14\u0E1B\u0E38\u0E48\u0E21\u0E14\u0E49\u0E32\u0E19\u0E25\u0E48\u0E32\u0E07\u0E40\u0E1E\u0E37\u0E48\u0E2D\u0E15\u0E31\u0E49\u0E07\u0E23\u0E2B\u0E31\u0E2A\u0E1C\u0E48\u0E32\u0E19\u0E43\u0E2B\u0E21\u0E48 \u0E25\u0E34\u0E07\u0E01\u0E4C\u0E43\u0E0A\u0E49\u0E44\u0E14\u0E49 1 \u0E0A\u0E31\u0E48\u0E27\u0E42\u0E21\u0E07\u0E41\u0E25\u0E30\u0E43\u0E0A\u0E49\u0E44\u0E14\u0E49\u0E04\u0E23\u0E31\u0E49\u0E07\u0E40\u0E14\u0E35\u0E22\u0E27", "\u0E15\u0E31\u0E49\u0E07\u0E23\u0E2B\u0E31\u0E2A\u0E1C\u0E48\u0E32\u0E19\u0E43\u0E2B\u0E21\u0E48", SITE_URL + "/#reset=" + token);
+    if (!r.ok) {
+      res.status(r.error === "MAIL_NOT_CONFIGURED" ? 503 : 502).json({ error: "\u0E2A\u0E48\u0E07\u0E2D\u0E35\u0E40\u0E21\u0E25\u0E44\u0E21\u0E48\u0E2A\u0E33\u0E40\u0E23\u0E47\u0E08: " + r.error });
+      return;
+    }
+    res.json({ ok: true, to: maskEmail(runner.email) });
   }));
   registerRunnerRoutes(app2, h, clientIp);
   app2.use("/api", (_req, res) => {

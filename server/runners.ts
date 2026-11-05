@@ -73,7 +73,33 @@ export function requireRunner(req: Request, res: Response, next: NextFunction) {
     return;
   }
   (req as any).runner = s;
-  next();
+  // an account switched off by an admin stops working even if its sign-in token has not expired yet
+  isRunnerDisabled(s.sub)
+    .then((off) => {
+      if (off) {
+        res.status(403).json({ error: 'บัญชีนี้ถูกระงับการใช้งาน กรุณาติดต่อผู้จัดงาน' });
+        return;
+      }
+      next();
+    })
+    .catch(next);
+}
+
+export async function isRunnerDisabled(runnerId: string): Promise<boolean> {
+  await ensureRunnerTables();
+  const rows = await dbQuery<{ disabled_at: string | null }>('select disabled_at from csr.runners where runner_id = $1', [runnerId]);
+  return Boolean(rows[0]?.disabled_at);
+}
+
+export async function setRunnerDisabled(runnerId: string, disabled: boolean): Promise<boolean> {
+  await ensureRunnerTables();
+  const rows = await dbQuery<{ runner_id: string }>(
+    disabled
+      ? 'update csr.runners set disabled_at = now() where runner_id = $1 returning runner_id'
+      : 'update csr.runners set disabled_at = null where runner_id = $1 returning runner_id',
+    [runnerId]
+  );
+  return rows.length > 0;
 }
 
 // ---------------------------------------------------------------------------
@@ -175,6 +201,8 @@ export interface RunnerRow {
   google_id?: string | null;
   email_verified?: boolean;
   facebook_id?: string | null;
+  /** set by an admin: the account can no longer sign in or buy */
+  disabled_at?: string | null;
   profile: Record<string, unknown>;
   created_at: string;
 }
@@ -200,6 +228,7 @@ export function ensureRunnerTables(): Promise<void> {
       await dbQuery('alter table csr.runners add column if not exists email_verified boolean not null default false');
       await dbQuery('alter table csr.runners add column if not exists google_id text');
       await dbQuery('alter table csr.runners add column if not exists facebook_id text');
+      await dbQuery('alter table csr.runners add column if not exists disabled_at timestamptz');
       await dbQuery('create unique index if not exists runners_line_uidx on csr.runners (line_user_id) where line_user_id is not null');
       await dbQuery('create unique index if not exists runners_google_uidx on csr.runners (google_id) where google_id is not null');
       await dbQuery('create unique index if not exists runners_facebook_uidx on csr.runners (facebook_id) where facebook_id is not null');
@@ -262,7 +291,7 @@ export async function loginRunner(identifier: string, password: string): Promise
   const row = rows[0];
   // compare against a dummy hash when the account does not exist (constant-ish time)
   const ok = verifyPassword(String(password || ''), row?.password_hash || DUMMY_HASH);
-  if (!row || !row.password_hash || !ok) return null;
+  if (!row || !row.password_hash || !ok || row.disabled_at) return null;
   await dbQuery('update csr.runners set last_login_at = now() where runner_id = $1', [row.runner_id]);
   return row;
 }
@@ -349,6 +378,7 @@ export function publicRunner(r: RunnerRow) {
     emailVerified: Boolean(r.email_verified),
     lineLinked: Boolean(r.line_user_id),
     social: [r.line_user_id && 'line', r.google_id && 'google'].filter(Boolean) as string[],
+    disabled: Boolean(r.disabled_at),
     profile: r.profile || {},
     createdAt: r.created_at,
   };
@@ -364,6 +394,7 @@ export interface AdminRunnerSummary {
   username: string;
   phone: string;
   emailVerified: boolean;
+  disabled: boolean;
   /** how the account can sign in: 'password' (e-mail / username), 'google', 'line' */
   methods: string[];
   createdAt: string;
@@ -395,6 +426,7 @@ export async function listRunnersForAdmin(): Promise<AdminRunnerSummary[]> {
     username: r.username || '',
     phone: r.phone || '',
     emailVerified: Boolean(r.email_verified),
+    disabled: Boolean(r.disabled_at),
     methods: [r.password_hash && 'password', r.google_id && 'google', r.line_user_id && 'line'].filter(Boolean) as string[],
     createdAt: new Date(r.created_at).toISOString(),
     orders: Number(r.orders) || 0,

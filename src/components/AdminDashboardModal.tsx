@@ -50,7 +50,10 @@ import {
   exportInsuranceCsv,
   formatBibNumber,
 } from '../utils/runnerStorage';
-import { ServerOrder, adminApi, adminLogin, clearAdminToken, getAdminToken } from '../utils/api';
+import { ServerOrder, adminApi, adminLogin, clearAdminToken, getAdminRole, getAdminToken, type AdminRole } from '../utils/api';
+import { AuditAdmin } from './AuditAdmin';
+import { AdminAccountsAdmin } from './AdminAccountsAdmin';
+import { ActivityLimitsCard } from './ActivityLimitsCard';
 import { formatThaiId } from '../data/shooting';
 import { AdminStationRoster, OrderFullDetails } from './AdminStationRoster';
 import { countShirts } from '../data/shirts';
@@ -135,6 +138,10 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
   // Authentication: a signed token issued by the server (/api/admin/login)
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => Boolean(getAdminToken()));
   const [adminUser, setAdminUser] = useState<string>('admin');
+  // what the server allows this account to do (it enforces it; this only hides what would be refused)
+  const [adminRole, setAdminRole] = useState<AdminRole>(() => getAdminRole());
+  const isOwner = adminRole === 'owner';
+  const canManage = adminRole !== 'viewer';
   const [loginUsername, setLoginUsername] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
   const [showLoginPassword, setShowLoginPassword] = useState(false);
@@ -149,7 +156,7 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
   });
   const [loadError, setLoadError] = useState<string | null>(null);
 
-  const [activeTab, setActiveTab] = useState<'overview' | 'roster' | 'orders' | 'security' | 'settings' | 'sponsors' | 'scan' | 'winners' | 'runners'>(
+  const [activeTab, setActiveTab] = useState<'overview' | 'roster' | 'orders' | 'security' | 'settings' | 'sponsors' | 'scan' | 'winners' | 'runners' | 'admins'>(
     'orders'
   );
   const [orders, setOrders] = useState<TicketOrder[]>([]);
@@ -170,6 +177,12 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
   const [routeFilter, setRouteFilter] = useState<'ALL' | RouteId>('ALL');
   const [shirtFilter, setShirtFilter] = useState<string>('ALL');
   const [kitFilter, setKitFilter] = useState<'ALL' | 'PENDING_PICKUP' | 'CHECKED_IN'>('ALL');
+  // 1-baht test orders are hidden unless asked for; e-mail filter finds tickets that never reached the buyer
+  const [showTests, setShowTests] = useState(false);
+  const [emailFilter, setEmailFilter] = useState<'ALL' | 'FAILED' | 'NEVER'>('ALL');
+  const [refundAmount, setRefundAmount] = useState('');
+  const [refundNote, setRefundNote] = useState('');
+  const [inspectBusy, setInspectBusy] = useState(false);
   const [verificationFilter, setVerificationFilter] = useState<'ALL' | PaymentVerificationStatus>(
     'ALL'
   );
@@ -197,12 +210,12 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
   const refreshData = async () => {
     if (!getAdminToken()) return;
     try {
-      const [ordersRes, settingsRes] = await Promise.all([adminApi.listOrders(), adminApi.getSettings()]);
+      const [ordersRes, settingsRes] = await Promise.all([adminApi.listOrders(), adminApi.getSettings().catch(() => null)]);
       setOrders(ordersRes.orders);
       setBibCounters(ordersRes.bibCounters);
       setCounterForm(ordersRes.bibCounters);
       setNextBibByRoute(ordersRes.nextBib);
-      setConfigForm((prev) => ({ ...prev, ...settingsRes.settings, adminUsername: adminUser }));
+      if (settingsRes) setConfigForm((prev) => ({ ...prev, ...settingsRes.settings, adminUsername: adminUser }));
       setAuditLogs(getSecurityAuditLogs());
       setLoadError(null);
     } catch (err) {
@@ -360,6 +373,13 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
       if (shirtFilter !== 'ALL' && o.shirtSize !== shirtFilter) return false;
       if (kitFilter !== 'ALL' && o.kitStatus !== kitFilter) return false;
       if (verificationFilter !== 'ALL' && o.verificationStatus !== verificationFilter) return false;
+      if (!showTests && (o as ServerOrder).isTest) return false;
+      if (emailFilter !== 'ALL') {
+        const so = o as ServerOrder;
+        if (so.paymentStatus !== 'PAID' || so.cancelledAt) return false;
+        if (emailFilter === 'FAILED' && !(so.emailStatus && !so.emailStatus.ok)) return false;
+        if (emailFilter === 'NEVER' && so.emailStatus) return false;
+      }
 
       if (!q) return true;
       return (
@@ -372,7 +392,12 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
         (o.dogName && o.dogName.toLowerCase().includes(q))
       );
     });
-  }, [orders, searchQuery, routeFilter, shirtFilter, kitFilter, verificationFilter]);
+  }, [orders, searchQuery, routeFilter, shirtFilter, kitFilter, verificationFilter, showTests, emailFilter]);
+
+  const emailProblems = useMemo(
+    () => orders.filter((o) => { const so = o as ServerOrder; return so.paymentStatus === 'PAID' && !so.cancelledAt && !so.isTest && so.emailStatus && !so.emailStatus.ok; }).length,
+    [orders]
+  );
 
   if (!isOpen) return null;
 
@@ -406,6 +431,8 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
     try {
       const username = await adminLogin(loginUsername.trim(), loginPassword);
       setAdminUser(username);
+      setAdminRole(getAdminRole());
+      setActiveTab('orders');
       setLoginPassword('');
       setIsAuthenticated(true);
       const updatedLogs = appendSecurityAuditLog({
@@ -438,6 +465,18 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
     setIsPiiMasked(true);
   };
 
+  /** re-reads the orders (the server records whether the last ticket e-mail went out) and refreshes the open inspector */
+  const reloadInspected = async () => {
+    try {
+      const fresh = await adminApi.listOrders();
+      setOrders(fresh.orders);
+      const again = fresh.orders.find((o) => inspectingOrder && o.orderId === inspectingOrder.orderId);
+      if (again) setInspectingOrder(again);
+    } catch {
+      /* the 30-second refresh will catch up */
+    }
+  };
+
   const replaceOrder = (updated: ServerOrder) => {
     setOrders((prev) => prev.map((o) => (o.orderId === updated.orderId ? updated : o)));
     if (inspectingOrder && inspectingOrder.orderId === updated.orderId) {
@@ -445,10 +484,12 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
     }
   };
 
-  const handleToggleKit = async (orderId: string) => {
+  const handleToggleKit = async (orderId: string, action: 'checkin' | 'undo' = 'checkin') => {
+    if (action === 'undo' && !window.confirm('ยกเลิกการรับชุดของคำสั่งซื้อนี้? (ใช้เมื่อกดเช็กอินผิดเท่านั้น — ระบบจะบันทึกว่าใครยกเลิก)')) return;
     try {
-      const res = await adminApi.toggleKit(orderId);
+      const res = await adminApi.toggleKit(orderId, action);
       replaceOrder(res.order);
+      if (res.alreadyCheckedIn) showToast('ตั๋วนี้เช็กอินรับชุดไปแล้ว');
     } catch (err) {
       showToast(err instanceof Error ? err.message : 'อัปเดตไม่สำเร็จ');
     }
@@ -689,116 +730,79 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
 
           {/* Navigation Tabs & Logout / Close Actions */}
           <div className="flex flex-wrap items-center gap-2">
-            <div className="inline-flex flex-wrap p-1 rounded-2xl bg-white/10 border border-white/15">
-              <button
-                type="button"
-                onClick={() => setActiveTab('orders')}
-                className={`px-3 py-2 rounded-xl text-xs font-extrabold transition-all cursor-pointer flex items-center gap-1.5 ${
-                  activeTab === 'orders'
-                    ? 'bg-[#FFC928] text-[#180B30] shadow-xs'
-                    : 'text-white/80 hover:text-white'
-                }`}
-              >
-                <Ticket className="w-4 h-4" />
-                <span>ตรวจสลิป & เลข BIB ({analytics.totalTickets})</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveTab('overview')}
-                className={`px-3 py-2 rounded-xl text-xs font-extrabold transition-all cursor-pointer flex items-center gap-1.5 ${
-                  activeTab === 'overview'
-                    ? 'bg-[#FFC928] text-[#180B30] shadow-xs'
-                    : 'text-white/80 hover:text-white'
-                }`}
-              >
-                <TrendingUp className="w-4 h-4" />
-                <span>สรุปยอดขาย & เสื้อ</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveTab('roster')}
-                className={`px-3 py-2 rounded-xl text-xs font-extrabold transition-all cursor-pointer flex items-center gap-1.5 ${
-                  activeTab === 'roster'
-                    ? 'bg-[#FFC928] text-[#180B30] shadow-xs'
-                    : 'text-white/80 hover:text-white'
-                }`}
-              >
-                <span aria-hidden="true">📋</span>
-                <span>รายชื่อแต่ละฐาน</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveTab('security')}
-                className={`px-3 py-2 rounded-xl text-xs font-extrabold transition-all cursor-pointer flex items-center gap-1.5 ${
-                  activeTab === 'security'
-                    ? 'bg-emerald-400 text-[#180B30] shadow-xs'
-                    : 'text-emerald-300 hover:text-white'
-                }`}
-              >
-                <ShieldAlert className="w-4 h-4" />
-                <span>ความปลอดภัย & PDPA</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveTab('settings')}
-                className={`px-3 py-2 rounded-xl text-xs font-extrabold transition-all cursor-pointer flex items-center gap-1.5 ${
-                  activeTab === 'settings'
-                    ? 'bg-[#FFC928] text-[#180B30] shadow-xs'
-                    : 'text-white/80 hover:text-white'
-                }`}
-              >
-                <Settings className="w-4 h-4" />
-                <span>ตั้งค่าระบบ</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveTab('sponsors')}
-                className={`px-3 py-2 rounded-xl text-xs font-extrabold transition-all cursor-pointer flex items-center gap-1.5 ${
-                  activeTab === 'sponsors'
-                    ? 'bg-[#FFC928] text-[#180B30] shadow-xs'
-                    : 'text-white/80 hover:text-white'
-                }`}
-              >
-                <Gift className="w-4 h-4" />
-                <span>รหัสสปอนเซอร์</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveTab('scan')}
-                className={`px-3 py-2 rounded-xl text-xs font-extrabold transition-all cursor-pointer flex items-center gap-1.5 ${
-                  activeTab === 'scan'
-                    ? 'bg-[#FFC928] text-[#180B30] shadow-xs'
-                    : 'text-white/80 hover:text-white'
-                }`}
-              >
-                <span aria-hidden="true">📷</span>
-                <span>สแกนตั๋ว</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveTab('runners')}
-                className={`px-3 py-2 rounded-xl text-xs font-extrabold transition-all cursor-pointer flex items-center gap-1.5 ${
-                  activeTab === 'runners'
-                    ? 'bg-[#FFC928] text-[#180B30] shadow-xs'
-                    : 'text-white/80 hover:text-white'
-                }`}
-              >
-                <span aria-hidden="true">👥</span>
-                <span>บัญชีนักวิ่ง</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveTab('winners')}
-                className={`px-3 py-2 rounded-xl text-xs font-extrabold transition-all cursor-pointer flex items-center gap-1.5 ${
-                  activeTab === 'winners'
-                    ? 'bg-[#FFC928] text-[#180B30] shadow-xs'
-                    : 'text-white/80 hover:text-white'
-                }`}
-              >
-                <span aria-hidden="true">🏆</span>
-                <span>ประกาศผู้ชนะ</span>
-              </button>
-            </div>
+            {(() => {
+              type TabId = typeof activeTab;
+              const groups: { id: string; label: string; icon: string; tabs: { id: TabId; label: string; icon: string; show: boolean }[] }[] = [
+                {
+                  id: 'sales', label: 'ขาย', icon: '🧾',
+                  tabs: [
+                    { id: 'orders', label: 'คำสั่งซื้อ', icon: '🧾', show: true },
+                    { id: 'overview', label: 'ภาพรวม', icon: '📊', show: true },
+                  ],
+                },
+                {
+                  id: 'people', label: 'ลูกค้า', icon: '👥',
+                  tabs: [
+                    { id: 'runners', label: 'บัญชีนักวิ่ง', icon: '👥', show: true },
+                    { id: 'roster', label: 'รายชื่อตามสถานี', icon: '📋', show: true },
+                  ],
+                },
+                {
+                  id: 'event', label: 'หน้างาน', icon: '📷',
+                  tabs: [
+                    { id: 'scan', label: 'สแกนตั๋ว', icon: '📷', show: canManage },
+                    { id: 'winners', label: 'ประกาศผู้ชนะ', icon: '🏆', show: canManage },
+                  ],
+                },
+                {
+                  id: 'config', label: 'ตั้งค่า', icon: '⚙️',
+                  tabs: [
+                    { id: 'sponsors', label: 'รหัสสปอนเซอร์', icon: '🎟️', show: canManage },
+                    { id: 'settings', label: 'ตั้งค่า/การชำระเงิน', icon: '⚙️', show: isOwner },
+                    { id: 'admins', label: 'บัญชีแอดมิน', icon: '🔑', show: isOwner },
+                    { id: 'security', label: 'บันทึกการใช้งาน', icon: '🛡️', show: isOwner },
+                  ],
+                },
+              ];
+              const visible = groups.map((g) => ({ ...g, tabs: g.tabs.filter((t) => t.show) })).filter((g) => g.tabs.length);
+              const active = visible.find((g) => g.tabs.some((t) => t.id === activeTab)) || visible[0];
+              return (
+                <div className="flex flex-col gap-1.5">
+                  <div className="inline-flex flex-wrap p-1 rounded-2xl bg-white/10 border border-white/15">
+                    {visible.map((g) => (
+                      <button
+                        key={g.id}
+                        type="button"
+                        onClick={() => setActiveTab(g.tabs[0].id)}
+                        className={`px-3 py-2 rounded-xl text-xs font-extrabold transition-all cursor-pointer flex items-center gap-1.5 ${
+                          active.id === g.id ? 'bg-[#FFC928] text-[#180B30] shadow-xs' : 'text-white/80 hover:text-white'
+                        }`}
+                      >
+                        <span aria-hidden="true">{g.icon}</span>
+                        <span>{g.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                  {active.tabs.length > 1 && (
+                    <div className="inline-flex flex-wrap gap-1">
+                      {active.tabs.map((t) => (
+                        <button
+                          key={t.id}
+                          type="button"
+                          onClick={() => setActiveTab(t.id)}
+                          className={`px-2.5 py-1.5 rounded-lg text-[11px] font-extrabold cursor-pointer flex items-center gap-1 border ${
+                            activeTab === t.id ? 'bg-white text-[#180B30] border-white' : 'text-white/85 border-white/25 hover:border-white/60'
+                          }`}
+                        >
+                          <span aria-hidden="true">{t.icon}</span>
+                          <span>{t.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
 
             <button
               type="button"
@@ -1006,7 +1010,7 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
                     <button
                       type="button"
                       onClick={() => {
-                        exportTicketOrdersToCsv(filteredOrders, {
+                        exportTicketOrdersToCsv(filteredOrders.filter((o) => !(o as ServerOrder).isTest), {
                           maskSensitiveData: true,
                           actor: configForm.adminUsername || 'admin',
                         });
@@ -1020,35 +1024,41 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
                     </button>
 
                     {/* Export for the insurance company */}
-                    <button
+                    {canManage && <button
                       type="button"
                       onClick={() => {
-                        const n = exportInsuranceCsv(orders, configForm.adminUsername || 'admin');
-                        setAuditLogs(getSecurityAuditLogs());
-                        showToast(n > 0 ? `ส่งออกรายชื่อทำประกัน ${n} คน (เฉพาะที่ชำระเงินแล้ว)` : 'ยังไม่มีนักวิ่ง 5K/10K ที่ชำระเงินแล้วสำหรับทำประกัน');
+                        adminApi
+                          .exportOrders('insurance')
+                          .then((r) => {
+                            const n = exportInsuranceCsv(r.orders.filter((o) => !o.isTest), adminUser);
+                            showToast(n > 0 ? `ส่งออกรายชื่อทำประกัน ${n} คน (เฉพาะที่ชำระเงินแล้ว) — บันทึกในบันทึกการใช้งานแล้ว` : 'ยังไม่มีนักวิ่ง 5K/10K ที่ชำระเงินแล้วสำหรับทำประกัน');
+                          })
+                          .catch((err) => showToast(err instanceof Error ? err.message : 'ส่งออกไม่สำเร็จ'));
                       }}
                       className="px-3.5 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-700 text-white text-xs font-extrabold flex items-center gap-1.5 shadow-xs cursor-pointer"
                     >
                       <span aria-hidden="true">🛡️</span>
                       <span>CSV ทำประกัน (ทุกระยะ)</span>
-                    </button>
+                    </button>}
 
                     {/* Export Full CSV */}
-                    <button
+                    {canManage && <button
                       type="button"
                       onClick={() => {
-                        exportTicketOrdersToCsv(filteredOrders, {
-                          maskSensitiveData: false,
-                          actor: configForm.adminUsername || 'admin',
-                        });
-                        setAuditLogs(getSecurityAuditLogs());
-                        showToast('ส่งออกไฟล์ CSV ข้อมูลเต็ม (บันทึกใน Security Audit Log แล้ว)');
+                        const wanted = new Set(filteredOrders.filter((o) => !(o as ServerOrder).isTest).map((o) => o.orderId));
+                        adminApi
+                          .exportOrders('full')
+                          .then((r) => {
+                            exportTicketOrdersToCsv(r.orders.filter((o) => wanted.has(o.orderId)), { maskSensitiveData: false, actor: adminUser });
+                            showToast('ส่งออกไฟล์ CSV ข้อมูลเต็มแล้ว — บันทึกในบันทึกการใช้งานแล้ว');
+                          })
+                          .catch((err) => showToast(err instanceof Error ? err.message : 'ส่งออกไม่สำเร็จ'));
                       }}
                       className="px-3 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-900 text-white text-xs font-extrabold flex items-center gap-1.5 shadow-xs cursor-pointer"
                     >
                       <FileSpreadsheet className="w-4 h-4 text-[#FFC928]" />
                       <span>CSV (ข้อมูลเต็ม)</span>
-                    </button>
+                    </button>}
 
                     {onOpenRegisterModal && (
                       <button
@@ -1141,6 +1151,22 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
                       <option value="PENDING_PICKUP">รอรับเสื้อ/BIB หน้างาน</option>
                       <option value="CHECKED_IN">✓ เช็กอินรับ BIB แล้ว</option>
                     </select>
+
+                    <select
+                      aria-label="กรองตามสถานะอีเมลตั๋ว"
+                      value={emailFilter}
+                      onChange={(e) => setEmailFilter(e.target.value as 'ALL' | 'FAILED' | 'NEVER')}
+                      className="px-2.5 py-1.5 rounded-lg border border-slate-300 bg-white font-bold text-slate-700 text-xs"
+                    >
+                      <option value="ALL">อีเมลตั๋ว: ทั้งหมด</option>
+                      <option value="FAILED">✉ ส่งไม่สำเร็จ{emailProblems ? ` (${emailProblems})` : ''}</option>
+                      <option value="NEVER">✉ ยังไม่มีบันทึกการส่ง</option>
+                    </select>
+
+                    <label className="inline-flex items-center gap-1.5 px-2 text-xs font-bold text-slate-700 cursor-pointer">
+                      <input type="checkbox" checked={showTests} onChange={(e) => setShowTests(e.target.checked)} />
+                      แสดงออเดอร์ทดสอบ 1 บาท
+                    </label>
                   </div>
                 </div>
               </div>
@@ -1229,6 +1255,20 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
                                 <div className="font-mono text-[11px] text-slate-500 mt-0.5">
                                   {isPiiMasked ? maskEmailAddress(order.email) : order.email}
                                 </div>
+                                {(order as ServerOrder).paymentStatus === 'PAID' && !(order as ServerOrder).cancelledAt && (
+                                  (order as ServerOrder).emailStatus ? (
+                                    (order as ServerOrder).emailStatus!.ok ? (
+                                      <span className="mt-0.5 inline-block rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200 px-1.5 py-0.5 text-[10px] font-extrabold">✉ ส่งตั๋วแล้ว</span>
+                                    ) : (
+                                      <span className="mt-0.5 inline-block rounded-md bg-rose-50 text-rose-700 border border-rose-300 px-1.5 py-0.5 text-[10px] font-extrabold" title={(order as ServerOrder).emailStatus!.error}>✉ ส่งไม่สำเร็จ — กดส่งซ้ำ</span>
+                                    )
+                                  ) : (
+                                    <span className="mt-0.5 inline-block rounded-md bg-slate-50 text-slate-500 border border-slate-200 px-1.5 py-0.5 text-[10px] font-bold">✉ ยังไม่มีบันทึกการส่ง</span>
+                                  )
+                                )}
+                                {(order as ServerOrder).refundedAt && (
+                                  <span className="mt-0.5 ml-1 inline-block rounded-md bg-violet-50 text-violet-800 border border-violet-300 px-1.5 py-0.5 text-[10px] font-extrabold">↩ คืนเงิน {formatBaht((order as ServerOrder).refundAmount || 0)}</span>
+                                )}
                                 {order.addOns && (
                                   <div className="text-[11px] font-extrabold text-[#B45309] mt-0.5">
                                     🎉 กิจกรรมเสริม: {order.addOns.label} × {order.addOns.people} คน ({formatBaht(order.addOns.total)} บาท)
@@ -1325,7 +1365,9 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
                               <td className="py-3.5 px-4 text-center whitespace-nowrap">
                                 <button
                                   type="button"
-                                  onClick={() => handleToggleKit(order.orderId)}
+                                  disabled={!canManage}
+                                  title={isCheckedIn ? 'รับชุดแล้ว (ยกเลิกได้ในหน้ารายละเอียด)' : 'กดเมื่อจ่ายชุดให้ผู้ซื้อแล้ว'}
+                                  onClick={() => !isCheckedIn && handleToggleKit(order.orderId)}
                                   className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-extrabold border transition-all cursor-pointer ${
                                     isCheckedIn
                                       ? 'bg-emerald-100 text-emerald-900 border-emerald-300 hover:bg-emerald-200'
@@ -1557,172 +1599,8 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
           {/* ========================================================== */}
           {/* TAB 3: SECURITY SHIELD & ANTI-DATA LEAK CENTER (PDPA)      */}
           {/* ========================================================== */}
-          {activeTab === 'security' && (
-            <div className="space-y-6">
-              {/* 4-Layer Security Posture Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="bg-white rounded-2xl border-2 border-emerald-300 p-5 shadow-xs space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-black uppercase tracking-wider text-emerald-800">
-                      1. AT-REST STORAGE ENCRYPTION
-                    </span>
-                    <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-extrabold">
-                      ✓ SERVER-SIDE
-                    </span>
-                  </div>
-                  <div className="text-sm font-black text-slate-900">
-                    ข้อมูลผู้สมัครเก็บบนเซิร์ฟเวอร์ ไม่อยู่ในเบราว์เซอร์
-                  </div>
-                  <p className="text-xs font-semibold text-slate-600 leading-relaxed">
-                    คำสั่งซื้อ ราคา สถานะการชำระเงิน และเลข BIB ถูกตัดสินที่เซิร์ฟเวอร์เท่านั้น
-                    การเข้าหน้านี้ต้องใช้รหัสผ่านที่ตั้งในตัวแปร ADMIN_PASSWORD บนเซิร์ฟเวอร์
-                  </p>
-                </div>
-
-                <div className="bg-white rounded-2xl border-2 border-purple-300 p-5 shadow-xs space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-black uppercase tracking-wider text-purple-800">
-                      2. PDPA DATA MASKING & PRIVACY SHIELD
-                    </span>
-                    <button
-                      type="button"
-                      onClick={handleTogglePiiMask}
-                      className="px-2.5 py-0.5 rounded-full bg-purple-100 hover:bg-purple-200 text-purple-900 text-[10px] font-extrabold cursor-pointer"
-                    >
-                      {isPiiMasked ? 'สถานะ: ปิดบังข้อมูลอยู่' : 'สถานะ: แสดงข้อมูลเต็ม'}
-                    </button>
-                  </div>
-                  <div className="text-sm font-black text-slate-900">
-                    ระบบปิดบังเบอร์โทรและอีเมลอัตโนมัติ (เว็บไม่เก็บเลขบัตรประชาชน)
-                  </div>
-                  <p className="text-xs font-semibold text-slate-600 leading-relaxed">
-                    ซ่อนข้อมูลส่วนบุคคลบนหน้าจอแอดมิน (เช่น <code className="font-mono">081-XXX-5678</code>,{' '}
-                    <code className="font-mono">1-1005-XXXXX-19-X</code>) และบนป้าย E-BIB เวลาผู้สมัครแชร์รูปลงโซเชียล พร้อมบันทึกประวัติทุกครั้งที่มีการกดดูข้อมูลเต็ม
-                  </p>
-                </div>
-
-                <div className="bg-white rounded-2xl border-2 border-amber-300 p-5 shadow-xs space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-black uppercase tracking-wider text-amber-800">
-                      3. BRUTE-FORCE & IDLE SESSION LOCK
-                    </span>
-                    <span className="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 text-[10px] font-extrabold">
-                      ✓ MAX {MAX_LOGIN_ATTEMPTS} ATTEMPTS
-                    </span>
-                  </div>
-                  <div className="text-sm font-black text-slate-900">
-                    ป้องกันการสุ่มรหัสผ่านแอดมิน & ล็อกหน้าจออัตโนมัติ
-                  </div>
-                  <p className="text-xs font-semibold text-slate-600 leading-relaxed">
-                    หากกรอกรหัสผ่านแอดมินผิดครบ {MAX_LOGIN_ATTEMPTS} ครั้ง ระบบจะระงับการเข้าสู่ระบบ 60 วินาทีทันที และล็อกหน้าจอแอดมินอัตโนมัติเมื่อไม่มีการใช้งานเกิน{' '}
-                    <strong>{configForm.sessionIdleTimeoutMinutes || 15} นาที</strong>
-                  </p>
-                </div>
-
-                <div className="bg-white rounded-2xl border-2 border-teal-300 p-5 shadow-xs space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-black uppercase tracking-wider text-teal-800">
-                      4. XSS & CSV FORMULA INJECTION SHIELD
-                    </span>
-                    <span className="px-2.5 py-0.5 rounded-full bg-teal-100 text-teal-900 text-[10px] font-extrabold">
-                      ✓ SANITIZED
-                    </span>
-                  </div>
-                  <div className="text-sm font-black text-slate-900">
-                    กรองโค้ดแปลกปลอม (Anti-XSS) & ป้องกันไวรัสสูตร Excel
-                  </div>
-                  <p className="text-xs font-semibold text-slate-600 leading-relaxed">
-                    คัดกรองแท็ก <code className="font-mono">&lt;script&gt;</code> จากฟอร์มรับสมัครทุกช่อง และป้องกัน{' '}
-                    <strong>CSV Formula Injection</strong> (<code className="font-mono">=, +, -, @</code>) เวลาแอดมินดาวน์โหลดไฟล์ไปเปิดในโปรแกรม Microsoft Excel
-                  </p>
-                </div>
-              </div>
-
-              {/* Security Audit Log Table */}
-              <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
-                <div className="px-5 py-4 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3">
-                  <div className="flex items-center gap-2.5">
-                    <Activity className="w-5 h-5 text-purple-700" />
-                    <div>
-                      <h3 className="text-base font-black text-slate-900">
-                        บันทึกประวัติการเข้าถึงข้อมูลและความปลอดภัย (Security Audit Log)
-                      </h3>
-                      <p className="text-xs font-semibold text-slate-500">
-                        ตรวจสอบย้อนหลังว่าใครเข้าสู่ระบบ เปิดดูข้อมูลส่วนบุคคล (Unmask PII) หรือดาวน์โหลดไฟล์ CSV เมื่อใด
-                      </p>
-                    </div>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const reset = clearSecurityAuditLogs(configForm.adminUsername || 'admin');
-                      setAuditLogs(reset);
-                      showToast('ล้างประวัติ Security Audit Log เรียบร้อยแล้ว');
-                    }}
-                    className="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-extrabold cursor-pointer"
-                  >
-                    ล้างประวัติบันทึก
-                  </button>
-                </div>
-
-                <div className="overflow-x-auto max-h-96">
-                  <table className="w-full text-left border-collapse">
-                    <thead>
-                      <tr className="bg-slate-100 border-b border-slate-200 text-[11px] font-extrabold uppercase tracking-wider text-slate-600">
-                        <th className="py-3 px-4">วัน-เวลา</th>
-                        <th className="py-3 px-4">ระดับ</th>
-                        <th className="py-3 px-4">เหตุการณ์ (Action)</th>
-                        <th className="py-3 px-4">ผู้ดำเนินการ</th>
-                        <th className="py-3 px-4">รายละเอียด</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-200 text-xs">
-                      {auditLogs.length === 0 ? (
-                        <tr>
-                          <td colSpan={5} className="py-8 text-center text-slate-500 font-bold">
-                            ยังไม่มีรายการบันทึกในระบบ
-                          </td>
-                        </tr>
-                      ) : (
-                        auditLogs.map((ev) => (
-                          <tr key={ev.id} className="hover:bg-slate-50">
-                            <td className="py-3 px-4 font-mono text-[11px] text-slate-600 whitespace-nowrap">
-                              {new Date(ev.timestamp).toLocaleString('th-TH')}
-                            </td>
-                            <td className="py-3 px-4 whitespace-nowrap">
-                              {ev.severity === 'CRITICAL' && (
-                                <span className="px-2 py-0.5 rounded-md bg-rose-100 text-rose-800 font-extrabold text-[10px]">
-                                  CRITICAL
-                                </span>
-                              )}
-                              {ev.severity === 'WARNING' && (
-                                <span className="px-2 py-0.5 rounded-md bg-amber-100 text-amber-900 font-extrabold text-[10px]">
-                                  WARNING
-                                </span>
-                              )}
-                              {ev.severity === 'INFO' && (
-                                <span className="px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 font-extrabold text-[10px]">
-                                  INFO
-                                </span>
-                              )}
-                            </td>
-                            <td className="py-3 px-4 font-mono font-bold text-slate-800 whitespace-nowrap">
-                              {ev.action}
-                            </td>
-                            <td className="py-3 px-4 font-bold text-purple-800 whitespace-nowrap">
-                              {ev.actor}
-                            </td>
-                            <td className="py-3 px-4 font-semibold text-slate-700">{ev.detail}</td>
-                          </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-          )}
+          {activeTab === 'security' && isOwner && <AuditAdmin />}
+          {activeTab === 'admins' && isOwner && <AdminAccountsAdmin />}
 
           {/* ========================================================== */}
           {/* TAB 4: PROMPTPAY, TIMER, ADMIN CREDENTIALS & BIB COUNTERS  */}
@@ -1755,7 +1633,13 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
             />
           )}
 
-          {activeTab === 'settings' && (
+          {activeTab === 'settings' && isOwner && (
+            <div className="mb-6">
+              <ActivityLimitsCard />
+            </div>
+          )}
+
+          {activeTab === 'settings' && isOwner && (
             <form onSubmit={handleSaveSettings} className="grid grid-cols-1 lg:grid-cols-12 gap-6">
               {/* Left 7 cols */}
               <div className="lg:col-span-7 space-y-5">
@@ -2055,6 +1939,26 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
                     ตรวจสอบการโอนเงิน & ป้าย BIB ของคุณ {inspectingOrder.fullName}
                     {inspectingOrder.bibNumber ? ` (#${inspectingOrder.bibNumber})` : ''}
                   </h3>
+                  {(inspectingOrder as ServerOrder).masked && canManage && (
+                    <button
+                      type="button"
+                      disabled={inspectBusy}
+                      onClick={async () => {
+                        setInspectBusy(true);
+                        try {
+                          const r = await adminApi.getFullOrder(inspectingOrder.orderId);
+                          setInspectingOrder(r.order);
+                        } catch (err) {
+                          showToast(err instanceof Error ? err.message : 'เปิดข้อมูลเต็มไม่สำเร็จ');
+                        } finally {
+                          setInspectBusy(false);
+                        }
+                      }}
+                      className="mt-1 mr-2 inline-flex items-center gap-1 rounded-lg border-2 border-amber-500 bg-amber-50 px-2.5 py-1 text-[11px] font-extrabold text-amber-900 cursor-pointer disabled:opacity-60"
+                    >
+                      🔓 แสดงข้อมูลเต็ม (เลขบัตร/สุขภาพ) — ระบบบันทึกว่าคุณเปิดดู
+                    </button>
+                  )}
                   {inspectingOrder.insurance && (
                     <p className="mt-1 text-xs font-bold text-sky-800 bg-sky-50 border border-sky-200 rounded-lg px-2.5 py-1.5">
                       🛡️ ประกัน: {inspectingOrder.insurance.prefix}{inspectingOrder.insurance.firstName} {inspectingOrder.insurance.lastName} · {inspectingOrder.insurance.gender} · อายุ {inspectingOrder.insurance.age} ปี (เกิด {inspectingOrder.insurance.birthDate}) · เลือด {inspectingOrder.insurance.bloodType} · โรคประจำตัว: {inspectingOrder.insurance.medicalConditions} · ติดต่อฉุกเฉิน: {inspectingOrder.insurance.emergencyName} ({inspectingOrder.insurance.relationship}) {inspectingOrder.emergencyPhone}
@@ -2086,8 +1990,10 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
                         try {
                           const r = await adminApi.resendTicketEmail(inspectingOrder.orderId);
                           showToast(`ส่งอีเมลตั๋วไปที่ ${r.to} แล้ว`);
+                          await reloadInspected();
                         } catch (err) {
                           showToast(err instanceof Error ? err.message : 'ส่งอีเมลไม่สำเร็จ');
+                          await reloadInspected();
                         }
                       }}
                       className="mt-1.5 inline-flex items-center gap-1.5 rounded-lg bg-[#2A1450] text-[#FFC928] px-3 py-1.5 text-xs font-extrabold cursor-pointer"
@@ -2248,20 +2154,106 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
                     {inspectingOrder.paymentRef || '-'} (฿{formatBaht(inspectingOrder.totalPrice)})
                   </span>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => handleToggleKit(inspectingOrder.orderId)}
-                  className={`px-3.5 py-1.5 rounded-xl font-extrabold cursor-pointer ${
-                    inspectingOrder.kitStatus === 'CHECKED_IN'
-                      ? 'bg-emerald-600 text-white'
-                      : 'bg-amber-400 text-slate-950'
-                  }`}
-                >
-                  {inspectingOrder.kitStatus === 'CHECKED_IN'
-                    ? '✓ เช็กอินรับเสื้อและ BIB แล้ว'
-                    : 'กดยืนยันจ่ายเสื้อและ BIB หน้างาน'}
-                </button>
+                {inspectingOrder.kitStatus === 'CHECKED_IN' ? (
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="px-3.5 py-1.5 rounded-xl bg-emerald-600 text-white font-extrabold">
+                      ✓ รับเสื้อและ BIB แล้ว
+                      {(inspectingOrder as ServerOrder).kitCheckedInAt ? ` · ${new Date((inspectingOrder as ServerOrder).kitCheckedInAt!).toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' })}` : ''}
+                      {(inspectingOrder as ServerOrder).kitCheckedInBy ? ` · โดย ${(inspectingOrder as ServerOrder).kitCheckedInBy}` : ''}
+                    </span>
+                    {canManage && (
+                      <button type="button" onClick={() => handleToggleKit(inspectingOrder.orderId, 'undo')} className="text-[11px] font-extrabold text-rose-700 underline underline-offset-2 cursor-pointer">
+                        ยกเลิกการรับชุด
+                      </button>
+                    )}
+                  </div>
+                ) : (
+                  canManage && (
+                    <button type="button" onClick={() => handleToggleKit(inspectingOrder.orderId, 'checkin')} className="px-3.5 py-1.5 rounded-xl font-extrabold cursor-pointer bg-amber-400 text-slate-950">
+                      กดยืนยันจ่ายเสื้อและ BIB หน้างาน
+                    </button>
+                  )
+                )}
               </div>
+
+              {inspectingOrder.paymentStatus === 'PAID' && (
+                <div className="rounded-2xl border border-slate-200 bg-white p-3.5 space-y-3 text-xs">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div className="font-bold text-slate-700">
+                      อีเมลตั๋ว:{' '}
+                      {(inspectingOrder as ServerOrder).emailStatus ? (
+                        (inspectingOrder as ServerOrder).emailStatus!.ok ? (
+                          <span className="text-emerald-700">ส่งสำเร็จ {new Date((inspectingOrder as ServerOrder).emailStatus!.at).toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' })}</span>
+                        ) : (
+                          <span className="text-rose-700">ส่งไม่สำเร็จ ({(inspectingOrder as ServerOrder).emailStatus!.error || 'ไม่ทราบสาเหตุ'})</span>
+                        )
+                      ) : (
+                        <span className="text-slate-500">ยังไม่มีบันทึกการส่ง</span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="border-t border-slate-200 pt-3">
+                    {(inspectingOrder as ServerOrder).refundedAt ? (
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div className="font-bold text-violet-800">
+                          ↩ บันทึกการคืนเงิน {formatBaht((inspectingOrder as ServerOrder).refundAmount || 0)} บาท · {new Date((inspectingOrder as ServerOrder).refundedAt!).toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' })} · โดย {(inspectingOrder as ServerOrder).refundBy}
+                          <div className="font-semibold text-slate-600">{(inspectingOrder as ServerOrder).refundNote}</div>
+                        </div>
+                        {canManage && (
+                          <button
+                            type="button"
+                            disabled={inspectBusy}
+                            onClick={async () => {
+                              if (!window.confirm('ลบบันทึกการคืนเงินนี้? (ใช้เมื่อบันทึกผิด)')) return;
+                              try {
+                                const r = await adminApi.refundOrder(inspectingOrder.orderId, { clear: true });
+                                replaceOrder(r.order);
+                              } catch (err) {
+                                showToast(err instanceof Error ? err.message : 'ลบไม่สำเร็จ');
+                              }
+                            }}
+                            className="text-[11px] font-extrabold text-rose-700 underline underline-offset-2 cursor-pointer"
+                          >
+                            ลบบันทึก
+                          </button>
+                        )}
+                      </div>
+                    ) : (
+                      canManage && (
+                        <div className="space-y-2">
+                          <div className="font-bold text-slate-700">บันทึกการคืนเงิน (ระบบนี้ไม่โอนเงินให้ — โอนคืนผ่านธนาคาร แล้วมาจดไว้ที่นี่)</div>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <input type="number" min={1} max={inspectingOrder.totalPrice} value={refundAmount} onChange={(e) => setRefundAmount(e.target.value)} placeholder={`ยอดคืน (สูงสุด ${inspectingOrder.totalPrice})`} className="w-44 rounded-lg border-2 border-slate-300 px-2 py-1.5 font-bold outline-none" />
+                            <input value={refundNote} onChange={(e) => setRefundNote(e.target.value)} placeholder="รายละเอียด เช่น โอนคืนวันที่ 5 พ.ย. เหตุผล…" className="min-w-[14rem] flex-1 rounded-lg border-2 border-slate-300 px-2 py-1.5 font-bold outline-none" />
+                            <button
+                              type="button"
+                              disabled={inspectBusy || !refundAmount || refundNote.trim().length < 3}
+                              onClick={async () => {
+                                setInspectBusy(true);
+                                try {
+                                  const r = await adminApi.refundOrder(inspectingOrder.orderId, { amount: Number(refundAmount), note: refundNote.trim() });
+                                  replaceOrder(r.order);
+                                  setRefundAmount('');
+                                  setRefundNote('');
+                                  showToast('บันทึกการคืนเงินแล้ว');
+                                } catch (err) {
+                                  showToast(err instanceof Error ? err.message : 'บันทึกไม่สำเร็จ');
+                                } finally {
+                                  setInspectBusy(false);
+                                }
+                              }}
+                              className="rounded-lg bg-violet-700 px-3 py-1.5 font-extrabold text-white cursor-pointer disabled:opacity-50"
+                            >
+                              บันทึก
+                            </button>
+                          </div>
+                        </div>
+                      )
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}

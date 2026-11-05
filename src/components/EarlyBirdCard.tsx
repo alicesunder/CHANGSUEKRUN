@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Tag } from 'lucide-react';
-import { adminApi } from '../utils/api';
+import { adminApi, type EarlyBirdState } from '../utils/api';
 import { EARLY_BIRD_OFF, formatBaht } from '../data/eventData';
 
 /**
@@ -9,19 +9,30 @@ import { EARLY_BIRD_OFF, formatBaht } from '../data/eventData';
  * Orders already created keep the price they were made with.
  */
 export const EarlyBirdCard: React.FC = () => {
-  const [state, setState] = useState<{ on: boolean; updatedAt?: string } | null>(null);
+  const [state, setState] = useState<EarlyBirdState | null>(null);
+  const [from, setFrom] = useState('');
+  const [until, setUntil] = useState('');
+  const [schedMsg, setSchedMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
     adminApi
       .getEarlyBird()
-      .then(setState)
+      .then((st) => {
+        setState(st);
+        setFrom((st.autoFrom || '').slice(0, 10));
+        setUntil((st.autoUntil || '').slice(0, 10));
+      })
       .catch((err) => setError(err instanceof Error ? err.message : 'โหลดสถานะ Early Bird ไม่สำเร็จ'));
   }, []);
 
   const toggle = async () => {
     if (!state || busy) return;
+    if (state.byTimer) {
+      window.alert('ตอนนี้ Early Bird เปิดอยู่ตามช่วงวันที่ที่ตั้งไว้ ถ้าจะปิดให้กด "ยกเลิกการตั้งเวลา" ด้านล่าง');
+      return;
+    }
     const next = !state.on;
     if (
       !window.confirm(
@@ -37,6 +48,25 @@ export const EarlyBirdCard: React.FC = () => {
       setState(await adminApi.setEarlyBird(next));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'บันทึกไม่สำเร็จ');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const saveSchedule = async (clear = false) => {
+    if (busy) return;
+    setBusy(true);
+    setSchedMsg(null);
+    try {
+      const st = await adminApi.setEarlyBirdSchedule(clear ? null : from || null, clear ? null : until || null);
+      setState(st);
+      if (clear) {
+        setFrom('');
+        setUntil('');
+      }
+      setSchedMsg({ ok: true, text: clear ? 'ยกเลิกการตั้งเวลาแล้ว' : 'บันทึกช่วงวันที่แล้ว' });
+    } catch (err) {
+      setSchedMsg({ ok: false, text: err instanceof Error ? err.message : 'บันทึกไม่สำเร็จ' });
     } finally {
       setBusy(false);
     }
@@ -79,6 +109,33 @@ export const EarlyBirdCard: React.FC = () => {
       >
         {busy ? 'กำลังบันทึก…' : on ? 'ปิด Early Bird' : 'เปิด Early Bird'}
       </button>
+      <div className="w-full rounded-xl border-2 border-dashed border-amber-300 bg-white/70 p-3 space-y-2">
+        <p className="text-xs font-extrabold text-slate-800">
+          ตั้งช่วงวันที่ให้เปิด-ปิดเอง (เวลาไทย){state?.byTimer ? ' — ตอนนี้เปิดอยู่เพราะอยู่ในช่วงนี้' : ''}
+        </p>
+        <div className="flex flex-wrap items-end gap-3">
+          <label className="text-xs font-bold text-slate-700">
+            เริ่มวันที่
+            <input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="mt-1 block rounded-lg border-2 border-slate-300 px-2 py-1.5 text-sm font-bold" />
+          </label>
+          <label className="text-xs font-bold text-slate-700">
+            ถึงวันที่ (รวมวันนี้)
+            <input type="date" value={until} onChange={(e) => setUntil(e.target.value)} className="mt-1 block rounded-lg border-2 border-slate-300 px-2 py-1.5 text-sm font-bold" />
+          </label>
+          <button type="button" disabled={busy || state === null || (!from && !until)} onClick={() => saveSchedule(false)} className="min-h-[38px] rounded-lg bg-[#5B20A8] px-4 text-xs font-black text-white cursor-pointer disabled:opacity-50">
+            บันทึกช่วงวันที่
+          </button>
+          {(state?.autoFrom || state?.autoUntil) && (
+            <button type="button" disabled={busy} onClick={() => saveSchedule(true)} className="min-h-[38px] rounded-lg border-2 border-slate-400 px-3 text-xs font-extrabold text-slate-700 cursor-pointer disabled:opacity-50">
+              ยกเลิกการตั้งเวลา
+            </button>
+          )}
+        </div>
+        <p className="text-[11px] font-semibold text-slate-500">
+          ตัวอย่างตามแผน: 9 พ.ย. 2569 ถึง 19 พ.ย. 2569 ราคา Early Bird จะเปิดตั้งแต่ 00.00 น. วันที่ 9 และกลับเป็นราคาปกติหลังสิ้นวันที่ 19 โดยไม่ต้องมากดเอง · ปุ่มเปิดด้านบนยังใช้บังคับเปิดได้ตลอด · คำสั่งซื้อที่สร้างแล้วคงราคาเดิม
+        </p>
+        {schedMsg && <p className={`text-xs font-bold ${schedMsg.ok ? 'text-emerald-700' : 'text-rose-700'}`}>{schedMsg.text}</p>}
+      </div>
     </section>
   );
 };
