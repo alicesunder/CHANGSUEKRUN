@@ -18,20 +18,16 @@ import {
   ensureRunnerTables,
   getRunner,
   issueSession,
-  lineAuthorizeUrl,
-  lineConfigured,
-  lineProfile,
-  lineState,
-  lineStateOk,
   loginRunner,
   normEmail,
   publicRunner,
   requireRunner,
   sessionFromRequest,
   updateRunnerProfile,
-  upsertLineRunner,
+  upsertSocialRunner,
   type RunnerSession,
 } from './runners';
+import { authorizeUrl, fetchProfile, isProvider, newState, providerConfigured, stateOk } from './socialLogin';
 
 type Wrap = (fn: (req: Request, res: Response) => Promise<void>) => RequestHandler;
 
@@ -109,34 +105,40 @@ export function registerRunnerRoutes(app: Express, h: Wrap, clientIp: (req: Requ
     res.json({ role: 'runner', user: publicRunner(runner) });
   }));
 
-  // ---- LINE Login --------------------------------------------------------
-  const redirectUri = (req: Request) => `${(process.env.PUBLIC_SITE_URL || `${req.protocol}://${req.get('host')}`).replace(/\/+$/, '')}/api/auth/line/callback`;
+  // ---- Social sign-in (LINE, Google, Facebook) --------------------------
+  const redirectUri = (req: Request, provider: string) => `${(process.env.PUBLIC_SITE_URL || `${req.protocol}://${req.get('host')}`).replace(/\/+$/, '')}/api/auth/${provider}/callback`;
+  const STATE_COOKIE = 'csr_oauth_state';
 
-  app.get('/api/auth/line/start', h(async (req, res) => {
-    if (!lineConfigured()) {
-      res.status(503).json({ error: 'ยังไม่ได้เปิดใช้การเข้าสู่ระบบด้วย LINE' });
+  app.get('/api/auth/:provider/start', h(async (req, res) => {
+    const provider = req.params.provider;
+    if (!isProvider(provider)) {
+      res.status(404).json({ error: 'Not found' });
       return;
     }
-    const { state, nonce } = lineState();
-    res.setHeader('Set-Cookie', `csr_line_state=${nonce}; Path=/api/auth/line; Max-Age=600; HttpOnly; SameSite=Lax${req.secure ? '; Secure' : ''}`);
-    res.redirect(lineAuthorizeUrl(redirectUri(req), state));
+    if (!providerConfigured(provider)) {
+      res.status(503).json({ error: 'ยังไม่ได้เปิดใช้การเข้าสู่ระบบด้วยช่องทางนี้' });
+      return;
+    }
+    const { state, nonce } = newState(provider);
+    res.setHeader('Set-Cookie', `${STATE_COOKIE}=${nonce}; Path=/api/auth; Max-Age=600; HttpOnly; SameSite=Lax${req.secure ? '; Secure' : ''}`);
+    res.redirect(authorizeUrl(provider, redirectUri(req, provider), state));
   }));
 
-  app.get('/api/auth/line/callback', h(async (req, res) => {
+  app.get('/api/auth/:provider/callback', h(async (req, res) => {
+    const provider = req.params.provider;
     const back = (q: string) => res.redirect(`/${q}`);
-    if (!lineConfigured()) return back('#line-error=off');
+    if (!isProvider(provider) || !providerConfigured(provider)) return back('#login-error=off');
     const code = String(req.query.code || '');
-    const state = String(req.query.state || '');
-    if (!code || !lineStateOk(state, cookieOf(req, 'csr_line_state'))) return back('#line-error=state');
+    if (!code || !stateOk(provider, String(req.query.state || ''), cookieOf(req, STATE_COOKIE))) return back('#login-error=state');
     try {
-      const p = await lineProfile(code, redirectUri(req));
-      const runner = await upsertLineRunner(p.userId, p.displayName);
+      const profile = await fetchProfile(provider, code, redirectUri(req, provider));
+      const runner = await upsertSocialRunner(provider, profile);
       const s = issueSession('runner', runner.runner_id);
-      res.setHeader('Set-Cookie', 'csr_line_state=; Path=/api/auth/line; Max-Age=0; HttpOnly; SameSite=Lax');
+      res.setHeader('Set-Cookie', `${STATE_COOKIE}=; Path=/api/auth; Max-Age=0; HttpOnly; SameSite=Lax`);
       back(`#runner-auth=${s.token}`);
     } catch (err: any) {
-      console.error('[line-login]', err?.message || err);
-      back('#line-error=fail');
+      console.error(`[${provider}-login]`, err?.message || err);
+      back('#login-error=fail');
     }
   }));
 

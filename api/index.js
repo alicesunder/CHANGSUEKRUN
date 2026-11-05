@@ -14233,11 +14233,11 @@ var require_json = __commonJS({
     var debug = require_src()("body-parser:json");
     var read = require_read();
     var typeis = require_type_is();
-    module.exports = json;
+    module.exports = json2;
     var FIRST_CHAR_REGEXP = /^[\x20\x09\x0a\x0d]*([^\x20\x09\x0a\x0d])/;
     var JSON_SYNTAX_CHAR = "#";
     var JSON_SYNTAX_REGEXP = /#+/g;
-    function json(options) {
+    function json2(options) {
       var opts = options || {};
       var limit = typeof opts.limit === "undefined" || opts.limit === null ? 102400 : bytes.parse(opts.limit);
       var inflate = opts.inflate !== false;
@@ -18977,14 +18977,14 @@ var require_etag = __commonJS({
   "node_modules/etag/index.js"(exports, module) {
     "use strict";
     module.exports = etag;
-    var crypto12 = __require("crypto");
+    var crypto13 = __require("crypto");
     var Stats = __require("fs").Stats;
     var toString = Object.prototype.toString;
     function entitytag(entity) {
       if (entity.length === 0) {
         return '"0-2jmj7l5rSw0yVb/vlWAYkK/YBwk"';
       }
-      var hash = crypto12.createHash("sha1").update(entity, "utf8").digest("base64").substring(0, 27);
+      var hash = crypto13.createHash("sha1").update(entity, "utf8").digest("base64").substring(0, 27);
       var len = typeof entity === "string" ? Buffer.byteLength(entity, "utf8") : entity.length;
       return '"' + len.toString(16) + "-" + hash + '"';
     }
@@ -21893,11 +21893,11 @@ var require_request = __commonJS({
 // node_modules/cookie-signature/index.js
 var require_cookie_signature = __commonJS({
   "node_modules/cookie-signature/index.js"(exports) {
-    var crypto12 = __require("crypto");
+    var crypto13 = __require("crypto");
     exports.sign = function(val, secret) {
       if ("string" !== typeof val) throw new TypeError("Cookie value must be provided as a string.");
       if (null == secret) throw new TypeError("Secret key must be provided.");
-      return val + "." + crypto12.createHmac("sha256", secret).update(val).digest("base64").replace(/\=+$/, "");
+      return val + "." + crypto13.createHmac("sha256", secret).update(val).digest("base64").replace(/\=+$/, "");
     };
     exports.unsign = function(val, secret) {
       if ("string" !== typeof val) throw new TypeError("Signed cookie string must be provided.");
@@ -21906,7 +21906,7 @@ var require_cookie_signature = __commonJS({
       return sha1(mac) == sha1(val) ? str : false;
     };
     function sha1(str) {
-      return crypto12.createHash("sha1").update(str).digest("hex");
+      return crypto13.createHash("sha1").update(str).digest("hex");
     }
   }
 });
@@ -22285,7 +22285,7 @@ var require_response = __commonJS({
       }
       return this;
     };
-    res.json = function json(obj) {
+    res.json = function json2(obj) {
       var val = obj;
       if (arguments.length === 2) {
         if (typeof arguments[1] === "number") {
@@ -22671,9 +22671,9 @@ var require_response = __commonJS({
       file.pipe(res2);
     }
     function stringify(value, replacer, spaces, escape2) {
-      var json = replacer || spaces ? JSON.stringify(value, replacer, spaces) : JSON.stringify(value);
-      if (escape2 && typeof json === "string") {
-        json = json.replace(/[<>&]/g, function(c) {
+      var json2 = replacer || spaces ? JSON.stringify(value, replacer, spaces) : JSON.stringify(value);
+      if (escape2 && typeof json2 === "string") {
+        json2 = json2.replace(/[<>&]/g, function(c) {
           switch (c.charCodeAt(0)) {
             case 60:
               return "\\u003c";
@@ -22687,7 +22687,7 @@ var require_response = __commonJS({
           }
         });
       }
-      return json;
+      return json2;
     }
   }
 });
@@ -24207,7 +24207,7 @@ var require_cert_signatures = __commonJS({
 var require_sasl = __commonJS({
   "node_modules/pg/lib/crypto/sasl.js"(exports, module) {
     "use strict";
-    var crypto12 = require_utils4();
+    var crypto13 = require_utils4();
     var { signatureAlgorithmHashFromCertificate } = require_cert_signatures();
     function saslprep(password) {
       const nonAsciiSpace = /[\u00A0\u1680\u2000-\u200B\u202F\u205F\u3000]/g;
@@ -24225,7 +24225,7 @@ var require_sasl = __commonJS({
       if (mechanism === "SCRAM-SHA-256-PLUS" && typeof stream.getPeerCertificate !== "function") {
         throw new Error("SASL: Mechanism SCRAM-SHA-256-PLUS requires a certificate");
       }
-      const clientNonce = crypto12.randomBytes(18).toString("base64");
+      const clientNonce = crypto13.randomBytes(18).toString("base64");
       const gs2Header = mechanism === "SCRAM-SHA-256-PLUS" ? "p=tls-server-end-point" : stream ? "y" : "n";
       return {
         mechanism,
@@ -24267,20 +24267,20 @@ var require_sasl = __commonJS({
         const peerCert = stream.getPeerCertificate().raw;
         let hashName = signatureAlgorithmHashFromCertificate(peerCert);
         if (hashName === "MD5" || hashName === "SHA-1") hashName = "SHA-256";
-        const certHash = await crypto12.hashByName(hashName, peerCert);
+        const certHash = await crypto13.hashByName(hashName, peerCert);
         const bindingData = Buffer.concat([Buffer.from("p=tls-server-end-point,,"), Buffer.from(certHash)]);
         channelBinding = bindingData.toString("base64");
       }
       const clientFinalMessageWithoutProof = "c=" + channelBinding + ",r=" + sv.nonce;
       const authMessage = clientFirstMessageBare + "," + serverFirstMessage + "," + clientFinalMessageWithoutProof;
       const saltBytes = Buffer.from(sv.salt, "base64");
-      const saltedPassword = await crypto12.deriveKey(saslprep(password), saltBytes, sv.iteration);
-      const clientKey = await crypto12.hmacSha256(saltedPassword, "Client Key");
-      const storedKey = await crypto12.sha256(clientKey);
-      const clientSignature = await crypto12.hmacSha256(storedKey, authMessage);
+      const saltedPassword = await crypto13.deriveKey(saslprep(password), saltBytes, sv.iteration);
+      const clientKey = await crypto13.hmacSha256(saltedPassword, "Client Key");
+      const storedKey = await crypto13.sha256(clientKey);
+      const clientSignature = await crypto13.hmacSha256(storedKey, authMessage);
       const clientProof = xorBuffers(Buffer.from(clientKey), Buffer.from(clientSignature)).toString("base64");
-      const serverKey = await crypto12.hmacSha256(saltedPassword, "Server Key");
-      const serverSignatureBytes = await crypto12.hmacSha256(serverKey, authMessage);
+      const serverKey = await crypto13.hmacSha256(saltedPassword, "Server Key");
+      const serverSignatureBytes = await crypto13.hmacSha256(serverKey, authMessage);
       session.message = "SASLResponse";
       session.serverSignature = Buffer.from(serverSignatureBytes).toString("base64");
       session.response = clientFinalMessageWithoutProof + ",p=" + clientProof;
@@ -26519,7 +26519,7 @@ var require_client = __commonJS({
     var Query2 = require_query2();
     var defaults2 = require_defaults();
     var Connection2 = require_connection();
-    var crypto12 = require_utils4();
+    var crypto13 = require_utils4();
     var activeQueryDeprecationNotice = nodeUtils.deprecate(
       () => {
       },
@@ -26774,7 +26774,7 @@ var require_client = __commonJS({
       _handleAuthMD5Password(msg) {
         this._getPassword(async () => {
           try {
-            const hashedPassword = await crypto12.postgresMd5PasswordHash(this.user, this.password, msg.salt);
+            const hashedPassword = await crypto13.postgresMd5PasswordHash(this.user, this.password, msg.salt);
             this.connection.password(hashedPassword);
           } catch (e) {
             this.emit("error", e);
@@ -32720,7 +32720,7 @@ var require_lib5 = __commonJS({
 
 // server/app.ts
 var import_express2 = __toESM(require_express2(), 1);
-import crypto11 from "crypto";
+import crypto12 from "crypto";
 
 // src/data/dogProfile.ts
 var DOG_GENDERS = ["\u0E1C\u0E39\u0E49", "\u0E40\u0E21\u0E35\u0E22"];
@@ -33351,7 +33351,7 @@ var scheduleData = [
       {
         id: "s-1",
         day: "day_before",
-        time: "10:00 - 18:00",
+        time: "09:00 - 15:00",
         title: "\u0E40\u0E1B\u0E34\u0E14\u0E23\u0E31\u0E1A\u0E40\u0E1A\u0E2D\u0E23\u0E4C\u0E27\u0E34\u0E48\u0E07 (BIB) \u0E40\u0E2A\u0E37\u0E49\u0E2D\u0E17\u0E35\u0E48\u0E23\u0E30\u0E25\u0E36\u0E01 \u0E41\u0E25\u0E30\u0E2A\u0E32\u0E22\u0E23\u0E31\u0E14\u0E0A\u0E34\u0E1B\u0E08\u0E31\u0E1A\u0E40\u0E27\u0E25\u0E32",
         description: "\u0E01\u0E23\u0E38\u0E13\u0E32\u0E41\u0E2A\u0E14\u0E07\u0E1A\u0E31\u0E15\u0E23\u0E1B\u0E23\u0E30\u0E08\u0E33\u0E15\u0E31\u0E27\u0E1B\u0E23\u0E30\u0E0A\u0E32\u0E0A\u0E19\u0E2B\u0E23\u0E37\u0E2D\u0E2B\u0E25\u0E31\u0E01\u0E10\u0E32\u0E19\u0E01\u0E32\u0E23\u0E2A\u0E21\u0E31\u0E04\u0E23\u0E09\u0E1A\u0E31\u0E1A\u0E14\u0E34\u0E08\u0E34\u0E17\u0E31\u0E25\u0E40\u0E1E\u0E37\u0E48\u0E2D\u0E23\u0E31\u0E1A\u0E0A\u0E38\u0E14\u0E41\u0E02\u0E48\u0E07\u0E02\u0E31\u0E19",
         iconName: "Package"
@@ -33716,6 +33716,10 @@ create unique index if not exists runners_email_uidx on csr.runners (email) wher
 create unique index if not exists runners_username_uidx on csr.runners (username) where username is not null;
 create unique index if not exists runners_line_uidx on csr.runners (line_user_id) where line_user_id is not null;
 create index if not exists orders_runner_idx on csr.orders ((data->>'runnerId')) where data ? 'runnerId';
+alter table csr.runners add column if not exists google_id text;
+alter table csr.runners add column if not exists facebook_id text;
+create unique index if not exists runners_google_uidx on csr.runners (google_id) where google_id is not null;
+create unique index if not exists runners_facebook_uidx on csr.runners (facebook_id) where facebook_id is not null;
 alter table csr.runners enable row level security;
 
 alter table csr.orders          enable row level security;
@@ -34844,7 +34848,7 @@ async function buildDocumentsHtml(o, opts = {}) {
     <div class="total"><span>${o.paymentMethod === "SPONSOR_CODE" ? `\u0E22\u0E2D\u0E14\u0E0A\u0E33\u0E23\u0E30 (\u0E2A\u0E34\u0E17\u0E18\u0E34\u0E4C\u0E2A\u0E1B\u0E2D\u0E19\u0E40\u0E0B\u0E2D\u0E23\u0E4C${o.sponsorName ? ` ${esc(o.sponsorName)}` : ""})` : "\u0E22\u0E2D\u0E14\u0E0A\u0E33\u0E23\u0E30\u0E2A\u0E38\u0E17\u0E18\u0E34"}</span><b>${formatBaht(o.totalPrice)} \u0E1A\u0E32\u0E17</b></div>
     <h2 class="sec" style="margin-top:16px">\u{1F4CD} \u0E27\u0E31\u0E19\u0E07\u0E32\u0E19\u0E15\u0E49\u0E2D\u0E07\u0E17\u0E33\u0E2D\u0E30\u0E44\u0E23\u0E1A\u0E49\u0E32\u0E07</h2>
     <div class="cards3">
-      ${isRun && pickupItem ? `<div class="card" style="border-color:#C4B5FD;background:#F5F0FF"><b>1. \u0E23\u0E31\u0E1A\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C</b>\u0E27\u0E31\u0E19\u0E01\u0E48\u0E2D\u0E19\u0E27\u0E31\u0E19\u0E41\u0E02\u0E48\u0E07 (8 \u0E21.\u0E04. 2570) \xB7 ${esc(pickupItem.time)} \u0E19.<br />${esc(pickup.description.replace(/^ณ\s*/, ""))}<br />\u0E41\u0E2A\u0E14\u0E07 QR \u0E19\u0E35\u0E49 + \u0E1A\u0E31\u0E15\u0E23\u0E1B\u0E23\u0E30\u0E0A\u0E32\u0E0A\u0E19</div>` : ""}
+      ${isRun && pickupItem ? `<div class="card" style="border-color:#C4B5FD;background:#F5F0FF"><b>1. \u0E23\u0E31\u0E1A\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C</b>\u0E27\u0E31\u0E19\u0E01\u0E48\u0E2D\u0E19\u0E27\u0E31\u0E19\u0E41\u0E02\u0E48\u0E07 (9 \u0E21.\u0E04. 2570) \u2022 ${esc(pickupItem.time)} \u0E19.<br />${esc(pickup.description.replace(/^ณ\s*/, ""))}<br />\u0E41\u0E2A\u0E14\u0E07 QR \u0E19\u0E35\u0E49 + \u0E1A\u0E31\u0E15\u0E23\u0E1B\u0E23\u0E30\u0E0A\u0E32\u0E0A\u0E19</div>` : ""}
       <div class="card" style="border-color:#7DD3FC;background:#E0F2FE"><b>${isRun ? "2. \u0E27\u0E31\u0E19\u0E41\u0E02\u0E48\u0E07" : "\u0E27\u0E31\u0E19\u0E07\u0E32\u0E19"}</b>${esc(eventInfo.dateNotice)}${isRun ? ` \xB7 \u0E1B\u0E25\u0E48\u0E2D\u0E22\u0E15\u0E31\u0E27 ${esc(start)}` : ""}<br />${esc(eventInfo.venueShort)}<br />\u0E40\u0E1C\u0E37\u0E48\u0E2D\u0E40\u0E27\u0E25\u0E32\u0E40\u0E14\u0E34\u0E19\u0E17\u0E32\u0E07\u0E21\u0E32\u0E16\u0E36\u0E07\u0E01\u0E48\u0E2D\u0E19\u0E40\u0E27\u0E25\u0E32</div>
       ${dog ? `<div class="card" style="border-color:#86EFAC;background:#ECFDF5"><b>3. \u0E19\u0E49\u0E2D\u0E07\u0E2B\u0E21\u0E32</b>\u0E19\u0E33\u0E2A\u0E21\u0E38\u0E14\u0E27\u0E31\u0E04\u0E0B\u0E35\u0E19 (\u0E1E\u0E34\u0E29\u0E2A\u0E38\u0E19\u0E31\u0E02\u0E1A\u0E49\u0E32 + \u0E27\u0E31\u0E04\u0E0B\u0E35\u0E19\u0E23\u0E27\u0E21) \u0E2A\u0E32\u0E22\u0E08\u0E39\u0E07 \u0E41\u0E25\u0E30\u0E16\u0E38\u0E07\u0E40\u0E01\u0E47\u0E1A\u0E21\u0E39\u0E25</div>` : o.addOns ? `<div class="card" style="border-color:#FDE68A;background:#FFF7DB"><b>\u0E01\u0E34\u0E08\u0E01\u0E23\u0E23\u0E21\u0E40\u0E2A\u0E23\u0E34\u0E21</b>${esc(eventInfo.activityDateNotice)}<br />\u0E14\u0E39\u0E40\u0E27\u0E25\u0E32\u0E41\u0E25\u0E30\u0E08\u0E38\u0E14\u0E02\u0E2D\u0E07\u0E41\u0E15\u0E48\u0E25\u0E30\u0E2A\u0E16\u0E32\u0E19\u0E35\u0E1A\u0E19\u0E40\u0E27\u0E47\u0E1A\u0E44\u0E0B\u0E15\u0E4C</div>` : ""}
     </div>
@@ -35007,10 +35011,10 @@ async function verifySlipWithEasySlip(imageDataUrl, amountBaht, remark) {
       body: JSON.stringify({ base64: imageDataUrl, remark, matchAccount: true, matchAmount: amountBaht, checkDuplicate: true }),
       signal: AbortSignal.timeout(2e4)
     });
-    const json = await resp.json().catch(() => ({}));
-    const raw = json?.data?.rawSlip;
-    if (!resp.ok || json?.success !== true || !raw) {
-      return { ...empty, errorCode: String(json?.error?.code || `HTTP_${resp.status}`) };
+    const json2 = await resp.json().catch(() => ({}));
+    const raw = json2?.data?.rawSlip;
+    if (!resp.ok || json2?.success !== true || !raw) {
+      return { ...empty, errorCode: String(json2?.error?.code || `HTTP_${resp.status}`) };
     }
     const acc = raw.receiver?.account || {};
     return {
@@ -35022,8 +35026,8 @@ async function verifySlipWithEasySlip(imageDataUrl, amountBaht, remark) {
       senderName: String(raw.sender?.account?.name?.th || raw.sender?.account?.name?.en || ""),
       receiverName: String(acc.name?.th || acc.name?.en || ""),
       receiverAccounts: [acc.bank?.account, acc.proxy?.account].filter((a) => typeof a === "string" && a.length > 0),
-      matchedAccount: Boolean(json.data.matchedAccount),
-      isDuplicate: json.data.isDuplicate === true
+      matchedAccount: Boolean(json2.data.matchedAccount),
+      isDuplicate: json2.data.isDuplicate === true
     };
   } catch (err) {
     return { ...empty, errorCode: err?.name === "TimeoutError" ? "TIMEOUT" : "NETWORK" };
@@ -47652,9 +47656,9 @@ async function sendViaResend(to, mail, apiKey) {
     }),
     signal: AbortSignal.timeout(1e4)
   });
-  const json = await resp.json().catch(() => ({}));
-  if (!resp.ok) return { ok: false, provider: "resend", error: String(json?.message || json?.name || `HTTP_${resp.status}`).slice(0, 200) };
-  return { ok: true, provider: "resend", id: json?.id };
+  const json2 = await resp.json().catch(() => ({}));
+  if (!resp.ok) return { ok: false, provider: "resend", error: String(json2?.message || json2?.name || `HTTP_${resp.status}`).slice(0, 200) };
+  return { ok: true, provider: "resend", id: json2?.id };
 }
 async function sendViaBrevo(to, mail) {
   const { user, pass } = brevoCreds();
@@ -47805,7 +47809,11 @@ function ensureRunnerTables() {
       )`);
       await dbQuery("create unique index if not exists runners_email_uidx on csr.runners (email) where email is not null");
       await dbQuery("create unique index if not exists runners_username_uidx on csr.runners (username) where username is not null");
+      await dbQuery("alter table csr.runners add column if not exists google_id text");
+      await dbQuery("alter table csr.runners add column if not exists facebook_id text");
       await dbQuery("create unique index if not exists runners_line_uidx on csr.runners (line_user_id) where line_user_id is not null");
+      await dbQuery("create unique index if not exists runners_google_uidx on csr.runners (google_id) where google_id is not null");
+      await dbQuery("create unique index if not exists runners_facebook_uidx on csr.runners (facebook_id) where facebook_id is not null");
       await dbQuery("create index if not exists orders_runner_idx on csr.orders ((data->>'runnerId')) where data ? 'runnerId'");
       await dbQuery("alter table csr.runners enable row level security");
     })().catch((err) => {
@@ -47894,16 +47902,24 @@ async function updateRunnerProfile(runnerId, patch) {
   );
   return { ok: true, runner: rows[0] };
 }
-async function upsertLineRunner(lineUserId, displayName) {
+var SOCIAL_COLUMN = { line: "line_user_id", google: "google_id", facebook: "facebook_id" };
+async function upsertSocialRunner(provider, p) {
   await ensureRunnerTables();
-  const existing = await dbQuery("select * from csr.runners where line_user_id = $1", [lineUserId]);
-  if (existing[0]) {
-    await dbQuery("update csr.runners set last_login_at = now() where runner_id = $1", [existing[0].runner_id]);
-    return existing[0];
+  const col = SOCIAL_COLUMN[provider];
+  const byId = await dbQuery(`select * from csr.runners where ${col} = $1`, [p.id]);
+  if (byId[0]) {
+    await dbQuery("update csr.runners set last_login_at = now() where runner_id = $1", [byId[0].runner_id]);
+    return byId[0];
+  }
+  const email = p.email ? normEmail(p.email) : "";
+  const byEmail = email && isEmail(email) ? await dbQuery("select * from csr.runners where email = $1", [email]) : [];
+  if (byEmail[0] && p.emailVerified) {
+    const rows2 = await dbQuery(`update csr.runners set ${col} = $2, last_login_at = now() where runner_id = $1 returning *`, [byEmail[0].runner_id, p.id]);
+    return rows2[0];
   }
   const rows = await dbQuery(
-    "insert into csr.runners (runner_id, name, line_user_id, last_login_at) values ($1, $2, $3, now()) returning *",
-    [newRunnerId(), cleanText(displayName, 80) || "\u0E19\u0E31\u0E01\u0E27\u0E34\u0E48\u0E07 LINE", lineUserId]
+    `insert into csr.runners (runner_id, name, email, ${col}, last_login_at) values ($1, $2, $3, $4, now()) returning *`,
+    [newRunnerId(), cleanText(p.name, 80) || (provider === "line" ? "\u0E19\u0E31\u0E01\u0E27\u0E34\u0E48\u0E07 LINE" : "\u0E19\u0E31\u0E01\u0E27\u0E34\u0E48\u0E07"), email && isEmail(email) && !byEmail[0] ? email : null, p.id]
   );
   return rows[0];
 }
@@ -47915,56 +47931,91 @@ function publicRunner(r) {
     username: r.username || "",
     phone: r.phone || "",
     lineLinked: Boolean(r.line_user_id),
+    social: [r.line_user_id && "line", r.google_id && "google", r.facebook_id && "facebook"].filter(Boolean),
     profile: r.profile || {},
     createdAt: r.created_at
   };
 }
-var lineConfigured = () => Boolean(process.env.LINE_CHANNEL_ID && process.env.LINE_CHANNEL_SECRET);
-function lineState() {
-  const nonce = crypto10.randomBytes(12).toString("hex");
-  const payload = b64(JSON.stringify({ n: nonce, exp: Date.now() + 10 * 60 * 1e3 }));
-  return { state: `${payload}.${hmac(`line|${payload}`)}`, nonce };
+
+// server/socialLogin.ts
+import crypto11 from "crypto";
+var PROVIDERS = ["line", "google", "facebook"];
+var isProvider = (v) => typeof v === "string" && PROVIDERS.includes(v);
+var CFG = {
+  line: { idEnv: "LINE_CHANNEL_ID", secretEnv: "LINE_CHANNEL_SECRET", authorize: "https://access.line.me/oauth2/v2.1/authorize", scope: "profile openid" },
+  google: { idEnv: "GOOGLE_CLIENT_ID", secretEnv: "GOOGLE_CLIENT_SECRET", authorize: "https://accounts.google.com/o/oauth2/v2/auth", scope: "openid email profile" },
+  facebook: { idEnv: "FACEBOOK_APP_ID", secretEnv: "FACEBOOK_APP_SECRET", authorize: "https://www.facebook.com/v19.0/dialog/oauth", scope: "public_profile,email" }
+};
+var providerConfigured = (p) => Boolean(process.env[CFG[p].idEnv] && process.env[CFG[p].secretEnv]);
+var configuredProviders = () => ({
+  line: providerConfigured("line"),
+  google: providerConfigured("google"),
+  facebook: providerConfigured("facebook")
+});
+var KEY2 = crypto11.createHash("sha256").update(`csr-oauth-state|${process.env.RUNNER_SESSION_SECRET || process.env.ADMIN_SESSION_SECRET || process.env.ADMIN_PASSWORD || crypto11.randomBytes(16).toString("hex")}`).digest();
+var hmac2 = (s) => crypto11.createHmac("sha256", KEY2).update(s).digest("base64url");
+var same = (a, b) => {
+  const x = crypto11.createHash("sha256").update(a).digest();
+  const y = crypto11.createHash("sha256").update(b).digest();
+  return crypto11.timingSafeEqual(x, y);
+};
+function newState(p) {
+  const nonce = crypto11.randomBytes(12).toString("hex");
+  const payload = Buffer.from(JSON.stringify({ p, n: nonce, exp: Date.now() + 10 * 60 * 1e3 })).toString("base64url");
+  return { state: `${payload}.${hmac2(`oauth|${payload}`)}`, nonce };
 }
-function lineStateOk(state, nonceCookie) {
+function stateOk(p, state, nonceCookie) {
   const [payload, sig] = String(state || "").split(".");
-  if (!payload || !sig || !safeEqual2(sig, hmac(`line|${payload}`))) return false;
+  if (!payload || !sig || !nonceCookie || !same(sig, hmac2(`oauth|${payload}`))) return false;
   try {
     const d = JSON.parse(Buffer.from(payload, "base64url").toString("utf8"));
-    return typeof d.exp === "number" && Date.now() < d.exp && typeof d.n === "string" && safeEqual2(d.n, nonceCookie);
+    return d.p === p && typeof d.exp === "number" && Date.now() < d.exp && typeof d.n === "string" && same(d.n, nonceCookie);
   } catch {
     return false;
   }
 }
-function lineAuthorizeUrl(redirectUri, state) {
-  const q = new URLSearchParams({
-    response_type: "code",
-    client_id: process.env.LINE_CHANNEL_ID || "",
-    redirect_uri: redirectUri,
-    state,
-    scope: "profile openid"
-  });
-  return `https://access.line.me/oauth2/v2.1/authorize?${q.toString()}`;
+function authorizeUrl(p, redirectUri, state) {
+  const q = new URLSearchParams({ response_type: "code", client_id: process.env[CFG[p].idEnv] || "", redirect_uri: redirectUri, state, scope: CFG[p].scope });
+  if (p === "google") q.set("prompt", "select_account");
+  return `${CFG[p].authorize}?${q.toString()}`;
 }
-async function lineProfile(code, redirectUri) {
-  const tok = await fetch("https://api.line.me/oauth2/v2.1/token", {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({
-      grant_type: "authorization_code",
-      code,
-      redirect_uri: redirectUri,
-      client_id: process.env.LINE_CHANNEL_ID || "",
-      client_secret: process.env.LINE_CHANNEL_SECRET || ""
-    })
-  });
-  if (!tok.ok) throw new Error(`LINE token ${tok.status}`);
-  const { access_token } = await tok.json();
-  if (!access_token) throw new Error("LINE token missing");
-  const prof = await fetch("https://api.line.me/v2/profile", { headers: { Authorization: `Bearer ${access_token}` } });
-  if (!prof.ok) throw new Error(`LINE profile ${prof.status}`);
-  const p = await prof.json();
-  if (!p.userId) throw new Error("LINE profile missing userId");
-  return { userId: p.userId, displayName: p.displayName || "" };
+async function json(r, what) {
+  if (!r.ok) throw new Error(`${what} ${r.status}`);
+  return await r.json();
+}
+async function fetchProfile(p, code, redirectUri) {
+  const clientId = process.env[CFG[p].idEnv] || "";
+  const clientSecret = process.env[CFG[p].secretEnv] || "";
+  if (p === "facebook") {
+    const q = new URLSearchParams({ client_id: clientId, client_secret: clientSecret, redirect_uri: redirectUri, code });
+    const tok2 = await json(await fetch(`https://graph.facebook.com/v19.0/oauth/access_token?${q.toString()}`), "facebook token");
+    if (!tok2.access_token) throw new Error("facebook token missing");
+    const me = await json(
+      await fetch(`https://graph.facebook.com/me?fields=id,name,email&access_token=${encodeURIComponent(tok2.access_token)}`),
+      "facebook profile"
+    );
+    if (!me.id) throw new Error("facebook profile missing id");
+    return { id: me.id, name: me.name || "", email: me.email, emailVerified: false };
+  }
+  const tokenUrl = p === "google" ? "https://oauth2.googleapis.com/token" : "https://api.line.me/oauth2/v2.1/token";
+  const tok = await json(
+    await fetch(tokenUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({ grant_type: "authorization_code", code, redirect_uri: redirectUri, client_id: clientId, client_secret: clientSecret })
+    }),
+    `${p} token`
+  );
+  if (!tok.access_token) throw new Error(`${p} token missing`);
+  const auth = { Authorization: `Bearer ${tok.access_token}` };
+  if (p === "google") {
+    const u = await json(await fetch("https://openidconnect.googleapis.com/v1/userinfo", { headers: auth }), "google profile");
+    if (!u.sub) throw new Error("google profile missing sub");
+    return { id: u.sub, name: u.name || "", email: u.email, emailVerified: u.email_verified === true };
+  }
+  const l = await json(await fetch("https://api.line.me/v2/profile", { headers: auth }), "line profile");
+  if (!l.userId) throw new Error("line profile missing userId");
+  return { id: l.userId, name: l.displayName || "", emailVerified: false };
 }
 
 // server/runnerRoutes.ts
@@ -47973,9 +48024,9 @@ var cookieOf = (req, name2) => {
   return m ? decodeURIComponent(m.slice(name2.length + 1)) : "";
 };
 function registerRunnerRoutes(app2, h2, clientIp2) {
-  const json = import_express.default.json({ limit: "50kb" });
+  const json2 = import_express.default.json({ limit: "50kb" });
   const sessionBody = (token, expiresAt, role, user) => ({ token, expiresAt, role, user });
-  app2.post("/api/auth/register", json, h2(async (req, res) => {
+  app2.post("/api/auth/register", json2, h2(async (req, res) => {
     if (await rateLimited(`signup:${clientIp2(req)}`, 10, 60 * 60 * 1e3)) {
       res.status(429).json({ error: "\u0E2A\u0E21\u0E31\u0E04\u0E23\u0E1A\u0E48\u0E2D\u0E22\u0E40\u0E01\u0E34\u0E19\u0E44\u0E1B \u0E01\u0E23\u0E38\u0E13\u0E32\u0E23\u0E2D\u0E2A\u0E31\u0E01\u0E04\u0E23\u0E39\u0E48\u0E41\u0E25\u0E49\u0E27\u0E25\u0E2D\u0E07\u0E43\u0E2B\u0E21\u0E48" });
       return;
@@ -47989,7 +48040,7 @@ function registerRunnerRoutes(app2, h2, clientIp2) {
     const s = issueSession("runner", made.runner.runner_id);
     res.json(sessionBody(s.token, s.expiresAt, "runner", publicRunner(made.runner)));
   }));
-  app2.post("/api/auth/login", json, h2(async (req, res) => {
+  app2.post("/api/auth/login", json2, h2(async (req, res) => {
     const ip = clientIp2(req);
     const identifier = String(req.body?.identifier || "").slice(0, 120);
     const password = String(req.body?.password || "").slice(0, 200);
@@ -48032,34 +48083,40 @@ function registerRunnerRoutes(app2, h2, clientIp2) {
     }
     res.json({ role: "runner", user: publicRunner(runner) });
   }));
-  const redirectUri = (req) => `${(process.env.PUBLIC_SITE_URL || `${req.protocol}://${req.get("host")}`).replace(/\/+$/, "")}/api/auth/line/callback`;
-  app2.get("/api/auth/line/start", h2(async (req, res) => {
-    if (!lineConfigured()) {
-      res.status(503).json({ error: "\u0E22\u0E31\u0E07\u0E44\u0E21\u0E48\u0E44\u0E14\u0E49\u0E40\u0E1B\u0E34\u0E14\u0E43\u0E0A\u0E49\u0E01\u0E32\u0E23\u0E40\u0E02\u0E49\u0E32\u0E2A\u0E39\u0E48\u0E23\u0E30\u0E1A\u0E1A\u0E14\u0E49\u0E27\u0E22 LINE" });
+  const redirectUri = (req, provider) => `${(process.env.PUBLIC_SITE_URL || `${req.protocol}://${req.get("host")}`).replace(/\/+$/, "")}/api/auth/${provider}/callback`;
+  const STATE_COOKIE = "csr_oauth_state";
+  app2.get("/api/auth/:provider/start", h2(async (req, res) => {
+    const provider = req.params.provider;
+    if (!isProvider(provider)) {
+      res.status(404).json({ error: "Not found" });
       return;
     }
-    const { state, nonce } = lineState();
-    res.setHeader("Set-Cookie", `csr_line_state=${nonce}; Path=/api/auth/line; Max-Age=600; HttpOnly; SameSite=Lax${req.secure ? "; Secure" : ""}`);
-    res.redirect(lineAuthorizeUrl(redirectUri(req), state));
+    if (!providerConfigured(provider)) {
+      res.status(503).json({ error: "\u0E22\u0E31\u0E07\u0E44\u0E21\u0E48\u0E44\u0E14\u0E49\u0E40\u0E1B\u0E34\u0E14\u0E43\u0E0A\u0E49\u0E01\u0E32\u0E23\u0E40\u0E02\u0E49\u0E32\u0E2A\u0E39\u0E48\u0E23\u0E30\u0E1A\u0E1A\u0E14\u0E49\u0E27\u0E22\u0E0A\u0E48\u0E2D\u0E07\u0E17\u0E32\u0E07\u0E19\u0E35\u0E49" });
+      return;
+    }
+    const { state, nonce } = newState(provider);
+    res.setHeader("Set-Cookie", `${STATE_COOKIE}=${nonce}; Path=/api/auth; Max-Age=600; HttpOnly; SameSite=Lax${req.secure ? "; Secure" : ""}`);
+    res.redirect(authorizeUrl(provider, redirectUri(req, provider), state));
   }));
-  app2.get("/api/auth/line/callback", h2(async (req, res) => {
+  app2.get("/api/auth/:provider/callback", h2(async (req, res) => {
+    const provider = req.params.provider;
     const back = (q) => res.redirect(`/${q}`);
-    if (!lineConfigured()) return back("#line-error=off");
+    if (!isProvider(provider) || !providerConfigured(provider)) return back("#login-error=off");
     const code = String(req.query.code || "");
-    const state = String(req.query.state || "");
-    if (!code || !lineStateOk(state, cookieOf(req, "csr_line_state"))) return back("#line-error=state");
+    if (!code || !stateOk(provider, String(req.query.state || ""), cookieOf(req, STATE_COOKIE))) return back("#login-error=state");
     try {
-      const p = await lineProfile(code, redirectUri(req));
-      const runner = await upsertLineRunner(p.userId, p.displayName);
+      const profile = await fetchProfile(provider, code, redirectUri(req, provider));
+      const runner = await upsertSocialRunner(provider, profile);
       const s = issueSession("runner", runner.runner_id);
-      res.setHeader("Set-Cookie", "csr_line_state=; Path=/api/auth/line; Max-Age=0; HttpOnly; SameSite=Lax");
+      res.setHeader("Set-Cookie", `${STATE_COOKIE}=; Path=/api/auth; Max-Age=0; HttpOnly; SameSite=Lax`);
       back(`#runner-auth=${s.token}`);
     } catch (err) {
-      console.error("[line-login]", err?.message || err);
-      back("#line-error=fail");
+      console.error(`[${provider}-login]`, err?.message || err);
+      back("#login-error=fail");
     }
   }));
-  app2.patch("/api/me", requireRunner, json, h2(async (req, res) => {
+  app2.patch("/api/me", requireRunner, json2, h2(async (req, res) => {
     const s = req.runner;
     const out = await updateRunnerProfile(s.sub, { name: req.body?.name, phone: req.body?.phone, email: req.body?.email, profile: req.body?.profile });
     if (!out.ok) {
@@ -48080,7 +48137,7 @@ function registerRunnerRoutes(app2, h2, clientIp2) {
       }))
     });
   }));
-  app2.post("/api/me/claim", requireRunner, json, h2(async (req, res) => {
+  app2.post("/api/me/claim", requireRunner, json2, h2(async (req, res) => {
     const s = req.runner;
     if (await rateLimited(`claim:${clientIp2(req)}`, 10, 60 * 60 * 1e3)) {
       res.status(429).json({ error: "\u0E25\u0E2D\u0E07\u0E1A\u0E48\u0E2D\u0E22\u0E40\u0E01\u0E34\u0E19\u0E44\u0E1B \u0E01\u0E23\u0E38\u0E13\u0E32\u0E23\u0E2D\u0E2A\u0E31\u0E01\u0E04\u0E23\u0E39\u0E48" });
@@ -48188,7 +48245,9 @@ async function publicConfig() {
     /** true when paid orders get their ticket by e-mail */
     emailReady: mailConfigured(),
     /** true when LINE_CHANNEL_ID / LINE_CHANNEL_SECRET are set (the LINE login button works) */
-    lineLoginReady: lineConfigured()
+    lineLoginReady: configuredProviders().line,
+    /** which social sign-in buttons work (their keys are set on the server) */
+    socialLogin: configuredProviders()
   };
 }
 async function gatewayStatus() {
@@ -48415,7 +48474,7 @@ function createApp() {
     const vipTotal = vipTablePrice(earlyBird) * vipTables;
     const ticketTotal = isAddonOnly ? 0 : isConcert ? concertUnit * concertQty + vipTotal : sponsorCode ? 0 : calcTicketTotal(routeId, extraPeople, extraDogs, earlyBird) + concertUnit * concertQty - concertDiscount + vipTotal;
     const total = testMode ? 1 : ticketTotal + addOnSum;
-    const token = crypto11.randomBytes(24).toString("base64url");
+    const token = crypto12.randomBytes(24).toString("base64url");
     const now = /* @__PURE__ */ new Date();
     const settings = await getSettings();
     const timeoutMin = Math.min(15, Math.max(1, settings.paymentTimeoutMinutes || 15));
@@ -48585,7 +48644,7 @@ function createApp() {
       o.slipAttempts = (o.slipAttempts || 0) + 1;
       if (problems.length && o.verificationStatus === "PENDING_REVIEW") return;
       o.slipFile = image;
-      o.slipHash = crypto11.createHash("sha256").update(image).digest("hex");
+      o.slipHash = crypto12.createHash("sha256").update(image).digest("hex");
       o.slipCheckedAt = (/* @__PURE__ */ new Date()).toISOString();
       o.slipRef = slip.transRef || void 0;
       o.slipNote = note.slice(0, 600);
@@ -48673,7 +48732,7 @@ function createApp() {
       const name2 = clean(w?.name, 120);
       if (!name2) continue;
       list.push({
-        id: clean(w?.id, 40) || crypto11.randomBytes(6).toString("hex"),
+        id: clean(w?.id, 40) || crypto12.randomBytes(6).toString("hex"),
         title: clean(w?.title, 120),
         name: name2,
         photo,

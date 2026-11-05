@@ -639,7 +639,7 @@ export const scheduleData: ScheduleDay[] = [
       {
         id: 's-1',
         day: 'day_before',
-        time: '10:00 - 18:00',
+        time: '09:00 - 15:00',
         title: 'เปิดรับเบอร์วิ่ง (BIB) เสื้อที่ระลึก และสายรัดชิปจับเวลา',
         description: 'กรุณาแสดงบัตรประจำตัวประชาชนหรือหลักฐานการสมัครฉบับดิจิทัลเพื่อรับชุดแข่งขัน',
         iconName: 'Package',

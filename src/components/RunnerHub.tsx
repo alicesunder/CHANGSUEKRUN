@@ -7,6 +7,7 @@ import type { ServerOrder } from '../utils/api';
 import { RaceBib, runnerBib } from './RaceBib';
 import { ACTIVITY_LOCATIONS } from '../data/activityLocations';
 import { SHIRT_SIZES } from '../data/shirts';
+import { BLOOD_TYPES, GENDERS, RELATIONSHIPS } from '../data/insurance';
 import { formatBaht } from '../data/eventData';
 
 type HubOrder = ServerOrder & { docsUrl?: string };
@@ -63,14 +64,18 @@ export const RunnerHub: React.FC<{
       .catch((e) => setLoadError(e instanceof Error ? e.message : 'error'));
   }, []);
 
+  // The parent passes a new onClose on every render; keeping it in a ref means the tab (and a just-saved
+  // message) is only reset when the center is opened, not each time the page re-renders (e.g. after saving).
+  const closeRef = React.useRef(onClose);
+  closeRef.current = onClose;
   useEffect(() => {
     if (!isOpen) return;
     setTab('tickets');
     load();
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && closeRef.current();
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [isOpen, load, onClose]);
+  }, [isOpen, load]);
 
   const stats = useMemo(() => {
     const live = (orders || []).filter((o) => !o.cancelledAt);
@@ -112,7 +117,7 @@ export const RunnerHub: React.FC<{
               <div className="min-w-0">
                 <p className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[#FFE268]">RUNNER CENTER · CHANGSUEK RUN 2027</p>
                 <h2 className="truncate text-xl font-black leading-tight sm:text-2xl">{t('สวัสดี', 'Hello')}, {user.name || user.username || user.email} 👋</h2>
-                <p className="truncate text-xs font-bold text-white/80">{user.email || (user.username && `@${user.username}`) || (user.lineLinked ? 'LINE' : '')}</p>
+                <p className="truncate text-xs font-bold text-white/80">{user.email || (user.username && `@${user.username}`) || (user.social?.length ? user.social.map((s) => s[0].toUpperCase() + s.slice(1)).join(' · ') : '')}</p>
               </div>
             </div>
             <div className="flex shrink-0 items-center gap-2">
@@ -357,20 +362,41 @@ const ClaimBox: React.FC<{ onClaimed: () => void; defaultEmail: string }> = ({ o
   );
 };
 
+const Pills: React.FC<{ label: string; options: readonly string[]; value: string; onPick: (v: string) => void }> = ({ label, options, value, onPick }) => (
+  <div>
+    <span className="mb-1 block text-xs font-extrabold">{label}</span>
+    <div className="flex flex-wrap gap-1.5" role="radiogroup" aria-label={label}>
+      {options.map((o) => (
+        <button key={o} type="button" role="radio" aria-checked={value === o} onClick={() => onPick(value === o ? '' : o)} className={`min-h-[40px] min-w-[48px] rounded-xl border-2 px-3 text-sm font-black cursor-pointer ${value === o ? 'border-[#2A1450] bg-[#2A1450] text-white' : 'border-[#2A1450]/20 bg-white'}`}>
+          {o}
+        </button>
+      ))}
+    </div>
+  </div>
+);
+
+/** Everything the runner can change about themselves; it also pre-fills the next order form. */
 const ProfileForm: React.FC<{ session: Session; onLogout: () => void }> = ({ session, onLogout }) => {
   const { t } = useLang();
   const u = session.user;
   const p = u.profile || {};
-  const [name, setName] = useState(u.name);
+  const [firstDefault = '', ...restDefault] = (u.name || '').trim().split(/\s+/);
+  const [firstName, setFirstName] = useState(p.firstName ?? firstDefault);
+  const [lastName, setLastName] = useState(p.lastName ?? restDefault.join(' '));
   const [phone, setPhone] = useState(u.phone);
   const [email, setEmail] = useState(u.email);
+  const [gender, setGender] = useState(p.gender || '');
+  const [birthDate, setBirthDate] = useState(p.birthDate || '');
+  const [bloodType, setBloodType] = useState(p.bloodType || '');
   const [shirt, setShirt] = useState(p.shirtSize || '');
   const [emName, setEmName] = useState(p.emergencyName || '');
+  const [relationship, setRelationship] = useState(p.relationship || '');
   const [emPhone, setEmPhone] = useState(p.emergencyPhone || '');
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [busy, setBusy] = useState(false);
   const box = 'min-h-[46px] w-full rounded-xl border-2 border-[#2A1450]/20 bg-white px-3 text-sm font-semibold text-[#2A1450] focus:border-[#7C3AED] outline-none';
   const lab = 'mb-1 block text-xs font-extrabold';
+  const today = new Date().toISOString().slice(0, 10);
   return (
     <form
       onSubmit={async (e) => {
@@ -378,10 +404,16 @@ const ProfileForm: React.FC<{ session: Session; onLogout: () => void }> = ({ ses
         setBusy(true);
         setMsg(null);
         try {
-          await authApi.saveProfile({ name, phone, email, profile: { ...p, shirtSize: shirt, emergencyName: emName, emergencyPhone: emPhone } });
-          setMsg({ ok: true, text: t('บันทึกแล้ว — ครั้งหน้าระบบจะเติมข้อมูลนี้ให้ในฟอร์มสั่งซื้อ', 'Saved — we will pre-fill these in your next order') });
+          const name = `${firstName.trim()} ${lastName.trim()}`.trim();
+          await authApi.saveProfile({
+            name,
+            phone,
+            email,
+            profile: { firstName: firstName.trim(), lastName: lastName.trim(), gender, birthDate, bloodType, shirtSize: shirt, emergencyName: emName, relationship, emergencyPhone: emPhone },
+          });
+          setMsg({ ok: true, text: t('บันทึกข้อมูลแล้ว ✓ ครั้งหน้าระบบจะเติมข้อมูลนี้ให้ในฟอร์มสั่งซื้อ', 'Saved ✓ we will pre-fill these details in your next order') });
         } catch (err) {
-          setMsg({ ok: false, text: err instanceof Error ? err.message : 'error' });
+          setMsg({ ok: false, text: err instanceof Error ? err.message : t('บันทึกไม่สำเร็จ', 'Could not save') });
         } finally {
           setBusy(false);
         }
@@ -389,28 +421,32 @@ const ProfileForm: React.FC<{ session: Session; onLogout: () => void }> = ({ ses
       className="space-y-4 rounded-3xl border-[3px] border-[#2A1450] bg-white p-4 shadow-[0_5px_0_#2A1450] sm:p-5"
     >
       <p className="rounded-xl bg-[#F3E8FF] px-3 py-2 text-xs font-bold text-[#4B2D78]">
-        {t('ข้อมูลนี้ใช้เติมในฟอร์มสั่งซื้ออัตโนมัติ (ไม่เก็บเลขบัตรประชาชน)', 'Used to pre-fill the order form automatically (national ID numbers are not stored)')}
+        {t('แก้ไขข้อมูลส่วนตัวได้ที่นี่ ใช้เติมในฟอร์มสั่งซื้ออัตโนมัติ (ไม่เก็บเลขบัตรประชาชน — กรอกตอนสั่งซื้อตั๋ววิ่ง 5 km / 10 km)', 'Edit your personal details here — they pre-fill the order form (your national ID is not stored; it is asked when you buy a 5 km / 10 km ticket)')}
+        {u.username && <span className="mt-1 block text-[#6B5A85]">{t('ชื่อผู้ใช้ (เปลี่ยนไม่ได้)', 'Username (cannot be changed)')}: @{u.username}</span>}
       </p>
       <div className="grid gap-3 sm:grid-cols-2">
-        <div><label className={lab}>{t('ชื่อ - นามสกุล', 'Full name')}</label><input className={box} value={name} onChange={(e) => setName(e.target.value)} required maxLength={80} /></div>
-        <div><label className={lab}>{t('เบอร์โทรศัพท์', 'Phone')}</label><input className={box} type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} /></div>
-        <div className="sm:col-span-2"><label className={lab}>{t('อีเมล (รับตั๋วและใบเสร็จ)', 'Email (for tickets and receipts)')}</label><input className={box} type="email" value={email} onChange={(e) => setEmail(e.target.value)} /></div>
-        <div><label className={lab}>{t('ผู้ติดต่อฉุกเฉิน', 'Emergency contact')}</label><input className={box} value={emName} onChange={(e) => setEmName(e.target.value)} maxLength={80} /></div>
-        <div><label className={lab}>{t('เบอร์ผู้ติดต่อฉุกเฉิน', 'Emergency phone')}</label><input className={box} type="tel" value={emPhone} onChange={(e) => setEmPhone(e.target.value)} /></div>
+        <div><label className={lab}>{t('ชื่อ', 'First name')}</label><input className={box} value={firstName} onChange={(e) => setFirstName(e.target.value)} required maxLength={40} autoComplete="given-name" /></div>
+        <div><label className={lab}>{t('นามสกุล', 'Last name')}</label><input className={box} value={lastName} onChange={(e) => setLastName(e.target.value)} maxLength={40} autoComplete="family-name" /></div>
+        <div><label className={lab}>{t('เบอร์โทรศัพท์', 'Phone')}</label><input className={box} type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} autoComplete="tel" /></div>
+        <div><label className={lab}>{t('อีเมล (รับตั๋วและใบเสร็จ)', 'Email (for tickets and receipts)')}</label><input className={box} type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" /></div>
+        <div><label className={lab}>{t('วันเกิด', 'Date of birth')}</label><input className={box} type="date" min="1900-01-01" max={today} value={birthDate} onChange={(e) => setBirthDate(e.target.value)} /></div>
       </div>
-      <div>
-        <span className={lab}>{t('ไซซ์เสื้อวิ่ง', 'Jersey size')}</span>
-        <div className="flex flex-wrap gap-1.5" role="radiogroup" aria-label={t('ไซซ์เสื้อวิ่ง', 'Jersey size')}>
-          {SHIRT_SIZES.map((s) => (
-            <button key={s} type="button" role="radio" aria-checked={shirt === s} onClick={() => setShirt(s)} className={`min-h-[40px] min-w-[48px] rounded-xl border-2 px-3 text-sm font-black cursor-pointer ${shirt === s ? 'border-[#2A1450] bg-[#2A1450] text-white' : 'border-[#2A1450]/20 bg-white'}`}>
-              {s}
-            </button>
-          ))}
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Pills label={t('เพศ', 'Gender')} options={GENDERS} value={gender} onPick={setGender} />
+        <Pills label={t('หมู่เลือด', 'Blood type')} options={BLOOD_TYPES} value={bloodType} onPick={setBloodType} />
+      </div>
+      <Pills label={t('ไซซ์เสื้อวิ่ง', 'Jersey size')} options={SHIRT_SIZES} value={shirt} onPick={setShirt} />
+      <div className="rounded-2xl border-2 border-dashed border-[#7C3AED]/40 p-3 space-y-3">
+        <p className="text-xs font-black">{t('ผู้ติดต่อฉุกเฉิน', 'Emergency contact')}</p>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div><label className={lab}>{t('ชื่อ-นามสกุล', 'Full name')}</label><input className={box} value={emName} onChange={(e) => setEmName(e.target.value)} maxLength={80} /></div>
+          <div><label className={lab}>{t('เบอร์โทร', 'Phone')}</label><input className={box} type="tel" value={emPhone} onChange={(e) => setEmPhone(e.target.value)} /></div>
         </div>
+        <Pills label={t('ความสัมพันธ์', 'Relationship')} options={RELATIONSHIPS} value={relationship} onPick={setRelationship} />
       </div>
-      {msg && <p role="status" className={`text-sm font-bold ${msg.ok ? 'text-emerald-700' : 'text-rose-700'}`}>{msg.text}</p>}
+      {msg && <p role="status" className={`rounded-xl px-3 py-2 text-sm font-bold ${msg.ok ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}`}>{msg.text}</p>}
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <button disabled={busy} className="inline-flex min-h-[48px] items-center gap-2 rounded-2xl border-[3px] border-[#140826] bg-[#FFC928] px-6 text-sm font-black shadow-[0_4px_0_#140826] disabled:opacity-60 cursor-pointer"><Save className="h-4 w-4" /> {t('บันทึก', 'Save')}</button>
+        <button disabled={busy} className="inline-flex min-h-[48px] items-center gap-2 rounded-2xl border-[3px] border-[#140826] bg-[#FFC928] px-6 text-sm font-black shadow-[0_4px_0_#140826] disabled:opacity-60 cursor-pointer"><Save className="h-4 w-4" /> {busy ? t('กำลังบันทึก…', 'Saving…') : t('บันทึก', 'Save')}</button>
         <button type="button" onClick={onLogout} className="inline-flex min-h-[48px] items-center gap-2 rounded-2xl border-[3px] border-[#2A1450]/30 bg-white px-5 text-sm font-black text-[#4B2D78] hover:border-[#2A1450] cursor-pointer"><LogOut className="h-4 w-4" /> {t('ออกจากระบบ', 'Log out')}</button>
       </div>
     </form>

@@ -93,6 +93,10 @@ create unique index if not exists runners_email_uidx on csr.runners (email) wher
 create unique index if not exists runners_username_uidx on csr.runners (username) where username is not null;
 create unique index if not exists runners_line_uidx on csr.runners (line_user_id) where line_user_id is not null;
 create index if not exists orders_runner_idx on csr.orders ((data->>'runnerId')) where data ? 'runnerId';
+alter table csr.runners add column if not exists google_id text;
+alter table csr.runners add column if not exists facebook_id text;
+create unique index if not exists runners_google_uidx on csr.runners (google_id) where google_id is not null;
+create unique index if not exists runners_facebook_uidx on csr.runners (facebook_id) where facebook_id is not null;
 alter table csr.runners enable row level security;
 
 alter table csr.orders          enable row level security;

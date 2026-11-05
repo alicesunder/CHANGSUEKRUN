@@ -36,6 +36,8 @@ export interface PublicConfig {
   earlyBird?: boolean;
   /** LINE Login is set up on the server */
   lineLoginReady?: boolean;
+  /** which social sign-in buttons work */
+  socialLogin?: { line: boolean; google: boolean; facebook: boolean };
 }
 
 export interface VisitStats {

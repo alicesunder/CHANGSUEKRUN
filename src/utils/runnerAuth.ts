@@ -25,6 +25,8 @@ export interface RunnerUser {
   username: string;
   phone: string;
   lineLinked?: boolean;
+  /** social sign-ins linked to this account: 'line' | 'google' | 'facebook' */
+  social?: string[];
   profile?: RunnerProfileData;
 }
 
@@ -182,14 +184,14 @@ export const staffApi = {
 };
 
 /**
- * Back from LINE Login the server sends us to /#runner-auth=<token> (or /#line-error=...).
+ * Back from a social sign-in (LINE / Google / Facebook) the server sends us to /#runner-auth=<token> (or /#login-error=...).
  * Call once at start-up: it signs the runner in and tidies the address bar. Returns an error code for the page to show.
  */
 export async function consumeLineLogin(): Promise<'ok' | 'error' | null> {
-  const m = /^#(runner-auth|line-error)=(.*)$/.exec(window.location.hash);
+  const m = /^#(runner-auth|login-error|line-error)=(.*)$/.exec(window.location.hash);
   if (!m) return null;
   history.replaceState(null, '', window.location.pathname + window.location.search);
-  if (m[1] === 'line-error') return 'error';
+  if (m[1] !== 'runner-auth') return 'error';
   try {
     const r = await call<{ role: 'runner' | 'staff'; user: RunnerUser }>('/api/auth/me', {}, m[2]);
     saveSession({ token: m[2], role: r.role, user: r.user, expiresAt: Date.now() + 30 * 24 * 60 * 60 * 1000 });

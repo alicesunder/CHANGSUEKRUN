@@ -84,7 +84,8 @@ const runnerView = (o: StoredOrder) => ({
 import { fetchVerifiedOmiseCharge, maskedAccountMatches, verifySlipWithEasySlip } from './payments';
 import { mailConfigured, maskEmail, sendTicketEmail } from './mailer';
 import { registerRunnerRoutes } from './runnerRoutes';
-import { lineConfigured, sessionFromRequest } from './runners';
+import { sessionFromRequest } from './runners';
+import { configuredProviders } from './socialLogin';
 
 /** Must match PRIVACY_POLICY_VERSION in src/components/PrivacyNotice.tsx */
 const PRIVACY_POLICY_VERSION = '2026-11-02';
@@ -190,7 +191,9 @@ async function publicConfig() {
     /** true when paid orders get their ticket by e-mail */
     emailReady: mailConfigured(),
     /** true when LINE_CHANNEL_ID / LINE_CHANNEL_SECRET are set (the LINE login button works) */
-    lineLoginReady: lineConfigured(),
+    lineLoginReady: configuredProviders().line,
+    /** which social sign-in buttons work (their keys are set on the server) */
+    socialLogin: configuredProviders(),
   };
 }
 

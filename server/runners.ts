@@ -12,6 +12,7 @@
 import crypto from 'crypto';
 import type { NextFunction, Request, Response } from 'express';
 import { dbQuery } from './db';
+import type { Provider, SocialProfile } from './socialLogin';
 
 // ---------------------------------------------------------------------------
 // Tokens
@@ -144,6 +145,8 @@ export interface RunnerRow {
   phone: string;
   password_hash: string | null;
   line_user_id: string | null;
+  google_id?: string | null;
+  facebook_id?: string | null;
   profile: Record<string, unknown>;
   created_at: string;
 }
@@ -166,7 +169,11 @@ export function ensureRunnerTables(): Promise<void> {
       )`);
       await dbQuery('create unique index if not exists runners_email_uidx on csr.runners (email) where email is not null');
       await dbQuery('create unique index if not exists runners_username_uidx on csr.runners (username) where username is not null');
+      await dbQuery('alter table csr.runners add column if not exists google_id text');
+      await dbQuery('alter table csr.runners add column if not exists facebook_id text');
       await dbQuery('create unique index if not exists runners_line_uidx on csr.runners (line_user_id) where line_user_id is not null');
+      await dbQuery('create unique index if not exists runners_google_uidx on csr.runners (google_id) where google_id is not null');
+      await dbQuery('create unique index if not exists runners_facebook_uidx on csr.runners (facebook_id) where facebook_id is not null');
       await dbQuery("create index if not exists orders_runner_idx on csr.orders ((data->>'runnerId')) where data ? 'runnerId'");
       await dbQuery('alter table csr.runners enable row level security');
     })().catch((err) => {
@@ -272,16 +279,32 @@ export async function updateRunnerProfile(
   return { ok: true, runner: rows[0] };
 }
 
-export async function upsertLineRunner(lineUserId: string, displayName: string): Promise<RunnerRow> {
+/** Column that holds each provider's user id (fixed list, never taken from the request). */
+const SOCIAL_COLUMN: Record<Provider, 'line_user_id' | 'google_id' | 'facebook_id'> = { line: 'line_user_id', google: 'google_id', facebook: 'facebook_id' };
+
+/**
+ * Finds or creates the runner for a social login.
+ *  - the same provider account always gets the same runner;
+ *  - a Google account whose e-mail Google has verified joins the runner that already uses that e-mail;
+ *  - otherwise a new runner is made (its e-mail is kept only when no one else already uses it).
+ */
+export async function upsertSocialRunner(provider: Provider, p: SocialProfile): Promise<RunnerRow> {
   await ensureRunnerTables();
-  const existing = await dbQuery<RunnerRow>('select * from csr.runners where line_user_id = $1', [lineUserId]);
-  if (existing[0]) {
-    await dbQuery('update csr.runners set last_login_at = now() where runner_id = $1', [existing[0].runner_id]);
-    return existing[0];
+  const col = SOCIAL_COLUMN[provider];
+  const byId = await dbQuery<RunnerRow>(`select * from csr.runners where ${col} = $1`, [p.id]);
+  if (byId[0]) {
+    await dbQuery('update csr.runners set last_login_at = now() where runner_id = $1', [byId[0].runner_id]);
+    return byId[0];
+  }
+  const email = p.email ? normEmail(p.email) : '';
+  const byEmail = email && isEmail(email) ? await dbQuery<RunnerRow>('select * from csr.runners where email = $1', [email]) : [];
+  if (byEmail[0] && p.emailVerified) {
+    const rows = await dbQuery<RunnerRow>(`update csr.runners set ${col} = $2, last_login_at = now() where runner_id = $1 returning *`, [byEmail[0].runner_id, p.id]);
+    return rows[0];
   }
   const rows = await dbQuery<RunnerRow>(
-    'insert into csr.runners (runner_id, name, line_user_id, last_login_at) values ($1, $2, $3, now()) returning *',
-    [newRunnerId(), cleanText(displayName, 80) || 'นักวิ่ง LINE', lineUserId]
+    `insert into csr.runners (runner_id, name, email, ${col}, last_login_at) values ($1, $2, $3, $4, now()) returning *`,
+    [newRunnerId(), cleanText(p.name, 80) || (provider === 'line' ? 'นักวิ่ง LINE' : 'นักวิ่ง'), email && isEmail(email) && !byEmail[0] ? email : null, p.id]
   );
   return rows[0];
 }
@@ -295,62 +318,8 @@ export function publicRunner(r: RunnerRow) {
     username: r.username || '',
     phone: r.phone || '',
     lineLinked: Boolean(r.line_user_id),
+    social: [r.line_user_id && 'line', r.google_id && 'google', r.facebook_id && 'facebook'].filter(Boolean) as string[],
     profile: r.profile || {},
     createdAt: r.created_at,
   };
-}
-
-// ---------------------------------------------------------------------------
-// LINE Login (needs LINE_CHANNEL_ID and LINE_CHANNEL_SECRET; the callback URL is set in the LINE Developers console)
-// ---------------------------------------------------------------------------
-export const lineConfigured = () => Boolean(process.env.LINE_CHANNEL_ID && process.env.LINE_CHANNEL_SECRET);
-
-export function lineState(): { state: string; nonce: string } {
-  const nonce = crypto.randomBytes(12).toString('hex');
-  const payload = b64(JSON.stringify({ n: nonce, exp: Date.now() + 10 * 60 * 1000 }));
-  return { state: `${payload}.${hmac(`line|${payload}`)}`, nonce };
-}
-
-export function lineStateOk(state: string, nonceCookie: string): boolean {
-  const [payload, sig] = String(state || '').split('.');
-  if (!payload || !sig || !safeEqual(sig, hmac(`line|${payload}`))) return false;
-  try {
-    const d = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8'));
-    return typeof d.exp === 'number' && Date.now() < d.exp && typeof d.n === 'string' && safeEqual(d.n, nonceCookie);
-  } catch {
-    return false;
-  }
-}
-
-export function lineAuthorizeUrl(redirectUri: string, state: string): string {
-  const q = new URLSearchParams({
-    response_type: 'code',
-    client_id: process.env.LINE_CHANNEL_ID || '',
-    redirect_uri: redirectUri,
-    state,
-    scope: 'profile openid',
-  });
-  return `https://access.line.me/oauth2/v2.1/authorize?${q.toString()}`;
-}
-
-export async function lineProfile(code: string, redirectUri: string): Promise<{ userId: string; displayName: string }> {
-  const tok = await fetch('https://api.line.me/oauth2/v2.1/token', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({
-      grant_type: 'authorization_code',
-      code,
-      redirect_uri: redirectUri,
-      client_id: process.env.LINE_CHANNEL_ID || '',
-      client_secret: process.env.LINE_CHANNEL_SECRET || '',
-    }),
-  });
-  if (!tok.ok) throw new Error(`LINE token ${tok.status}`);
-  const { access_token } = (await tok.json()) as { access_token?: string };
-  if (!access_token) throw new Error('LINE token missing');
-  const prof = await fetch('https://api.line.me/v2/profile', { headers: { Authorization: `Bearer ${access_token}` } });
-  if (!prof.ok) throw new Error(`LINE profile ${prof.status}`);
-  const p = (await prof.json()) as { userId?: string; displayName?: string };
-  if (!p.userId) throw new Error('LINE profile missing userId');
-  return { userId: p.userId, displayName: p.displayName || '' };
 }

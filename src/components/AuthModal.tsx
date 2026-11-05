@@ -7,6 +7,29 @@ import { getPublicConfig } from '../utils/api';
 
 type Tab = 'login' | 'signup';
 type Method = 'email' | 'username';
+type Social = { line: boolean; google: boolean; facebook: boolean };
+
+/** Brand marks for the sign-in buttons (simple inline SVG, no external files). */
+const FacebookMark = () => (
+  <svg viewBox="0 0 24 24" className="h-6 w-6" aria-hidden="true">
+    <circle cx="12" cy="12" r="12" fill="#1877F2" />
+    <path d="M13.4 19.5v-6.1h2l.4-2.5h-2.4V9.3c0-.7.3-1.3 1.4-1.3h1.1V5.8c-.2 0-.9-.1-1.7-.1-1.9 0-3.1 1.1-3.1 3.2v1.9H9.1v2.5h2v6.2z" fill="#fff" />
+  </svg>
+);
+const GoogleMark = () => (
+  <svg viewBox="0 0 24 24" className="h-6 w-6" aria-hidden="true">
+    <path fill="#EA4335" d="M12 10.2v3.9h5.5c-.2 1.3-1.6 3.8-5.5 3.8a6.1 6.1 0 1 1 0-12.2c1.9 0 3.2.8 3.9 1.5l2.7-2.6A9.8 9.8 0 0 0 12 2.2a9.9 9.9 0 1 0 0 19.8c5.7 0 9.5-4 9.5-9.6 0-.6-.1-1.1-.2-1.6z" />
+    <path fill="#34A853" d="M3.5 7.3l3.2 2.4A6.1 6.1 0 0 1 12 5.9c1.9 0 3.2.8 3.9 1.5l2.7-2.6A9.8 9.8 0 0 0 12 2.2 9.9 9.9 0 0 0 3.5 7.3z" opacity=".0" />
+    <path fill="#FBBC05" d="M5.9 12c0-.7.1-1.3.3-1.9L3 7.7A9.9 9.9 0 0 0 2.2 12c0 1.6.4 3.1 1 4.4l3.2-2.5c-.3-.6-.5-1.200-.5-1.900z" />
+    <path fill="#4285F4" d="M12 22c2.7 0 4.900-.9 6.600-2.400l-3.200-2.500c-.9.600-2 1-3.400 1a6 6 0 0 1-5.600-4.100L3.200 16.400A9.900 9.900 0 0 0 12 22z" />
+  </svg>
+);
+const LineMark = () => (
+  <svg viewBox="0 0 24 24" className="h-6 w-6" aria-hidden="true">
+    <rect width="24" height="24" rx="6" fill="#06C755" />
+    <path d="M12 5.2c-3.9 0-7 2.5-7 5.600 0 2.800 2.500 5.100 5.800 5.500.2 0 .5.2.6.4l.1.7c0 .2.1.6.5.4.4-.2 2.400-1.400 3.300-2.400 1.800-1.100 2.700-2.500 2.700-4.100 0-3.100-3.100-5.600-6-5.600z" fill="#fff" />
+  </svg>
+);
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -50,19 +73,24 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthed,
   const [showPw, setShowPw] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [lineReady, setLineReady] = useState(false);
+  const [social, setSocial] = useState<Social>({ line: false, google: false, facebook: false });
+  // the first screen lists the sign-in choices; the e-mail / username form opens from the first one
+  const [showForm, setShowForm] = useState(false);
 
+  const closeRef = React.useRef(onClose);
+  closeRef.current = onClose;
   useEffect(() => {
     if (!isOpen) return;
     setTab(initialTab);
     setError(null);
+    setShowForm(false);
     getPublicConfig()
-      .then((c) => setLineReady(Boolean((c as { lineLoginReady?: boolean }).lineLoginReady)))
+      .then((c) => setSocial((c as { socialLogin?: Social }).socialLogin ?? { line: Boolean((c as { lineLoginReady?: boolean }).lineLoginReady), google: false, facebook: false }))
       .catch(() => {});
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && closeRef.current();
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [isOpen, initialTab, onClose]);
+  }, [isOpen, initialTab]);
 
   if (!isOpen) return null;
 
@@ -96,10 +124,15 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthed,
       );
   };
 
-  const methods: { id: Method | 'line'; emoji: string; th: string; en: string }[] = [
-    { id: 'email', emoji: '✉️', th: 'อีเมล', en: 'Email' },
-    { id: 'username', emoji: '🧑‍💻', th: 'ตั้งเอง', en: 'Username' },
-    { id: 'line', emoji: '💚', th: 'LINE', en: 'LINE' },
+  const methods: { id: Method; emoji: string; th: string; en: string }[] = [
+    { id: 'email', emoji: '✉️', th: 'ใช้อีเมล', en: 'Use e-mail' },
+    { id: 'username', emoji: '🧑‍💻', th: 'ตั้งชื่อผู้ใช้เอง', en: 'Own username' },
+  ];
+
+  const socials: { id: 'facebook' | 'google' | 'line'; label: string; mark: React.ReactNode }[] = [
+    { id: 'facebook', label: 'Facebook', mark: <FacebookMark /> },
+    { id: 'google', label: 'Google', mark: <GoogleMark /> },
+    { id: 'line', label: 'LINE', mark: <LineMark /> },
   ];
 
   return createPortal(
@@ -154,38 +187,71 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthed,
           ))}
         </div>
 
-        <form onSubmit={submit} className="space-y-3.5 px-5 pb-5 pt-4">
+        {!showForm && (
+          <div className="space-y-2.5 px-5 pb-5 pt-4">
+            <button
+              type="button"
+              onClick={() => setShowForm(true)}
+              className="flex min-h-[54px] w-full items-center gap-3 rounded-full bg-[#2B2B2B] px-5 text-[15px] font-extrabold text-white shadow-[0_4px_0_#000] transition hover:bg-[#3a3a3a] active:translate-y-0.5 cursor-pointer"
+            >
+              <UserRound className="h-6 w-6 shrink-0" aria-hidden="true" />
+              <span className="flex-1 text-center">{t('ใช้อีเมลหรือชื่อผู้ใช้', 'Use e-mail or username')}</span>
+            </button>
+            {socials.map((s) => {
+              const on = social[s.id];
+              const cls = 'flex min-h-[54px] w-full items-center gap-3 rounded-full px-5 text-[15px] font-extrabold transition';
+              const inner = (
+                <>
+                  <span className="shrink-0">{s.mark}</span>
+                  <span className="flex-1 text-center">
+                    {t('ดำเนินการต่อด้วย', 'Continue with')} {s.label}
+                    {!on && <span className="ml-1.5 text-xs font-bold opacity-75">({t('เร็ว ๆ นี้', 'coming soon')})</span>}
+                  </span>
+                </>
+              );
+              return on ? (
+                <a key={s.id} href={`/api/auth/${s.id}/start`} className={`${cls} bg-[#2B2B2B] text-white shadow-[0_4px_0_#000] hover:bg-[#3a3a3a] active:translate-y-0.5`}>
+                  {inner}
+                </a>
+              ) : (
+                <button key={s.id} type="button" disabled className={`${cls} cursor-not-allowed bg-[#EFEAF7] text-[#6B5A85]`}>
+                  <span className="shrink-0 grayscale opacity-70">{s.mark}</span>
+                  <span className="flex-1 text-center">
+                    {t('ดำเนินการต่อด้วย', 'Continue with')} {s.label}
+                    <span className="ml-1.5 text-xs font-bold">({t('เร็ว ๆ นี้', 'coming soon')})</span>
+                  </span>
+                </button>
+              );
+            })}
+            <p className="pt-1 text-center text-[11px] font-semibold leading-snug text-[#6B5A85]">
+              {tab === 'login'
+                ? t('ยังไม่มีบัญชี? ปุ่มด้านบนสร้างบัญชีให้อัตโนมัติ หรือเลือกแท็บ "สมัครสมาชิก"', 'No account yet? The buttons above create one for you, or use the "Sign up" tab')
+                : t('สมัครด้วย Facebook / Google / LINE ได้ในคลิกเดียว หรือใช้อีเมลของคุณเอง', 'Sign up with Facebook / Google / LINE in one click, or use your own e-mail')}
+            </p>
+          </div>
+        )}
+
+        <form onSubmit={submit} className={`space-y-3.5 px-5 pb-5 pt-4 ${showForm ? '' : 'hidden'}`}>
+          <button type="button" onClick={() => setShowForm(false)} className="text-xs font-extrabold text-[#5B20A8] underline underline-offset-2 cursor-pointer">
+            ← {t('ตัวเลือกอื่น (Facebook / Google / LINE)', 'Other options (Facebook / Google / LINE)')}
+          </button>
           {tab === 'signup' && (
             <>
-              <div role="radiogroup" aria-label={t('วิธีสมัคร', 'Sign-up method')} className="grid grid-cols-3 gap-2">
+              <div role="radiogroup" aria-label={t('วิธีสมัคร', 'Sign-up method')} className="grid grid-cols-2 gap-2">
                 {methods.map((m) => {
                   const on = m.id === method;
-                  const isLine = m.id === 'line';
-                  const common = 'flex min-h-[64px] flex-col items-center justify-center rounded-2xl border-[3px] px-1 text-center text-xs font-black transition';
-                  if (isLine) {
-                    return lineReady ? (
-                      <a key={m.id} href="/api/auth/line/start" className={`${common} border-[#06A94D] bg-[#06C755] text-white shadow-[0_4px_0_#04703a] hover:brightness-105`}>
-                        <span className="text-xl" aria-hidden="true">{m.emoji}</span>
-                        {t('สมัครด้วย LINE', 'Sign up with LINE')}
-                      </a>
-                    ) : (
-                      <button key={m.id} type="button" disabled title={t('ยังไม่เปิดใช้งาน', 'Not available yet')} className={`${common} cursor-not-allowed border-[#2A1450]/15 bg-[#EFEAF7] text-[#6B5A85] opacity-80`}>
-                        <span className="text-xl grayscale" aria-hidden="true">{m.emoji}</span>
-                        LINE
-                        <span className="text-[10px] font-bold">{t('เร็ว ๆ นี้', 'Coming soon')}</span>
-                      </button>
-                    );
-                  }
                   return (
                     <button
                       key={m.id}
                       type="button"
                       role="radio"
                       aria-checked={on}
-                      onClick={() => setMethod(m.id as Method)}
-                      className={`${common} cursor-pointer ${on ? 'border-[#2A1450] bg-[#2A1450] text-white shadow-[0_4px_0_#FFC928]' : 'border-[#2A1450]/20 bg-white text-[#2A1450] hover:border-[#2A1450]/50'}`}
+                      onClick={() => setMethod(m.id)}
+                      className={`flex min-h-[52px] items-center justify-center gap-2 rounded-2xl border-[3px] px-2 text-center text-xs font-black cursor-pointer transition ${
+                        on ? 'border-[#2A1450] bg-[#2A1450] text-white shadow-[0_4px_0_#FFC928]' : 'border-[#2A1450]/20 bg-white text-[#2A1450] hover:border-[#2A1450]/50'
+                      }`}
                     >
-                      <span className="text-xl" aria-hidden="true">{m.emoji}</span>
+                      <span className="text-lg" aria-hidden="true">{m.emoji}</span>
                       {t(m.th, m.en)}
                     </button>
                   );
@@ -237,19 +303,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthed,
             {busy ? t('กำลังดำเนินการ…', 'Please wait…') : tab === 'login' ? t('เข้าสู่ระบบ', 'Log in') : t('สมัครและเข้าสู่ระบบ', 'Sign up & log in')}
           </button>
 
-          {tab === 'login' && (
-            <a
-              href={lineReady ? '/api/auth/line/start' : undefined}
-              aria-disabled={!lineReady}
-              onClick={(e) => !lineReady && e.preventDefault()}
-              className={`flex min-h-[50px] w-full items-center justify-center gap-2 rounded-2xl border-[3px] text-sm font-black ${
-                lineReady ? 'border-[#06A94D] bg-[#06C755] text-white shadow-[0_4px_0_#04703a] cursor-pointer hover:brightness-105' : 'cursor-not-allowed border-[#2A1450]/15 bg-[#EFEAF7] text-[#6B5A85]'
-              }`}
-            >
-              <span aria-hidden="true">💚</span>
-              {lineReady ? t('เข้าสู่ระบบด้วย LINE', 'Log in with LINE') : t('เข้าสู่ระบบด้วย LINE (เร็ว ๆ นี้)', 'Log in with LINE (coming soon)')}
-            </a>
-          )}
 
           <p className="flex items-start gap-1.5 text-[11px] font-semibold leading-snug text-[#6B5A85]">
             <ShieldCheck className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#15803D]" aria-hidden="true" />

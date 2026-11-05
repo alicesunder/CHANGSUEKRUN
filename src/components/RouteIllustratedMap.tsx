@@ -141,16 +141,6 @@ const CAMP: MapDef = {
       sticker: { id: 'camp', src: '/images/map/sticker-bpp-school.webp', x: 1010, y: 650, w: 240, h: 243, rotate: -4 },
     },
     {
-      id: 'mangrove',
-      pin: [210, 720],
-      label: 'ป่าชายเลน',
-      sub: 'หอดูนก',
-      labelAt: [210, 805],
-      anchor: 'middle',
-      color: '#16A34A',
-      sticker: { id: 'mangrove', src: '/images/map/sticker-mangrove.webp', x: 40, y: 1010, w: 320, h: 320, rotate: -5 },
-    },
-    {
       id: 'statue',
       pin: [968, 1352],
       label: 'พระบรมราชานุสาวรีย์',
