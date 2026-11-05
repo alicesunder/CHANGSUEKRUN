@@ -644,7 +644,7 @@ export const TicketShop: React.FC<TicketShopProps> = ({
                       <Equaliser on={concertQty > 0} />
                     </span>
                     <div className="min-w-0">
-                      <p className="text-lg font-extrabold leading-tight">บัตร GA · คอนเสิร์ตริมหาดชะอำ</p>
+                      <p className="text-lg font-extrabold leading-tight">บัตร GA · คอนเสิร์ตริมหาด</p>
                       <p className="text-xs sm:text-sm font-semibold text-white/85 leading-snug">ไม่ต้องวิ่งก็มาได้ · ซื้อให้ทั้งครอบครัวได้</p>
                       <p className="mt-1 text-2xl font-black text-[#FFD84D] tabular-nums leading-none">
                         {(concertUnitOff > 0 || earlyBird) && <span className="mr-1.5 text-base font-bold text-white/60 line-through">{formatBaht(CONCERT_PASS_PRICE)}</span>}

@@ -647,7 +647,7 @@ export const InteractiveRouteMap: React.FC<InteractiveRouteMapProps> = ({
 
             <p className="text-xs sm:text-sm text-gray-600 mt-1.5 max-w-2xl font-medium leading-relaxed">
               แผนที่เส้นทางแข่งขันอย่างเป็นทางการ รวมข้อมูลพิกัด GPS จุดปล่อยตัว จุดบริการน้ำดื่ม
-              หน่วยปฐมพยาบาล ลานจอดรถ และที่พักริมหาดชะอำ-หัวหิน ครบจบในแผนที่เดียว
+              หน่วยปฐมพยาบาล ลานจอดรถ และที่พักริมหาด ครบจบในแผนที่เดียว
             </p>
           </div>
 

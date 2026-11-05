@@ -400,7 +400,7 @@ export default function App() {
                 </h2>
               </div>
               <p className="text-xs sm:text-sm font-bold text-[#4B2D78]">
-                ตรวจเช็กอุณหภูมิริมหาดชะอำและอุปกรณ์สำคัญก่อนออกสตาร์ท
+                ตรวจเช็กอุณหภูมิริมหาดและอุปกรณ์สำคัญก่อนออกสตาร์ท
               </p>
             </div>
 

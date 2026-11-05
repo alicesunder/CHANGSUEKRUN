@@ -21,7 +21,7 @@ export const TICKET_CARD_IMAGES: Record<
   '5km': {
     src: '/images/distances/card-5k-editorial.jpg',
     objectPosition: '82% center',
-    alt: 'บัตรวิ่ง 5 km บุคคลทั่วไป - นักวิ่งชายหญิงวิ่งรับแสงเช้าเลียบชายหาดชะอำพร้อมช้างศึก',
+    alt: 'บัตรวิ่ง 5 km บุคคลทั่วไป - นักวิ่งชายหญิงวิ่งรับแสงเช้าเลียบชายหาดพร้อมช้างศึก',
     sceneTag: 'SUNRISE COASTAL RUN',
     terrainBadge: 'ทางเรียบเลียบหาด & รอบค่าย',
     skyGrad: 'linear-gradient(135deg, #FFF3B0 0%, #FFD55A 55%, #FFAE34 100%)',

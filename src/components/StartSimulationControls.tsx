@@ -100,7 +100,7 @@ export const StartSimulationControls: React.FC<StartSimulationControlsProps> = (
             </button>
           </div>
           <p className="text-xs text-white/90 mb-3">
-            คุณได้จำลองการวิ่งครบระยะ {totalKm.toFixed(2)} กม. สัมผัสทัศนียภาพค่ายนเรศวรและหาดชะอำเรียบร้อยแล้ว
+            คุณได้จำลองการวิ่งครบระยะ {totalKm.toFixed(2)} กม. สัมผัสทัศนียภาพค่ายนเรศวรเรียบร้อยแล้ว
           </p>
           <div className="flex flex-wrap items-center gap-2">
             <button

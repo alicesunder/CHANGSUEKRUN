@@ -454,7 +454,7 @@ export const RouteAndScheduleSection: React.FC<RouteAndScheduleProps> = ({
                         เส้นทางวิ่ง (GPS Survey)
                       </h3>
                       <span className="block text-xs font-bold text-[#6B5A85] mt-0.5">
-                        เลียบชายหาดชะอำ – ค่ายนเรศวร (ปล่อยตัวยามเย็น 16.30 - 17.30 น.)
+                        เลียบชายหาด – ค่ายนเรศวร (ปล่อยตัวยามเย็น 16.30 - 17.30 น.)
                       </span>
                     </div>
                   </div>
@@ -588,7 +588,7 @@ export const RouteAndScheduleSection: React.FC<RouteAndScheduleProps> = ({
                     กำหนดการ (PDF)
                   </h3>
                   <p className="text-xs text-gray-500 font-medium">
-                    CHANGSUEK RUN 2027 • วิ่ง 9 มกราคม 2570 · กิจกรรมเสริม 10 มกราคม 2570 ณ หาดชะอำ ค่ายนเรศวร
+                    CHANGSUEK RUN 2027 • วิ่ง 9 มกราคม 2570 · กิจกรรมเสริม 10 มกราคม 2570 ณ ค่ายนเรศวร อ.ชะอำ จ.เพชรบุรี
                   </p>
                 </div>
               </div>

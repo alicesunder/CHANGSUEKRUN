@@ -22,7 +22,7 @@ export const HeroBeachRunnerVisual: React.FC<HeroBeachRunnerVisualProps> = ({ on
         <div className="relative aspect-[4/3] sm:aspect-[16/13] w-full overflow-hidden">
           <img
             src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80"
-            alt="หาดชะอำ - หัวหิน เส้นทางวิ่งริมทะเล"
+            alt="เส้นทางวิ่งริมทะเล"
             className="w-full h-full object-cover transform scale-105 group-hover:scale-110 transition-transform duration-1000"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-black/10" />

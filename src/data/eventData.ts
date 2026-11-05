@@ -55,7 +55,7 @@ export const venueInfo: VenueInfo = {
   name: 'ค่ายนเรศวร กองบัญชาการตำรวจตระเวนชายแดน',
   nameEn: 'Naresuan Camp, Border Patrol Police',
   description:
-    'ค่ายประวัติศาสตร์อันทรงเกียรติติดชายหาดชะอำ-หัวหิน ทัศนียภาพงดงาม ร่มรื่นด้วยป่าสน ชายทะเล และสิ่งอำนวยความสะดวกครบครัน พร้อมศูนย์ฝึกน้องสุนัขสงครามแห่งประวัติศาสตร์',
+    'ค่ายประวัติศาสตร์อันทรงเกียรติติดชายหาด ทัศนียภาพงดงาม ร่มรื่นด้วยป่าสน ชายทะเล และสิ่งอำนวยความสะดวกครบครัน พร้อมศูนย์ฝึกน้องสุนัขสงครามแห่งประวัติศาสตร์',
   latitude: 12.6948,
   longitude: 99.9642,
   highlights: [
@@ -260,7 +260,7 @@ export const routesData: Record<RouteId, RouteData> = {
         id: 'beach-trail-3k',
         name: 'เส้นทางเลียบหาดค่ายนเรศวร',
         nameEn: 'Naresuan Beachfront Trail',
-        description: 'วิ่งรับลมทะเลยามเย็น ชมแสงอาทิตย์อัสดงริมหาดชะอำ',
+        description: 'วิ่งรับลมทะเลยามเย็น ชมแสงอาทิตย์อัสดงริมหาด',
         type: 'photo',
         distanceFromStartKm: 0.8,
         latitude: 12.6957,

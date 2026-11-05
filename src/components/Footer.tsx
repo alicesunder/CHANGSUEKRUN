@@ -49,7 +49,7 @@ export const Footer: React.FC<FooterProps> = ({
             />
             
             <p className="text-xs text-purple-200/80 leading-relaxed mb-4 max-w-sm">
-              {t('งานวิ่งริมทะเลชะอำ-หัวหิน ณ หาดชะอำ (ค่ายนเรศวร) จ.เพชรบุรี วันที่ 9 มกราคม 2570 ก้าวไปด้วยกันเพื่อสุขภาพ รอยยิ้ม และเพื่อนสี่ขา', 'A seaside run in Cha-am – Hua Hin at Cha-am Beach (Naresuan Camp), Phetchaburi, on 9 January 2027. Stepping together for health, smiles and our four-legged friends.')}
+              {t('งานวิ่งริมทะเลชะอำ-หัวหิน ณ ค่ายนเรศวร อ.ชะอำ จ.เพชรบุรี วันที่ 9 มกราคม 2570 ก้าวไปด้วยกันเพื่อสุขภาพ รอยยิ้ม และเพื่อนสี่ขา', 'A seaside run in Cha-am – Hua Hin at Naresuan Camp, Cha-am, Phetchaburi, on 9 January 2027. Stepping together for health, smiles and our four-legged friends.')}
             </p>
 
             {/* Handwritten sign-off */}

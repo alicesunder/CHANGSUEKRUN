@@ -47,7 +47,7 @@ export const ChangsuekRunExperience: React.FC<ChangsuekRunExperienceProps> = ({
       step: '01',
       tag: 'DISCOVER',
       headline: 'เลือกระยะที่ใช่',
-      summary: 'เลือกวิ่ง 5K / 10K หรือวิ่งคู่กับน้องสุนัข 1K / 4K ริมหาดชะอำ',
+      summary: 'เลือกวิ่ง 5K / 10K หรือวิ่งคู่กับน้องสุนัข 1K / 4K ริมหาด',
       badge: '4 ระยะแข่งขัน',
       icon: Compass,
       actionLabel: 'เลือกบัตรวิ่ง',
@@ -110,7 +110,7 @@ export const ChangsuekRunExperience: React.FC<ChangsuekRunExperienceProps> = ({
       step: '05',
       tag: 'RACE DAY',
       headline: 'ออกสตาร์ทยามเย็น',
-      summary: 'วอร์มอัพพร้อมกันและปล่อยตัวแยกตามระยะ รับลมทะเลยามเย็นริมหาดชะอำ',
+      summary: 'วอร์มอัพพร้อมกันและปล่อยตัวแยกตามระยะ รับลมทะเลยามเย็นริมหาด',
       badge: 'ปล่อยตัว 16:30 น.',
       icon: Flame,
       actionLabel: 'ดูกำหนดการ',
@@ -171,7 +171,7 @@ export const ChangsuekRunExperience: React.FC<ChangsuekRunExperienceProps> = ({
             </h2>
           </div>
           <p className="text-xs sm:text-sm text-[#4B2D78] font-medium max-w-md">
-            6 ขั้นตอนกระชับเข้าใจง่าย ตั้งแต่เลือกระยะวิ่ง รับป้าย Digital BIB ไปจนถึงการพิชิตเหรียญรางวัลริมหาดชะอำ
+            6 ขั้นตอนกระชับเข้าใจง่าย ตั้งแต่เลือกระยะวิ่ง รับป้าย Digital BIB ไปจนถึงการพิชิตเหรียญรางวัลริมหาด
           </p>
         </div>
 

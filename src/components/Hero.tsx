@@ -234,8 +234,7 @@ export const Hero: React.FC<HeroProps> = ({
             >
               <p className="text-[12px] sm:text-sm font-semibold leading-relaxed text-white/92 max-w-[340px] sm:max-w-[460px] mx-auto [@media(max-height:700px)]:hidden">
                 {t('งานวิ่งการกุศลรักษ์ช้างและพัฒนาศูนย์ฝึกสุนัขตำรวจ', 'A charity run to protect elephants and develop the police dog training centre')}{' '}
-                <span className="whitespace-nowrap">{t('ค่ายนเรศวร', 'Naresuan Camp')}</span> {t('ริมชายหาด', 'on the beach of')}
-                <span className="whitespace-nowrap"> {t('ชะอำ-หัวหิน', 'Cha-am – Hua Hin')}</span>
+                <span className="whitespace-nowrap">{t('ค่ายนเรศวร อ.ชะอำ จ.เพชรบุรี', 'Naresuan Camp, Cha-am, Phetchaburi')}</span>
               </p>
 
               <div className="mt-2.5 flex items-center justify-center gap-2 text-[11px] font-bold text-white">
@@ -243,7 +242,7 @@ export const Hero: React.FC<HeroProps> = ({
                   <Calendar className="w-3.5 h-3.5 text-[#FFD84D]" /> {t('9 ม.ค. 2570', '9 Jan 2027')}
                 </span>
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 backdrop-blur-md border border-white/35 px-3 py-1.5">
-                  <MapPin className="w-3.5 h-3.5 text-[#FFD84D]" /> {t('หาดชะอำ (ค่ายนเรศวร)', 'Cha-am Beach (Naresuan Camp)')}
+                  <MapPin className="w-3.5 h-3.5 text-[#FFD84D]" /> {t('ค่ายนเรศวร อ.ชะอำ จ.เพชรบุรี', 'Naresuan Camp, Cha-am, Phetchaburi')}
                 </span>
               </div>
 
@@ -335,9 +334,7 @@ export const Hero: React.FC<HeroProps> = ({
 
             <p className="mt-2 sm:mt-3 text-xs sm:text-base font-bold text-[#3A1F5D] max-w-[360px] sm:max-w-[520px] mx-auto lg:mx-0 leading-relaxed text-balance">
               {t('งานวิ่งการกุศลรักษ์ช้างและพัฒนาศูนย์ฝึกสุนัขตำรวจ', 'A charity run to protect elephants and develop the police dog training centre')}{' '}
-              <span className="whitespace-nowrap">{t('ค่ายนเรศวร', 'Naresuan Camp')}</span>
-              <br className="hidden sm:inline" /> {t('ริมชายหาด', 'on the beach of')}
-              <span className="whitespace-nowrap"> {t('ชะอำ-หัวหิน', 'Cha-am – Hua Hin')}</span> {t('บรรยากาศอบอุ่นสำหรับทุกครอบครัว', '— a warm day out for the whole family')}
+              <span className="whitespace-nowrap">{t('ค่ายนเรศวร อ.ชะอำ จ.เพชรบุรี', 'Naresuan Camp, Cha-am, Phetchaburi')}</span> {t('บรรยากาศอบอุ่นสำหรับทุกครอบครัว', '— a warm day out for the whole family')}
             </p>
 
             {/* Desktop Date & Venue Glass Pills */}
@@ -348,7 +345,7 @@ export const Hero: React.FC<HeroProps> = ({
               </span>
               <span className="inline-flex items-center gap-2 bg-white/90 backdrop-blur-md rounded-full px-4 py-2 shadow-[0_8px_20px_-6px_rgba(42,20,80,0.18)] border border-white">
                 <MapPin className="w-4 h-4 text-[#C2410C]" />
-                <span>{t('หาดชะอำ (ค่ายนเรศวร) จ.เพชรบุรี', 'Cha-am Beach (Naresuan Camp), Phetchaburi')}</span>
+                <span>{t('ค่ายนเรศวร อ.ชะอำ จ.เพชรบุรี', 'Naresuan Camp, Cha-am, Phetchaburi')}</span>
               </span>
             </div>
 

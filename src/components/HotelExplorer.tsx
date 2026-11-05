@@ -222,7 +222,7 @@ export const HotelExplorer: React.FC<HotelExplorerProps> = () => {
                   ที่พักใกล้สนาม วิ่งสบาย พักสบาย
                 </h2>
                 <p className="text-xs sm:text-sm text-[#6B5A85] font-bold mt-0.5">
-                  แนะนำที่พักยอดนิยม ใกล้หาดชะอำ • ต้อนรับนักวิ่งและสัตว์เลี้ยง
+                  แนะนำที่พักยอดนิยม ใกล้ค่ายนเรศวร • ต้อนรับนักวิ่งและสัตว์เลี้ยง
                 </p>
                 <p className="mt-1 inline-flex items-center gap-1.5 rounded-full bg-amber-50 border border-amber-300 px-2.5 py-0.5 text-[11px] font-bold text-[#8A5A00]">
                   หมายเหตุ: ภาพโรงแรมในเว็บเป็นเพียงภาพจำลองเท่านั้น กรุณาติดต่อที่พักโดยตรงเพื่อสอบถามห้องและราคา

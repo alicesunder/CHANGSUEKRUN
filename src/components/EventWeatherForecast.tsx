@@ -37,7 +37,7 @@ const getWeatherDescription = (
     return {
       label: 'ท้องฟ้าแจ่มใส ลมพัดเย็น',
       icon: <Sun className="w-7 h-7 text-amber-500" />,
-      mood: 'เหมาะแก่การวิ่งทำ New PB ริมหาดชะอำ',
+      mood: 'เหมาะแก่การวิ่งทำ New PB ริมหาด',
     };
   }
   if (code >= 1 && code <= 3) {
@@ -179,7 +179,7 @@ export const EventWeatherForecast: React.FC = () => {
                 </h3>
                 <span className="inline-flex items-center gap-1 text-xs font-bold text-[#0369A1]">
                   <MapPin className="w-3.5 h-3.5" />
-                  <span>หาดชะอำ (ค่ายนเรศวร)</span>
+                  <span>ค่ายนเรศวร อ.ชะอำ จ.เพชรบุรี</span>
                 </span>
               </div>
             </div>

@@ -78,7 +78,7 @@ export const VenueSection: React.FC = () => {
                   LANDMARK ATMOSPHERE
                 </div>
                 <h3 className="text-2xl font-black mb-2">
-                  ค่ายนเรศวร & ชายหาดชะอำ
+                  ค่ายนเรศวร อ.ชะอำ จ.เพชรบุรี
                 </h3>
                 <p className="text-xs text-white/80 leading-relaxed max-w-sm mx-auto font-medium">
                   วิ่งรับสายลมทะเล สัมผัสเงาไม้สนร่มรื่น และชื่นชมทัศนียภาพอันสง่างามของพระราชนิเวศน์มฤคทายวัน
