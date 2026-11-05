@@ -233,7 +233,7 @@ export const Hero: React.FC<HeroProps> = ({
               className="text-center"
             >
               <p className="text-[12px] sm:text-sm font-semibold leading-relaxed text-white/92 max-w-[340px] sm:max-w-[460px] mx-auto [@media(max-height:700px)]:hidden">
-                {t('งานวิ่งการกุศลรักษ์ช้างและพัฒนาศูนย์ฝึกสุนัขตำรวจ', 'A charity run to protect elephants and develop the police dog training centre')}{' '}
+                {t('งานวิ่งการกุศลและพัฒนาศูนย์ฝึกสุนัขตำรวจ', 'A charity run supporting the police dog training centre')}{' '}
                 <span className="whitespace-nowrap">{t('ค่ายนเรศวร อ.ชะอำ จ.เพชรบุรี', 'Naresuan Camp, Cha-am, Phetchaburi')}</span>
               </p>
 
@@ -333,7 +333,7 @@ export const Hero: React.FC<HeroProps> = ({
             </div>
 
             <p className="mt-2 sm:mt-3 text-xs sm:text-base font-bold text-[#3A1F5D] max-w-[360px] sm:max-w-[520px] mx-auto lg:mx-0 leading-relaxed text-balance">
-              {t('งานวิ่งการกุศลรักษ์ช้างและพัฒนาศูนย์ฝึกสุนัขตำรวจ', 'A charity run to protect elephants and develop the police dog training centre')}{' '}
+              {t('งานวิ่งการกุศลและพัฒนาศูนย์ฝึกสุนัขตำรวจ', 'A charity run supporting the police dog training centre')}{' '}
               <span className="whitespace-nowrap">{t('ค่ายนเรศวร อ.ชะอำ จ.เพชรบุรี', 'Naresuan Camp, Cha-am, Phetchaburi')}</span> {t('บรรยากาศอบอุ่นสำหรับทุกครอบครัว', '— a warm day out for the whole family')}
             </p>
 
