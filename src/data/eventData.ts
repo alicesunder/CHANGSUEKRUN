@@ -43,6 +43,9 @@ export const eventInfo = {
   /** Organiser numbers shown on the site, on the BIB (emergency contact) and in the e-mails */
   contactPhones: ['084-789-4651', '097-145-1945', '095-449-9741'],
   contactLine: '@changsuekrun',
+  /** official LINE account: add-friend link (from the organiser's QR) and the QR picture */
+  lineUrl: 'https://lin.ee/Y543CDb',
+  lineQr: '/images/brand/line-oa-qr.jpg',
   contactFacebook: 'CHANGSUEK RUN',
   /** official Facebook page for news (link from the organiser) */
   facebookUrl: 'https://www.facebook.com/share/1CFXG1fRE9/',

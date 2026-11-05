@@ -33,6 +33,14 @@ export const FollowFacebook: React.FC = () => (
         >
           กดติดตามเพจ <ExternalLink className="w-4 h-4" />
         </a>
+        <a
+          href={eventInfo.lineUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="relative shrink-0 inline-flex items-center gap-2 min-h-[52px] px-6 rounded-2xl bg-[#06C755] text-white text-base font-extrabold border-[3px] border-[#140826] shadow-[0_5px_0_#140826] active:translate-y-0.5"
+        >
+          แอดไลน์ <ExternalLink className="w-4 h-4" />
+        </a>
       </div>
     </div>
   </section>

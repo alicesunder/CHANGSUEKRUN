@@ -117,6 +117,20 @@ export const Footer: React.FC<FooterProps> = ({
             <h4 className="text-sm font-black text-white uppercase mb-2">
               {t('ติดตามข่าวสาร', 'Follow us')}
             </h4>
+            <div className="mb-3 flex items-center gap-3">
+              <a
+                href={eventInfo.lineUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 min-h-[44px] px-4 rounded-xl bg-[#06C755] text-white text-sm font-extrabold hover:brightness-110"
+              >
+                <span aria-hidden="true" className="w-5 h-5 rounded-md bg-white text-[#06C755] flex items-center justify-center font-black text-[9px] leading-none">LINE</span>
+                {t('แอดไลน์ทีมงาน', 'Add us on LINE')}
+              </a>
+              <a href={eventInfo.lineUrl} target="_blank" rel="noopener noreferrer" aria-label={t('สแกน QR เพื่อแอดไลน์', 'Scan the QR code to add us on LINE')} className="shrink-0 rounded-lg bg-white p-1">
+                <img src={eventInfo.lineQr} alt={t('QR code แอดไลน์ CHANGSUEK RUN', 'LINE QR code for CHANGSUEK RUN')} width={72} height={72} loading="lazy" className="h-[72px] w-[72px] rounded" />
+              </a>
+            </div>
             <a
               href={eventInfo.facebookUrl}
               target="_blank"
