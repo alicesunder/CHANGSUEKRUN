@@ -34096,6 +34096,28 @@ async function listOrders() {
 async function rollbackNewOrder(orderId) {
   await dbQuery("delete from csr.orders where order_id = $1 and payment_status <> 'PAID'", [orderId]);
 }
+async function deleteOrderPermanently(orderId) {
+  return dbTx(async (q) => {
+    const rows = await q("select data from csr.orders where order_id = $1 for update", [orderId]);
+    if (!rows[0]) return void 0;
+    const o = rowToOrder(rows[0]);
+    await q("delete from csr.orders where order_id = $1", [orderId]);
+    if (o.sponsorCode) await q("update csr.sponsor_codes set used_count = greatest(used_count - 1, 0) where code = $1", [o.sponsorCode]);
+    return {
+      orderId: o.orderId,
+      fullName: o.fullName,
+      routeName: o.routeName,
+      totalPrice: o.totalPrice,
+      paymentStatus: o.paymentStatus,
+      bibNumber: o.bibNumber,
+      cancelled: Boolean(o.cancelledAt),
+      test: Boolean(o.isTest),
+      refunded: o.refundAmount || 0,
+      runnerId: o.runnerId || "",
+      createdAt: o.createdAt
+    };
+  });
+}
 async function recordEmailResult(orderId, r) {
   try {
     await updateOrder(orderId, (o) => {
@@ -35326,6 +35348,7 @@ function minRoleFor(method, path4) {
   if (p === "/login" || p === "/lookup") return null;
   if (/^\/(admins|audit|payment-gateway|settings|limits)(\/|$)/.test(p)) return "owner";
   if (method !== "GET" && /^\/(early-bird|sales)$/.test(p)) return "owner";
+  if (method === "DELETE" && /^\/orders\/[^/]+$/.test(p)) return "owner";
   if (/^\/me(\/|$)/.test(p)) return "viewer";
   if (method !== "GET") return "manager";
   if (/^\/export(\/|$)/.test(p) || /^\/orders\/[^/]+\/(full|slip)$/.test(p)) return "manager";
@@ -49263,7 +49286,7 @@ function createApp() {
         const v = (req.body || {})[k];
         if (typeof v === "string" || typeof v === "number" || typeof v === "boolean") body[k] = typeof v === "string" ? v.slice(0, 200) : v;
       }
-      void writeAudit({ username: admin ? admin.username : staff.sub, role: admin ? admin.role : "staff", ip: clientIp(req) }, req.method + " " + pattern, target, Object.keys(body).length ? { body } : {});
+      void writeAudit({ username: admin ? admin.username : staff.sub, role: admin ? admin.role : "staff", ip: clientIp(req) }, req.method + " " + pattern, target, { ...Object.keys(body).length ? { body } : {}, ...res.locals.auditDetail || {} });
     });
     next();
   };
@@ -49502,6 +49525,21 @@ function createApp() {
     }
     console.log(`[admin] ${admin} cancelled ${id}`);
     res.json({ order: toAdminView(updated) });
+  }));
+  app2.delete("/api/admin/orders/:orderId", requireAdmin, smallJson, h(async (req, res) => {
+    const id = String(req.params.orderId);
+    if (String(req.body?.confirm || "").trim().toUpperCase() !== id.toUpperCase()) {
+      res.status(400).json({ error: "\u0E15\u0E49\u0E2D\u0E07\u0E1E\u0E34\u0E21\u0E1E\u0E4C\u0E40\u0E25\u0E02\u0E04\u0E33\u0E2A\u0E31\u0E48\u0E07\u0E0B\u0E37\u0E49\u0E2D " + id + " \u0E40\u0E1E\u0E37\u0E48\u0E2D\u0E22\u0E37\u0E19\u0E22\u0E31\u0E19\u0E01\u0E32\u0E23\u0E25\u0E1A" });
+      return;
+    }
+    const summary = await deleteOrderPermanently(id);
+    if (!summary) {
+      res.status(404).json({ error: "\u0E44\u0E21\u0E48\u0E1E\u0E1A\u0E04\u0E33\u0E2A\u0E31\u0E48\u0E07\u0E0B\u0E37\u0E49\u0E2D (\u0E2D\u0E32\u0E08\u0E16\u0E39\u0E01\u0E25\u0E1A\u0E44\u0E1B\u0E41\u0E25\u0E49\u0E27)" });
+      return;
+    }
+    res.locals.auditDetail = { deleted: summary };
+    console.log("[admin] " + req.admin.username + " DELETED order " + id);
+    res.json({ ok: true, orderId: id });
   }));
   app2.post("/api/admin/orders/:orderId/restore", requireAdmin, h(async (req, res) => {
     const id = String(req.params.orderId);

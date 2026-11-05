@@ -69,6 +69,7 @@ import {
   recordVisit,
   visitStats,
   recordEmailResult,
+  deleteOrderPermanently,
   refreshActivityLimits,
   saveActivityLimits,
   setEarlyBirdSchedule,
@@ -775,7 +776,7 @@ export function createApp(): express.Express {
         const v = (req.body || {})[k];
         if (typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean') body[k] = typeof v === 'string' ? v.slice(0, 200) : v;
       }
-      void writeAudit({ username: admin ? admin.username : staff!.sub, role: admin ? admin.role : 'staff', ip: clientIp(req) }, req.method + ' ' + pattern, target, Object.keys(body).length ? { body } : {});
+      void writeAudit({ username: admin ? admin.username : staff!.sub, role: admin ? admin.role : 'staff', ip: clientIp(req) }, req.method + ' ' + pattern, target, { ...(Object.keys(body).length ? { body } : {}), ...((res.locals.auditDetail as Record<string, unknown>) || {}) });
     });
     next();
   };
@@ -1041,6 +1042,24 @@ export function createApp(): express.Express {
     }
     console.log(`[admin] ${admin} cancelled ${id}`);
     res.json({ order: toAdminView(updated) });
+  }));
+
+  // Permanent delete (owner only, no undo). The browser must send the order id back as a typed confirmation.
+  app.delete('/api/admin/orders/:orderId', requireAdmin, smallJson, h(async (req, res) => {
+    const id = String(req.params.orderId);
+    if (String(req.body?.confirm || '').trim().toUpperCase() !== id.toUpperCase()) {
+      res.status(400).json({ error: 'ต้องพิมพ์เลขคำสั่งซื้อ ' + id + ' เพื่อยืนยันการลบ' });
+      return;
+    }
+    const summary = await deleteOrderPermanently(id);
+    if (!summary) {
+      res.status(404).json({ error: 'ไม่พบคำสั่งซื้อ (อาจถูกลบไปแล้ว)' });
+      return;
+    }
+    // what was removed is kept in the audit log (id, name, amount, status), the rest of the order is gone for good
+    res.locals.auditDetail = { deleted: summary };
+    console.log('[admin] ' + (req as any).admin.username + ' DELETED order ' + id);
+    res.json({ ok: true, orderId: id });
   }));
 
   app.post('/api/admin/orders/:orderId/restore', requireAdmin, h(async (req, res) => {

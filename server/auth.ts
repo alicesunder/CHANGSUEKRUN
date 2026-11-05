@@ -175,6 +175,8 @@ export function minRoleFor(method: string, path: string): AdminRole | null {
   if (p === '/login' || p === '/lookup') return null;
   if (/^\/(admins|audit|payment-gateway|settings|limits)(\/|$)/.test(p)) return 'owner';
   if (method !== 'GET' && /^\/(early-bird|sales)$/.test(p)) return 'owner';
+  // deleting an order for good cannot be undone: owner only
+  if (method === 'DELETE' && /^\/orders\/[^/]+$/.test(p)) return 'owner';
   if (/^\/me(\/|$)/.test(p)) return 'viewer';
   if (method !== 'GET') return 'manager';
   if (/^\/export(\/|$)/.test(p) || /^\/orders\/[^/]+\/(full|slip)$/.test(p)) return 'manager';

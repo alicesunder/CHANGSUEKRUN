@@ -14,6 +14,7 @@ const LABELS: Record<string, string> = {
   'POST /orders/:id/cancel': 'ยกเลิกคำสั่งซื้อ',
   'POST /orders/:id/restore': 'กู้คืนคำสั่งซื้อ',
   'POST /orders/:id/refund': 'บันทึกการคืนเงิน',
+  'DELETE /orders/:id': 'ลบคำสั่งซื้อถาวร',
   'PUT /settings': 'แก้ตั้งค่าการชำระเงิน/BIB',
   'POST /payment-gateway': 'เปลี่ยนคีย์ตรวจสลิป',
   'PUT /sales': 'เปิด/ปิดการขาย',
@@ -31,7 +32,7 @@ const LABELS: Record<string, string> = {
   'POST /runners/:id/reset-email': 'ส่งลิงก์ตั้งรหัสผ่านให้นักวิ่ง',
 };
 
-const SENSITIVE = new Set(['GET /orders/:id/full', 'GET /export/orders', 'POST /orders/:id/cancel', 'POST /orders/:id/refund', 'POST /admins', 'PATCH /admins/:user', 'POST /admins/sign-out-all', 'LOGIN failed', 'LOGIN locked', 'PUT /settings', 'POST /payment-gateway']);
+const SENSITIVE = new Set(['DELETE /orders/:id', 'GET /orders/:id/full', 'GET /export/orders', 'POST /orders/:id/cancel', 'POST /orders/:id/refund', 'POST /admins', 'PATCH /admins/:user', 'POST /admins/sign-out-all', 'LOGIN failed', 'LOGIN locked', 'PUT /settings', 'POST /payment-gateway']);
 
 const fmt = (iso: string) => new Date(iso).toLocaleString('th-TH', { dateStyle: 'medium', timeStyle: 'medium' });
 
@@ -128,7 +129,7 @@ export const AuditAdmin: React.FC = () => {
                 <td className="px-3 py-2 font-bold">{LABELS[r.action] || r.action}</td>
                 <td className="px-3 py-2 font-mono text-xs">{r.target || '—'}</td>
                 <td className="px-3 py-2 text-xs text-slate-600">
-                  {r.detail?.body ? Object.entries(r.detail.body).map(([k, v]) => `${k}: ${String(v)}`).join(' · ') : r.detail && Object.keys(r.detail).length ? JSON.stringify(r.detail) : ''}
+                  {r.detail?.deleted ? `ลบ: ${JSON.stringify(r.detail.deleted)}` : r.detail?.body ? Object.entries(r.detail.body).map(([k, v]) => `${k}: ${String(v)}`).join(' · ') : r.detail && Object.keys(r.detail).length ? JSON.stringify(r.detail) : ''}
                 </td>
                 <td className="px-3 py-2 font-mono text-[11px] text-slate-500">{r.ip}</td>
               </tr>

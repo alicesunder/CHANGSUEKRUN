@@ -2176,6 +2176,40 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
                 )}
               </div>
 
+              {isOwner && (
+                <div className="rounded-2xl border-2 border-rose-300 bg-rose-50 p-3.5 flex flex-wrap items-center justify-between gap-3 text-xs">
+                  <div className="font-bold text-rose-900 max-w-xl">
+                    ลบคำสั่งซื้อนี้ถาวร — ข้อมูลผู้ซื้อและคำสั่งซื้อหายไปเลย กู้คืนไม่ได้
+                    {inspectingOrder.paymentStatus === 'PAID' && !(inspectingOrder as ServerOrder).cancelledAt && !(inspectingOrder as ServerOrder).isTest ? (
+                      <span className="block text-rose-700">⚠️ คำสั่งซื้อนี้ชำระเงินแล้วและยังไม่ถูกยกเลิก ถ้ามีการคืนเงินให้จดบันทึกการคืนเงินก่อน</span>
+                    ) : null}
+                  </div>
+                  <button
+                    type="button"
+                    disabled={inspectBusy}
+                    onClick={async () => {
+                      const id = inspectingOrder.orderId;
+                      const typed = window.prompt('ลบคำสั่งซื้อ ' + id + ' (' + inspectingOrder.fullName + ') ถาวร กู้คืนไม่ได้\n\nพิมพ์เลขคำสั่งซื้อให้ตรงเพื่อยืนยัน:');
+                      if (typed === null) return;
+                      setInspectBusy(true);
+                      try {
+                        await adminApi.deleteOrder(id, typed.trim());
+                        setOrders((prev) => prev.filter((o) => o.orderId !== id));
+                        setInspectingOrder(null);
+                        showToast('ลบคำสั่งซื้อ ' + id + ' แล้ว');
+                      } catch (err) {
+                        showToast(err instanceof Error ? err.message : 'ลบไม่สำเร็จ');
+                      } finally {
+                        setInspectBusy(false);
+                      }
+                    }}
+                    className="rounded-xl bg-rose-600 px-3.5 py-2 text-xs font-black text-white cursor-pointer disabled:opacity-60"
+                  >
+                    🗑️ ลบคำสั่งซื้อถาวร
+                  </button>
+                </div>
+              )}
+
               {inspectingOrder.paymentStatus === 'PAID' && (
                 <div className="rounded-2xl border border-slate-200 bg-white p-3.5 space-y-3 text-xs">
                   <div className="flex flex-wrap items-center justify-between gap-2">

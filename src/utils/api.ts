@@ -378,7 +378,7 @@ export interface AuditRow {
   role: string;
   action: string;
   target: string;
-  detail: { body?: Record<string, unknown>; [k: string]: unknown };
+  detail: { body?: Record<string, unknown>; deleted?: Record<string, unknown>; [k: string]: unknown };
   ip: string;
 }
 
@@ -467,6 +467,9 @@ export const adminApi = {
       headers: jsonHeaders,
       body: JSON.stringify({ action }),
     }),
+  /** permanent delete (owner only). `confirm` must be the order id, typed by the admin */
+  deleteOrder: (orderId: string, confirm: string) =>
+    adminFetch<{ ok: true; orderId: string }>(`/api/admin/orders/${encodeURIComponent(orderId)}`, { method: 'DELETE', headers: jsonHeaders, body: JSON.stringify({ confirm }) }),
   /** the order with ID number / health data unmasked (written to the audit log) */
   getFullOrder: (orderId: string) => adminFetch<{ order: ServerOrder }>(`/api/admin/orders/${encodeURIComponent(orderId)}/full`),
   /** every order unmasked, for the full CSV and the insurance CSV (written to the audit log) */

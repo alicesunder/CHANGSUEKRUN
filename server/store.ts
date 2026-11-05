@@ -451,6 +451,34 @@ export async function rollbackNewOrder(orderId: string): Promise<void> {
   await dbQuery("delete from csr.orders where order_id = $1 and payment_status <> 'PAID'", [orderId]);
 }
 
+/**
+ * Permanently removes an order (admin "delete", no undo). Gives back the sponsor-code use it consumed.
+ * The slip's transfer reference stays in csr.used_refs on purpose, so the same slip can never pay another order.
+ * Returns a short summary for the audit log, or undefined when there is no such order.
+ */
+export async function deleteOrderPermanently(orderId: string): Promise<Record<string, unknown> | undefined> {
+  return dbTx(async (q) => {
+    const rows = await q<{ data: unknown }>('select data from csr.orders where order_id = $1 for update', [orderId]);
+    if (!rows[0]) return undefined;
+    const o = rowToOrder(rows[0]);
+    await q('delete from csr.orders where order_id = $1', [orderId]);
+    if (o.sponsorCode) await q('update csr.sponsor_codes set used_count = greatest(used_count - 1, 0) where code = $1', [o.sponsorCode]);
+    return {
+      orderId: o.orderId,
+      fullName: o.fullName,
+      routeName: o.routeName,
+      totalPrice: o.totalPrice,
+      paymentStatus: o.paymentStatus,
+      bibNumber: o.bibNumber,
+      cancelled: Boolean(o.cancelledAt),
+      test: Boolean(o.isTest),
+      refunded: o.refundAmount || 0,
+      runnerId: o.runnerId || '',
+      createdAt: o.createdAt,
+    };
+  });
+}
+
 /** Read-modify-write under a row lock, so two requests can't overwrite each other. */
 /** Remembers whether the last ticket e-mail went out (shown in the back office; never throws). */
 export async function recordEmailResult(orderId: string, r: { ok: boolean; error?: string }): Promise<void> {
