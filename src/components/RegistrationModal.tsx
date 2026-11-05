@@ -769,13 +769,13 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
         { num: 1, title: tr('เลือกระยะวิ่ง', 'Choose distance'), sub: 'Package & Add-on' },
         { num: 2, title: tr('ข้อมูลนักวิ่ง', 'Runner details'), sub: 'Runner & Shirt' },
         { num: 3, title: tr('โอนเงิน', 'Payment'), sub: tr('โอน + แนบสลิป', 'Transfer + slip') },
-        { num: 4, title: tr('รับเลข BIB', 'Get your BIB'), sub: 'Auto E-BIB' },
+        { num: 4, title: tr('สำเร็จ ✓', 'Done ✓'), sub: tr('ได้เลข BIB แล้ว', 'Your BIB number') },
       ]
     : [
         { num: 1, title: wantConcert ? tr('เลือกบัตร', 'Choose tickets') : tr('เลือกกิจกรรม', 'Choose activities'), sub: wantConcert ? 'Concert & VIP' : 'Activities' },
         { num: 2, title: wantConcert ? tr('ข้อมูลผู้ซื้อ', 'Buyer details') : tr('ข้อมูลผู้ร่วมกิจกรรม', 'Participant details'), sub: wantConcert ? 'Buyer details' : 'Participants' },
         { num: 3, title: tr('โอนเงิน', 'Payment'), sub: tr('โอน + แนบสลิป', 'Transfer + slip') },
-        { num: 4, title: tr('รับบัตร', 'Get your ticket'), sub: 'E-Ticket' },
+        { num: 4, title: tr('สำเร็จ ✓', 'Done ✓'), sub: 'E-Ticket' },
       ];
 
   const renderTicketOption = (id: RouteId) => {

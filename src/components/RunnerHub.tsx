@@ -5,6 +5,7 @@ import { LangSwitch, useLang } from '../i18n/lang';
 import { authApi, clearSession, type Session } from '../utils/runnerAuth';
 import type { ServerOrder } from '../utils/api';
 import { RaceBib, runnerBib } from './RaceBib';
+import { ParkingPasses } from './ParkingPass';
 import { ACTIVITY_LOCATIONS } from '../data/activityLocations';
 import { SHIRT_SIZES } from '../data/shirts';
 import { BLOOD_TYPES, GENDERS, RELATIONSHIPS } from '../data/insurance';
@@ -228,6 +229,9 @@ export const RunnerHub: React.FC<{
                             <RaceBib key={i} bib={runnerBib(o.bibNumber, i)} routeId={o.routeId} name={r.name} orderId={o.orderId} gender={r.ins?.gender} age={r.ins?.age} shirtSize={r.shirt} dogName={o.runningWithDog ? o.dogName : undefined} />
                           ))}
                         </div>
+                      )}
+                      {o.paymentStatus === 'PAID' && !o.cancelledAt && !!o.vipTables && (
+                        <ParkingPasses orderId={o.orderId} vipTables={o.vipTables} plates={o.parkingPlates} paid />
                       )}
                       {st.key === 'pending' && (
                         <p className="rounded-xl bg-amber-50 px-3 py-2 text-sm font-bold text-amber-900">

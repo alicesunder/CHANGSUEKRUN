@@ -1,9 +1,7 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { CheckCircle2, Download, FileText, Mail, Printer, Ticket } from 'lucide-react';
+import { CheckCircle2, Download, FileText, Mail, Ticket } from 'lucide-react';
 import { PawIcon } from './brand/DogDecor';
-import { RaceBib, runnerBib } from './RaceBib';
-import { ParkingPasses } from './ParkingPass';
 import { formatBaht } from '../data/eventData';
 import type { ServerOrder } from '../utils/api';
 import type { PrintFormatOption } from '../utils/ticketEmailAndPrint';
@@ -18,8 +16,8 @@ const Fact: React.FC<{ label: string; value: React.ReactNode; tone?: 'ok' }> = (
 );
 
 /**
- * The last step: one clean ticket (BIB, QR and the facts), the buttons people really need (documents, print, save),
- * what happens next, and the printable BIB / parking passes underneath.
+ * The confirmation screen after paying: the ticket (BIB, QR, the facts), ONE main button (Runner Center, where every
+ * document, print-out and pass lives), what happens next. Printing was moved out of here on purpose.
  */
 export const PaymentSuccess: React.FC<{
   order: ServerOrder;
@@ -29,18 +27,15 @@ export const PaymentSuccess: React.FC<{
   qrUrl: string;
   emailReady: boolean;
   noRun: boolean;
-  onPrint: (format: PrintFormatOption) => void;
+  /** kept so callers need no change; printing now happens in the Runner Center */
+  onPrint?: (format: PrintFormatOption) => void;
   onDownloadBib: () => void;
   onRunnerCenter: () => void;
   onClose: () => void;
   onOpenAdmin?: () => void;
-}> = ({ order, chipLabel, headerGrad, startTime, qrUrl, emailReady, noRun, onPrint, onDownloadBib, onRunnerCenter, onClose, onOpenAdmin }) => {
+}> = ({ order, chipLabel, headerGrad, startTime, qrUrl, emailReady, noRun, onDownloadBib, onRunnerCenter, onClose, onOpenAdmin }) => {
   const isRun = RUN_ROUTES.includes(order.routeId) && Boolean(order.bibNumber);
   const numberLabel = noRun ? 'เลขบัตรของคุณ' : 'หมายเลข BIB ของคุณ';
-  const runners = [
-    { name: order.fullName, ins: order.insurance, shirt: order.shirtSize },
-    ...(order.extraRunners || []).map((r) => ({ name: r.name, ins: r.insurance, shirt: r.shirtSize })),
-  ];
   const steps = [
     { icon: '✉️', title: 'ตรวจอีเมล', text: emailReady ? `ส่งตั๋วไปที่ ${order.email} แล้ว (ไม่เห็นให้ดูในโฟลเดอร์สแปม)` : 'บันทึกหน้านี้หรือพิมพ์บัตรเก็บไว้' },
     { icon: '🎽', title: 'รับเสื้อและ BIB', text: `แสดง QR หรือเลขคำสั่งซื้อ ${order.orderId} ที่จุดรับอุปกรณ์` },
@@ -65,6 +60,30 @@ export const PaymentSuccess: React.FC<{
         </p>
       </motion.div>
 
+      {/* the one main action */}
+      <div className="flex flex-col items-center gap-2">
+        <button
+          type="button"
+          onClick={onRunnerCenter}
+          className="w-full sm:w-auto sm:min-w-[320px] px-7 min-h-[56px] rounded-2xl bg-gradient-to-r from-[#7C3AED] to-[#5B21B6] text-white text-base font-black border-[3px] border-[#2A1450] shadow-[0_5px_0_#2A1450] flex items-center justify-center gap-2 cursor-pointer active:translate-y-0.5"
+        >
+          <Ticket className="w-5 h-5" /> ไปศูนย์นักวิ่ง
+        </button>
+        <p className="text-center text-xs font-bold text-[#6B5A85]">เอกสาร A4 · พิมพ์ BIB · บัตรจอดรถ · ใบประกัน ทั้งหมดอยู่ที่ศูนย์นักวิ่ง เปิดได้ทุกเมื่อ</p>
+        <div className="flex flex-wrap items-center justify-center gap-2">
+          {isRun && (
+            <button type="button" onClick={onDownloadBib} className="min-h-[44px] px-4 rounded-xl bg-white hover:bg-[#F3E8FF] text-[#2A1450] text-sm font-extrabold border-2 border-[#2A1450] flex items-center gap-2 cursor-pointer">
+              <Download className="w-4 h-4" /> บันทึกรูป BIB (.PNG)
+            </button>
+          )}
+          {order.documentsUrl && (
+            <a href={order.documentsUrl} target="_blank" rel="noopener noreferrer" className="min-h-[44px] px-4 rounded-xl bg-white hover:bg-[#F3E8FF] text-[#2A1450] text-sm font-extrabold border-2 border-[#2A1450] flex items-center gap-2">
+              <FileText className="w-4 h-4" /> เปิดเอกสาร A4
+            </a>
+          )}
+        </div>
+      </div>
+
       {/* the ticket */}
       <motion.div
         initial={{ opacity: 0, y: 18 }}
@@ -83,7 +102,7 @@ export const PaymentSuccess: React.FC<{
         <div className="p-5 grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-5 items-center">
           <div className="text-center sm:text-left">
             <div className="text-xs font-extrabold text-[#6B5A85]">{numberLabel}</div>
-            <div className="font-display text-6xl sm:text-7xl font-black text-[#2A1450] tabular-nums leading-tight tracking-wide">#{order.bibNumber}</div>
+            <div className="font-display text-5xl sm:text-7xl whitespace-nowrap font-black text-[#2A1450] tabular-nums leading-tight tracking-wide">#{order.bibNumber}</div>
             <div className="inline-flex items-center gap-1.5 mt-1 px-3 py-1 rounded-full bg-emerald-100 text-emerald-900 text-xs font-black">
               <CheckCircle2 className="w-3.5 h-3.5" /> ยืนยันการชำระเงินแล้ว
             </div>
@@ -120,31 +139,6 @@ export const PaymentSuccess: React.FC<{
         </div>
       </motion.div>
 
-      {/* what you need now */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-        {order.documentsUrl && (
-          <a
-            href={order.documentsUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="sm:col-span-3 flex items-center justify-center gap-2 min-h-[56px] px-5 rounded-2xl bg-gradient-to-r from-[#7C3AED] to-[#5B21B6] text-white text-base font-black border-[3px] border-[#2A1450] shadow-[0_5px_0_#2A1450] active:translate-y-0.5"
-          >
-            <FileText className="w-5 h-5" /> เปิด / พิมพ์เอกสาร A4 (BIB · บัตร · ประกัน)
-          </a>
-        )}
-        <button type="button" onClick={() => onPrint('full_a4_receipt')} className="min-h-[50px] px-4 rounded-2xl bg-[#FFC928] hover:bg-[#FFD646] text-[#2A1450] text-sm font-black border-2 border-[#2A1450] shadow-[0_3px_0_#2A1450] flex items-center justify-center gap-2 cursor-pointer">
-          <Printer className="w-4 h-4" /> พิมพ์ / บันทึก PDF
-        </button>
-        {isRun && (
-          <button type="button" onClick={onDownloadBib} className="min-h-[50px] px-4 rounded-2xl bg-white hover:bg-[#F3E8FF] text-[#2A1450] text-sm font-black border-2 border-[#2A1450] shadow-[0_3px_0_#2A1450] flex items-center justify-center gap-2 cursor-pointer">
-            <Download className="w-4 h-4" /> รูป BIB (.PNG)
-          </button>
-        )}
-        <button type="button" onClick={() => onPrint('eticket_pass')} className="min-h-[50px] px-4 rounded-2xl bg-white hover:bg-[#F3E8FF] text-[#2A1450] text-sm font-black border-2 border-[#2A1450] shadow-[0_3px_0_#2A1450] flex items-center justify-center gap-2 cursor-pointer">
-          <Ticket className="w-4 h-4" /> บัตร E-Ticket
-        </button>
-      </div>
-
       {/* next steps */}
       <div className="rounded-3xl bg-[#FAF7FF] border-2 border-[#2A1450]/15 p-4 sm:p-5">
         <div className="text-sm font-black text-[#2A1450] mb-3 flex items-center gap-2">
@@ -167,35 +161,7 @@ export const PaymentSuccess: React.FC<{
         </ol>
       </div>
 
-      {/* printable BIBs */}
-      {isRun && (
-        <div className="rounded-3xl border-[3px] border-[#2A1450] bg-white p-4 sm:p-5 space-y-4">
-          <div>
-            <h3 className="text-base font-black text-[#2A1450]">ป้าย BIB ของคุณ</h3>
-            <p className="text-xs font-bold text-[#6B5A85]">เลข ชื่อ และ QR เติมให้อัตโนมัติ · BIB ตัวจริงพร้อมชิปรับได้ที่จุดรับอุปกรณ์</p>
-          </div>
-          {runners.map((r, i) => (
-            <RaceBib
-              key={i}
-              bib={runnerBib(order.bibNumber, i)}
-              routeId={order.routeId}
-              name={r.name}
-              orderId={order.orderId}
-              gender={r.ins?.gender}
-              age={r.ins?.age}
-              shirtSize={r.shirt}
-              dogName={order.runningWithDog ? order.dogName : undefined}
-            />
-          ))}
-        </div>
-      )}
-
-      <ParkingPasses orderId={order.orderId} vipTables={order.vipTables} plates={order.parkingPlates} paid={order.paymentStatus === 'PAID'} />
-
       <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-1">
-        <button type="button" onClick={onRunnerCenter} className="w-full sm:w-auto px-6 min-h-[50px] rounded-2xl bg-[#6D28D9] hover:bg-[#5B21B6] text-white font-extrabold text-sm border-2 border-[#2A1450] shadow-[0_4px_0_#2A1450] flex items-center justify-center gap-2 cursor-pointer">
-          <Ticket className="w-4 h-4" /> ไปยังศูนย์นักวิ่ง
-        </button>
         {onOpenAdmin && (
           <button type="button" onClick={onOpenAdmin} className="w-full sm:w-auto px-5 min-h-[50px] rounded-2xl bg-[#2A1450] text-[#FFC928] font-extrabold text-sm cursor-pointer">
             ดูรายการในระบบแอดมิน
