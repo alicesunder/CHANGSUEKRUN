@@ -1,4 +1,5 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { startDomTranslation } from './domTranslate';
 
 /**
  * Site language (Thai / English). Texts are written next to each other where they are used:
@@ -40,6 +41,12 @@ export const LangProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     document.documentElement.lang = lang;
+  }, [lang]);
+
+  // English: Thai text that is not written with t() yet is swapped for the dictionary's English (see domTranslate.ts)
+  useEffect(() => {
+    if (lang !== 'en') return;
+    return startDomTranslation();
   }, [lang]);
 
   const value = useMemo<Ctx>(() => ({ lang, setLang, t: (th, en) => (lang === 'en' ? en : th) }), [lang, setLang]);
