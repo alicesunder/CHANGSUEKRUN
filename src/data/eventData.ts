@@ -633,14 +633,15 @@ export const CONCERT_LINEUP: { time: string; artist: string; tba?: boolean; colo
 // Schedule Data
 export const scheduleData: ScheduleDay[] = [
   {
-    dateLabel: 'วันก่อนวันแข่งขัน (Expo & Bib Pickup)',
-    title: 'วันรับอุปกรณ์และตรวจสอบเส้นทาง',
+    // Organiser's plan (Nov 2026): Race Kit collection is on race day, Sat 9 Jan 2570, from 09.00
+    dateLabel: 'วันเสาร์ที่ 9 ม.ค. 2570 ตั้งแต่ 09.00 น. (รับ Race Kit & Expo)',
+    title: 'รับอุปกรณ์ (Race Kit) และตรวจสอบเส้นทาง',
     description: 'กิจกรรมทั้งหมด ณ Sea Sand Sun Hua Hin Resort',
     items: [
       {
         id: 's-1',
         day: 'day_before',
-        time: '09:00 - 15:00',
+        time: 'ตั้งแต่ 09:00',
         title: 'เปิดรับเบอร์วิ่ง (BIB) เสื้อที่ระลึก และสายรัดชิปจับเวลา',
         description: 'กรุณาแสดงบัตรประจำตัวประชาชนหรือหลักฐานการสมัครฉบับดิจิทัลเพื่อรับชุดแข่งขัน',
         iconName: 'Package',

@@ -133,7 +133,7 @@ export async function buildDocumentsHtml(o: StoredOrder, opts: { assetBase?: str
     <div class="total"><span>${o.paymentMethod === 'SPONSOR_CODE' ? `ยอดชำระ (สิทธิ์สปอนเซอร์${o.sponsorName ? ` ${esc(o.sponsorName)}` : ''})` : 'ยอดชำระสุทธิ'}</span><b>${formatBaht(o.totalPrice)} บาท</b></div>
     <h2 class="sec" style="margin-top:16px">📍 วันงานต้องทำอะไรบ้าง</h2>
     <div class="cards3">
-      ${isRun && pickupItem ? `<div class="card" style="border-color:#C4B5FD;background:#F5F0FF"><b>1. รับอุปกรณ์</b>วันก่อนวันแข่ง (9 ม.ค. 2570) • ${esc(pickupItem.time)} น.<br />${esc(pickup.description.replace(/^ณ\s*/, ''))}<br />แสดง QR นี้ + บัตรประชาชน</div>` : ''}
+      ${isRun && pickupItem ? `<div class="card" style="border-color:#C4B5FD;background:#F5F0FF"><b>1. รับอุปกรณ์ (Race Kit)</b>วันเสาร์ที่ 9 ม.ค. 2570 ตั้งแต่ 09.00 น.<br />${esc(pickup.description.replace(/^ณ\s*/, ''))}<br />แสดง QR นี้ + บัตรประชาชน</div>` : ''}
       <div class="card" style="border-color:#7DD3FC;background:#E0F2FE"><b>${isRun ? '2. วันแข่ง' : 'วันงาน'}</b>${esc(eventInfo.dateNotice)}${isRun ? ` · ปล่อยตัว ${esc(start)}` : ''}<br />${esc(eventInfo.venueShort)}<br />เผื่อเวลาเดินทางมาถึงก่อนเวลา</div>
       ${dog ? `<div class="card" style="border-color:#86EFAC;background:#ECFDF5"><b>3. น้องหมา</b>นำสมุดวัคซีน (พิษสุนัขบ้า + วัคซีนรวม) สายจูง และถุงเก็บมูล</div>` : o.addOns ? `<div class="card" style="border-color:#FDE68A;background:#FFF7DB"><b>กิจกรรมเสริม</b>${esc(eventInfo.activityDateNotice)}<br />ดูเวลาและจุดของแต่ละสถานีบนเว็บไซต์</div>` : ''}
     </div>

@@ -45,7 +45,7 @@ export const EventSchedule: React.FC = () => {
                   : 'text-[#6F6878] hover:text-[#17151C]'
               }`}
             >
-              วันก่อนแข่งขัน (รับเบอร์วิ่ง & เสื้อ)
+              รับ Race Kit (รับเบอร์วิ่ง & เสื้อ)
             </button>
             <button
               onClick={() => setActiveDay('race_day')}
