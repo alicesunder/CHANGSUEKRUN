@@ -137,7 +137,7 @@ export default function App() {
     return () => window.removeEventListener('hashchange', check);
   }, []);
 
-  // Public addresses for the privacy notice and the terms (asked for by Google / Facebook sign-in setup): /privacy and /terms
+  // Public addresses for the privacy notice and the terms (asked for by the Google sign-in setup): /privacy and /terms
   useEffect(() => {
     const path = window.location.pathname.replace(/\/+$/, '');
     if (path !== '/privacy' && path !== '/terms') return;
@@ -145,7 +145,7 @@ export default function App() {
     return () => window.clearTimeout(t);
   }, []);
 
-  // Back from LINE Login (the server redirects to /#runner-auth=...), and refresh the account details at start-up
+  // Back from Google sign-in (the server redirects to /#runner-auth=...), and refresh the account details at start-up
   useEffect(() => {
     consumeLineLogin().then((r) => {
       if (r === 'ok') setRunnerCenterOpen(true);
@@ -480,7 +480,7 @@ export default function App() {
 
       {lineFailed && (
         <div role="alert" className="fixed left-1/2 top-20 z-[10200] -translate-x-1/2 rounded-2xl border-[3px] border-[#2A1450] bg-white px-4 py-3 text-sm font-extrabold text-[#2A1450] shadow-[0_5px_0_#2A1450]">
-          {t('เข้าสู่ระบบด้วย LINE ไม่สำเร็จ กรุณาลองใหม่หรือใช้อีเมล', 'LINE login failed — please try again or use e-mail')}
+          {t('เข้าสู่ระบบด้วย Google ไม่สำเร็จ กรุณาลองใหม่หรือใช้อีเมล', 'Google sign-in failed — please try again or use e-mail')}
           <button type="button" onClick={() => setLineFailed(false)} className="ml-3 rounded-lg bg-[#2A1450] px-2 py-0.5 text-xs text-white cursor-pointer">OK</button>
         </div>
       )}

@@ -7,27 +7,15 @@ import { getPublicConfig } from '../utils/api';
 
 type Tab = 'login' | 'signup';
 type Method = 'email' | 'username';
-type Social = { line: boolean; google: boolean; facebook: boolean };
+type Social = { google: boolean };
 
 /** Brand marks for the sign-in buttons (simple inline SVG, no external files). */
-const FacebookMark = () => (
-  <svg viewBox="0 0 24 24" className="h-6 w-6" aria-hidden="true">
-    <circle cx="12" cy="12" r="12" fill="#1877F2" />
-    <path d="M13.4 19.5v-6.1h2l.4-2.5h-2.4V9.3c0-.7.3-1.3 1.4-1.3h1.1V5.8c-.2 0-.9-.1-1.7-.1-1.9 0-3.1 1.1-3.1 3.2v1.9H9.1v2.5h2v6.2z" fill="#fff" />
-  </svg>
-);
 const GoogleMark = () => (
   <svg viewBox="0 0 24 24" className="h-6 w-6" aria-hidden="true">
     <path fill="#EA4335" d="M12 10.2v3.9h5.5c-.2 1.3-1.6 3.8-5.5 3.8a6.1 6.1 0 1 1 0-12.2c1.9 0 3.2.8 3.9 1.5l2.7-2.6A9.8 9.8 0 0 0 12 2.2a9.9 9.9 0 1 0 0 19.8c5.7 0 9.5-4 9.5-9.6 0-.6-.1-1.1-.2-1.6z" />
     <path fill="#34A853" d="M3.5 7.3l3.2 2.4A6.1 6.1 0 0 1 12 5.9c1.9 0 3.2.8 3.9 1.5l2.7-2.6A9.8 9.8 0 0 0 12 2.2 9.9 9.9 0 0 0 3.5 7.3z" opacity=".0" />
     <path fill="#FBBC05" d="M5.9 12c0-.7.1-1.3.3-1.9L3 7.7A9.9 9.9 0 0 0 2.2 12c0 1.6.4 3.1 1 4.4l3.2-2.5c-.3-.6-.5-1.200-.5-1.900z" />
     <path fill="#4285F4" d="M12 22c2.7 0 4.900-.9 6.600-2.400l-3.200-2.500c-.9.600-2 1-3.400 1a6 6 0 0 1-5.600-4.100L3.200 16.400A9.900 9.900 0 0 0 12 22z" />
-  </svg>
-);
-const LineMark = () => (
-  <svg viewBox="0 0 24 24" className="h-6 w-6" aria-hidden="true">
-    <rect width="24" height="24" rx="6" fill="#06C755" />
-    <path d="M12 5.2c-3.9 0-7 2.5-7 5.600 0 2.800 2.500 5.100 5.800 5.500.2 0 .5.2.6.4l.1.7c0 .2.1.6.5.4.4-.2 2.400-1.400 3.300-2.400 1.800-1.100 2.700-2.500 2.700-4.100 0-3.100-3.100-5.600-6-5.600z" fill="#fff" />
   </svg>
 );
 
@@ -75,7 +63,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthed,
   const [showPw, setShowPw] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [social, setSocial] = useState<Social>({ line: false, google: false, facebook: false });
+  const [social, setSocial] = useState<Social>({ google: false });
   // the first screen lists the sign-in choices; the e-mail / username form opens from the first one
   const [showForm, setShowForm] = useState(false);
   const [view, setView] = useState<'main' | 'forgot' | 'reset'>('main');
@@ -92,7 +80,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthed,
     setNotice(null);
     setView(resetToken ? 'reset' : 'main');
     getPublicConfig()
-      .then((c) => setSocial((c as { socialLogin?: Social }).socialLogin ?? { line: Boolean((c as { lineLoginReady?: boolean }).lineLoginReady), google: false, facebook: false }))
+      .then((c) => setSocial((c as { socialLogin?: Social }).socialLogin ?? { google: false }))
       .catch(() => {});
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && closeRef.current();
     window.addEventListener('keydown', onKey);
@@ -136,11 +124,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthed,
     { id: 'username', emoji: '🧑‍💻', th: 'ตั้งชื่อผู้ใช้เอง', en: 'Own username' },
   ];
 
-  const socials: { id: 'facebook' | 'google' | 'line'; label: string; mark: React.ReactNode }[] = [
-    { id: 'facebook', label: 'Facebook', mark: <FacebookMark /> },
-    { id: 'google', label: 'Google', mark: <GoogleMark /> },
-    { id: 'line', label: 'LINE', mark: <LineMark /> },
-  ];
+  const socials: { id: 'google'; label: string; mark: React.ReactNode }[] = [{ id: 'google', label: 'Google', mark: <GoogleMark /> }];
 
   return createPortal(
     <div className="fixed inset-0 z-[10100] flex items-center justify-center p-3 sm:p-6 bg-[#140826]/80 backdrop-blur-md overflow-y-auto" onClick={onClose}>
@@ -275,14 +259,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthed,
             <p className="pt-1 text-center text-[11px] font-semibold leading-snug text-[#6B5A85]">
               {tab === 'login'
                 ? t('ยังไม่มีบัญชี? ปุ่มด้านบนสร้างบัญชีให้อัตโนมัติ หรือเลือกแท็บ "สมัครสมาชิก"', 'No account yet? The buttons above create one for you, or use the "Sign up" tab')
-                : t('สมัครด้วย Facebook / Google / LINE ได้ในคลิกเดียว หรือใช้อีเมลของคุณเอง', 'Sign up with Facebook / Google / LINE in one click, or use your own e-mail')}
+                : t('สมัครด้วย Google ได้ในคลิกเดียว หรือใช้อีเมลของคุณเอง', 'Sign up with Google in one click, or use your own e-mail')}
             </p>
           </div>
         )}
 
         <form onSubmit={submit} className={`space-y-3.5 px-5 pb-5 pt-4 ${showForm && view === 'main' ? '' : 'hidden'}`}>
           <button type="button" onClick={() => setShowForm(false)} className="text-xs font-extrabold text-[#5B20A8] underline underline-offset-2 cursor-pointer">
-            ← {t('ตัวเลือกอื่น (Facebook / Google / LINE)', 'Other options (Facebook / Google / LINE)')}
+            ← {t('ตัวเลือกอื่น (Google)', 'Other options (Google)')}
           </button>
           {tab === 'signup' && (
             <>

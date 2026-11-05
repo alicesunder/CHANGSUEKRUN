@@ -1,7 +1,7 @@
 /**
  * Runner accounts + staff logins (separate from the single admin login in auth.ts).
  *
- *  - A runner signs up with an e-mail, a username of their own, or LINE, and must be logged in to buy.
+ *  - A runner signs up with an e-mail, a username of their own, or Google, and must be logged in to buy.
  *  - Staff (ticket checking) log in with an account listed in STAFF_ACCOUNTS (below / env). A staff token can
  *    only use the two scanner endpoints; it is never accepted as an admin login.
  *  - Tokens are signed with their own key (not the admin one) and carry a role, so a runner or staff token can
@@ -309,7 +309,7 @@ export async function updateRunnerProfile(
 }
 
 /** Column that holds each provider's user id (fixed list, never taken from the request). */
-const SOCIAL_COLUMN: Record<Provider, 'line_user_id' | 'google_id' | 'facebook_id'> = { line: 'line_user_id', google: 'google_id', facebook: 'facebook_id' };
+const SOCIAL_COLUMN: Record<Provider, 'google_id'> = { google: 'google_id' };
 
 /**
  * Finds or creates the runner for a social login.
@@ -333,7 +333,7 @@ export async function upsertSocialRunner(provider: Provider, p: SocialProfile): 
   }
   const rows = await dbQuery<RunnerRow>(
     `insert into csr.runners (runner_id, name, email, ${col}, email_verified, last_login_at) values ($1, $2, $3, $4, $5, now()) returning *`,
-    [newRunnerId(), cleanText(p.name, 80) || (provider === 'line' ? 'นักวิ่ง LINE' : 'นักวิ่ง'), email && isEmail(email) && !byEmail[0] ? email : null, p.id, Boolean(p.emailVerified && email && isEmail(email) && !byEmail[0])]
+    [newRunnerId(), cleanText(p.name, 80) || 'นักวิ่ง', email && isEmail(email) && !byEmail[0] ? email : null, p.id, Boolean(p.emailVerified && email && isEmail(email) && !byEmail[0])]
   );
   return rows[0];
 }
@@ -347,8 +347,7 @@ export function publicRunner(r: RunnerRow) {
     username: r.username || '',
     phone: r.phone || '',
     emailVerified: Boolean(r.email_verified),
-    lineLinked: Boolean(r.line_user_id),
-    social: [r.line_user_id && 'line', r.google_id && 'google', r.facebook_id && 'facebook'].filter(Boolean) as string[],
+    social: [r.google_id && 'google'].filter(Boolean) as string[],
     profile: r.profile || {},
     createdAt: r.created_at,
   };

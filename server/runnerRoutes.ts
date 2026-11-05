@@ -3,7 +3,7 @@
  *   POST /api/auth/register   sign up (e-mail or own username)
  *   POST /api/auth/login      runners (e-mail or username) and staff
  *   GET  /api/auth/me
- *   GET  /api/auth/line/start, /api/auth/line/callback   LINE Login
+ *   GET  /api/auth/google/start, /api/auth/google/callback   Google sign-in
  *   PATCH /api/me             profile used to pre-fill the booking form
  *   GET  /api/me/orders       everything this runner bought
  *   POST /api/me/claim        attach an older order (order id + the e-mail on it)
@@ -199,7 +199,7 @@ export function registerRunnerRoutes(app: Express, h: Wrap, clientIp: (req: Requ
     res.json({ role: 'runner', user: publicRunner(runner) });
   }));
 
-  // ---- Social sign-in (LINE, Google, Facebook) --------------------------
+  // ---- Google sign-in -----------------------------------------------------
   const redirectUri = (req: Request, provider: string) => `${(process.env.PUBLIC_SITE_URL || `${req.protocol}://${req.get('host')}`).replace(/\/+$/, '')}/api/auth/${provider}/callback`;
   const STATE_COOKIE = 'csr_oauth_state';
 
