@@ -326,7 +326,6 @@ export const RunnerHub: React.FC<{
                   );
                 })}
               </div>
-              <ClaimBox onClaimed={load} defaultEmail={user.email} />
             </>
           )}
 
@@ -408,44 +407,6 @@ const ResendTicket: React.FC<{ orderId: string }> = ({ orderId }) => {
       </button>
       {state && <p role="status" className={`mt-1 text-xs font-bold ${state.ok ? 'text-emerald-700' : 'text-rose-700'}`}>{state.text}</p>}
     </div>
-  );
-};
-
-/** An order made before the account existed: order id + the e-mail on that order. */
-const ClaimBox: React.FC<{ onClaimed: () => void; defaultEmail: string }> = ({ onClaimed, defaultEmail }) => {
-  const { t } = useLang();
-  const [orderId, setOrderId] = useState('');
-  const [email, setEmail] = useState(defaultEmail);
-  const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
-  const [busy, setBusy] = useState(false);
-  return (
-    <form
-      onSubmit={async (e) => {
-        e.preventDefault();
-        setBusy(true);
-        setMsg(null);
-        try {
-          await authApi.claim(orderId.trim(), email.trim());
-          setMsg({ ok: true, text: t('เพิ่มคำสั่งซื้อเข้าบัญชีแล้ว ดูได้ที่ "ตั๋วของฉัน"', 'Order added to your account — see "My tickets"') });
-          setOrderId('');
-          onClaimed();
-        } catch (err) {
-          setMsg({ ok: false, text: err instanceof Error ? err.message : 'error' });
-        } finally {
-          setBusy(false);
-        }
-      }}
-      className="rounded-3xl border-[3px] border-dashed border-[#7C3AED]/50 bg-white p-4"
-    >
-      <h3 className="flex items-center gap-2 text-base font-black"><Ticket className="h-4 w-4 text-[#7C3AED]" /> {t('มีตั๋วที่ซื้อไว้ก่อนสมัครสมาชิก?', 'Bought before you had an account?')}</h3>
-      <p className="text-xs font-semibold text-[#6B5A85]">{t('ใส่เลขคำสั่งซื้อ (หรือเลข BIB) และอีเมลที่ใช้สั่งซื้อ เพื่อเพิ่มเข้าบัญชีนี้ — ต้องยืนยันอีเมลของบัญชีก่อน และอีเมลต้องตรงกับในคำสั่งซื้อ', 'Enter the order number (or BIB) and the e-mail used for the order to add it to this account — your account e-mail must be confirmed and match the one on the order')}</p>
-      <div className="mt-3 grid gap-2 sm:grid-cols-[1fr_1fr_auto]">
-        <input required value={orderId} onChange={(e) => setOrderId(e.target.value)} placeholder={t('เลขคำสั่งซื้อ / BIB', 'Order no. / BIB')} className="min-h-[46px] rounded-xl border-2 border-[#2A1450]/20 px-3 text-sm font-semibold" />
-        <input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="email" className="min-h-[46px] rounded-xl border-2 border-[#2A1450]/20 px-3 text-sm font-semibold" />
-        <button disabled={busy} className="min-h-[46px] rounded-xl bg-[#2A1450] px-5 text-sm font-black text-white disabled:opacity-60 cursor-pointer">{t('เพิ่ม', 'Add')}</button>
-      </div>
-      {msg && <p role="status" className={`mt-2 text-sm font-bold ${msg.ok ? 'text-emerald-700' : 'text-rose-700'}`}>{msg.text}</p>}
-    </form>
   );
 };
 
