@@ -231,7 +231,7 @@ export const EventWeatherForecast: React.FC = () => {
           <div className="mt-4 rounded-2xl bg-gradient-to-br from-[#F0F9FF] via-[#FAF6FF] to-[#FFFBEB] p-4 border-2 border-[#2A1450]/15">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
-                <span className="inline-block text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded-full bg-[#2A1450] text-[#FFC928] mb-1">
+                <span className="inline-block text-[11px] font-extrabold uppercase px-2.5 py-0.5 rounded-full bg-[#2A1450] text-[#FFC928] mb-1">
                   เวลา {activeTime} น. • พระอาทิตย์ตกประมาณ {data.sunrise} น.
                 </span>
                 <div className="flex items-baseline gap-2">
@@ -247,14 +247,14 @@ export const EventWeatherForecast: React.FC = () => {
                 <div className="bg-white rounded-xl px-3 py-2 border border-purple-100 text-center min-w-[78px]">
                   <Droplets className="w-4 h-4 text-[#0369A1] mx-auto mb-0.5" />
                   <div className="text-xs font-black text-[#2A1450] tabular-nums">{activeHum}%</div>
-                  <div className="text-[10px] font-bold text-[#6B5A85]">ความชื้น</div>
+                  <div className="text-[11px] font-bold text-[#6B5A85]">ความชื้น</div>
                 </div>
                 <div className="bg-white rounded-xl px-3 py-2 border border-purple-100 text-center min-w-[78px]">
                   <Wind className="w-4 h-4 text-[#15803D] mx-auto mb-0.5" />
                   <div className="text-xs font-black text-[#2A1450] tabular-nums">
                     {activeWind} km/h
                   </div>
-                  <div className="text-[10px] font-bold text-[#6B5A85]">ลมทะเล</div>
+                  <div className="text-[11px] font-bold text-[#6B5A85]">ลมทะเล</div>
                 </div>
               </div>
             </div>

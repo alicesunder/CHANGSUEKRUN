@@ -91,7 +91,7 @@ export const HeroCountdownTimer: React.FC<CountdownTimerProps> = ({
                   </motion.span>
                 </AnimatePresence>
               </div>
-              <div className="mt-1 text-[10px] sm:text-xs font-bold text-white/90">
+              <div className="mt-1 text-[11px] sm:text-xs font-bold text-white/90">
                 {unit.thaiLabel}
               </div>
             </div>

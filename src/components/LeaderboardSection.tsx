@@ -286,7 +286,7 @@ const LeaderboardResults: React.FC = () => {
 
                     <div className="mt-4 pt-3.5 border-t border-purple-100 w-full flex items-center justify-around">
                       <div>
-                        <div className="text-[10px] text-[#6B5A85] font-bold uppercase">
+                        <div className="text-[11px] text-[#6B5A85] font-bold uppercase">
                           เวลาเข้าเส้นชัย
                         </div>
                         <div className="font-mono text-lg font-black text-[#2A1450] tabular-nums">
@@ -295,7 +295,7 @@ const LeaderboardResults: React.FC = () => {
                       </div>
                       <div className="h-7 w-[1px] bg-purple-100" />
                       <div>
-                        <div className="text-[10px] text-[#6B5A85] font-bold uppercase">
+                        <div className="text-[11px] text-[#6B5A85] font-bold uppercase">
                           ความเร็วเฉลี่ย
                         </div>
                         <div className="font-mono text-sm font-extrabold text-[#B45309] tabular-nums">
@@ -395,7 +395,7 @@ const LeaderboardResults: React.FC = () => {
                           <div className="font-mono font-black text-sm text-[#2A1450] tabular-nums">
                             {runner.time}
                           </div>
-                          <div className="text-[10px] text-[#6B5A85] font-bold">
+                          <div className="text-[11px] text-[#6B5A85] font-bold">
                             Pace: {runner.pace}
                           </div>
                         </div>
@@ -453,7 +453,7 @@ const LeaderboardResults: React.FC = () => {
 
                   <div className="grid grid-cols-3 gap-2 bg-[#FAF7FF] p-3 rounded-2xl border border-purple-100 mb-4 text-center">
                     <div>
-                      <div className="text-[10px] text-[#6B5A85] font-bold uppercase">
+                      <div className="text-[11px] text-[#6B5A85] font-bold uppercase">
                         ระยะทางรวม
                       </div>
                       <div className="font-mono text-xs sm:text-sm font-black text-[#5B20A8] mt-0.5">
@@ -461,13 +461,13 @@ const LeaderboardResults: React.FC = () => {
                       </div>
                     </div>
                     <div className="border-x border-purple-200">
-                      <div className="text-[10px] text-[#6B5A85] font-bold uppercase">สมาชิก</div>
+                      <div className="text-[11px] text-[#6B5A85] font-bold uppercase">สมาชิก</div>
                       <div className="font-mono text-xs sm:text-sm font-black text-[#2A1450] mt-0.5">
                         {team.members} ท่าน
                       </div>
                     </div>
                     <div>
-                      <div className="text-[10px] text-[#6B5A85] font-bold uppercase">
+                      <div className="text-[11px] text-[#6B5A85] font-bold uppercase">
                         คะแนนส่งใจ
                       </div>
                       <div className="font-mono text-xs sm:text-sm font-black text-[#B45309] mt-0.5 tabular-nums">

@@ -167,7 +167,7 @@ export const VenueMap: React.FC = () => {
                 >
                   <Icon className="w-4 h-4" />
                 </div>
-                <span className={`text-[9px] font-black px-2 py-0.5 rounded-full ${zone.badgeBg}`}>
+                <span className={`text-[11px] font-black px-2 py-0.5 rounded-full ${zone.badgeBg}`}>
                   {zone.category}
                 </span>
               </div>
@@ -175,7 +175,7 @@ export const VenueMap: React.FC = () => {
                 <h4 className="text-xs font-black text-[#17151C] leading-snug line-clamp-1">
                   {zone.name.split('(')[0]}
                 </h4>
-                <p className="text-[10px] text-gray-500 line-clamp-1 font-medium mt-0.5">
+                <p className="text-[11px] text-gray-500 line-clamp-1 font-medium mt-0.5">
                   {zone.description}
                 </p>
               </div>
@@ -199,7 +199,7 @@ export const VenueMap: React.FC = () => {
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${selectedZoneItem.badgeBg}`}>
+              <span className={`text-[11px] font-black px-2 py-0.5 rounded-full ${selectedZoneItem.badgeBg}`}>
                 {selectedZoneItem.category}
               </span>
               <h4 className="text-base font-black text-[#17151C]">

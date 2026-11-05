@@ -35,7 +35,7 @@ export const ParkingSection: React.FC = () => {
                       {zone.name}
                     </span>
                     <span
-                      className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full uppercase flex items-center gap-1 ${
+                      className={`text-[11px] font-extrabold px-2.5 py-0.5 rounded-full uppercase flex items-center gap-1 ${
                         isAvailable
                           ? 'bg-[#E8F7ED] text-[#2EAA59]'
                           : 'bg-[#FFF4D6] text-[#A66D00]'

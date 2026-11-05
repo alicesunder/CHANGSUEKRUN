@@ -144,7 +144,7 @@ const Pills: React.FC<{
           style={on ? { background: color } : undefined}
         >
           {o}
-          {sub?.(o) && <span className={`block text-[10px] font-bold ${on ? 'text-white/85' : 'text-[#6B5A85]'}`}>{sub(o)}</span>}
+          {sub?.(o) && <span className={`block text-[11px] font-bold ${on ? 'text-white/85' : 'text-[#6B5A85]'}`}>{sub(o)}</span>}
         </button>
       );
     })}

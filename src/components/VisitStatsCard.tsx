@@ -78,7 +78,7 @@ export const VisitStatsCard: React.FC = () => {
             <div className="flex items-end gap-1 h-24" role="img" aria-label="จำนวนผู้เข้าชม 14 วันล่าสุด">
               {stats.days.map((d) => (
                 <div key={d.day} className="flex-1 flex flex-col items-center justify-end h-full" title={`${shortDay(d.day)}: ${nf(d.visitors)} คน · ${nf(d.views)} ครั้ง`}>
-                  <span className="text-[9px] font-bold text-slate-600 leading-none mb-0.5 tabular-nums">{d.visitors || ''}</span>
+                  <span className="text-[11px] font-bold text-slate-600 leading-none mb-0.5 tabular-nums">{d.visitors || ''}</span>
                   <div
                     className="w-full rounded-t bg-gradient-to-t from-[#7B3FC6] to-[#C084FC]"
                     style={{ height: `${Math.max(d.visitors ? 6 : 2, (d.visitors / max) * 100)}%`, opacity: d.visitors ? 1 : 0.25 }}
@@ -86,7 +86,7 @@ export const VisitStatsCard: React.FC = () => {
                 </div>
               ))}
             </div>
-            <div className="flex justify-between text-[10px] text-slate-500 mt-1">
+            <div className="flex justify-between text-[11px] text-slate-500 mt-1">
               <span>{shortDay(stats.days[0].day)}</span>
               <span>วันนี้</span>
             </div>

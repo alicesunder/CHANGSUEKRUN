@@ -225,7 +225,7 @@ export const ChangsuekRunExperience: React.FC<ChangsuekRunExperienceProps> = ({
                           {st.step}
                         </span>
                         <span
-                          className="text-[10px] font-mono font-extrabold uppercase tracking-wider"
+                          className="text-[11px] font-mono font-extrabold uppercase tracking-wider"
                           style={{ color: st.accent }}
                         >
                           {st.tag}
@@ -242,7 +242,7 @@ export const ChangsuekRunExperience: React.FC<ChangsuekRunExperienceProps> = ({
 
                     {/* Badge Pill */}
                     <span
-                      className="inline-block text-[10px] font-extrabold px-2.5 py-0.5 rounded-full mb-2 border border-black/5"
+                      className="inline-block text-[11px] font-extrabold px-2.5 py-0.5 rounded-full mb-2 border border-black/5"
                       style={{ background: st.softBg, color: st.accent }}
                     >
                       {st.badge}

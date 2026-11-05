@@ -35,7 +35,7 @@ export const TICKET_CARD_IMAGES: Record<
     skyGrad: 'linear-gradient(135deg, #E2CEFF 0%, #9F65EB 55%, #4A1C88 100%)',
   },
   '1km': {
-    src: '/images/hero/beach-run.jpg',
+    src: '/images/hero/beach-run.webp',
     objectPosition: '58% 45%',
     alt: 'บัตรวิ่ง 1 km Dog Run - ช้างศึกสีม่วง นักวิ่ง และน้องสุนัขวิ่งเล่นสนุกสนานริมชายหาด',
     sceneTag: 'BEACH PUPPY FUN RUN',
@@ -200,7 +200,7 @@ export const TicketCardImageBanner: React.FC<{
           </span>
         </div>
         <div className="pb-0.5">
-          <div className="text-[10px] font-extrabold uppercase tracking-wider text-[#FFC928] drop-shadow">
+          <div className="text-[11px] font-extrabold uppercase tracking-wider text-[#FFC928] drop-shadow">
             {meta.sceneTag}
           </div>
           <div className="text-xs font-bold text-white drop-shadow leading-tight">
@@ -236,7 +236,7 @@ export const RacePackCardVisual: React.FC<{
           className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-[#25183B]/70 via-transparent to-transparent" />
-        <span className="absolute bottom-2 left-2.5 text-[10px] font-bold text-white bg-[#5B20A8]/90 px-2.5 py-0.5 rounded-full border border-white/30">
+        <span className="absolute bottom-2 left-2.5 text-[11px] font-bold text-white bg-[#5B20A8]/90 px-2.5 py-0.5 rounded-full border border-white/30">
           OFFICIAL JERSEY 2027
         </span>
       </div>
@@ -253,7 +253,7 @@ export const RacePackCardVisual: React.FC<{
           className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-[#25183B]/70 via-transparent to-transparent" />
-        <span className="absolute bottom-2 left-2.5 text-[10px] font-bold text-[#25183B] bg-[#FFC928] px-2.5 py-0.5 rounded-full border border-white/50">
+        <span className="absolute bottom-2 left-2.5 text-[11px] font-bold text-[#25183B] bg-[#FFC928] px-2.5 py-0.5 rounded-full border border-white/50">
           3D ZINC ALLOY MEDAL
         </span>
       </div>

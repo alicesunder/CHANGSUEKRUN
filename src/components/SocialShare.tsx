@@ -105,7 +105,7 @@ export const SocialShare: React.FC<SocialShareProps> = ({
           {/* Copy Message */}
           <button
             onClick={handleCopyLink}
-            className={`px-2 py-1 rounded-full text-[10px] font-bold flex items-center gap-1 transition-all cursor-pointer border ${
+            className={`px-2 py-1 rounded-full text-[11px] font-bold flex items-center gap-1 transition-all cursor-pointer border ${
               copied
                 ? 'bg-amber-100/90 text-[#2A0E4E] border-amber-300'
                 : 'bg-purple-50/80 hover:bg-purple-100 text-[#2A0E4E] border-purple-200/70'

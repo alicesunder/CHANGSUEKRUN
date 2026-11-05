@@ -133,7 +133,7 @@ export const DistanceComparisonModal: React.FC<DistanceComparisonModalProps> = (
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
                   <span
-                    className="absolute top-2 left-2 text-[10px] font-black px-2 py-0.5 rounded-full shadow-xs"
+                    className="absolute top-2 left-2 text-[11px] font-black px-2 py-0.5 rounded-full shadow-xs"
                     style={{ background: c.soft, color: c.color }}
                   >
                     {c.chip}

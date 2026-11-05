@@ -221,7 +221,7 @@ export const RunnerBibCard: React.FC<RunnerBibCardProps> = ({
               {/* Runner Metadata Grid */}
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 mt-4 text-xs">
                 <div className="p-2.5 rounded-xl bg-white/80 border border-[#2A1450]/15">
-                  <div className="text-[10px] font-bold text-[#6B5A85] uppercase">
+                  <div className="text-[11px] font-bold text-[#6B5A85] uppercase">
                     ชื่อนักวิ่ง / Runner
                   </div>
                   <div className="font-extrabold text-[#2A1450] truncate text-sm mt-0.5">
@@ -229,7 +229,7 @@ export const RunnerBibCard: React.FC<RunnerBibCardProps> = ({
                   </div>
                 </div>
                 <div className="p-2.5 rounded-xl bg-white/80 border border-[#2A1450]/15">
-                  <div className="text-[10px] font-bold text-[#6B5A85] uppercase">
+                  <div className="text-[11px] font-bold text-[#6B5A85] uppercase">
                     ไซส์เสื้อ / Jersey
                   </div>
                   <div className="font-extrabold text-[#2A1450] text-sm mt-0.5">
@@ -237,7 +237,7 @@ export const RunnerBibCard: React.FC<RunnerBibCardProps> = ({
                   </div>
                 </div>
                 <div className="col-span-2 sm:col-span-1 p-2.5 rounded-xl bg-white/80 border border-[#2A1450]/15">
-                  <div className="text-[10px] font-bold text-[#6B5A85] uppercase">
+                  <div className="text-[11px] font-bold text-[#6B5A85] uppercase">
                     สถานที่ / Venue
                   </div>
                   <div className="font-extrabold text-[#5B20A8] text-sm mt-0.5 truncate">
@@ -254,7 +254,7 @@ export const RunnerBibCard: React.FC<RunnerBibCardProps> = ({
                       <PawIcon size={16} color="#fff" />
                     </span>
                     <div>
-                      <span className="block text-[10px] uppercase tracking-wider text-[#166534]">
+                      <span className="block text-[11px] uppercase tracking-wider text-[#166534]">
                         K9 COMPANION PASS
                       </span>
                       <span>
@@ -263,19 +263,19 @@ export const RunnerBibCard: React.FC<RunnerBibCardProps> = ({
                       </span>
                     </div>
                   </div>
-                  <span className="text-[10px] bg-white text-[#14532D] border border-[#14532D]/30 px-2.5 py-1 rounded-full font-extrabold shrink-0">
+                  <span className="text-[11px] bg-white text-[#14532D] border border-[#14532D]/30 px-2.5 py-1 rounded-full font-extrabold shrink-0">
                     ✓ สิทธิ์เข้าโซน Pet Vet
                   </span>
                 </div>
               )}
 
               {/* Perforated Tear-Off Barcode Footer */}
-              <div className="mt-4 pt-3 border-t-2 border-dashed border-[#2A1450]/25 flex items-center justify-between text-[10px] text-[#4B2D78] font-mono">
+              <div className="mt-4 pt-3 border-t-2 border-dashed border-[#2A1450]/25 flex items-center justify-between text-[11px] text-[#4B2D78] font-mono">
                 <div>
                   <span className="font-extrabold block text-[#2A1450]">
                     CSR-2027-{profile.routeId.toUpperCase()}-{profile.bibNumber}
                   </span>
-                  <span className="text-[9px] font-sans font-bold text-[#6B5A85]">
+                  <span className="text-[11px] font-sans font-bold text-[#6B5A85]">
                     RFID TIMING CHIP EMBEDDED · แสดงบัตรนี้ในวันรับ Race Pack
                   </span>
                 </div>
@@ -309,7 +309,7 @@ export const RunnerBibCard: React.FC<RunnerBibCardProps> = ({
               <div className="flex items-center gap-2">
                 <Cpu className="w-5 h-5 text-[#FFC928]" />
                 <div>
-                  <span className="text-[10px] font-mono font-bold tracking-widest text-[#FFC928] block">
+                  <span className="text-[11px] font-mono font-bold tracking-widest text-[#FFC928] block">
                     RFID TIMING TRANSPONDER
                   </span>
                   <span className="text-sm font-extrabold">
@@ -346,7 +346,7 @@ export const RunnerBibCard: React.FC<RunnerBibCardProps> = ({
             <div className="grid grid-cols-2 gap-2.5 text-xs">
               <div className="p-3 rounded-xl bg-white/10 border border-white/15">
                 <div className="flex items-center justify-between gap-1">
-                  <div className="text-[10px] text-white/60 font-bold uppercase flex items-center gap-1">
+                  <div className="text-[11px] text-white/60 font-bold uppercase flex items-center gap-1">
                     <PhoneCall className="w-3 h-3 text-[#FFC928]" />
                     <span>เบอร์ฉุกเฉิน (PDPA)</span>
                   </div>
@@ -357,7 +357,7 @@ export const RunnerBibCard: React.FC<RunnerBibCardProps> = ({
                       setMaskPii((prev) => !prev);
                     }}
                     title={maskPii ? 'แสดงเบอร์เต็ม' : 'ซ่อนเบอร์โทรป้องกันข้อมูลรั่วไหล'}
-                    className="text-[10px] font-bold text-[#FFC928] hover:underline inline-flex items-center gap-0.5 cursor-pointer"
+                    className="text-[11px] font-bold text-[#FFC928] hover:underline inline-flex items-center gap-0.5 cursor-pointer"
                   >
                     {maskPii ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
                     <span>{maskPii ? 'ดูเบอร์' : 'ซ่อน'}</span>
@@ -370,7 +370,7 @@ export const RunnerBibCard: React.FC<RunnerBibCardProps> = ({
                 </div>
               </div>
               <div className="p-3 rounded-xl bg-white/10 border border-white/15">
-                <div className="text-[10px] text-white/60 font-bold uppercase flex items-center gap-1">
+                <div className="text-[11px] text-white/60 font-bold uppercase flex items-center gap-1">
                   <ShieldCheck className="w-3 h-3 text-emerald-400" />
                   <span>ติดต่อผู้จัดงาน (ฉุกเฉิน)</span>
                 </div>

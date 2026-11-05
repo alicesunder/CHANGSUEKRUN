@@ -156,7 +156,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthed,
               🐘
             </span>
             <div>
-              <p className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[#FFE268]">CHANGSUEK RUN 2027</p>
+              <p className="text-[11px] font-extrabold uppercase tracking-[0.18em] text-[#FFE268]">CHANGSUEK RUN 2027</p>
               <h2 className="text-xl font-black leading-tight">{tab === 'login' ? t('เข้าสู่ระบบ', 'Log in') : t('สมัครสมาชิกนักวิ่ง', 'Create runner account')}</h2>
             </div>
           </div>

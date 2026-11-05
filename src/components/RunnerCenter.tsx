@@ -74,10 +74,10 @@ export const RunnerCenter: React.FC<RunnerCenterProps> = ({
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-[10px] font-black uppercase tracking-widest text-[#FFC928]">
+                <span className="text-[11px] font-black uppercase tracking-widest text-[#FFC928]">
                   CHANGSUEK RUN 2027
                 </span>
-                <span className="text-[9px] bg-white/20 text-white px-2 py-0.5 rounded-full font-bold">
+                <span className="text-[11px] bg-white/20 text-white px-2 py-0.5 rounded-full font-bold">
                   RUNNER CENTER
                 </span>
               </div>
@@ -161,7 +161,7 @@ export const RunnerCenter: React.FC<RunnerCenterProps> = ({
                       <IdCard className="w-4 h-4 text-[#5B20A8]" />
                       <span>บัตรประจำตัวนักวิ่ง (Digital BIB)</span>
                     </h4>
-                    <span className="text-[10px] text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                    <span className="text-[11px] text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
                       ✓ พร้อมใช้งาน
                     </span>
                   </div>
@@ -202,15 +202,15 @@ export const RunnerCenter: React.FC<RunnerCenterProps> = ({
 
                     <div className="grid grid-cols-3 gap-2 text-center text-xs">
                       <div className="p-2.5 rounded-2xl bg-purple-50 border border-purple-100">
-                        <div className="text-[10px] text-gray-500 font-bold uppercase">ประกวด & กิจกรรม</div>
+                        <div className="text-[11px] text-gray-500 font-bold uppercase">ประกวด & กิจกรรม</div>
                         <div className="text-sm font-black text-[#5B20A8] mt-0.5">09.00 - 15.00 น.</div>
                       </div>
                       <div className="p-2.5 rounded-2xl bg-amber-50 border border-amber-200">
-                        <div className="text-[10px] text-gray-500 font-bold uppercase">ปล่อยตัววิ่ง 4 ระยะ</div>
+                        <div className="text-[11px] text-gray-500 font-bold uppercase">ปล่อยตัววิ่ง 4 ระยะ</div>
                         <div className="text-sm font-black text-[#B26A00] mt-0.5">16.30 - 17.30 น.</div>
                       </div>
                       <div className="p-2.5 rounded-2xl bg-emerald-50 border border-emerald-100">
-                        <div className="text-[10px] text-gray-500 font-bold uppercase">ดนตรี & คอนเสิร์ต</div>
+                        <div className="text-[11px] text-gray-500 font-bold uppercase">ดนตรี & คอนเสิร์ต</div>
                         <div className="text-sm font-black text-emerald-700 mt-0.5">18.00 น. เป็นต้นไป</div>
                       </div>
                     </div>

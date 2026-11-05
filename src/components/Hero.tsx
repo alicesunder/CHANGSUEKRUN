@@ -29,8 +29,8 @@ interface HeroProps {
   onSelectDistance: (distance: RouteId) => void;
 }
 
-const BEACH = '/images/hero/beach-run.jpg';
-const COASTAL_SUNSET = '/images/hero/changsuek-run-coastal.jpg';
+const BEACH = '/images/hero/beach-run.webp';
+const COASTAL_SUNSET = '/images/hero/changsuek-run-coastal.webp';
 
 const fadeMask: React.CSSProperties = {
   WebkitMaskImage:
@@ -52,7 +52,7 @@ const EarlyBirdBadge: React.FC<{ onClick: () => void; className?: string }> = ({
     aria-label={t('เปิดขาย Early Bird แล้ว กดเพื่อซื้อบัตร', 'Early Bird is open — tap to buy tickets')}
   >
     <span className="text-[13px] sm:text-sm font-black leading-tight">{t('🐦 เปิดขาย Early Bird แล้ว!', '🐦 Early Bird is open!')}</span>
-    <span className="text-[10.5px] sm:text-xs font-extrabold leading-tight text-[#FFE9A8]">
+    <span className="text-[11px] sm:text-xs font-extrabold leading-tight text-[#FFE9A8]">
       {t('วิ่งลด', 'Run −')} {formatBaht(EARLY_BIRD_OFF.run)} · {t('คอนเสิร์ต GA ลด', 'Concert GA −')} {formatBaht(EARLY_BIRD_OFF.concert)} · {t('VIP ลด', 'VIP −')} {formatBaht(EARLY_BIRD_OFF.vip)}
     </span>
   </button>
@@ -152,7 +152,7 @@ export const Hero: React.FC<HeroProps> = ({
             glowColor="rgba(251, 191, 36, 0.5)"
           />
           <div className="text-left">
-            <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-100/90 text-amber-900 text-[10px] font-extrabold">
+            <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-100/90 text-amber-900 text-[11px] font-extrabold">
               <Heart className="w-3 h-3 text-rose-500 fill-rose-500" />
               <span>{t('มาสคอตน้องสุนัข', 'Our dog mascot')}</span>
             </div>
@@ -278,7 +278,7 @@ export const Hero: React.FC<HeroProps> = ({
                     <span className="font-display text-[13px] font-black leading-none" style={{ color: d.color }}>
                       {d.label}
                     </span>
-                    <span className="text-[9px] font-bold text-[#4B2D78] mt-0.5 truncate max-w-full">{d.tag}</span>
+                    <span className="text-[11px] font-bold text-[#4B2D78] mt-0.5 truncate max-w-full">{d.tag}</span>
                   </button>
                 ))}
               </div>
@@ -442,7 +442,7 @@ export const Hero: React.FC<HeroProps> = ({
                 “ {t('มากกว่างานวิ่ง คือ', 'More than a run, it is')}{' '}
                 <span className="text-[#FFE28A] block sm:inline">{t('การวิ่งไปด้วยกัน', 'running together')} ”</span>
               </p>
-              <p className="mt-1 text-[9px] sm:text-xs font-mono font-extrabold tracking-[0.24em] text-[#FFC928] uppercase drop-shadow">
+              <p className="mt-1 text-[11px] sm:text-xs font-mono font-extrabold tracking-[0.24em] text-[#FFC928] uppercase drop-shadow">
                 MORE THAN A RUN · A BIGGER FAMILY
               </p>
             </div>

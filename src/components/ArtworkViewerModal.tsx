@@ -188,7 +188,7 @@ export const ArtworkViewerModal: React.FC<ArtworkViewerModalProps> = ({
               {/* Google Earth Measurement Box */}
               <div className="p-4 rounded-xl bg-[#292235] border border-white/10 mb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                 <div>
-                  <span className="text-[10px] font-extrabold text-[#FFC928] uppercase tracking-wider block">
+                  <span className="text-[11px] font-extrabold text-[#FFC928] uppercase tracking-wider block">
                     GOOGLE EARTH POLYGON SURVEY
                   </span>
                   <div className="text-sm font-bold text-white mt-0.5">
@@ -197,12 +197,12 @@ export const ArtworkViewerModal: React.FC<ArtworkViewerModalProps> = ({
                 </div>
                 <div className="flex items-center gap-3 text-xs font-bold text-white bg-black/40 px-3 py-2 rounded-lg border border-white/10">
                   <div>
-                    <span className="text-white/60 block text-[9px]">เส้นรอบวงจริง</span>
+                    <span className="text-white/60 block text-[11px]">เส้นรอบวงจริง</span>
                     <span className="text-[#FFC928] text-sm font-black">{currentRouteData.measuredPerimeterKm} กม.</span>
                   </div>
                   <span className="text-white/20">|</span>
                   <div>
-                    <span className="text-white/60 block text-[9px]">พื้นที่รูปหลายเหลี่ยม</span>
+                    <span className="text-white/60 block text-[11px]">พื้นที่รูปหลายเหลี่ยม</span>
                     <span className="text-white text-sm font-black">{currentRouteData.measuredAreaSqM?.toLocaleString()} ม²</span>
                   </div>
                 </div>
@@ -220,13 +220,13 @@ export const ArtworkViewerModal: React.FC<ArtworkViewerModalProps> = ({
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {currentRouteData.landmarks.map((lm, idx) => (
                     <div key={lm.id} className="p-2.5 rounded-lg bg-black/30 border border-white/5 flex items-start gap-2 text-xs">
-                      <div className="w-5 h-5 rounded-full bg-white/10 flex items-center justify-center text-[10px] font-bold text-[#FFC928] flex-shrink-0 mt-0.5">
+                      <div className="w-5 h-5 rounded-full bg-white/10 flex items-center justify-center text-[11px] font-bold text-[#FFC928] flex-shrink-0 mt-0.5">
                         {idx + 1}
                       </div>
                       <div>
                         <div className="font-bold text-white flex items-center gap-1">
                           <span>{lm.name}</span>
-                          <span className="text-[10px] text-white/50">(กม. {lm.distanceFromStartKm})</span>
+                          <span className="text-[11px] text-white/50">(กม. {lm.distanceFromStartKm})</span>
                         </div>
                         <p className="text-[11px] text-white/60 line-clamp-1">{lm.description}</p>
                       </div>

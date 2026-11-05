@@ -197,7 +197,7 @@ const PinLink: React.FC<{ id: ActivityLocation['id'] }> = ({ id }) => {
       href={loc.mapsUrl}
       target="_blank"
       rel="noopener noreferrer"
-      className="self-start inline-flex items-center gap-1 min-h-[32px] px-1 text-[12px] font-extrabold text-[#5B20A8] underline underline-offset-2 hover:text-[#2A1450]"
+      className="self-start inline-flex items-center gap-1 min-h-[44px] px-1 text-[12px] font-extrabold text-[#5B20A8] underline underline-offset-2 hover:text-[#2A1450]"
     >
       <MapPin className="w-3.5 h-3.5" style={{ color: loc.color }} aria-hidden="true" />
       {tr('ดูตำแหน่ง', 'Directions to')} {tr(loc.name, ({ gun: 'the shooting range', tower: 'the high tower', wind: 'the wind tunnel', resort: 'the resort' } as Record<string, string>)[loc.id] || loc.name)}

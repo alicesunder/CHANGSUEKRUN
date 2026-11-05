@@ -135,7 +135,7 @@ export const EventGallery: React.FC = () => {
               {/* Image / Gradient Artistic Container */}
               <div className={`relative h-56 w-full bg-gradient-to-br ${item.gradient} p-6 flex flex-col justify-between overflow-hidden`}>
                 <div className="flex items-center justify-between z-10">
-                  <span className="text-[10px] font-black px-2.5 py-1 rounded-full bg-black/40 text-white backdrop-blur-xs uppercase tracking-wider">
+                  <span className="text-[11px] font-black px-2.5 py-1 rounded-full bg-black/40 text-white backdrop-blur-xs uppercase tracking-wider">
                     {item.tag}
                   </span>
                   <div className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-xs flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity">

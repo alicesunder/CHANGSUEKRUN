@@ -816,7 +816,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                   backgroundColor: on ? rTheme.badgeBg : '#F3E8FF',
                   color: on ? rTheme.badgeText : '#4B2D78',
                 }}
-                className="inline-block px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider"
+                className="inline-block px-2 py-0.5 rounded-full text-[11px] font-extrabold uppercase tracking-wider"
               >
                 {t.category === 'dog' ? '🐾 วิ่งกับน้องสุนัข' : '🏃 บุคคลทั่วไป'}
               </span>
@@ -847,7 +847,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
             <span className="font-display text-lg font-black text-[#261247] tabular-nums">
               <EarlyBirdPrice list={t.basePrice} now={runBasePrice(t.id, earlyBird)} />
             </span>
-            <span className="text-[10px] font-extrabold text-[#4B2D78] ml-0.5">บาท</span>
+            <span className="text-[11px] font-extrabold text-[#4B2D78] ml-0.5">บาท</span>
           </div>
         </div>
       </button>
@@ -886,7 +886,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
               </div>
               <div>
                 {/* one short line on phones: the long version wrapped onto 3 lines and ran into the title */}
-                <div className="flex items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-[0.12em] sm:tracking-[0.18em] text-[#FFE268] leading-none whitespace-nowrap mb-1">
+                <div className="flex items-center gap-1.5 text-[11px] font-extrabold uppercase tracking-[0.12em] sm:tracking-[0.18em] text-[#FFE268] leading-none whitespace-nowrap mb-1">
                   <Sparkles className="w-3 h-3 shrink-0" />
                   <span>CHANGSUEK RUN 2027<span className="hidden sm:inline"> · SMART E-TICKET & AUTO-BIB</span></span>
                 </div>
@@ -938,7 +938,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                       {s.title}
                     </div>
                     <div
-                      className={`text-[9px] font-bold truncate hidden sm:block ${
+                      className={`text-[11px] font-bold truncate hidden sm:block ${
                         isCurrent ? 'text-[#261247]/80' : 'text-white/50'
                       }`}
                     >
@@ -1141,7 +1141,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                     className="p-4 text-white flex items-center justify-between relative overflow-hidden"
                   >
                     <div className="relative z-10">
-                      <span className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-white/90 block">
+                      <span className="text-[11px] font-extrabold uppercase tracking-[0.2em] text-white/90 block">
                         SELECTED PASS SUMMARY
                       </span>
                       <h3 className="text-xl font-black leading-tight mt-0.5">{isAddonOnly ? 'กิจกรรมเสริมอย่างเดียว' : isConcert ? 'ตั๋วคอนเสิร์ต / เข้างาน' : ticket.name}</h3>
@@ -1163,7 +1163,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                         className="w-11 h-11 object-contain shrink-0"
                       />
                       <div>
-                        <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#6D28D9] block">
+                        <span className="text-[11px] font-extrabold uppercase tracking-wider text-[#6D28D9] block">
                           หมายเลข BIB ของคุณ
                         </span>
                         <span className="text-[11px] font-bold text-[#4B2D78]">
@@ -1261,7 +1261,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                     {/* Total Box */}
                     <div className="rounded-2xl bg-gradient-to-r from-[#240D47] to-[#3B1870] text-white p-3.5 flex items-center justify-between shadow-md">
                       <div>
-                        <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#FFE268] block">
+                        <span className="text-[11px] font-extrabold uppercase tracking-wider text-[#FFE268] block">
                           ยอดชำระสุทธิ (PromptPay QR)
                         </span>
                         <span className="text-xs text-white/80 font-bold">
@@ -1320,7 +1320,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                   </div>
                   <div className="flex items-center gap-2.5">
                     <div className="text-right">
-                      <span className="text-[10px] font-extrabold uppercase text-[#6B5A85] block">
+                      <span className="text-[11px] font-extrabold uppercase text-[#6B5A85] block">
                         ยอดชำระสุทธิ
                       </span>
                       <span className="font-display text-xl font-black text-[#2A1450] tabular-nums">

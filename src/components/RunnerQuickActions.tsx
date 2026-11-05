@@ -108,7 +108,7 @@ export const RunnerQuickActions: React.FC<RunnerQuickActionsProps> = ({
                 <Icon className="w-4 h-4 stroke-[2.2]" />
               </div>
               {act.badge && (
-                <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-[#FFC928] text-[#17151C]">
+                <span className="text-[11px] font-black uppercase px-2 py-0.5 rounded-full bg-[#FFC928] text-[#17151C]">
                   {act.badge}
                 </span>
               )}

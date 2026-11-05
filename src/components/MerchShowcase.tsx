@@ -31,9 +31,9 @@ const MockupWatermark: React.FC<{ size?: 'sm' | 'lg' }> = ({ size = 'sm' }) => (
       className="absolute left-1/2 top-1/2 flex w-[190%] -translate-x-1/2 -translate-y-1/2 -rotate-[24deg] flex-col items-center justify-center gap-[3.4em]"
       style={{ fontSize: size === 'lg' ? 20 : 11 }}
     >
-      {[0, 1, 2, 3].map((row) => (
+      {[0, 1, 2].map((row) => (
         <span key={row} className="whitespace-nowrap font-black tracking-wide text-[#2A1450]/[0.09]">
-          {Array.from({ length: 4 }, () => MOCKUP_NOTICE).join('     ·     ')}
+          {Array.from({ length: 2 }, () => MOCKUP_NOTICE).join('     ·     ')}
         </span>
       ))}
     </span>
@@ -174,7 +174,7 @@ export const MerchShowcase: React.FC<MerchShowcaseProps> = ({ onOpenRegister, cl
               {SIZES.map((sz) => (
                 <li key={sz.size} className="rounded-lg bg-[#F3ECFF] py-1 text-center leading-none">
                   <span className="block text-[11px] font-black text-[#2A1450]">{sz.size}</span>
-                  <span className="block mt-0.5 text-[10px] font-semibold text-[#6D28D9]">{sz.chest}</span>
+                  <span className="block mt-0.5 text-[11px] font-semibold text-[#6D28D9]">{sz.chest}</span>
                 </li>
               ))}
             </ul>

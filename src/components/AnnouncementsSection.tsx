@@ -34,7 +34,7 @@ export const AnnouncementsSection: React.FC = () => {
             >
               <div>
                 <div className="flex items-center justify-between mb-3">
-                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#6F35B5] bg-[#F3EDF9] px-2.5 py-0.5 rounded-full">
+                  <span className="text-[11px] font-extrabold uppercase tracking-wider text-[#6F35B5] bg-[#F3EDF9] px-2.5 py-0.5 rounded-full">
                     {item.category}
                   </span>
                   <div className="flex items-center gap-1 text-[11px] text-[#6F6A76]">

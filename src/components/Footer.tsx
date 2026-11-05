@@ -54,7 +54,7 @@ export const Footer: React.FC<FooterProps> = ({
 
             {/* Handwritten sign-off */}
             <div className="font-comic text-base font-bold text-[#FFCC00] mt-1 -rotate-2 inline-flex items-center gap-1.5">
-              “Run Together a Brighter Tomorrow”
+              “{t('วิ่งไปด้วยกัน เพื่อวันพรุ่งนี้ที่สดใสกว่า', 'Run Together a Brighter Tomorrow')}”
               <span className="animate-bounce-subtle inline-block">💛</span>
             </div>
           </div>
@@ -66,22 +66,22 @@ export const Footer: React.FC<FooterProps> = ({
             </h4>
             <ul className="space-y-2.5 text-xs text-white/70 font-semibold">
               <li>
-                <a href="#hero" className="inline-block py-1.5 hover:text-[#FFCC00] hover:translate-x-1.5 transition-all before:content-['🐾'] before:mr-1.5 before:opacity-0 hover:before:opacity-100 before:transition-opacity">{t('หน้าแรก', 'Home')}</a>
+                <a href="#hero" className="inline-block py-3 hover:text-[#FFCC00] hover:translate-x-1.5 transition-all before:content-['🐾'] before:mr-1.5 before:opacity-0 hover:before:opacity-100 before:transition-opacity">{t('หน้าแรก', 'Home')}</a>
               </li>
               <li>
-                <a href="#objective" className="inline-block py-1.5 hover:text-[#FFCC00] hover:translate-x-1.5 transition-all before:content-['🐾'] before:mr-1.5 before:opacity-0 hover:before:opacity-100 before:transition-opacity">{t('รายละเอียดงาน', 'About the event')}</a>
+                <a href="#objective" className="inline-block py-3 hover:text-[#FFCC00] hover:translate-x-1.5 transition-all before:content-['🐾'] before:mr-1.5 before:opacity-0 hover:before:opacity-100 before:transition-opacity">{t('รายละเอียดงาน', 'About the event')}</a>
               </li>
               <li>
-                <a href="#distances" className="inline-block py-1.5 hover:text-[#FFCC00] hover:translate-x-1.5 transition-all before:content-['🐾'] before:mr-1.5 before:opacity-0 hover:before:opacity-100 before:transition-opacity">{t('ระยะวิ่ง', 'Distances')} (10K / 5K / Dog 4K / Dog 1K)</a>
+                <a href="#distances" className="inline-block py-3 hover:text-[#FFCC00] hover:translate-x-1.5 transition-all before:content-['🐾'] before:mr-1.5 before:opacity-0 hover:before:opacity-100 before:transition-opacity">{t('ระยะวิ่ง', 'Distances')} (10K / 5K / Dog 4K / Dog 1K)</a>
               </li>
               <li>
-                <a href="#schedule-and-map" className="inline-block py-1.5 hover:text-[#FFCC00] hover:translate-x-1.5 transition-all before:content-['🐾'] before:mr-1.5 before:opacity-0 hover:before:opacity-100 before:transition-opacity">{t('เส้นทางวิ่ง & กำหนดการแข่งขัน', 'Route & schedule')}</a>
+                <a href="#schedule-and-map" className="inline-block py-3 hover:text-[#FFCC00] hover:translate-x-1.5 transition-all before:content-['🐾'] before:mr-1.5 before:opacity-0 hover:before:opacity-100 before:transition-opacity">{t('เส้นทางวิ่ง & กำหนดการแข่งขัน', 'Route & schedule')}</a>
               </li>
               <li>
-                <a href="#hotels" className="inline-block py-1.5 hover:text-[#FFCC00] hover:translate-x-1.5 transition-all before:content-['🐾'] before:mr-1.5 before:opacity-0 hover:before:opacity-100 before:transition-opacity">{t('ที่พักใกล้สถานที่จัดงาน', 'Hotels near the venue')}</a>
+                <a href="#hotels" className="inline-block py-3 hover:text-[#FFCC00] hover:translate-x-1.5 transition-all before:content-['🐾'] before:mr-1.5 before:opacity-0 hover:before:opacity-100 before:transition-opacity">{t('ที่พักใกล้สถานที่จัดงาน', 'Hotels near the venue')}</a>
               </li>
               <li>
-                <a href="#faq" className="inline-block py-1.5 hover:text-[#FFCC00] hover:translate-x-1.5 transition-all before:content-['🐾'] before:mr-1.5 before:opacity-0 hover:before:opacity-100 before:transition-opacity">{t('คำถามที่พบบ่อย (FAQ)', 'FAQ')}</a>
+                <a href="#faq" className="inline-block py-3 hover:text-[#FFCC00] hover:translate-x-1.5 transition-all before:content-['🐾'] before:mr-1.5 before:opacity-0 hover:before:opacity-100 before:transition-opacity">{t('คำถามที่พบบ่อย (FAQ)', 'FAQ')}</a>
               </li>
             </ul>
           </div>
@@ -100,13 +100,13 @@ export const Footer: React.FC<FooterProps> = ({
                 <Phone className="w-4 h-4 text-[#FFCC00] flex-shrink-0 mt-2" />
                 <div className="flex flex-col">
                   {eventInfo.contactPhones.map((p) => (
-                    <a key={p} href={`tel:${p.replace(/[^0-9]/g, '')}`} className="inline-block py-1 hover:text-[#FFCC00]">{p}</a>
+                    <a key={p} href={`tel:${p.replace(/[^0-9]/g, '')}`} className="inline-block py-2.5 hover:text-[#FFCC00]">{p}</a>
                   ))}
                 </div>
               </div>
               <div className="flex items-center gap-2">
                 <Mail className="w-4 h-4 text-[#FFCC00] flex-shrink-0" />
-                <a href={`mailto:${eventInfo.contactEmail}`} className="inline-block py-1 hover:text-[#FFCC00]">{eventInfo.contactEmail}</a>
+                <a href={`mailto:${eventInfo.contactEmail}`} className="inline-block py-2.5 hover:text-[#FFCC00]">{eventInfo.contactEmail}</a>
               </div>
 
             </div>
@@ -124,7 +124,7 @@ export const Footer: React.FC<FooterProps> = ({
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 min-h-[44px] px-4 rounded-xl bg-[#06C755] text-white text-sm font-extrabold hover:brightness-110"
               >
-                <span aria-hidden="true" className="w-5 h-5 rounded-md bg-white text-[#06C755] flex items-center justify-center font-black text-[9px] leading-none">LINE</span>
+                <span aria-hidden="true" className="w-5 h-5 rounded-md bg-white text-[#06C755] flex items-center justify-center font-black text-[11px] leading-none">LINE</span>
                 {t('แอดไลน์ทีมงาน', 'Add us on LINE')}
               </a>
               <a href={eventInfo.lineUrl} target="_blank" rel="noopener noreferrer" aria-label={t('สแกน QR เพื่อแอดไลน์', 'Scan the QR code to add us on LINE')} className="shrink-0 rounded-lg bg-white p-1">
@@ -164,7 +164,7 @@ export const Footer: React.FC<FooterProps> = ({
         <div className="pt-6 flex flex-col sm:flex-row items-center justify-between text-xs text-white/50 gap-4">
           <div className="flex flex-wrap items-center gap-3">
             <span>
-              © 2027 CHANGSUEK RUN. All rights reserved. |{' '}
+              © {new Date().getFullYear()} CHANGSUEK RUN. All rights reserved. |{' '}
               <span className="text-white/70">เห็นช้างวิ่ง วิ่งตามช้าง</span>
             </span>
             {onOpenAdminModal && (

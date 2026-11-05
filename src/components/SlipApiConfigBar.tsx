@@ -274,7 +274,7 @@ export const SlipApiConfigBar: React.FC<{ defaultExpanded?: boolean }> = ({
                 ตั้งค่าเชื่อม Omise PromptPay API (สแกนจ่ายปุ๊บได้บัตรเลย ไม่ต้องแนบสลิป)
               </span>
               <span
-                className={`px-2 py-0.5 rounded-md text-[10px] font-extrabold ${
+                className={`px-2 py-0.5 rounded-md text-[11px] font-extrabold ${
                   isExternalConnected
                     ? 'bg-emerald-600 text-white'
                     : 'bg-[#FFC928] text-[#2A1450] border border-[#2A1450]/30'

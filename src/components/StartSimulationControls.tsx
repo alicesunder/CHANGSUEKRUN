@@ -67,7 +67,7 @@ export const StartSimulationControls: React.FC<StartSimulationControlsProps> = (
             )}
           </div>
           <div className="flex-1 min-w-0">
-            <div className="text-[10px] font-black uppercase tracking-wider text-emerald-700 flex items-center gap-1.5">
+            <div className="text-[11px] font-black uppercase tracking-wider text-emerald-700 flex items-center gap-1.5">
               <span>ถึงจุดสำคัญ • กม. {currentLandmark.distanceFromStartKm}</span>
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
             </div>
@@ -201,14 +201,14 @@ export const StartSimulationControls: React.FC<StartSimulationControlsProps> = (
 
           {/* Speed Buttons: 0.5x, 1x, 2x, 5x, 10x */}
           <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-xl">
-            <span className="text-[10px] font-bold text-gray-400 px-1 hidden sm:inline">
+            <span className="text-[11px] font-bold text-gray-400 px-1 hidden sm:inline">
               ความเร็ว:
             </span>
             {speeds.map((s) => (
               <button
                 key={s}
                 onClick={() => onSpeedChange(s)}
-                className={`px-2 py-1 rounded-lg text-[10px] font-black transition-all cursor-pointer ${
+                className={`px-2 py-1 rounded-lg text-[11px] font-black transition-all cursor-pointer ${
                   speedMultiplier === s
                     ? 'bg-white text-[#5B20A8] shadow-xs'
                     : 'text-gray-500 hover:text-gray-900'

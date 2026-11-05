@@ -40,6 +40,16 @@ export const FAQ_EN: Record<string, { question: string; answer: string }> = {
     answer:
       'In light rain the event goes on as normal. In a severe thunderstorm or dangerous conditions the race committee may delay the start or change the route in line with safety standards.',
   },
+  'faq-9': {
+    question: 'Can I get a refund, transfer my ticket or change the runner name?',
+    answer:
+      'Under the registration terms there are no refunds and tickets cannot be transferred, so please check the distance, date and your details before paying. If you entered something wrong (such as a name or shirt size), contact the organiser through the channels at the bottom of the page (phone, e-mail or LINE).',
+  },
+  'faq-10': {
+    question: 'Do I need my ID card, and is there accident insurance?',
+    answer:
+      'Every runner needs to give a national ID number for accident insurance (covering all distances). The system asks for it when you register each run ticket, and on Race Kit day please bring your ID card and show your ticket QR.',
+  },
 };
 
 export const FAQ_CATEGORIES_EN: Record<string, string> = {

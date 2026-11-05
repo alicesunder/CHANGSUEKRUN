@@ -87,15 +87,15 @@ export const VenueSection: React.FC = () => {
                 <div className="grid grid-cols-3 gap-2 mt-6 pt-4 border-t border-white/20 text-center">
                   <div>
                     <div className="text-lg font-black text-[#FFC928]">300+</div>
-                    <div className="text-[10px] text-white/70 font-bold">ไร่ พื้นที่สีเขียว</div>
+                    <div className="text-[11px] text-white/70 font-bold">ไร่ พื้นที่สีเขียว</div>
                   </div>
                   <div>
                     <div className="text-lg font-black text-[#FFC928]">1.5 km</div>
-                    <div className="text-[10px] text-white/70 font-bold">หาดทรายขาว</div>
+                    <div className="text-[11px] text-white/70 font-bold">หาดทรายขาว</div>
                   </div>
                   <div>
                     <div className="text-lg font-black text-[#FFC928]">100%</div>
-                    <div className="text-[10px] text-white/70 font-bold">อากาศบริสุทธิ์</div>
+                    <div className="text-[11px] text-white/70 font-bold">อากาศบริสุทธิ์</div>
                   </div>
                 </div>
               </div>

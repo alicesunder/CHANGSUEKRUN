@@ -511,7 +511,7 @@ export const RouteAndScheduleSection: React.FC<RouteAndScheduleProps> = ({
                   <div className="bg-white rounded-xl px-3 py-1.5 border border-purple-100 flex items-center gap-2">
                     <Flag className="w-4 h-4 text-[#7B3FC6] shrink-0" />
                     <div>
-                      <div className="text-[10px] font-bold text-[#6B5A85]">ระยะทางจริง</div>
+                      <div className="text-[11px] font-bold text-[#6B5A85]">ระยะทางจริง</div>
                       <div className="text-xs sm:text-sm font-black text-[#2A1450] tabular-nums">
                         {activeRouteData.distanceKm} กม.
                       </div>
@@ -520,7 +520,7 @@ export const RouteAndScheduleSection: React.FC<RouteAndScheduleProps> = ({
                   <div className="bg-white rounded-xl px-3 py-1.5 border border-purple-100 flex items-center gap-2">
                     <Clock className="w-4 h-4 text-[#C2410C] shrink-0" />
                     <div>
-                      <div className="text-[10px] font-bold text-[#6B5A85]">เวลาปล่อยตัว</div>
+                      <div className="text-[11px] font-bold text-[#6B5A85]">เวลาปล่อยตัว</div>
                       <div className="text-xs sm:text-sm font-black text-[#2A1450] tabular-nums">
                         {activeRouteData.startTime}
                       </div>
@@ -529,7 +529,7 @@ export const RouteAndScheduleSection: React.FC<RouteAndScheduleProps> = ({
                   <div className="bg-white rounded-xl px-3 py-1.5 border border-purple-100 flex items-center gap-2">
                     <Droplets className="w-4 h-4 text-[#0369A1] shrink-0" />
                     <div>
-                      <div className="text-[10px] font-bold text-[#6B5A85]">จุดบริการน้ำ</div>
+                      <div className="text-[11px] font-bold text-[#6B5A85]">จุดบริการน้ำ</div>
                       <div className="text-xs sm:text-sm font-black text-[#2A1450] tabular-nums">
                         {activeRouteData.waterStationCount} จุดตลอดสาย
                       </div>

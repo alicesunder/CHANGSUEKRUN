@@ -96,7 +96,7 @@ export const DogHealthCheckSection: React.FC = () => (
                 <f.icon className="w-5 h-5 mx-auto" style={{ color: f.color }} aria-hidden="true" />
                 <p className="mt-1 text-[11px] font-extrabold text-[#6B5A85]">{f.label}</p>
                 <p className="text-[15px] sm:text-lg font-black leading-tight" style={{ color: f.color }}>{f.big}</p>
-                <p className="text-[10.5px] sm:text-xs font-bold text-[#4B2D78]">{f.small}</p>
+                <p className="text-[11px] sm:text-xs font-bold text-[#4B2D78]">{f.small}</p>
               </li>
             ))}
           </ul>

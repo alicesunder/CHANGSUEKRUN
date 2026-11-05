@@ -107,7 +107,7 @@ export const PaymentStep: React.FC<{
               {mm}:{ss}
             </span>
           )}
-          {!expired && <span className="text-[10px] font-extrabold mt-1">นาที : วินาที</span>}
+          {!expired && <span className="text-[11px] font-extrabold mt-1">นาที : วินาที</span>}
         </div>
         <div className="min-w-0">
           <div className="text-[11px] font-mono font-extrabold uppercase tracking-wider text-[#6B5A85]">คำสั่งซื้อ {order.orderId}</div>

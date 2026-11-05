@@ -65,7 +65,7 @@ export const EventQuickInfo: React.FC = () => {
               <div className="text-xs sm:text-sm font-black text-gray-900 leading-tight">
                 ค่ายนเรศวร ตชด.
               </div>
-              <div className="text-[10px] text-gray-400 font-medium">ชะอำ - หัวหิน</div>
+              <div className="text-[11px] text-gray-400 font-medium">ชะอำ - หัวหิน</div>
             </div>
           </div>
 
@@ -79,7 +79,7 @@ export const EventQuickInfo: React.FC = () => {
               <div className="text-xs sm:text-sm font-black text-gray-900 leading-tight whitespace-nowrap">
                 10 / 5 km + Dog 4 / 1 km
               </div>
-              <div className="text-[10px] text-gray-400 font-medium">เหมาะสำหรับทุกคน</div>
+              <div className="text-[11px] text-gray-400 font-medium">เหมาะสำหรับทุกคน</div>
             </div>
           </div>
 
@@ -93,7 +93,7 @@ export const EventQuickInfo: React.FC = () => {
               <div className="text-xs sm:text-sm font-black text-gray-900 leading-tight">
                 06:00 น.
               </div>
-              <div className="text-[10px] text-gray-400 font-medium">(ตามระยะ)</div>
+              <div className="text-[11px] text-gray-400 font-medium">(ตามระยะ)</div>
             </div>
           </div>
 
@@ -110,7 +110,7 @@ export const EventQuickInfo: React.FC = () => {
               <div className="text-xs sm:text-sm font-black text-gray-900 leading-tight group-hover:text-rose-600 transition-colors">
                 แนะนำโรงแรม
               </div>
-              <div className="text-[10px] text-rose-500 font-bold">ภายใน 10 กม. ➔</div>
+              <div className="text-[11px] text-rose-500 font-bold">ภายใน 10 กม. ➔</div>
             </div>
           </a>
 
@@ -146,22 +146,22 @@ export const EventQuickInfo: React.FC = () => {
               <div className="flex items-center gap-2">
                 <div className="bg-white px-2.5 py-1 rounded-xl shadow-xs border border-gray-200 text-center min-w-[50px]">
                   <div className="text-base sm:text-lg font-black text-[#7B3FC6]">{timeLeft.days}</div>
-                  <div className="text-[9px] text-gray-400 font-bold">วัน</div>
+                  <div className="text-[11px] text-gray-400 font-bold">วัน</div>
                 </div>
                 <span className="font-black text-gray-400">:</span>
                 <div className="bg-white px-2.5 py-1 rounded-xl shadow-xs border border-gray-200 text-center min-w-[50px]">
                   <div className="text-base sm:text-lg font-black text-gray-800">{timeLeft.hours}</div>
-                  <div className="text-[9px] text-gray-400 font-bold">ชั่วโมง</div>
+                  <div className="text-[11px] text-gray-400 font-bold">ชั่วโมง</div>
                 </div>
                 <span className="font-black text-gray-400">:</span>
                 <div className="bg-white px-2.5 py-1 rounded-xl shadow-xs border border-gray-200 text-center min-w-[50px]">
                   <div className="text-base sm:text-lg font-black text-gray-800">{timeLeft.minutes}</div>
-                  <div className="text-[9px] text-gray-400 font-bold">นาที</div>
+                  <div className="text-[11px] text-gray-400 font-bold">นาที</div>
                 </div>
                 <span className="font-black text-gray-400">:</span>
                 <div className="bg-white px-2.5 py-1 rounded-xl shadow-xs border border-gray-200 text-center min-w-[50px]">
                   <div className="text-base sm:text-lg font-black text-[#2EAD62]">{timeLeft.seconds}</div>
-                  <div className="text-[9px] text-gray-400 font-bold">วินาที</div>
+                  <div className="text-[11px] text-gray-400 font-bold">วินาที</div>
                 </div>
               </div>
             </div>
@@ -172,14 +172,14 @@ export const EventQuickInfo: React.FC = () => {
                 <Sun className="w-5 h-5 text-amber-500" />
                 <div>
                   <div className="font-bold text-gray-800">อุณหภูมิ 24°C - 27°C</div>
-                  <div className="text-[10px] text-gray-500">อากาศเช้าเย็นสบาย</div>
+                  <div className="text-[11px] text-gray-500">อากาศเช้าเย็นสบาย</div>
                 </div>
               </div>
               <div className="flex items-center gap-2">
                 <Wind className="w-5 h-5 text-sky-500" />
                 <div>
                   <div className="font-bold text-gray-800">ลมทะเล 12 กม./ชม.</div>
-                  <div className="text-[10px] text-gray-500">โปร่ง โล่ง สดชื่น</div>
+                  <div className="text-[11px] text-gray-500">โปร่ง โล่ง สดชื่น</div>
                 </div>
               </div>
             </div>

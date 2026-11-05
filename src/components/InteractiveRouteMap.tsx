@@ -729,7 +729,7 @@ export const InteractiveRouteMap: React.FC<InteractiveRouteMapProps> = ({
                       style={{ backgroundColor: isSelected ? '#FFC928' : r?.color || '#5B20A8' }}
                     />
                     <span>{rId.toUpperCase()}{rId === '1km' || rId === '3km' ? ' 🐾' : ''}</span>
-                    <span className="text-[10px] opacity-80 hidden sm:inline">
+                    <span className="text-[11px] opacity-80 hidden sm:inline">
                       ({r?.distanceKm || 0} km)
                     </span>
                   </button>
@@ -976,7 +976,7 @@ export const InteractiveRouteMap: React.FC<InteractiveRouteMapProps> = ({
               <div className="flex items-start justify-between gap-2 mb-2">
                 <div>
                   <span
-                    className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md"
+                    className="text-[11px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md"
                     style={{
                       backgroundColor: `${selectedEntityInfo.tagColor || '#5B20A8'}15`,
                       color: selectedEntityInfo.tagColor || '#5B20A8',
@@ -1009,7 +1009,7 @@ export const InteractiveRouteMap: React.FC<InteractiveRouteMapProps> = ({
                   {selectedEntityInfo.features.map((feat, i) => (
                     <span
                       key={i}
-                      className="bg-purple-50 text-[#5B20A8] border border-purple-100 text-[10px] font-bold px-2 py-0.5 rounded-md"
+                      className="bg-purple-50 text-[#5B20A8] border border-purple-100 text-[11px] font-bold px-2 py-0.5 rounded-md"
                     >
                       {feat}
                     </span>
@@ -1074,7 +1074,7 @@ export const InteractiveRouteMap: React.FC<InteractiveRouteMapProps> = ({
               <div className="text-lg font-black text-[#261042] mt-0.5">
                 {currentRoute.distanceKm} km
               </div>
-              <div className="text-[10px] text-[#5B20A8] font-semibold">
+              <div className="text-[11px] text-[#5B20A8] font-semibold">
                 สำรวจ: {currentRoute.measuredPerimeterKm || currentRoute.distanceKm} km
               </div>
             </div>
@@ -1085,7 +1085,7 @@ export const InteractiveRouteMap: React.FC<InteractiveRouteMapProps> = ({
               <div className="text-lg font-black text-[#261042] mt-0.5">
                 {currentRoute.startTime}
               </div>
-              <div className="text-[10px] text-gray-500">ยามรุ่งอรุณริมหาด</div>
+              <div className="text-[11px] text-gray-500">ยามรุ่งอรุณริมหาด</div>
             </div>
 
             {/* 3. Cut-off */}
@@ -1094,7 +1094,7 @@ export const InteractiveRouteMap: React.FC<InteractiveRouteMapProps> = ({
               <div className="text-lg font-black text-[#261042] mt-0.5">
                 {currentRoute.cutoffTime}
               </div>
-              <div className="text-[10px] text-emerald-600 font-semibold">
+              <div className="text-[11px] text-emerald-600 font-semibold">
                 {currentRoute.durationEstimate}
               </div>
             </div>
@@ -1105,7 +1105,7 @@ export const InteractiveRouteMap: React.FC<InteractiveRouteMapProps> = ({
               <div className="text-lg font-black text-[#0369A1] mt-0.5">
                 {currentRoute.waterStationCount} จุด
               </div>
-              <div className="text-[10px] text-gray-500">พร้อมเกลือแร่ & ผ้าเย็น</div>
+              <div className="text-[11px] text-gray-500">พร้อมเกลือแร่ & ผ้าเย็น</div>
             </div>
 
             {/* 5. Medical Stations */}
@@ -1114,7 +1114,7 @@ export const InteractiveRouteMap: React.FC<InteractiveRouteMapProps> = ({
               <div className="text-lg font-black text-rose-600 mt-0.5">
                 {currentRoute.medicalStationCount} จุด
               </div>
-              <div className="text-[10px] text-gray-500">พร้อมเครื่อง AED & กู้ชีพ</div>
+              <div className="text-[11px] text-gray-500">พร้อมเครื่อง AED & กู้ชีพ</div>
             </div>
 
             {/* 6. Terrain */}
@@ -1123,7 +1123,7 @@ export const InteractiveRouteMap: React.FC<InteractiveRouteMapProps> = ({
               <div className="text-lg font-black text-[#5B20A8] mt-0.5">
                 {currentRoute.difficulty.split(' ')[0]}
               </div>
-              <div className="text-[10px] text-gray-500">ทางเรียบวิวทะเล</div>
+              <div className="text-[11px] text-gray-500">ทางเรียบวิวทะเล</div>
             </div>
           </div>
 
@@ -1181,7 +1181,7 @@ export const InteractiveRouteMap: React.FC<InteractiveRouteMapProps> = ({
                       <span className="w-1.5 h-1.5 rounded-full bg-[#5B20A8] shrink-0" />
                       <span className="font-bold text-gray-800 truncate">{lm.name}</span>
                     </div>
-                    <span className="text-[10px] font-bold text-purple-700 shrink-0">
+                    <span className="text-[11px] font-bold text-purple-700 shrink-0">
                       กม. {lm.distanceFromStartKm}
                     </span>
                   </div>
@@ -1205,11 +1205,11 @@ export const InteractiveRouteMap: React.FC<InteractiveRouteMapProps> = ({
                     key={i}
                     className="bg-[#FAF8FD] p-2.5 rounded-xl border border-purple-100 text-center"
                   >
-                    <div className="text-[10px] text-gray-500 font-bold">กม. {el.distanceKm}</div>
+                    <div className="text-[11px] text-gray-500 font-bold">กม. {el.distanceKm}</div>
                     <div className="text-sm font-black text-[#5B20A8] my-0.5">
                       {el.elevationMeters || el.elevationM || 4} ม.
                     </div>
-                    <div className="text-[9px] text-gray-600 truncate">{el.surface || 'ทางเรียบ'}</div>
+                    <div className="text-[11px] text-gray-600 truncate">{el.surface || 'ทางเรียบ'}</div>
                   </div>
                 ))}
               </div>

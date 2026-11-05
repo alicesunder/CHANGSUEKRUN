@@ -18,6 +18,8 @@ export const WinnersSection: React.FC = () => {
   }, []);
 
   const has = !!winners && winners.length > 0;
+  // nothing to show before the event: no empty placeholder block
+  if (winners !== null && !has) return null;
 
   return (
     <section id="winners" aria-labelledby="winners-heading" className="py-10 sm:py-14 scroll-mt-20">

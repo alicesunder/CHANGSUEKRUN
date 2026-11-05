@@ -36,7 +36,7 @@ export const RunnerChecklist: React.FC = () => {
 
         <div className="text-right">
           <div className="text-2xl font-black text-[#5B20A8] leading-none">{percentage}%</div>
-          <span className="text-[10px] font-bold text-gray-400 uppercase">
+          <span className="text-[11px] font-bold text-gray-400 uppercase">
             {completedCount}/{items.length} เรียบร้อย
           </span>
         </div>

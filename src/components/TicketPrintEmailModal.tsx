@@ -129,7 +129,7 @@ export const TicketPrintEmailModal: React.FC<TicketPrintEmailModalProps> = ({
               <Printer className="w-5 h-5" />
             </div>
             <div>
-              <div className="text-[10px] font-mono font-extrabold uppercase tracking-widest text-[#FFC928]">
+              <div className="text-[11px] font-mono font-extrabold uppercase tracking-widest text-[#FFC928]">
                 AUTO E-TICKET, EMAIL & PRINT CENTER · BIB #{profile.bibNumber}
               </div>
               <h3 className="text-base sm:text-xl font-black leading-tight">
@@ -253,7 +253,7 @@ export const TicketPrintEmailModal: React.FC<TicketPrintEmailModalProps> = ({
                     <div className="min-w-0">
                       <div className="text-xs font-black truncate">{opt.title}</div>
                       <div
-                        className={`text-[10px] font-semibold truncate ${
+                        className={`text-[11px] font-semibold truncate ${
                           active ? 'text-white/80' : 'text-[#6B5A85]'
                         }`}
                       >
@@ -330,7 +330,7 @@ export const TicketPrintEmailModal: React.FC<TicketPrintEmailModalProps> = ({
                   <div className="border-2 border-[#2A1450] rounded-2xl p-4 sm:p-5 bg-[#FAF7FF] space-y-3 page-break-avoid">
                     <div className="flex flex-wrap items-start justify-between gap-3 border-b-2 border-[#2A1450]/15 pb-3">
                       <div>
-                        <span className="text-[10px] font-mono font-extrabold uppercase tracking-widest text-[#6D28D9] block">
+                        <span className="text-[11px] font-mono font-extrabold uppercase tracking-widest text-[#6D28D9] block">
                           OFFICIAL E-RECEIPT & AUTOMATIC PAYMENT CONFIRMATION
                         </span>
                         <h2 className="text-lg sm:text-xl font-black text-[#2A1450]">
@@ -353,21 +353,21 @@ export const TicketPrintEmailModal: React.FC<TicketPrintEmailModalProps> = ({
 
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
                       <div>
-                        <span className="text-[10px] font-bold text-[#6B5A85] block">ชื่อผู้สมัคร</span>
+                        <span className="text-[11px] font-bold text-[#6B5A85] block">ชื่อผู้สมัคร</span>
                         <span className="font-black text-[#2A1450]">{profile.fullName}</span>
                       </div>
                       <div>
-                        <span className="text-[10px] font-bold text-[#6B5A85] block">อีเมลรับบัตร</span>
+                        <span className="text-[11px] font-bold text-[#6B5A85] block">อีเมลรับบัตร</span>
                         <span className="font-bold text-[#2A1450]">{profile.email || '-'}</span>
                       </div>
                       <div>
-                        <span className="text-[10px] font-bold text-[#6B5A85] block">อ้างอิง PromptPay</span>
+                        <span className="text-[11px] font-bold text-[#6B5A85] block">อ้างอิง PromptPay</span>
                         <span className="font-mono font-black text-emerald-800">
                           {profile.paymentRef || 'PP-VERIFIED'}
                         </span>
                       </div>
                       <div>
-                        <span className="text-[10px] font-bold text-[#6B5A85] block">ยอดชำระสุทธิ</span>
+                        <span className="text-[11px] font-bold text-[#6B5A85] block">ยอดชำระสุทธิ</span>
                         <span className="font-display text-base font-black text-[#2A1450]">
                           {formatBaht(totalAmount)} บาท
                         </span>
@@ -386,7 +386,7 @@ export const TicketPrintEmailModal: React.FC<TicketPrintEmailModalProps> = ({
                       className="px-5 py-3.5 text-white border-b-[3px] border-[#2A1450] flex items-center justify-between"
                     >
                       <div>
-                        <span className="text-[10px] font-mono font-extrabold uppercase tracking-widest text-[#FFC928] block">
+                        <span className="text-[11px] font-mono font-extrabold uppercase tracking-widest text-[#FFC928] block">
                           CHANGSUEK RUN 2027 · E-TICKET & RACE KIT PICKUP PASS
                         </span>
                         <span className="text-base sm:text-lg font-black">
@@ -414,7 +414,7 @@ export const TicketPrintEmailModal: React.FC<TicketPrintEmailModalProps> = ({
 
                         <div className="grid grid-cols-2 gap-2.5 text-xs bg-[#FAF7FF] p-3.5 rounded-2xl border border-[#2A1450]/15">
                           <div>
-                            <span className="text-[10px] font-bold text-[#6B5A85] block">
+                            <span className="text-[11px] font-bold text-[#6B5A85] block">
                               ชื่อนักวิ่ง (Runner)
                             </span>
                             <span className="font-black text-sm text-[#2A1450]">
@@ -422,7 +422,7 @@ export const TicketPrintEmailModal: React.FC<TicketPrintEmailModalProps> = ({
                             </span>
                           </div>
                           <div>
-                            <span className="text-[10px] font-bold text-[#6B5A85] block">
+                            <span className="text-[11px] font-bold text-[#6B5A85] block">
                               ประเภทระยะทาง
                             </span>
                             <span className="font-black text-sm text-[#2A1450]">
@@ -430,7 +430,7 @@ export const TicketPrintEmailModal: React.FC<TicketPrintEmailModalProps> = ({
                             </span>
                           </div>
                           <div>
-                            <span className="text-[10px] font-bold text-[#6B5A85] block">
+                            <span className="text-[11px] font-bold text-[#6B5A85] block">
                               วันและสถานที่จัดงาน
                             </span>
                             <span className="font-bold text-[#2A1450]">
@@ -438,7 +438,7 @@ export const TicketPrintEmailModal: React.FC<TicketPrintEmailModalProps> = ({
                             </span>
                           </div>
                           <div>
-                            <span className="text-[10px] font-bold text-[#6B5A85] block">
+                            <span className="text-[11px] font-bold text-[#6B5A85] block">
                               จุดรับ Race Kit
                             </span>
                             <span className="font-bold text-[#5B20A8]">
@@ -470,7 +470,7 @@ export const TicketPrintEmailModal: React.FC<TicketPrintEmailModalProps> = ({
                         <span className="text-[11px] font-black text-[#2A1450] mt-1.5">
                           QR สแกนรับเสื้อและเหรียญ
                         </span>
-                        <span className="text-[10px] font-mono font-bold text-[#6B5A85]">
+                        <span className="text-[11px] font-mono font-bold text-[#6B5A85]">
                           {orderId}
                         </span>
                       </div>
@@ -535,7 +535,7 @@ export const TicketPrintEmailModal: React.FC<TicketPrintEmailModalProps> = ({
 
                       <div className="grid grid-cols-3 gap-3 mt-5 text-left max-w-2xl mx-auto">
                         <div className="p-3 rounded-2xl bg-[#FAF7FF] border-2 border-[#2A1450]/20">
-                          <span className="text-[10px] font-bold text-[#6B5A85] uppercase block">
+                          <span className="text-[11px] font-bold text-[#6B5A85] uppercase block">
                             RUNNER NAME
                           </span>
                           <span className="text-sm sm:text-base font-black text-[#2A1450] truncate block">
@@ -543,7 +543,7 @@ export const TicketPrintEmailModal: React.FC<TicketPrintEmailModalProps> = ({
                           </span>
                         </div>
                         <div className="p-3 rounded-2xl bg-[#FAF7FF] border-2 border-[#2A1450]/20">
-                          <span className="text-[10px] font-bold text-[#6B5A85] uppercase block">
+                          <span className="text-[11px] font-bold text-[#6B5A85] uppercase block">
                             JERSEY SIZE
                           </span>
                           <span className="text-sm sm:text-base font-black text-[#2A1450] block">
@@ -551,7 +551,7 @@ export const TicketPrintEmailModal: React.FC<TicketPrintEmailModalProps> = ({
                           </span>
                         </div>
                         <div className="p-3 rounded-2xl bg-[#FAF7FF] border-2 border-[#2A1450]/20">
-                          <span className="text-[10px] font-bold text-[#6B5A85] uppercase block">
+                          <span className="text-[11px] font-bold text-[#6B5A85] uppercase block">
                             EMERGENCY / ติดต่อผู้จัดงาน
                           </span>
                           <span className="text-xs sm:text-sm font-black text-[#5B20A8] block leading-snug">
@@ -627,7 +627,7 @@ export const TicketPrintEmailModal: React.FC<TicketPrintEmailModalProps> = ({
                           alt="Email E-Ticket QR"
                           className="w-28 h-28 object-contain mx-auto"
                         />
-                        <span className="text-[10px] font-extrabold text-[#2A1450] block mt-1">
+                        <span className="text-[11px] font-extrabold text-[#2A1450] block mt-1">
                           QR สแกนรับเสื้อวันงาน
                         </span>
                       </div>

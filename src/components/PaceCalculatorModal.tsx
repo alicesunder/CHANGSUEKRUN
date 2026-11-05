@@ -175,7 +175,7 @@ export const PaceCalculatorModal: React.FC<PaceCalculatorModalProps> = ({
                 }}
                 className="w-full accent-[#7B3FC6] cursor-pointer"
               />
-              <div className="flex justify-between text-[10px] text-gray-400 font-bold mt-1">
+              <div className="flex justify-between text-[11px] text-gray-400 font-bold mt-1">
                 <span>เร็ว 4:00</span>
                 <span>ปานกลาง 8:00</span>
                 <span>เดิน 14:00</span>
@@ -207,14 +207,14 @@ export const PaceCalculatorModal: React.FC<PaceCalculatorModalProps> = ({
               <div className="flex items-center gap-2 p-2 rounded-xl bg-white border border-gray-100">
                 <Flame className="w-4 h-4 text-orange-500" />
                 <div>
-                  <div className="text-[10px] text-gray-400 font-bold">เผาผลาญพลังงาน</div>
+                  <div className="text-[11px] text-gray-400 font-bold">เผาผลาญพลังงาน</div>
                   <div className="text-xs font-black text-gray-800">~{estimatedCalories} กิโลแคลอรี</div>
                 </div>
               </div>
               <div className="flex items-center gap-2 p-2 rounded-xl bg-white border border-gray-100">
                 <Droplets className="w-4 h-4 text-blue-500" />
                 <div>
-                  <div className="text-[10px] text-gray-400 font-bold">น้ำดื่มที่ควรดื่ม</div>
+                  <div className="text-[11px] text-gray-400 font-bold">น้ำดื่มที่ควรดื่ม</div>
                   <div className="text-xs font-black text-gray-800">{recommendedWater}</div>
                 </div>
               </div>

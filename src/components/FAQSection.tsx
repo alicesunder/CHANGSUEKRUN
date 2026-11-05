@@ -66,6 +66,7 @@ export const FAQSection: React.FC = () => {
             <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-[#6B5A85]" />
             <input
               type="text"
+              aria-label={t('ค้นหาในคำถามที่พบบ่อย', 'Search the FAQ')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={t('ค้นหาคำถาม เช่น น้องสุนัข, ที่จอดรถ, เหรียญรางวัล, เสื้อ...', 'Search, e.g. dog, parking, medal, shirt...')}

@@ -116,7 +116,7 @@ export const RunnerHub: React.FC<{
             <div className="flex min-w-0 items-center gap-3">
               <span className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl border-2 border-[#FFE268] bg-white/95 text-3xl shadow-lg" aria-hidden="true">🐘</span>
               <div className="min-w-0">
-                <p className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[#FFE268]">RUNNER CENTER · CHANGSUEK RUN 2027</p>
+                <p className="text-[11px] font-extrabold uppercase tracking-[0.18em] text-[#FFE268]">RUNNER CENTER · CHANGSUEK RUN 2027</p>
                 <h2 className="truncate text-xl font-black leading-tight sm:text-2xl">{t('สวัสดี', 'Hello')}, {user.name || user.username || user.email} 👋</h2>
                 <p className="truncate text-xs font-bold text-white/80">{user.email || (user.username && `@${user.username}`) || (user.social?.length ? user.social.map((s) => s[0].toUpperCase() + s.slice(1)).join(' · ') : '')}</p>
               </div>

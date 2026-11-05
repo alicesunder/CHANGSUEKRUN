@@ -42,7 +42,7 @@ const BRAND_HEADER = 'linear-gradient(135deg, #2A1450 0%, #4C1D95 55%, #6D28D9 1
 const STATIONS = {
   run: { n: 1, emoji: '🏃', title: 'ตั๋ววิ่ง', titleEn: 'Run ticket', hint: 'เลือก 1 ระยะ (ไม่วิ่งก็ข้ามได้)', hintEn: 'Pick 1 distance (skip it if you are not running)', grad: BRAND_HEADER },
   concert: { n: 2, emoji: '🎶', title: 'ตั๋วคอนเสิร์ต', titleEn: 'Concert ticket', hint: 'ริมหาด Door Open 17.30 น. · เริ่ม 18.00 น. · GA หรือ VIP TABLE · ซื้อแยกได้', hintEn: 'On the beach · doors 17:30 · show 18:00 · GA or VIP table · can be bought separately', grad: BRAND_HEADER },
-  addon: { n: 3, emoji: '🎢', title: 'กิจกรรมเสริม (เฉพาะบุคคล)', titleEn: 'Activities (individuals only)', hint: 'วันอาทิตย์ที่ 10 ม.ค. 2570 · 2 อย่างขึ้นไปลด 10% · มีคอนเสิร์ตลดเพิ่ม 10% (สูงสุด 20%)', hintEn: 'Sunday 10 Jan 2027 · 2+ activities −10% · with a concert ticket another −10% (max 20%)', grad: BRAND_HEADER },
+  addon: { n: 3, emoji: '🎢', title: 'กิจกรรมเสริม (เฉพาะบุคคล)', titleEn: 'Activities (individuals only)', hint: 'วันอาทิตย์ที่ 10 ม.ค. 2570 · ยิงปืน 09.00–11.00 · หอสูง 10.00–12.00 · อุโมงค์ลม 13.00–15.00 น.', hintEn: 'Sunday 10 Jan 2027 · shooting 09:00–11:00 · high tower 10:00–12:00 · wind tunnel 13:00–15:00', grad: BRAND_HEADER },
 } as const;
 type StationKey = keyof typeof STATIONS;
 
@@ -159,6 +159,7 @@ const perks = (isDog: boolean) => [
 ];
 
 const RUN_ORDER: RouteId[] = ['1km', '3km', '5km', '10km'];
+const QUICK_LABEL: Record<string, string> = { '1km': 'Dog 1K', '3km': 'Dog 4K', '5km': '5K', '10km': '10K' };
 
 // Package prices per person (2+ activities), shown in the price list under the activities
 const PACKAGE_TABLE: { name: string; price: number; strong?: boolean }[] = [
@@ -223,6 +224,7 @@ const RunTicket: React.FC<{ id: RouteId; on: boolean; onPick: () => void }> = ({
       whileHover={{ y: -4 }}
       animate={on ? { y: -6, rotate: -0.6 } : { y: 0, rotate: 0 }}
       transition={{ type: 'spring', stiffness: 380, damping: 20 }}
+      id={`run-ticket-${id}`}
       className="group relative flex flex-col rounded-[26px] overflow-hidden shrink-0 w-[88%] snap-start sm:w-auto"
       style={{ background: l.grad, border: on ? '3px solid var(--ink)' : `2px solid ${l.borderIdle}`, boxShadow: on ? l.shadowActive : l.shadowIdle }}
     >
@@ -582,6 +584,23 @@ export const TicketShop: React.FC<TicketShopProps> = ({
               }
             >
               <span id="ticket-cards" className="block h-0 scroll-mt-28" aria-hidden="true" />
+              <div className="sm:hidden mt-3 grid grid-cols-4 gap-1.5" role="group" aria-label={tr('เลือกระยะอย่างเร็ว', 'Quick pick')}>
+                {RUN_ORDER.map((id) => (
+                  <button
+                    key={id}
+                    type="button"
+                    onClick={() => {
+                      onRunChange(run === id ? null : id);
+                      requestAnimationFrame(() => document.getElementById('run-ticket-' + id)?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' }));
+                    }}
+                    aria-pressed={run === id}
+                    className={`flex min-h-[52px] flex-col items-center justify-center rounded-xl border-2 px-1 py-1 text-center leading-tight cursor-pointer ${run === id ? 'bg-[#FFC928] border-[var(--ink)] text-[var(--ink)]' : 'bg-white border-[var(--ink)]/25 text-[var(--ink)]'}`}
+                  >
+                    <span className="text-sm font-black">{QUICK_LABEL[id]}</span>
+                    <span className="text-[11px] font-extrabold tabular-nums">{runBasePrice(id, earlyBird)}฿</span>
+                  </button>
+                ))}
+              </div>
               <div
                 role="radiogroup"
                 aria-label="เลือกระยะวิ่ง"
@@ -707,7 +726,7 @@ export const TicketShop: React.FC<TicketShopProps> = ({
                   }
                 >
                   <span id="addons" className="block h-0 scroll-mt-28" aria-hidden="true" />
-                  <p className={`mb-3 rounded-2xl px-3 py-2 text-sm font-extrabold text-center border-2 ${addOnRate > 0 ? 'bg-[#FFE268] border-[var(--ink)] text-[var(--ink)]' : 'bg-gradient-to-r from-[#E0F7FA] to-[#ECFDF5] border-[#0EA5E9]/30 text-[#0369A1]'}`}>
+                  {(activityCount === 1 || addOnRate > 0) && <p className={`mb-3 rounded-2xl px-3 py-2 text-sm font-extrabold text-center border-2 ${addOnRate > 0 ? 'bg-[#FFE268] border-[var(--ink)] text-[var(--ink)]' : 'bg-gradient-to-r from-[#E0F7FA] to-[#ECFDF5] border-[#0EA5E9]/30 text-[#0369A1]'}`}>
                     {addOnRate >= ADDON_MAX_RATE
                       ? `🎉🎉 กิจกรรมลด ${percentOf(addOnRate)}% สูงสุดแล้ว! สุดคุ้ม!!!`
                       : addOnRate > 0
@@ -715,7 +734,7 @@ export const TicketShop: React.FC<TicketShopProps> = ({
                         : activityCount === 1
                           ? `อีก 1 กิจกรรม หรือเพิ่มตั๋วคอนเสิร์ต ลด ${percentOf(ADDON_TWO_RATE)}% ทันที! 🎁`
                           : `2 กิจกรรมขึ้นไปลด ${percentOf(ADDON_TWO_RATE)}% · มีคอนเสิร์ตลดเพิ่มอีก ${percentOf(ADDON_CONCERT_RATE)}% (สูงสุด ${percentOf(ADDON_MAX_RATE)}%) 🎁`}
-                  </p>
+                  </p>}
                   <AddOnPicker value={addOns} onChange={onAddOnsChange} windTunnelRemaining={windRemaining} showResult={false} layout="rows" discountCtx={discountCtx} />
                   <details className="group mt-3 rounded-2xl bg-[#FAF7FF] border-2 border-[var(--ink)]/10">
                     <summary className="list-none cursor-pointer flex items-center justify-between gap-3 px-4 py-2.5 min-h-[48px] text-sm font-extrabold text-[var(--ink)]">
@@ -835,6 +854,7 @@ export const TicketShop: React.FC<TicketShopProps> = ({
                 </div>
                 {checkoutBtn()}
                 <p className="mt-2.5 text-center text-xs font-bold text-[#6B5A85]">{tr('ชำระด้วย QR หรือโอนเข้าบัญชี · ได้ตั๋วทันที', 'Pay by QR or bank transfer · get your ticket right away')}</p>
+                <p className="mt-1 text-center text-xs font-semibold text-[#6B5A85]">{tr('ต้องเข้าสู่ระบบก่อนชำระเงิน (Google / LINE / อีเมล) · ไม่มีการคืนเงินและโอนสิทธิ์', 'Sign in before paying (Google / LINE / e-mail) · no refunds or transfers')}</p>
               </div>
             </div>
           </aside>

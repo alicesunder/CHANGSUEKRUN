@@ -99,7 +99,7 @@ const PassCard: React.FC<{ orderId: string; plate: ParkingPlate; n: number }> = 
           <span className="font-display text-3xl sm:text-4xl font-black text-[#3B1270] leading-none">VIP</span>
           <span className="font-display text-sm sm:text-base font-black text-[#3B1270] leading-tight">
             PARKING PASS
-            <span className="block text-[10px] sm:text-[11px] font-bold">ONLINE PARKING ACCESS · คันที่ {n}</span>
+            <span className="block text-[11px] sm:text-[11px] font-bold">ONLINE PARKING ACCESS · คันที่ {n}</span>
           </span>
         </div>
         <div className="mt-3 grid grid-cols-[1fr_auto] gap-3 items-stretch">

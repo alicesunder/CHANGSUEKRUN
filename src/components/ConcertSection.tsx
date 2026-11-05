@@ -106,6 +106,10 @@ export const ConcertSection: React.FC = () => {
             </ol>
           </div>
 
+          <details className="group mt-8">
+            <summary className="mx-auto flex w-fit min-h-[48px] cursor-pointer list-none items-center gap-2 rounded-2xl border-2 border-[#FFC928]/60 bg-white/10 px-5 text-sm font-extrabold text-[#FFE28A] [&::-webkit-details-marker]:hidden">
+              🎞️ ดูภาพบรรยากาศปีที่แล้ว <span className="group-open:hidden">▾</span><span className="hidden group-open:inline">▴</span>
+            </summary>
           {/* Last year's line-up: smaller photos */}
           <div className="mt-8 relative rounded-[26px] bg-[#0E0620] border-2 border-[#FFC928]/40 p-3 sm:p-5 overflow-clip">
             <span aria-hidden="true" className="concert-beam left-[20%]" style={{ ['--beam' as string]: '#C084FC' }} />
@@ -154,6 +158,7 @@ export const ConcertSection: React.FC = () => {
               </li>
             ))}
           </ul>
+          </details>
           <div className="mt-6 flex justify-center">
             <a
               href="#shop-concert"

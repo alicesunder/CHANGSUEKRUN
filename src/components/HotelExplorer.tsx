@@ -261,11 +261,11 @@ export const HotelExplorer: React.FC<HotelExplorerProps> = () => {
                       loading="lazy"
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                     />
-                    <span className="absolute top-2 left-2 inline-flex items-center gap-1 rounded-full bg-[#15803D] text-white text-[10px] font-extrabold px-2.5 py-0.5 shadow-sm">
+                    <span className="absolute top-2 left-2 inline-flex items-center gap-1 rounded-full bg-[#15803D] text-white text-[11px] font-extrabold px-2.5 py-0.5 shadow-sm">
                       <PawPrint className="w-3 h-3" />
                       Pet Friendly
                     </span>
-                    <span className="absolute bottom-2 right-2 rounded-md bg-black/55 text-white text-[10px] font-semibold px-1.5 py-0.5">
+                    <span className="absolute bottom-2 right-2 rounded-md bg-black/55 text-white text-[11px] font-semibold px-1.5 py-0.5">
                       ภาพจำลอง
                     </span>
                   </div>
@@ -340,21 +340,21 @@ export const HotelExplorer: React.FC<HotelExplorerProps> = () => {
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3 mb-4">
               <div className="bg-[#FAF8FD] border border-purple-100 rounded-xl px-3.5 py-2 flex items-center justify-between">
                 <div>
-                  <div className="text-[10px] text-slate-500 font-semibold uppercase">ที่พักทั้งหมด</div>
+                  <div className="text-[11px] text-slate-500 font-semibold uppercase">ที่พักทั้งหมด</div>
                   <div className="text-base font-black text-[#261042]">{totalHotelsCount} แห่ง</div>
                 </div>
                 <Building className="w-4 h-4 text-[#5B20A8]" />
               </div>
               <div className="bg-[#FAF8FD] border border-purple-100 rounded-xl px-3.5 py-2 flex items-center justify-between">
                 <div>
-                  <div className="text-[10px] text-slate-500 font-semibold uppercase">รัศมีค้นหา</div>
+                  <div className="text-[11px] text-slate-500 font-semibold uppercase">รัศมีค้นหา</div>
                   <div className="text-base font-black text-[#261042]">30 กม.</div>
                 </div>
                 <Compass className="w-4 h-4 text-rose-500" />
               </div>
               <div className="bg-[#FAF8FD] border border-purple-100 rounded-xl px-3.5 py-2 flex items-center justify-between">
                 <div>
-                  <div className="text-[10px] text-slate-500 font-semibold uppercase">รับสัตว์เลี้ยง</div>
+                  <div className="text-[11px] text-slate-500 font-semibold uppercase">รับสัตว์เลี้ยง</div>
                   <div className="text-base font-black text-emerald-600">
                     {petFriendlyCount} แห่ง
                   </div>
@@ -428,18 +428,18 @@ export const HotelExplorer: React.FC<HotelExplorerProps> = () => {
                           loading="lazy"
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                         />
-                        <div className="absolute top-1 left-1 bg-[#5B20A8] text-white text-[9px] font-black px-1.5 py-0.5 rounded">
+                        <div className="absolute top-1 left-1 bg-[#5B20A8] text-white text-[11px] font-black px-1.5 py-0.5 rounded">
                           #{hotel.rank || 1}
                         </div>
                       </div>
 
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-1.5 mb-0.5">
-                          <span className="text-[9px] uppercase font-bold text-[#5B20A8] bg-purple-50 border border-purple-200 px-1.5 py-0.2 rounded">
+                          <span className="text-[11px] uppercase font-bold text-[#5B20A8] bg-purple-50 border border-purple-200 px-1.5 py-0.2 rounded">
                             {hotel.type || 'Hotel'}
                           </span>
                           {hotel.rating && (
-                            <span className="flex items-center gap-0.5 text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.2 rounded">
+                            <span className="flex items-center gap-0.5 text-[11px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.2 rounded">
                               <Star className="w-2.5 h-2.5 fill-amber-500 text-amber-500" />
                               <span>{hotel.rating}</span>
                             </span>

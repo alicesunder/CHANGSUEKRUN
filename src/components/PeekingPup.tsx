@@ -83,7 +83,7 @@ export const PeekingPup: React.FC = () => {
 
   return (
     <div
-      className="pup-peek fixed left-1 sm:left-3 bottom-[76px] lg:bottom-4 z-[55] flex items-end gap-1"
+      className="pup-peek fixed left-1 sm:left-3 bottom-[76px] lg:bottom-4 z-[55] hidden sm:flex items-end gap-1"
       data-show={show ? 'true' : 'false'}
       aria-hidden={!show}
     >

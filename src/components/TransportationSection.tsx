@@ -126,7 +126,7 @@ export const TransportationSection: React.FC = () => {
                     <div className="w-12 h-12 rounded-2xl bg-[#EEE4FA] text-[#7B3FC6] flex items-center justify-center">
                       <Icon className="w-6 h-6" />
                     </div>
-                    <span className={`text-[10px] font-black px-2.5 py-1 rounded-full ${item.badgeColor}`}>
+                    <span className={`text-[11px] font-black px-2.5 py-1 rounded-full ${item.badgeColor}`}>
                       {item.badge}
                     </span>
                   </div>
@@ -182,7 +182,7 @@ export const TransportationSection: React.FC = () => {
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-xs font-black text-[#7B3FC6]">{pz.zone}</span>
-                    <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${pz.statusColor}`}>
+                    <span className={`text-[11px] font-black px-2 py-0.5 rounded-full ${pz.statusColor}`}>
                       {pz.status}
                     </span>
                   </div>

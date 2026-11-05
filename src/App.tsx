@@ -289,6 +289,9 @@ export default function App() {
         onClose={() => setEasterEggActive(false)}
       />
 
+      <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:left-2 focus:top-2 focus:z-[10000] focus:rounded-lg focus:bg-[#FFC928] focus:px-4 focus:py-2 focus:text-sm focus:font-extrabold focus:text-[#2A1450]">
+        ข้ามไปเนื้อหาหลัก
+      </a>
       {/* 3. Top Dark-Purple Navbar matching mockup */}
       <Navbar
         onOpenArtworkModal={() => setArtworkModalOpen(true)}
@@ -298,7 +301,7 @@ export default function App() {
       />
 
       {/* Main Content Flow */}
-      <main>
+      <main id="main">
         {/* 4. Hero + Curved Countdown & Quote Banner + 9 Quick-Navigation Icon Cards */}
         <Hero
           onOpenArtworkModal={() => setArtworkModalOpen(true)}
@@ -342,6 +345,9 @@ export default function App() {
             </>
           }
         />
+
+        {/* วัตถุประสงค์ของการจัดงาน (การกุศล): ย้ายขึ้นมาไว้ใกล้ตั๋ว เพื่อสร้างความน่าเชื่อถือก่อนตัดสินใจ */}
+        <EventObjectiveSection />
 
         {/* 6. 2-Column Side-by-Side: กำหนดการวันแข่งขัน (Left) & เส้นทางวิ่ง GPS Survey (Right) */}
         <LazySection id="schedule-and-map" minHeight={1100}>
@@ -410,9 +416,6 @@ export default function App() {
             </div>
           </details>
         </section>
-
-        {/* 4.5 วัตถุประสงค์ของการจัดงาน (Official Event Objective & Mission) */}
-        <EventObjectiveSection />
 
 
         {/* 12. คำถามที่พบบ่อย (FAQ) */}

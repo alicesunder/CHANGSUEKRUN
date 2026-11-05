@@ -43,13 +43,13 @@ export const Navbar: React.FC<NavbarProps> = ({
   };
 
   const navLinks = [
-    { label: t('เกี่ยวกับงาน', 'About'), href: '#objective' },
     { label: t('ระยะ & ราคา', 'Distances & prices'), href: '#distances' },
     { label: t('กิจกรรมเสริม', 'Activities'), href: '#addons' },
+    { label: t('เกี่ยวกับงาน', 'About'), href: '#objective' },
     { label: t('กำหนดการ & เส้นทาง', 'Schedule & route'), href: '#schedule-and-map' },
     { label: t('ที่พัก', 'Hotels'), href: '#hotels' },
-    { label: t('ผู้สนับสนุน', 'Sponsors'), href: '#sponsors' },
     { label: 'FAQ', href: '#faq' },
+    { label: t('ผู้สนับสนุน', 'Sponsors'), href: '#sponsors' },
   ];
 
   return (

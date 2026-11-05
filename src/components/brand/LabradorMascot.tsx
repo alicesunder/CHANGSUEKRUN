@@ -99,7 +99,7 @@ export const LabradorMascot: React.FC<LabradorMascotProps> = ({
 
       {/* Optional Bottom Pill Caption */}
       {badgeText && (
-        <span className="-mt-1.5 relative z-20 px-2.5 py-0.5 rounded-full bg-gradient-to-r from-[#FFFBEB] to-[#FEF3C7] border border-amber-300 text-[#92400E] text-[10px] font-extrabold shadow-xs whitespace-nowrap">
+        <span className="-mt-1.5 relative z-20 px-2.5 py-0.5 rounded-full bg-gradient-to-r from-[#FFFBEB] to-[#FEF3C7] border border-amber-300 text-[#92400E] text-[11px] font-extrabold shadow-xs whitespace-nowrap">
           {badgeText}
         </span>
       )}

@@ -59,7 +59,7 @@ export const LangSwitch: React.FC<{ className?: string }> = ({ className = '' })
           type="button"
           onClick={() => setLang(l)}
           aria-pressed={lang === l}
-          className={`min-w-[38px] rounded-full px-2.5 py-1 text-xs font-black tracking-wide cursor-pointer transition-colors ${
+          className={`min-w-[44px] min-h-[36px] rounded-full px-3 py-1.5 text-xs font-black tracking-wide cursor-pointer transition-colors ${
             lang === l ? 'bg-[#FFC928] text-[#1F1035]' : 'text-white/85 hover:text-white'
           }`}
         >

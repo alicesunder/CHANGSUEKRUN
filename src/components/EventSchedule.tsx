@@ -93,7 +93,7 @@ export const EventSchedule: React.FC = () => {
                       {item.title}
                     </h4>
                     {item.highlight && (
-                      <span className="bg-[#FFC928] text-[#17151C] text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase shadow-xs">
+                      <span className="bg-[#FFC928] text-[#17151C] text-[11px] font-black px-2.5 py-0.5 rounded-full uppercase shadow-xs">
                         ไฮไลต์สำคัญ
                       </span>
                     )}

@@ -59,7 +59,7 @@ export const EventIntro: React.FC<EventIntroProps> = ({ onOpenVideoModal }) => {
               
               {/* Elephant + Runner + Dog coastal sunset photograph with parallax scrolling */}
               <motion.img
-                src="/images/hero/changsuek-run-coastal.jpg"
+                src="/images/hero/changsuek-run-coastal.webp"
                 alt="ช้าง คนวิ่ง และน้องสุนัข วิ่งไปด้วยกันริมชายหาดยามพระอาทิตย์ตก"
                 style={{
                   y: bannerY,
@@ -87,7 +87,7 @@ export const EventIntro: React.FC<EventIntroProps> = ({ onOpenVideoModal }) => {
                       <div className="w-8 h-8 sm:w-11 sm:h-11 rounded-full bg-[#10B981]/20 border border-[#10B981] flex items-center justify-center text-[#10B981] shadow-md">
                         <Users className="w-4 h-4 sm:w-5 sm:h-5" />
                       </div>
-                      <span className="text-[8px] sm:text-[9px] font-black text-white/90 uppercase tracking-tighter mt-1 text-center">
+                      <span className="text-[8px] sm:text-[11px] font-black text-white/90 uppercase tracking-tighter mt-1 text-center">
                         HEALTHIER<br />PEOPLE
                       </span>
                     </div>
@@ -97,7 +97,7 @@ export const EventIntro: React.FC<EventIntroProps> = ({ onOpenVideoModal }) => {
                       <div className="w-8 h-8 sm:w-11 sm:h-11 rounded-full bg-[#FFC928]/20 border border-[#FFC928] flex items-center justify-center text-[#FFC928] shadow-md">
                         <Heart className="w-4 h-4 sm:w-5 sm:h-5" />
                       </div>
-                      <span className="text-[8px] sm:text-[9px] font-black text-white/90 uppercase tracking-tighter mt-1 text-center">
+                      <span className="text-[8px] sm:text-[11px] font-black text-white/90 uppercase tracking-tighter mt-1 text-center">
                         HAPPIER<br />PETS
                       </span>
                     </div>
@@ -107,7 +107,7 @@ export const EventIntro: React.FC<EventIntroProps> = ({ onOpenVideoModal }) => {
                       <div className="w-8 h-8 sm:w-11 sm:h-11 rounded-full bg-[#A855F7]/20 border border-[#A855F7] flex items-center justify-center text-[#C084FC] shadow-md">
                         <Sparkles className="w-4 h-4 sm:w-5 sm:h-5" />
                       </div>
-                      <span className="text-[8px] sm:text-[9px] font-black text-white/90 uppercase tracking-tighter mt-1 text-center">
+                      <span className="text-[8px] sm:text-[11px] font-black text-white/90 uppercase tracking-tighter mt-1 text-center">
                         STRONGER<br />COMMUNITIES
                       </span>
                     </div>
