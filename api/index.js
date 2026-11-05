@@ -48848,6 +48848,7 @@ function createApp() {
   });
   const smallJson = import_express2.default.json({ limit: "200kb" });
   app2.get("/api/public-config", h(async (_req, res) => {
+    res.setHeader("Cache-Control", "public, s-maxage=10, stale-while-revalidate=30");
     res.json(await publicConfig());
   }));
   app2.get("/api/winners", h(async (_req, res) => {

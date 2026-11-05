@@ -258,6 +258,8 @@ export function createApp(): express.Express {
 
   // ---------------- Public ----------------
   app.get('/api/public-config', h(async (_req, res) => {
+    // a few seconds at the edge is enough to spare the database on every page view; orders re-check sales / prices on the server
+    res.setHeader('Cache-Control', 'public, s-maxage=10, stale-while-revalidate=30');
     res.json(await publicConfig());
   }));
 
