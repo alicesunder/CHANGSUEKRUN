@@ -39,6 +39,7 @@ import { RouteId } from '../types';
 import { SponsorCodesAdmin } from './SponsorCodesAdmin';
 import { TicketScannerAdmin } from './TicketScannerAdmin';
 import { WinnersAdmin } from './WinnersAdmin';
+import { RunnersAdmin } from './RunnersAdmin';
 import {
   TicketOrder,
   PromptPayConfig,
@@ -148,7 +149,7 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
   });
   const [loadError, setLoadError] = useState<string | null>(null);
 
-  const [activeTab, setActiveTab] = useState<'overview' | 'roster' | 'orders' | 'security' | 'settings' | 'sponsors' | 'scan' | 'winners'>(
+  const [activeTab, setActiveTab] = useState<'overview' | 'roster' | 'orders' | 'security' | 'settings' | 'sponsors' | 'scan' | 'winners' | 'runners'>(
     'orders'
   );
   const [orders, setOrders] = useState<TicketOrder[]>([]);
@@ -772,6 +773,18 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
               >
                 <span aria-hidden="true">📷</span>
                 <span>สแกนตั๋ว</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab('runners')}
+                className={`px-3 py-2 rounded-xl text-xs font-extrabold transition-all cursor-pointer flex items-center gap-1.5 ${
+                  activeTab === 'runners'
+                    ? 'bg-[#FFC928] text-[#180B30] shadow-xs'
+                    : 'text-white/80 hover:text-white'
+                }`}
+              >
+                <span aria-hidden="true">👥</span>
+                <span>บัญชีนักวิ่ง</span>
               </button>
               <button
                 type="button"
@@ -1727,6 +1740,20 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
           {activeTab === 'sponsors' && <SponsorCodesAdmin />}
           {activeTab === 'scan' && <TicketScannerAdmin />}
           {activeTab === 'winners' && <WinnersAdmin />}
+          {activeTab === 'runners' && (
+            <RunnersAdmin
+              onOpenOrder={(id) => {
+                const o = orders.find((x) => x.orderId === id);
+                if (o) {
+                  setInspectorViewMode('details');
+                  setInspectingOrder(o);
+                } else {
+                  setActiveTab('orders');
+                  setSearchQuery(id);
+                }
+              }}
+            />
+          )}
 
           {activeTab === 'settings' && (
             <form onSubmit={handleSaveSettings} className="grid grid-cols-1 lg:grid-cols-12 gap-6">

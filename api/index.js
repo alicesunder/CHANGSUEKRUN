@@ -48017,6 +48017,34 @@ function publicRunner(r) {
     createdAt: r.created_at
   };
 }
+async function listRunnersForAdmin() {
+  await ensureRunnerTables();
+  const rows = await dbQuery(
+    `select r.*,
+        count(o.order_id) filter (where not (o.data ? 'cancelledAt') and not (o.data ? 'isTest')) as orders,
+        count(o.order_id) filter (where o.data->>'paymentStatus' = 'PAID' and not (o.data ? 'cancelledAt') and not (o.data ? 'isTest')) as paid_orders,
+        coalesce(sum((o.data->>'totalPrice')::numeric) filter (where o.data->>'paymentStatus' = 'PAID' and not (o.data ? 'cancelledAt') and not (o.data ? 'isTest')), 0) as paid_total,
+        max(o.created_at) filter (where not (o.data ? 'isTest')) as last_order_at
+       from csr.runners r
+       left join csr.orders o on o.data->>'runnerId' = r.runner_id
+      group by r.runner_id
+      order by r.created_at desc`
+  );
+  return rows.map((r) => ({
+    id: r.runner_id,
+    name: r.name || "",
+    email: r.email || "",
+    username: r.username || "",
+    phone: r.phone || "",
+    emailVerified: Boolean(r.email_verified),
+    methods: [r.password_hash && "password", r.google_id && "google", r.line_user_id && "line"].filter(Boolean),
+    createdAt: new Date(r.created_at).toISOString(),
+    orders: Number(r.orders) || 0,
+    paidOrders: Number(r.paid_orders) || 0,
+    paidTotal: Number(r.paid_total) || 0,
+    lastOrderAt: r.last_order_at ? new Date(r.last_order_at).toISOString() : null
+  }));
+}
 
 // server/socialLogin.ts
 import crypto11 from "crypto";
@@ -48945,6 +48973,29 @@ function createApp() {
       bibCounters: await getBibCounters(),
       nextBib: await nextBibPreview()
     });
+  }));
+  app2.get("/api/admin/runners", requireAdmin, h(async (_req, res) => {
+    const runners = await listRunnersForAdmin();
+    const by = (m) => runners.filter((r) => r.methods.includes(m)).length;
+    res.json({
+      runners,
+      totals: {
+        accounts: runners.length,
+        withOrders: runners.filter((r) => r.orders > 0).length,
+        password: by("password"),
+        google: by("google"),
+        line: by("line")
+      }
+    });
+  }));
+  app2.get("/api/admin/runners/:runnerId", requireAdmin, h(async (req, res) => {
+    const runner = await getRunner(String(req.params.runnerId));
+    if (!runner) {
+      res.status(404).json({ error: "\u0E44\u0E21\u0E48\u0E1E\u0E1A\u0E1A\u0E31\u0E0D\u0E0A\u0E35\u0E19\u0E35\u0E49" });
+      return;
+    }
+    const orders = await listOrdersByRunner(runner.runner_id);
+    res.json({ runner: { ...publicRunner(runner), hasPassword: Boolean(runner.password_hash) }, orders: orders.map(toAdminView) });
   }));
   app2.post("/api/admin/orders/:orderId/verification", requireAdmin, smallJson, h(async (req, res) => {
     const orderId = String(req.params.orderId);

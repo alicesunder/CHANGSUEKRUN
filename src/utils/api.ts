@@ -329,6 +329,21 @@ export interface SponsorCodeRow {
   createdAt: string;
 }
 
+export interface AdminRunnerSummary {
+  id: string;
+  name: string;
+  email: string;
+  username: string;
+  phone: string;
+  emailVerified: boolean;
+  methods: string[];
+  createdAt: string;
+  orders: number;
+  paidOrders: number;
+  paidTotal: number;
+  lastOrderAt: string | null;
+}
+
 export interface Winner {
   id: string;
   title: string;
@@ -358,6 +373,12 @@ export const adminApi = {
       headers: jsonHeaders,
       body: JSON.stringify({ winners }),
     }),
+  listRunners: () =>
+    adminFetch<{ runners: AdminRunnerSummary[]; totals: { accounts: number; withOrders: number; password: number; google: number; line: number } }>('/api/admin/runners'),
+  getRunner: (id: string) =>
+    adminFetch<{ runner: { id: string; name: string; email: string; username: string; phone: string; emailVerified: boolean; social: string[]; hasPassword: boolean; createdAt: string }; orders: ServerOrder[] }>(
+      `/api/admin/runners/${encodeURIComponent(id)}`
+    ),
   listSponsorCodes: () => adminFetch<{ codes: SponsorCodeRow[] }>('/api/admin/sponsor-codes'),
   createSponsorCode: (input: { sponsorName: string; maxUses: number | null; code?: string; note?: string }) =>
     adminFetch<{ code: SponsorCodeRow }>('/api/admin/sponsor-codes', {

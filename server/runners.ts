@@ -353,3 +353,53 @@ export function publicRunner(r: RunnerRow) {
     createdAt: r.created_at,
   };
 }
+
+// ---------------------------------------------------------------------------
+// Back office: list of accounts with how much each one bought
+// ---------------------------------------------------------------------------
+export interface AdminRunnerSummary {
+  id: string;
+  name: string;
+  email: string;
+  username: string;
+  phone: string;
+  emailVerified: boolean;
+  /** how the account can sign in: 'password' (e-mail / username), 'google', 'line' */
+  methods: string[];
+  createdAt: string;
+  /** orders not cancelled and not admin test orders */
+  orders: number;
+  paidOrders: number;
+  paidTotal: number;
+  lastOrderAt: string | null;
+}
+
+/** Every runner account plus the totals of the orders linked to it (never includes password hashes or ids of other providers). */
+export async function listRunnersForAdmin(): Promise<AdminRunnerSummary[]> {
+  await ensureRunnerTables();
+  const rows = await dbQuery<RunnerRow & { orders: string; paid_orders: string; paid_total: string; last_order_at: string | null }>(
+    `select r.*,
+        count(o.order_id) filter (where not (o.data ? 'cancelledAt') and not (o.data ? 'isTest')) as orders,
+        count(o.order_id) filter (where o.data->>'paymentStatus' = 'PAID' and not (o.data ? 'cancelledAt') and not (o.data ? 'isTest')) as paid_orders,
+        coalesce(sum((o.data->>'totalPrice')::numeric) filter (where o.data->>'paymentStatus' = 'PAID' and not (o.data ? 'cancelledAt') and not (o.data ? 'isTest')), 0) as paid_total,
+        max(o.created_at) filter (where not (o.data ? 'isTest')) as last_order_at
+       from csr.runners r
+       left join csr.orders o on o.data->>'runnerId' = r.runner_id
+      group by r.runner_id
+      order by r.created_at desc`
+  );
+  return rows.map((r) => ({
+    id: r.runner_id,
+    name: r.name || '',
+    email: r.email || '',
+    username: r.username || '',
+    phone: r.phone || '',
+    emailVerified: Boolean(r.email_verified),
+    methods: [r.password_hash && 'password', r.google_id && 'google', r.line_user_id && 'line'].filter(Boolean) as string[],
+    createdAt: new Date(r.created_at).toISOString(),
+    orders: Number(r.orders) || 0,
+    paidOrders: Number(r.paid_orders) || 0,
+    paidTotal: Number(r.paid_total) || 0,
+    lastOrderAt: r.last_order_at ? new Date(r.last_order_at).toISOString() : null,
+  }));
+}
