@@ -14,6 +14,7 @@ import {
   Flag,
   MapPin,
   Mountain,
+  Package,
   Music,
   Play,
   Printer,
@@ -42,10 +43,22 @@ export const RouteAndScheduleSection: React.FC<RouteAndScheduleProps> = ({
 
   const timelineRows = [
     {
+      id: 'race-kit',
+      time: 'ตั้งแต่ 09.00 น.',
+      title: 'รับอุปกรณ์ Race Kit (เบอร์วิ่ง BIB · เสื้อ)',
+      desc: 'ที่ Sea Sand Sun Hua Hin Resort · แสดง QR ของตั๋วพร้อมบัตรประชาชน',
+      badge: 'RACE KIT',
+      iconBg: '#FEF9C3',
+      iconColor: '#A16207',
+      Icon: Package,
+      routeId: undefined as RouteId | undefined,
+      isGoldDot: false,
+    },
+    {
       id: 'dog-contest',
       time: '09.00–14.00 น.',
       title: 'การแข่งขันประกวดน้องสุนัข',
-      desc: 'สุนัขแฟนซีธีม War Dog • น้องสุนัขสุขภาพดี • น้องสุนัขเชื่อฟังคำสั่ง',
+      desc: 'แต่งตัวธีมผจญภัยม่วง–ทอง • น้องสุนัขสุขภาพดี • น้องสุนัขเชื่อฟังคำสั่ง',
       badge: 'DOG CONTEST',
       iconBg: '#FCE7F3',
       iconColor: '#BE185D',

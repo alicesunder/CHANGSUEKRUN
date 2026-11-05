@@ -24,7 +24,7 @@ export const DistanceComparisonModal: React.FC<DistanceComparisonModalProps> = (
     color: string;
     soft: string;
   }[] = [
-    { id: '1km', short: '1 km', sub: 'DOG MINI RUN', chip: 'เริ่มต้นง่าย', color: '#FF8A3D', soft: '#FFE9DA' },
+    { id: '1km', short: '1 km', sub: 'DOG RUN', chip: 'เริ่มต้นง่าย', color: '#FF8A3D', soft: '#FFE9DA' },
     { id: '3km', short: '4 km', sub: 'DOG RUN', chip: 'วิ่งคู่น้องสุนัข', color: '#2EAD62', soft: '#DFF5E8' },
     { id: '5km', short: '5 km', sub: 'บุคคลทั่วไป', chip: 'ยอดนิยม', color: '#E5A800', soft: '#FFF6CF' },
     { id: '10km', short: '10 km', sub: 'บุคคลทั่วไป', chip: 'ท้าทาย', color: '#7B3FC6', soft: '#EEE4FA' },

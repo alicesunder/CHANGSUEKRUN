@@ -75,10 +75,10 @@ export const Hero: React.FC<HeroProps> = ({
   };
 
   const mobileDistancePills: { id: RouteId; label: string; tag: string; color: string; bg: string }[] = [
-    { id: '1km', label: '1 km', tag: 'Dog Mini', color: '#C2410C', bg: '#FFF7ED' },
+    { id: '1km', label: '1 km', tag: 'Dog Run', color: '#C2410C', bg: '#FFF7ED' },
     { id: '3km', label: '4 km', tag: 'Dog Run', color: '#0F766E', bg: '#F0FDFA' },
-    { id: '5km', label: '5 km', tag: 'Fun Run', color: '#B45309', bg: '#FFFBEB' },
-    { id: '10km', label: '10 km', tag: 'Mini Marathon', color: '#7C3AED', bg: '#FAF5FF' },
+    { id: '5km', label: '5 km', tag: 'Runner', color: '#B45309', bg: '#FFFBEB' },
+    { id: '10km', label: '10 km', tag: 'Runner', color: '#7C3AED', bg: '#FAF5FF' },
   ];
 
 

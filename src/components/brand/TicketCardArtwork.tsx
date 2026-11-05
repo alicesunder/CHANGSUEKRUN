@@ -37,7 +37,7 @@ export const TICKET_CARD_IMAGES: Record<
   '1km': {
     src: '/images/hero/beach-run.jpg',
     objectPosition: '58% 45%',
-    alt: 'บัตรวิ่ง 1 km Dog Mini Run - ช้างศึกสีม่วง นักวิ่ง และน้องสุนัขวิ่งเล่นสนุกสนานริมชายหาด',
+    alt: 'บัตรวิ่ง 1 km Dog Run - ช้างศึกสีม่วง นักวิ่ง และน้องสุนัขวิ่งเล่นสนุกสนานริมชายหาด',
     sceneTag: 'BEACH PUPPY FUN RUN',
     terrainBadge: 'ทางเรียบชายหาด 100% (ไป-กลับ)',
     skyGrad: 'linear-gradient(135deg, #FFE0C2 0%, #FFB076 55%, #FF8442 100%)',

@@ -6,9 +6,9 @@ export const FAQ_EN: Record<string, { question: string; answer: string }> = {
       'At Naresuan Camp, Border Patrol Police Headquarters, on the beach in front of the Sea Sand Sun hotel, Cha-am, Phetchaburi (between Cha-am and Hua Hin, Phetkasem Road km 219).',
   },
   'faq-2': {
-    question: 'How do the 4 km, 5 km and 10 km routes differ?',
+    question: 'How do the 1, 4, 5 and 10 km routes differ?',
     answer:
-      'The 4 km (Fun Run) is a flat route along the beach, great for families and children. The 5 km (Challenge Run) adds a stretch inside Naresuan Camp. The 10 km (War Dog Trail) is a mini-marathon mixed with trail through nature, ponds, mangrove and the war-dog training ground.',
+      'Dog Run 1 km: a flat out-and-back along the beach, a short run or walk with your dog. Dog Run 4 km: a loop around the heart of Naresuan Camp on smooth, flat roads, good for families and beginners. 5 km: a loop around the camp boundary (about 5.2 km) on shaded paved roads. 10 km: a mini-marathon mixed with trail, along the beach, through the camp and the Sirindhorn International Environmental Park to the Thung Kramom mangrove park on a wooden boardwalk.',
   },
   'faq-3': {
     question: 'Are there recommended hotels near the venue?',
@@ -23,7 +23,7 @@ export const FAQ_EN: Record<string, { question: string; answer: string }> = {
   'faq-5': {
     question: 'How do I collect my shirt and race bib (BIB)?',
     answer:
-      'The organiser will announce the race-kit collection day and time through its official channels. Collect it in person by showing your BIB number or digital ticket.',
+      'Race Kit pick-up is on Saturday 9 Jan 2027 (B.E. 2570) from 09.00 at Sea Sand Sun Hua Hin Resort. Collect your own kit and show your ticket QR (in the e-mail or the Runner Center) with your national ID card. The organiser will announce the closing time through official channels.',
   },
   'faq-6': {
     question: 'Is there bag drop and parking?',

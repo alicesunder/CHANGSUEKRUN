@@ -61,7 +61,7 @@ const routeTheme: Record<
     accent: '#EA580C',
     badgeBg: '#FFEDD5',
     badgeText: '#9A3412',
-    wave: 'WAVE D · DOG MINI RUN',
+    wave: 'WAVE D · DOG RUN 1 km',
     startTime: '17.30 น.',
   },
   '3km': {
@@ -70,7 +70,7 @@ const routeTheme: Record<
     accent: '#1F8A4C',
     badgeBg: '#DCFCE7',
     badgeText: '#14532D',
-    wave: 'WAVE C · DOG BUDDY RUN',
+    wave: 'WAVE C · DOG RUN 4 km',
     startTime: '17.15 น.',
   },
   '5km': {
@@ -79,7 +79,7 @@ const routeTheme: Record<
     accent: '#D48800',
     badgeBg: '#FEF3C7',
     badgeText: '#78350F',
-    wave: 'WAVE B · FUN & MASS RUN',
+    wave: 'WAVE B · RUN 5 km',
     startTime: '17.00 น.',
   },
   '10km': {
@@ -88,7 +88,7 @@ const routeTheme: Record<
     accent: '#6D2FC4',
     badgeBg: '#F3E8FF',
     badgeText: '#4C1D95',
-    wave: 'WAVE A · MINI MARATHON',
+    wave: 'WAVE A · RUN 10 km',
     startTime: '16.30 น.',
   },
 };
