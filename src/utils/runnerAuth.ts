@@ -24,9 +24,10 @@ export interface RunnerUser {
   email: string;
   username: string;
   phone: string;
+  lineLinked?: boolean;
   /** the e-mail address was confirmed (link in an e-mail, or a verified Google address) */
   emailVerified?: boolean;
-  /** social sign-ins linked to this account: 'google' */
+  /** social sign-ins linked to this account: 'line' | 'google' */
   social?: string[];
   profile?: RunnerProfileData;
 }
@@ -222,7 +223,7 @@ export async function consumeEmailLink(): Promise<{ kind: 'reset'; token: string
 }
 
 /**
- * Back from Google sign-in the server sends us to /#runner-auth=<token> (or /#login-error=...).
+ * Back from a social sign-in (LINE / Google) the server sends us to /#runner-auth=<token> (or /#login-error=...).
  * Call once at start-up: it signs the runner in and tidies the address bar. Returns an error code for the page to show.
  */
 export async function consumeLineLogin(): Promise<'ok' | 'error' | null> {

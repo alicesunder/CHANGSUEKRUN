@@ -34,8 +34,10 @@ export interface PublicConfig {
   salesOpen?: boolean;
   /** the admin's early-bird switch (lower run / concert / VIP prices) */
   earlyBird?: boolean;
-  /** whether the Google sign-in button works */
-  socialLogin?: { google: boolean };
+  /** LINE Login is set up on the server */
+  lineLoginReady?: boolean;
+  /** which social sign-in buttons work */
+  socialLogin?: { line: boolean; google: boolean };
 }
 
 export interface VisitStats {

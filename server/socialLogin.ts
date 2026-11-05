@@ -1,18 +1,26 @@
 /**
- * Google sign-in for runners (OAuth 2.0 authorization-code flow). Works only when GOOGLE_CLIENT_ID and
- * GOOGLE_CLIENT_SECRET are set; callback address: <site>/api/auth/google/callback.
- * (LINE and Facebook sign-in were removed on request.)
+ * Social sign-in for runners: LINE and Google (OAuth 2.0 authorization-code flow).
+ * Each provider works only when its keys are set in the environment; until then the buttons show "coming soon".
+ *
+ *   LINE      LINE_CHANNEL_ID, LINE_CHANNEL_SECRET           callback  <site>/api/auth/line/callback
+ *   Google    GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET         callback  <site>/api/auth/google/callback
  */
 import crypto from 'crypto';
 
-export type Provider = 'google';
-export const PROVIDERS: Provider[] = ['google'];
+export type Provider = 'line' | 'google';
+export const PROVIDERS: Provider[] = ['line', 'google'];
 export const isProvider = (v: unknown): v is Provider => typeof v === 'string' && (PROVIDERS as string[]).includes(v);
 
-const CFG = { idEnv: 'GOOGLE_CLIENT_ID', secretEnv: 'GOOGLE_CLIENT_SECRET', authorize: 'https://accounts.google.com/o/oauth2/v2/auth', scope: 'openid email profile' };
+const CFG: Record<Provider, { idEnv: string; secretEnv: string; authorize: string; scope: string }> = {
+  line: { idEnv: 'LINE_CHANNEL_ID', secretEnv: 'LINE_CHANNEL_SECRET', authorize: 'https://access.line.me/oauth2/v2.1/authorize', scope: 'profile openid' },
+  google: { idEnv: 'GOOGLE_CLIENT_ID', secretEnv: 'GOOGLE_CLIENT_SECRET', authorize: 'https://accounts.google.com/o/oauth2/v2/auth', scope: 'openid email profile' },
+};
 
-export const providerConfigured = (_p: Provider = 'google') => Boolean(process.env[CFG.idEnv] && process.env[CFG.secretEnv]);
-export const configuredProviders = (): { google: boolean } => ({ google: providerConfigured('google') });
+export const providerConfigured = (p: Provider) => Boolean(process.env[CFG[p].idEnv] && process.env[CFG[p].secretEnv]);
+export const configuredProviders = (): Record<Provider, boolean> => ({
+  line: providerConfigured('line'),
+  google: providerConfigured('google'),
+});
 
 const KEY = crypto
   .createHash('sha256')
@@ -43,31 +51,45 @@ export function stateOk(p: Provider, state: string, nonceCookie: string): boolea
   }
 }
 
-export function authorizeUrl(_p: Provider, redirectUri: string, state: string): string {
-  const q = new URLSearchParams({ response_type: 'code', client_id: process.env[CFG.idEnv] || '', redirect_uri: redirectUri, state, scope: CFG.scope, prompt: 'select_account' });
-  return `${CFG.authorize}?${q.toString()}`;
+export function authorizeUrl(p: Provider, redirectUri: string, state: string): string {
+  const q = new URLSearchParams({ response_type: 'code', client_id: process.env[CFG[p].idEnv] || '', redirect_uri: redirectUri, state, scope: CFG[p].scope });
+  if (p === 'google') q.set('prompt', 'select_account');
+  return `${CFG[p].authorize}?${q.toString()}`;
 }
 
 export interface SocialProfile {
   id: string;
   name: string;
   email?: string;
-  /** true only when Google vouches for the e-mail (email_verified) */
+  /** true only when the provider vouches for the e-mail (Google's email_verified) */
   emailVerified: boolean;
 }
 
-export async function fetchProfile(_p: Provider, code: string, redirectUri: string): Promise<SocialProfile> {
-  const tokRes = await fetch('https://oauth2.googleapis.com/token', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({ grant_type: 'authorization_code', code, redirect_uri: redirectUri, client_id: process.env[CFG.idEnv] || '', client_secret: process.env[CFG.secretEnv] || '' }),
-  });
-  if (!tokRes.ok) throw new Error(`google token ${tokRes.status}`);
-  const tok = (await tokRes.json()) as { access_token?: string };
-  if (!tok.access_token) throw new Error('google token missing');
-  const uRes = await fetch('https://openidconnect.googleapis.com/v1/userinfo', { headers: { Authorization: `Bearer ${tok.access_token}` } });
-  if (!uRes.ok) throw new Error(`google profile ${uRes.status}`);
-  const u = (await uRes.json()) as { sub?: string; name?: string; email?: string; email_verified?: boolean };
-  if (!u.sub) throw new Error('google profile missing sub');
-  return { id: u.sub, name: u.name || '', email: u.email, emailVerified: u.email_verified === true };
+async function json<T>(r: Response, what: string): Promise<T> {
+  if (!r.ok) throw new Error(`${what} ${r.status}`);
+  return (await r.json()) as T;
+}
+
+export async function fetchProfile(p: Provider, code: string, redirectUri: string): Promise<SocialProfile> {
+  const clientId = process.env[CFG[p].idEnv] || '';
+  const clientSecret = process.env[CFG[p].secretEnv] || '';
+  const tokenUrl = p === 'google' ? 'https://oauth2.googleapis.com/token' : 'https://api.line.me/oauth2/v2.1/token';
+  const tok = await json<{ access_token?: string }>(
+    await fetch(tokenUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ grant_type: 'authorization_code', code, redirect_uri: redirectUri, client_id: clientId, client_secret: clientSecret }),
+    }),
+    `${p} token`
+  );
+  if (!tok.access_token) throw new Error(`${p} token missing`);
+  const auth = { Authorization: `Bearer ${tok.access_token}` };
+  if (p === 'google') {
+    const u = await json<{ sub?: string; name?: string; email?: string; email_verified?: boolean }>(await fetch('https://openidconnect.googleapis.com/v1/userinfo', { headers: auth }), 'google profile');
+    if (!u.sub) throw new Error('google profile missing sub');
+    return { id: u.sub, name: u.name || '', email: u.email, emailVerified: u.email_verified === true };
+  }
+  const l = await json<{ userId?: string; displayName?: string }>(await fetch('https://api.line.me/v2/profile', { headers: auth }), 'line profile');
+  if (!l.userId) throw new Error('line profile missing userId');
+  return { id: l.userId, name: l.displayName || '', emailVerified: false };
 }

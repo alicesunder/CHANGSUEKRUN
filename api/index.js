@@ -14233,11 +14233,11 @@ var require_json = __commonJS({
     var debug = require_src()("body-parser:json");
     var read = require_read();
     var typeis = require_type_is();
-    module.exports = json;
+    module.exports = json2;
     var FIRST_CHAR_REGEXP = /^[\x20\x09\x0a\x0d]*([^\x20\x09\x0a\x0d])/;
     var JSON_SYNTAX_CHAR = "#";
     var JSON_SYNTAX_REGEXP = /#+/g;
-    function json(options) {
+    function json2(options) {
       var opts = options || {};
       var limit = typeof opts.limit === "undefined" || opts.limit === null ? 102400 : bytes.parse(opts.limit);
       var inflate = opts.inflate !== false;
@@ -22285,7 +22285,7 @@ var require_response = __commonJS({
       }
       return this;
     };
-    res.json = function json(obj) {
+    res.json = function json2(obj) {
       var val = obj;
       if (arguments.length === 2) {
         if (typeof arguments[1] === "number") {
@@ -22671,9 +22671,9 @@ var require_response = __commonJS({
       file.pipe(res2);
     }
     function stringify(value, replacer, spaces, escape2) {
-      var json = replacer || spaces ? JSON.stringify(value, replacer, spaces) : JSON.stringify(value);
-      if (escape2 && typeof json === "string") {
-        json = json.replace(/[<>&]/g, function(c) {
+      var json2 = replacer || spaces ? JSON.stringify(value, replacer, spaces) : JSON.stringify(value);
+      if (escape2 && typeof json2 === "string") {
+        json2 = json2.replace(/[<>&]/g, function(c) {
           switch (c.charCodeAt(0)) {
             case 60:
               return "\\u003c";
@@ -22687,7 +22687,7 @@ var require_response = __commonJS({
           }
         });
       }
-      return json;
+      return json2;
     }
   }
 });
@@ -35047,10 +35047,10 @@ async function verifySlipWithEasySlip(imageDataUrl, amountBaht, remark) {
       body: JSON.stringify({ base64: imageDataUrl, remark, matchAccount: true, matchAmount: amountBaht, checkDuplicate: true }),
       signal: AbortSignal.timeout(2e4)
     });
-    const json = await resp.json().catch(() => ({}));
-    const raw = json?.data?.rawSlip;
-    if (!resp.ok || json?.success !== true || !raw) {
-      return { ...empty, errorCode: String(json?.error?.code || `HTTP_${resp.status}`) };
+    const json2 = await resp.json().catch(() => ({}));
+    const raw = json2?.data?.rawSlip;
+    if (!resp.ok || json2?.success !== true || !raw) {
+      return { ...empty, errorCode: String(json2?.error?.code || `HTTP_${resp.status}`) };
     }
     const acc = raw.receiver?.account || {};
     return {
@@ -35062,8 +35062,8 @@ async function verifySlipWithEasySlip(imageDataUrl, amountBaht, remark) {
       senderName: String(raw.sender?.account?.name?.th || raw.sender?.account?.name?.en || ""),
       receiverName: String(acc.name?.th || acc.name?.en || ""),
       receiverAccounts: [acc.bank?.account, acc.proxy?.account].filter((a) => typeof a === "string" && a.length > 0),
-      matchedAccount: Boolean(json.data.matchedAccount),
-      isDuplicate: json.data.isDuplicate === true
+      matchedAccount: Boolean(json2.data.matchedAccount),
+      isDuplicate: json2.data.isDuplicate === true
     };
   } catch (err) {
     return { ...empty, errorCode: err?.name === "TimeoutError" ? "TIMEOUT" : "NETWORK" };
@@ -47692,9 +47692,9 @@ async function sendViaResend(to, mail, apiKey) {
     }),
     signal: AbortSignal.timeout(1e4)
   });
-  const json = await resp.json().catch(() => ({}));
-  if (!resp.ok) return { ok: false, provider: "resend", error: String(json?.message || json?.name || `HTTP_${resp.status}`).slice(0, 200) };
-  return { ok: true, provider: "resend", id: json?.id };
+  const json2 = await resp.json().catch(() => ({}));
+  if (!resp.ok) return { ok: false, provider: "resend", error: String(json2?.message || json2?.name || `HTTP_${resp.status}`).slice(0, 200) };
+  return { ok: true, provider: "resend", id: json2?.id };
 }
 async function sendViaBrevo(to, mail) {
   const { user, pass } = brevoCreds();
@@ -47982,7 +47982,7 @@ async function updateRunnerProfile(runnerId, patch) {
   );
   return { ok: true, runner: rows[0] };
 }
-var SOCIAL_COLUMN = { google: "google_id" };
+var SOCIAL_COLUMN = { line: "line_user_id", google: "google_id" };
 async function upsertSocialRunner(provider, p) {
   await ensureRunnerTables();
   const col = SOCIAL_COLUMN[provider];
@@ -47999,7 +47999,7 @@ async function upsertSocialRunner(provider, p) {
   }
   const rows = await dbQuery(
     `insert into csr.runners (runner_id, name, email, ${col}, email_verified, last_login_at) values ($1, $2, $3, $4, $5, now()) returning *`,
-    [newRunnerId(), cleanText(p.name, 80) || "\u0E19\u0E31\u0E01\u0E27\u0E34\u0E48\u0E07", email && isEmail(email) && !byEmail[0] ? email : null, p.id, Boolean(p.emailVerified && email && isEmail(email) && !byEmail[0])]
+    [newRunnerId(), cleanText(p.name, 80) || (provider === "line" ? "\u0E19\u0E31\u0E01\u0E27\u0E34\u0E48\u0E07 LINE" : "\u0E19\u0E31\u0E01\u0E27\u0E34\u0E48\u0E07"), email && isEmail(email) && !byEmail[0] ? email : null, p.id, Boolean(p.emailVerified && email && isEmail(email) && !byEmail[0])]
   );
   return rows[0];
 }
@@ -48011,7 +48011,8 @@ function publicRunner(r) {
     username: r.username || "",
     phone: r.phone || "",
     emailVerified: Boolean(r.email_verified),
-    social: [r.google_id && "google"].filter(Boolean),
+    lineLinked: Boolean(r.line_user_id),
+    social: [r.line_user_id && "line", r.google_id && "google"].filter(Boolean),
     profile: r.profile || {},
     createdAt: r.created_at
   };
@@ -48019,11 +48020,17 @@ function publicRunner(r) {
 
 // server/socialLogin.ts
 import crypto11 from "crypto";
-var PROVIDERS = ["google"];
+var PROVIDERS = ["line", "google"];
 var isProvider = (v) => typeof v === "string" && PROVIDERS.includes(v);
-var CFG = { idEnv: "GOOGLE_CLIENT_ID", secretEnv: "GOOGLE_CLIENT_SECRET", authorize: "https://accounts.google.com/o/oauth2/v2/auth", scope: "openid email profile" };
-var providerConfigured = (_p = "google") => Boolean(process.env[CFG.idEnv] && process.env[CFG.secretEnv]);
-var configuredProviders = () => ({ google: providerConfigured("google") });
+var CFG = {
+  line: { idEnv: "LINE_CHANNEL_ID", secretEnv: "LINE_CHANNEL_SECRET", authorize: "https://access.line.me/oauth2/v2.1/authorize", scope: "profile openid" },
+  google: { idEnv: "GOOGLE_CLIENT_ID", secretEnv: "GOOGLE_CLIENT_SECRET", authorize: "https://accounts.google.com/o/oauth2/v2/auth", scope: "openid email profile" }
+};
+var providerConfigured = (p) => Boolean(process.env[CFG[p].idEnv] && process.env[CFG[p].secretEnv]);
+var configuredProviders = () => ({
+  line: providerConfigured("line"),
+  google: providerConfigured("google")
+});
 var KEY2 = crypto11.createHash("sha256").update(`csr-oauth-state|${process.env.RUNNER_SESSION_SECRET || process.env.ADMIN_SESSION_SECRET || process.env.ADMIN_PASSWORD || crypto11.randomBytes(16).toString("hex")}`).digest();
 var hmac2 = (s) => crypto11.createHmac("sha256", KEY2).update(s).digest("base64url");
 var same = (a, b) => {
@@ -48046,24 +48053,37 @@ function stateOk(p, state, nonceCookie) {
     return false;
   }
 }
-function authorizeUrl(_p, redirectUri, state) {
-  const q = new URLSearchParams({ response_type: "code", client_id: process.env[CFG.idEnv] || "", redirect_uri: redirectUri, state, scope: CFG.scope, prompt: "select_account" });
-  return `${CFG.authorize}?${q.toString()}`;
+function authorizeUrl(p, redirectUri, state) {
+  const q = new URLSearchParams({ response_type: "code", client_id: process.env[CFG[p].idEnv] || "", redirect_uri: redirectUri, state, scope: CFG[p].scope });
+  if (p === "google") q.set("prompt", "select_account");
+  return `${CFG[p].authorize}?${q.toString()}`;
 }
-async function fetchProfile(_p, code, redirectUri) {
-  const tokRes = await fetch("https://oauth2.googleapis.com/token", {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({ grant_type: "authorization_code", code, redirect_uri: redirectUri, client_id: process.env[CFG.idEnv] || "", client_secret: process.env[CFG.secretEnv] || "" })
-  });
-  if (!tokRes.ok) throw new Error(`google token ${tokRes.status}`);
-  const tok = await tokRes.json();
-  if (!tok.access_token) throw new Error("google token missing");
-  const uRes = await fetch("https://openidconnect.googleapis.com/v1/userinfo", { headers: { Authorization: `Bearer ${tok.access_token}` } });
-  if (!uRes.ok) throw new Error(`google profile ${uRes.status}`);
-  const u = await uRes.json();
-  if (!u.sub) throw new Error("google profile missing sub");
-  return { id: u.sub, name: u.name || "", email: u.email, emailVerified: u.email_verified === true };
+async function json(r, what) {
+  if (!r.ok) throw new Error(`${what} ${r.status}`);
+  return await r.json();
+}
+async function fetchProfile(p, code, redirectUri) {
+  const clientId = process.env[CFG[p].idEnv] || "";
+  const clientSecret = process.env[CFG[p].secretEnv] || "";
+  const tokenUrl = p === "google" ? "https://oauth2.googleapis.com/token" : "https://api.line.me/oauth2/v2.1/token";
+  const tok = await json(
+    await fetch(tokenUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({ grant_type: "authorization_code", code, redirect_uri: redirectUri, client_id: clientId, client_secret: clientSecret })
+    }),
+    `${p} token`
+  );
+  if (!tok.access_token) throw new Error(`${p} token missing`);
+  const auth = { Authorization: `Bearer ${tok.access_token}` };
+  if (p === "google") {
+    const u = await json(await fetch("https://openidconnect.googleapis.com/v1/userinfo", { headers: auth }), "google profile");
+    if (!u.sub) throw new Error("google profile missing sub");
+    return { id: u.sub, name: u.name || "", email: u.email, emailVerified: u.email_verified === true };
+  }
+  const l = await json(await fetch("https://api.line.me/v2/profile", { headers: auth }), "line profile");
+  if (!l.userId) throw new Error("line profile missing userId");
+  return { id: l.userId, name: l.displayName || "", emailVerified: false };
 }
 
 // server/runnerRoutes.ts
@@ -48072,7 +48092,7 @@ var cookieOf = (req, name2) => {
   return m ? decodeURIComponent(m.slice(name2.length + 1)) : "";
 };
 function registerRunnerRoutes(app2, h2, clientIp2) {
-  const json = import_express.default.json({ limit: "50kb" });
+  const json2 = import_express.default.json({ limit: "50kb" });
   const sendVerifyMail = async (runnerId, email) => {
     if (!email) return false;
     const token = issueActionToken("verify", runnerId, emailFingerprint(email));
@@ -48081,7 +48101,7 @@ function registerRunnerRoutes(app2, h2, clientIp2) {
     return r.ok;
   };
   const sessionBody = (token, expiresAt, role, user) => ({ token, expiresAt, role, user });
-  app2.post("/api/auth/register", json, h2(async (req, res) => {
+  app2.post("/api/auth/register", json2, h2(async (req, res) => {
     if (await rateLimited(`signup:${clientIp2(req)}`, 10, 60 * 60 * 1e3)) {
       res.status(429).json({ error: "\u0E2A\u0E21\u0E31\u0E04\u0E23\u0E1A\u0E48\u0E2D\u0E22\u0E40\u0E01\u0E34\u0E19\u0E44\u0E1B \u0E01\u0E23\u0E38\u0E13\u0E32\u0E23\u0E2D\u0E2A\u0E31\u0E01\u0E04\u0E23\u0E39\u0E48\u0E41\u0E25\u0E49\u0E27\u0E25\u0E2D\u0E07\u0E43\u0E2B\u0E21\u0E48" });
       return;
@@ -48096,7 +48116,7 @@ function registerRunnerRoutes(app2, h2, clientIp2) {
     await sendVerifyMail(made.runner.runner_id, made.runner.email);
     res.json(sessionBody(s.token, s.expiresAt, "runner", publicRunner(made.runner)));
   }));
-  app2.post("/api/auth/forgot", json, h2(async (req, res) => {
+  app2.post("/api/auth/forgot", json2, h2(async (req, res) => {
     const email = normEmail(req.body?.email);
     const generic = { ok: true, message: "\u0E16\u0E49\u0E32\u0E2D\u0E35\u0E40\u0E21\u0E25\u0E19\u0E35\u0E49\u0E21\u0E35\u0E1A\u0E31\u0E0D\u0E0A\u0E35\u0E2D\u0E22\u0E39\u0E48 \u0E40\u0E23\u0E32\u0E44\u0E14\u0E49\u0E2A\u0E48\u0E07\u0E25\u0E34\u0E07\u0E01\u0E4C\u0E15\u0E31\u0E49\u0E07\u0E23\u0E2B\u0E31\u0E2A\u0E1C\u0E48\u0E32\u0E19\u0E43\u0E2B\u0E21\u0E48\u0E43\u0E2B\u0E49\u0E41\u0E25\u0E49\u0E27 (\u0E25\u0E34\u0E07\u0E01\u0E4C\u0E43\u0E0A\u0E49\u0E44\u0E14\u0E49 1 \u0E0A\u0E31\u0E48\u0E27\u0E42\u0E21\u0E07)" };
     if (!email || await rateLimited(`forgot-ip:${clientIp2(req)}`, 8, 60 * 60 * 1e3) || await rateLimited(`forgot:${email}`, 3, 60 * 60 * 1e3)) {
@@ -48113,7 +48133,7 @@ function registerRunnerRoutes(app2, h2, clientIp2) {
     }
     res.json(generic);
   }));
-  app2.post("/api/auth/reset", json, h2(async (req, res) => {
+  app2.post("/api/auth/reset", json2, h2(async (req, res) => {
     const pw = String(req.body?.password || "");
     if (pw.length < 8 || pw.length > 200) {
       res.status(400).json({ error: "\u0E23\u0E2B\u0E31\u0E2A\u0E1C\u0E48\u0E32\u0E19\u0E15\u0E49\u0E2D\u0E07\u0E22\u0E32\u0E27\u0E2D\u0E22\u0E48\u0E32\u0E07\u0E19\u0E49\u0E2D\u0E22 8 \u0E15\u0E31\u0E27\u0E2D\u0E31\u0E01\u0E29\u0E23" });
@@ -48133,7 +48153,7 @@ function registerRunnerRoutes(app2, h2, clientIp2) {
     const s = issueSession("runner", row2.runner_id);
     res.json(sessionBody(s.token, s.expiresAt, "runner", publicRunner(rows[0])));
   }));
-  app2.post("/api/auth/verify-email", json, h2(async (req, res) => {
+  app2.post("/api/auth/verify-email", json2, h2(async (req, res) => {
     const t = readActionToken("verify", String(req.body?.token || ""));
     const row2 = t ? await getRunner(t.runnerId) : void 0;
     if (!t || !row2 || !row2.email || emailFingerprint(row2.email) !== t.fp) {
@@ -48165,7 +48185,7 @@ function registerRunnerRoutes(app2, h2, clientIp2) {
     }
     res.json({ ok: true, to: maskEmail(row2.email) });
   }));
-  app2.post("/api/auth/login", json, h2(async (req, res) => {
+  app2.post("/api/auth/login", json2, h2(async (req, res) => {
     const ip = clientIp2(req);
     const identifier = String(req.body?.identifier || "").slice(0, 120);
     const password = String(req.body?.password || "").slice(0, 200);
@@ -48241,7 +48261,7 @@ function registerRunnerRoutes(app2, h2, clientIp2) {
       back("#login-error=fail");
     }
   }));
-  app2.patch("/api/me", requireRunner, json, h2(async (req, res) => {
+  app2.patch("/api/me", requireRunner, json2, h2(async (req, res) => {
     const s = req.runner;
     const out = await updateRunnerProfile(s.sub, { name: req.body?.name, phone: req.body?.phone, email: req.body?.email, profile: req.body?.profile });
     if (!out.ok) {
@@ -48282,7 +48302,7 @@ function registerRunnerRoutes(app2, h2, clientIp2) {
       }))
     });
   }));
-  app2.post("/api/me/claim", requireRunner, json, h2(async (req, res) => {
+  app2.post("/api/me/claim", requireRunner, json2, h2(async (req, res) => {
     const s = req.runner;
     if (await rateLimited(`claim:${clientIp2(req)}`, 10, 60 * 60 * 1e3)) {
       res.status(429).json({ error: "\u0E25\u0E2D\u0E07\u0E1A\u0E48\u0E2D\u0E22\u0E40\u0E01\u0E34\u0E19\u0E44\u0E1B \u0E01\u0E23\u0E38\u0E13\u0E32\u0E23\u0E2D\u0E2A\u0E31\u0E01\u0E04\u0E23\u0E39\u0E48" });
@@ -48397,7 +48417,9 @@ async function publicConfig() {
     paymentReady: Boolean(key),
     /** true when paid orders get their ticket by e-mail */
     emailReady: mailConfigured(),
-    /** whether the Google sign-in button works (its keys are set on the server) */
+    /** true when LINE_CHANNEL_ID / LINE_CHANNEL_SECRET are set (the LINE login button works) */
+    lineLoginReady: configuredProviders().line,
+    /** which social sign-in buttons work (their keys are set on the server) */
     socialLogin: configuredProviders()
   };
 }

@@ -195,7 +195,9 @@ async function publicConfig() {
     paymentReady: Boolean(key),
     /** true when paid orders get their ticket by e-mail */
     emailReady: mailConfigured(),
-    /** whether the Google sign-in button works (its keys are set on the server) */
+    /** true when LINE_CHANNEL_ID / LINE_CHANNEL_SECRET are set (the LINE login button works) */
+    lineLoginReady: configuredProviders().line,
+    /** which social sign-in buttons work (their keys are set on the server) */
     socialLogin: configuredProviders(),
   };
 }
