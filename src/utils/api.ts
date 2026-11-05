@@ -32,6 +32,8 @@ export interface PublicConfig {
   emailReady?: boolean;
   /** the admin's open / close switch for ticket sales (missing = open) */
   salesOpen?: boolean;
+  /** when sales open by themselves (ISO); only set while that moment is still ahead */
+  salesOpensAt?: string | null;
   /** the admin's early-bird switch (lower run / concert / VIP prices) */
   earlyBird?: boolean;
   /** LINE Login is set up on the server */
@@ -353,6 +355,14 @@ export interface SponsorCodeRow {
   createdAt: string;
 }
 
+export interface SalesState {
+  open: boolean;
+  manualOpen: boolean;
+  openAt?: string;
+  scheduled: boolean;
+  updatedAt?: string;
+}
+
 export interface EarlyBirdState {
   on: boolean;
   manual: boolean;
@@ -413,9 +423,11 @@ export async function getWinners(): Promise<Winner[]> {
 
 export const adminApi = {
   visits: () => adminFetch<VisitStats>('/api/admin/visits'),
-  getSales: () => adminFetch<{ open: boolean; updatedAt?: string }>('/api/admin/sales'),
+  getSales: () => adminFetch<SalesState>('/api/admin/sales'),
+  setSalesOpenAt: (openAt: string | null) =>
+    adminFetch<SalesState>('/api/admin/sales', { method: 'PUT', headers: jsonHeaders, body: JSON.stringify({ openAt }) }),
   setSales: (open: boolean) =>
-    adminFetch<{ open: boolean; updatedAt?: string }>('/api/admin/sales', { method: 'PUT', headers: jsonHeaders, body: JSON.stringify({ open }) }),
+    adminFetch<SalesState>('/api/admin/sales', { method: 'PUT', headers: jsonHeaders, body: JSON.stringify({ open }) }),
   getEarlyBird: () => adminFetch<EarlyBirdState>('/api/admin/early-bird'),
   setEarlyBirdSchedule: (autoFrom: string | null, autoUntil: string | null) =>
     adminFetch<EarlyBirdState>('/api/admin/early-bird', { method: 'PUT', headers: jsonHeaders, body: JSON.stringify({ autoFrom, autoUntil }) }),

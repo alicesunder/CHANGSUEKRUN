@@ -93,7 +93,7 @@ export const ActivityMap: React.FC<{ className?: string }> = ({ className = '' }
                 showActivitySticker(a.id, locationTitle(a));
               }}
               aria-label={`ซูมไปที่${a.name}`}
-              className="w-9 h-9 shrink-0 rounded-full text-white text-sm font-black cursor-pointer"
+              className="w-11 h-11 shrink-0 rounded-full text-white text-sm font-black cursor-pointer"
               style={{ background: a.color }}
             >
               {a.station ?? '🏖'}
@@ -104,7 +104,7 @@ export const ActivityMap: React.FC<{ className?: string }> = ({ className = '' }
                 href={a.mapsUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 text-[11px] font-extrabold text-[#5B20A8] underline"
+                className="inline-flex items-center gap-1 min-h-[44px] text-xs font-extrabold text-[#5B20A8] underline"
               >
                 <Navigation className="w-3 h-3" /> นำทาง <ExternalLink className="w-3 h-3" />
               </a>

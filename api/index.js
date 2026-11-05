@@ -33893,19 +33893,33 @@ async function saveSettings(s) {
     [JSON.stringify(s)]
   );
 }
+var DEFAULT_SALES_OPEN_AT = "2026-11-09T09:00:00+07:00";
+var DEFAULT_EARLY_BIRD_FROM = "2026-11-09";
+var DEFAULT_EARLY_BIRD_UNTIL = "2026-11-19";
 async function getSalesStatus() {
   const rows = await dbQuery("select value from csr.settings where key = 'sales'");
   const v = rows[0] ? asObj(rows[0].value) : {};
-  return { open: v.open !== false, updatedAt: v.updatedAt };
+  const openAt = v.openAt === null ? void 0 : typeof v.openAt === "string" && v.openAt ? v.openAt : DEFAULT_SALES_OPEN_AT;
+  const manualOpen = v.open !== false;
+  const timeOk = !openAt || Number.isNaN(Date.parse(openAt)) || Date.now() >= Date.parse(openAt);
+  return { open: manualOpen && timeOk, manualOpen, openAt, scheduled: manualOpen && !timeOk, updatedAt: v.updatedAt };
 }
-async function setSalesOpen(open) {
-  const value = { open, updatedAt: (/* @__PURE__ */ new Date()).toISOString() };
+async function writeSales(v) {
+  const value = { open: v.open, openAt: v.openAt, updatedAt: (/* @__PURE__ */ new Date()).toISOString() };
   await dbQuery(
     `insert into csr.settings (key, value) values ('sales', $1::jsonb)
      on conflict (key) do update set value = excluded.value, updated_at = now()`,
     [JSON.stringify(value)]
   );
-  return value;
+  return getSalesStatus();
+}
+async function setSalesOpen(open) {
+  const cur = await getSalesStatus();
+  return writeSales({ open, openAt: open ? null : cur.openAt ?? null });
+}
+async function setSalesOpenAt(openAt) {
+  const cur = await getSalesStatus();
+  return writeSales({ open: cur.manualOpen, openAt });
 }
 var DATE_ONLY = /^\d{4}-\d{2}-\d{2}$/;
 var bkkStart = (d) => DATE_ONLY.test(d) ? `${d}T00:00:00+07:00` : d;
@@ -33920,7 +33934,8 @@ function earlyBirdWindowActive(autoFrom, autoUntil, now = Date.now()) {
 async function readEarlyBird() {
   const rows = await dbQuery("select value from csr.settings where key = 'early_bird'");
   const v = rows[0] ? asObj(rows[0].value) : {};
-  return { manual: v.on === true, autoFrom: v.autoFrom || void 0, autoUntil: v.autoUntil || void 0, updatedAt: v.updatedAt };
+  const pick = (x, d) => x === null ? void 0 : x || d;
+  return { manual: v.on === true, autoFrom: pick(v.autoFrom, DEFAULT_EARLY_BIRD_FROM), autoUntil: pick(v.autoUntil, DEFAULT_EARLY_BIRD_UNTIL), updatedAt: v.updatedAt };
 }
 async function getEarlyBird() {
   const v = await readEarlyBird();
@@ -48790,6 +48805,8 @@ async function publicConfig() {
   return {
     /** the admin's open / close switch for ticket sales */
     salesOpen: sales.open,
+    /** when sales open by themselves (ISO), only while that time is still ahead */
+    salesOpensAt: sales.scheduled ? sales.openAt : null,
     /** the admin's early-bird switch (lower run / concert / VIP prices) */
     earlyBird: early.on,
     windTunnelLimit: WIND_TUNNEL_LIMIT,
@@ -48927,8 +48944,11 @@ function createApp() {
       res.status(401).json({ error: "\u0E01\u0E23\u0E38\u0E13\u0E32\u0E40\u0E02\u0E49\u0E32\u0E2A\u0E39\u0E48\u0E23\u0E30\u0E1A\u0E1A\u0E2B\u0E23\u0E37\u0E2D\u0E2A\u0E21\u0E31\u0E04\u0E23\u0E2A\u0E21\u0E32\u0E0A\u0E34\u0E01\u0E01\u0E48\u0E2D\u0E19\u0E2A\u0E31\u0E48\u0E07\u0E0B\u0E37\u0E49\u0E2D", needLogin: true });
       return;
     }
-    if (!testMode && !(await getSalesStatus()).open) {
-      res.status(403).json({ error: "\u0E02\u0E13\u0E30\u0E19\u0E35\u0E49\u0E1B\u0E34\u0E14\u0E01\u0E32\u0E23\u0E02\u0E32\u0E22\u0E1A\u0E31\u0E15\u0E23\u0E0A\u0E31\u0E48\u0E27\u0E04\u0E23\u0E32\u0E27 \u0E01\u0E23\u0E38\u0E13\u0E32\u0E15\u0E34\u0E14\u0E15\u0E32\u0E21\u0E1B\u0E23\u0E30\u0E01\u0E32\u0E28\u0E08\u0E32\u0E01\u0E1C\u0E39\u0E49\u0E08\u0E31\u0E14\u0E07\u0E32\u0E19" });
+    const salesNow = await getSalesStatus();
+    if (!testMode && !salesNow.open) {
+      res.status(403).json({
+        error: salesNow.scheduled ? "\u0E22\u0E31\u0E07\u0E44\u0E21\u0E48\u0E16\u0E36\u0E07\u0E40\u0E27\u0E25\u0E32\u0E40\u0E1B\u0E34\u0E14\u0E02\u0E32\u0E22 (\u0E40\u0E1B\u0E34\u0E14\u0E02\u0E32\u0E22 " + new Date(salesNow.openAt).toLocaleString("th-TH", { timeZone: "Asia/Bangkok", dateStyle: "long", timeStyle: "short" }) + " \u0E19.)" : "\u0E02\u0E13\u0E30\u0E19\u0E35\u0E49\u0E1B\u0E34\u0E14\u0E01\u0E32\u0E23\u0E02\u0E32\u0E22\u0E1A\u0E31\u0E15\u0E23\u0E0A\u0E31\u0E48\u0E27\u0E04\u0E23\u0E32\u0E27 \u0E01\u0E23\u0E38\u0E13\u0E32\u0E15\u0E34\u0E14\u0E15\u0E32\u0E21\u0E1B\u0E23\u0E30\u0E01\u0E32\u0E28\u0E08\u0E32\u0E01\u0E1C\u0E39\u0E49\u0E08\u0E31\u0E14\u0E07\u0E32\u0E19"
+      });
       return;
     }
     const isConcert = b.ticketType === "CONCERT";
@@ -49654,11 +49674,20 @@ function createApp() {
     res.json(state);
   }));
   app2.put("/api/admin/sales", requireAdmin, smallJson, h(async (req, res) => {
-    if (typeof req.body?.open !== "boolean") {
+    const b = req.body || {};
+    const hasAt = "openAt" in b;
+    if (typeof b.open !== "boolean" && !hasAt) {
       res.status(400).json({ error: "open must be true or false" });
       return;
     }
-    res.json(await setSalesOpen(req.body.open));
+    if (hasAt && b.openAt !== null && (typeof b.openAt !== "string" || Number.isNaN(Date.parse(b.openAt)))) {
+      res.status(400).json({ error: "\u0E40\u0E27\u0E25\u0E32\u0E40\u0E1B\u0E34\u0E14\u0E02\u0E32\u0E22\u0E44\u0E21\u0E48\u0E16\u0E39\u0E01\u0E15\u0E49\u0E2D\u0E07" });
+      return;
+    }
+    let state = await getSalesStatus();
+    if (typeof b.open === "boolean") state = await setSalesOpen(b.open);
+    if (hasAt) state = await setSalesOpenAt(b.openAt);
+    res.json(state);
   }));
   app2.get("/api/admin/settings", requireAdmin, h(async (_req, res) => {
     res.json({ settings: await getSettings(), bibCounters: await getBibCounters() });

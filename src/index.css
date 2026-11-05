@@ -143,6 +143,16 @@
   font-family: 'Plus Jakarta Sans', 'Prompt', sans-serif !important;
 }
 
+/* Map zoom buttons: 44px tap targets on touch screens (Leaflet default is 30px) */
+@media (pointer: coarse) {
+  .leaflet-touch .leaflet-bar a {
+    width: 44px !important;
+    height: 44px !important;
+    line-height: 44px !important;
+    font-size: 22px;
+  }
+}
+
 /* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 8px;

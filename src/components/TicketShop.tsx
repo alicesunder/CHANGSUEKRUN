@@ -3,7 +3,7 @@ import { AnimatePresence, motion } from 'motion/react';
 import { ArrowRight, Check, ChevronDown, Clock, Crown, Droplets, Flame, Medal, Minus, Plus, Shirt, ShoppingBasket, Sparkles, Ticket, Zap } from 'lucide-react';
 import type { RouteId } from '../types';
 import { EarlyBirdPrice } from './EarlyBirdPrice';
-import { useEarlyBird } from '../utils/earlyBird';
+import { useEarlyBird, formatOpenAt } from '../utils/earlyBird';
 import { useLang } from '../i18n/lang';
 import { CONCERT_PASS_PRICE, MAX_VIP_TABLES, VIP_TABLE_PERKS, VIP_TABLE_PRICE, VIP_TABLE_SEATS, calcTicketTotal, concertPassPrice, runBasePrice, vipTablePrice, isDogCategory, routesData, ticketById } from '../data/eventData';
 import {
@@ -442,6 +442,7 @@ export const TicketShop: React.FC<TicketShopProps> = ({
   const [windRemaining, setWindRemaining] = useState<number | null>(null);
   // the admin's open / close switch (see SalesSwitchCard)
   const [salesClosed, setSalesClosed] = useState(false);
+  const [opensAt, setOpensAt] = useState<string | null>(null);
   const earlyBird = useEarlyBird();
   const { t: tr } = useLang();
   useEffect(() => {
@@ -451,6 +452,7 @@ export const TicketShop: React.FC<TicketShopProps> = ({
         if (!alive) return;
         setWindRemaining(typeof c.windTunnelRemaining === 'number' ? c.windTunnelRemaining : null);
         setSalesClosed(c.salesOpen === false);
+        setOpensAt(c.salesOpensAt || null);
       })
       .catch(() => {});
     return () => {
@@ -562,8 +564,16 @@ export const TicketShop: React.FC<TicketShopProps> = ({
         </div>
         {salesClosed && (
           <div role="status" className="mx-auto mt-5 max-w-2xl rounded-2xl border-[3px] border-[#2A1450] bg-[#FFE4E6] px-4 py-3 text-center shadow-[0_5px_0_#2A1450]">
-            <p className="text-base sm:text-lg font-black text-[#9F1239]">{tr('⏸️ ขณะนี้ปิดการขายบัตรชั่วคราว', '⏸️ Ticket sales are paused for now')}</p>
-            <p className="text-xs sm:text-sm font-bold text-[#4B2D78]">ดูรายละเอียดบัตรได้ตามปกติ · ติดตามประกาศเปิดขายจากผู้จัดงาน</p>
+            <p className="text-base sm:text-lg font-black text-[#9F1239]">
+              {opensAt
+                ? tr('⏳ เปิดขายบัตร ' + formatOpenAt(opensAt, false), '⏳ Tickets go on sale ' + formatOpenAt(opensAt, true))
+                : tr('⏸️ ขณะนี้ปิดการขายบัตรชั่วคราว', '⏸️ Ticket sales are paused for now')}
+            </p>
+            <p className="text-xs sm:text-sm font-bold text-[#4B2D78]">
+              {opensAt
+                ? tr('ดูรายละเอียดบัตรและราคาได้ก่อน · ปุ่มซื้อจะใช้งานได้เมื่อถึงเวลาเปิดขาย', 'Browse tickets and prices now · buying unlocks when sales open')
+                : tr('ดูรายละเอียดบัตรได้ตามปกติ · ติดตามประกาศเปิดขายจากผู้จัดงาน', 'Ticket details stay visible · follow the organiser for the reopening')}
+            </p>
           </div>
         )}
 

@@ -165,20 +165,56 @@ export async function saveSettings(s: PublicSettings): Promise<void> {
 }
 
 /** Ticket sales switch (admin): when closed, no new orders; orders already made can still be paid. */
-export async function getSalesStatus(): Promise<{ open: boolean; updatedAt?: string }> {
-  const rows = await dbQuery<{ value: unknown }>("select value from csr.settings where key = 'sales'");
-  const v = rows[0] ? asObj<{ open?: boolean; updatedAt?: string }>(rows[0].value) : {};
-  return { open: v.open !== false, updatedAt: v.updatedAt };
+/**
+ * Defaults from the organiser's registration plan (Nov 2026): sales open on 9 Nov 2569 at 09.00 (Bangkok), and the
+ * early-bird prices run 9–19 Nov. They apply until an admin saves something else in the back office
+ * (saving "no schedule" stores an explicit null, which switches the default off).
+ */
+export const DEFAULT_SALES_OPEN_AT = '2026-11-09T09:00:00+07:00';
+export const DEFAULT_EARLY_BIRD_FROM = '2026-11-09';
+export const DEFAULT_EARLY_BIRD_UNTIL = '2026-11-19';
+
+export interface SalesState {
+  /** effective: orders are accepted right now */
+  open: boolean;
+  /** the manual switch (false = closed by an admin) */
+  manualOpen: boolean;
+  /** automatic opening time (ISO); undefined = none */
+  openAt?: string;
+  /** the manual switch is on but the opening time has not come yet */
+  scheduled: boolean;
+  updatedAt?: string;
 }
 
-export async function setSalesOpen(open: boolean): Promise<{ open: boolean; updatedAt: string }> {
-  const value = { open, updatedAt: new Date().toISOString() };
+export async function getSalesStatus(): Promise<SalesState> {
+  const rows = await dbQuery<{ value: unknown }>("select value from csr.settings where key = 'sales'");
+  const v = rows[0] ? asObj<{ open?: boolean; openAt?: string | null; updatedAt?: string }>(rows[0].value) : {};
+  const openAt = v.openAt === null ? undefined : typeof v.openAt === 'string' && v.openAt ? v.openAt : DEFAULT_SALES_OPEN_AT;
+  const manualOpen = v.open !== false;
+  const timeOk = !openAt || Number.isNaN(Date.parse(openAt)) || Date.now() >= Date.parse(openAt);
+  return { open: manualOpen && timeOk, manualOpen, openAt, scheduled: manualOpen && !timeOk, updatedAt: v.updatedAt };
+}
+
+async function writeSales(v: { open: boolean; openAt: string | null }): Promise<SalesState> {
+  const value = { open: v.open, openAt: v.openAt, updatedAt: new Date().toISOString() };
   await dbQuery(
     `insert into csr.settings (key, value) values ('sales', $1::jsonb)
      on conflict (key) do update set value = excluded.value, updated_at = now()`,
     [JSON.stringify(value)]
   );
-  return value;
+  return getSalesStatus();
+}
+
+/** Opening by hand opens NOW (it clears the automatic opening time); closing keeps the time for later. */
+export async function setSalesOpen(open: boolean): Promise<SalesState> {
+  const cur = await getSalesStatus();
+  return writeSales({ open, openAt: open ? null : cur.openAt ?? null });
+}
+
+/** Sets (or, with null, removes) the automatic opening time. */
+export async function setSalesOpenAt(openAt: string | null): Promise<SalesState> {
+  const cur = await getSalesStatus();
+  return writeSales({ open: cur.manualOpen, openAt });
 }
 
 /**
@@ -212,7 +248,9 @@ export function earlyBirdWindowActive(autoFrom?: string, autoUntil?: string, now
 async function readEarlyBird(): Promise<{ manual: boolean; autoFrom?: string; autoUntil?: string; updatedAt?: string }> {
   const rows = await dbQuery<{ value: unknown }>("select value from csr.settings where key = 'early_bird'");
   const v = rows[0] ? asObj<{ on?: boolean; updatedAt?: string; autoFrom?: string; autoUntil?: string }>(rows[0].value) : {};
-  return { manual: v.on === true, autoFrom: v.autoFrom || undefined, autoUntil: v.autoUntil || undefined, updatedAt: v.updatedAt };
+  // missing = the organiser's default window; an explicit null (saved from the back office) = no schedule
+  const pick = (x: string | null | undefined, d: string) => (x === null ? undefined : x || d);
+  return { manual: v.on === true, autoFrom: pick(v.autoFrom as string | null | undefined, DEFAULT_EARLY_BIRD_FROM), autoUntil: pick(v.autoUntil as string | null | undefined, DEFAULT_EARLY_BIRD_UNTIL), updatedAt: v.updatedAt };
 }
 
 export async function getEarlyBird(): Promise<EarlyBirdState> {

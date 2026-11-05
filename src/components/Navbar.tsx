@@ -134,7 +134,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             <button
               type="button"
               onClick={onOpenRegisterModal}
-              className="attn jelly inline-flex items-center gap-1 bg-[#FFC928] hover:bg-[#FFD645] text-[#1F1035] text-xs sm:text-[13px] font-extrabold px-5 py-1.5 rounded-full shadow-md hover:shadow-lg transition-all transform hover:-translate-y-0.5 active:translate-y-0 cursor-pointer whitespace-nowrap"
+              className="attn jelly inline-flex items-center gap-1 bg-[#FFC928] hover:bg-[#FFD645] text-[#1F1035] text-xs sm:text-[13px] font-extrabold px-5 min-h-[44px] py-1.5 rounded-full shadow-md hover:shadow-lg transition-all transform hover:-translate-y-0.5 active:translate-y-0 cursor-pointer whitespace-nowrap"
             >
               <span aria-hidden="true">🐾</span>
               {t('ซื้อบัตร', 'Buy tickets')}

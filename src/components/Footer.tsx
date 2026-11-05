@@ -181,7 +181,7 @@ export const Footer: React.FC<FooterProps> = ({
 
           <button
             onClick={scrollToTop}
-            className="flex items-center gap-1.5 min-h-[32px] text-xs text-white/60 hover:text-white transition-colors cursor-pointer"
+            className="flex items-center gap-1.5 min-h-[44px] px-2 text-xs text-white/70 hover:text-white transition-colors cursor-pointer"
           >
             <span>{t('กลับขึ้นด้านบน', 'Back to top')}</span>
             <ArrowUp className="w-3.5 h-3.5" />

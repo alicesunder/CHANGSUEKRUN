@@ -19,7 +19,7 @@ import { HeroCountdownTimer } from './HeroCountdownTimer';
 import { PawIcon } from './brand/DogDecor';
 import { LabradorMascot } from './brand/LabradorMascot';
 import { BouncyText } from './BouncyText';
-import { useEarlyBird } from '../utils/earlyBird';
+import { useEarlyBird, useSalesInfo, formatOpenAt } from '../utils/earlyBird';
 import { useLang } from '../i18n/lang';
 import { EARLY_BIRD_OFF, formatBaht } from '../data/eventData';
 
@@ -66,6 +66,7 @@ export const Hero: React.FC<HeroProps> = ({
 }) => {
   const reduceMotion = useReducedMotion();
   const earlyBird = useEarlyBird();
+  const sales = useSalesInfo();
   const { t } = useLang();
   const scrollToSection = (id: string) => {
     const el = document.getElementById(id);
@@ -205,7 +206,12 @@ export const Hero: React.FC<HeroProps> = ({
               className="flex flex-col items-center text-center"
             >
               <span className="inline-flex items-center gap-1.5 rounded-full bg-[#FFC928] text-[#2A1450] text-[11px] font-extrabold px-3 py-1 shadow-[0_3px_0_#2A1450]">
-                <Sparkles className="w-3 h-3" /> {t('เปิดรับสมัครออนไลน์แล้ว', 'Online registration is open')}
+                <Sparkles className="w-3 h-3" />{' '}
+                {sales.opensAt
+                  ? t('เปิดขายบัตร ' + formatOpenAt(sales.opensAt, false), 'Tickets on sale ' + formatOpenAt(sales.opensAt, true))
+                  : sales.closed
+                    ? t('ปิดการขายบัตรชั่วคราว', 'Ticket sales paused')
+                    : t('เปิดรับสมัครออนไลน์แล้ว', 'Online registration is open')}
               </span>
               {earlyBird && <EarlyBirdBadge onClick={onOpenRegisterModal} className="mt-2" />}
               <img

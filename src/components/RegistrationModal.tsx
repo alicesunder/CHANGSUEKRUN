@@ -1282,7 +1282,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                       disabled={addonMissing || concertMissing || salesClosed}
                       className="disabled:opacity-50 disabled:cursor-not-allowed w-full py-3.5 px-5 rounded-2xl bg-gradient-to-r from-[#FFE268] via-[#FFC928] to-[#F59E0B] hover:brightness-105 text-[#261247] font-black text-base border-2 border-[#261247] luminous-pill-btn active:translate-y-0.5 transition-all flex items-center justify-center gap-2 cursor-pointer"
                     >
-                      <span>{salesClosed ? 'ขณะนี้ปิดการขายบัตรชั่วคราว' : addonMissing ? 'เลือกอย่างน้อย 1 อย่างก่อน (วิ่ง / คอนเสิร์ต / กิจกรรม)' : concertMissing ? 'เลือกตั๋ว GA หรือ VIP TABLE ก่อน' : 'ดำเนินการต่อ · กรอกข้อมูลผู้สมัคร'}</span>
+                      <span>{salesClosed ? (publicCfg?.salesOpensAt ? 'ยังไม่ถึงเวลาเปิดขาย' : 'ขณะนี้ปิดการขายบัตรชั่วคราว') : addonMissing ? 'เลือกอย่างน้อย 1 อย่างก่อน (วิ่ง / คอนเสิร์ต / กิจกรรม)' : concertMissing ? 'เลือกตั๋ว GA หรือ VIP TABLE ก่อน' : 'ดำเนินการต่อ · กรอกข้อมูลผู้สมัคร'}</span>
                       <ArrowRight className="w-5 h-5 stroke-[2.5]" />
                     </button>
                   </div>

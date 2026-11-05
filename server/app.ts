@@ -65,6 +65,7 @@ import {
   getEarlyBird,
   setEarlyBird,
   setSalesOpen,
+  setSalesOpenAt,
   isVisitorId,
   recordVisit,
   visitStats,
@@ -185,6 +186,8 @@ async function publicConfig() {
   return {
     /** the admin's open / close switch for ticket sales */
     salesOpen: sales.open,
+    /** when sales open by themselves (ISO), only while that time is still ahead */
+    salesOpensAt: sales.scheduled ? sales.openAt : null,
     /** the admin's early-bird switch (lower run / concert / VIP prices) */
     earlyBird: early.on,
     windTunnelLimit: WIND_TUNNEL_LIMIT,
@@ -350,8 +353,13 @@ export function createApp(): express.Express {
       res.status(401).json({ error: 'กรุณาเข้าสู่ระบบหรือสมัครสมาชิกก่อนสั่งซื้อ', needLogin: true });
       return;
     }
-    if (!testMode && !(await getSalesStatus()).open) {
-      res.status(403).json({ error: 'ขณะนี้ปิดการขายบัตรชั่วคราว กรุณาติดตามประกาศจากผู้จัดงาน' });
+    const salesNow = await getSalesStatus();
+    if (!testMode && !salesNow.open) {
+      res.status(403).json({
+        error: salesNow.scheduled
+          ? 'ยังไม่ถึงเวลาเปิดขาย (เปิดขาย ' + new Date(salesNow.openAt as string).toLocaleString('th-TH', { timeZone: 'Asia/Bangkok', dateStyle: 'long', timeStyle: 'short' }) + ' น.)'
+          : 'ขณะนี้ปิดการขายบัตรชั่วคราว กรุณาติดตามประกาศจากผู้จัดงาน',
+      });
       return;
     }
     const isConcert = b.ticketType === 'CONCERT';
@@ -1183,11 +1191,20 @@ export function createApp(): express.Express {
   }));
 
   app.put('/api/admin/sales', requireAdmin, smallJson, h(async (req, res) => {
-    if (typeof req.body?.open !== 'boolean') {
+    const b = req.body || {};
+    const hasAt = 'openAt' in b;
+    if (typeof b.open !== 'boolean' && !hasAt) {
       res.status(400).json({ error: 'open must be true or false' });
       return;
     }
-    res.json(await setSalesOpen(req.body.open));
+    if (hasAt && b.openAt !== null && (typeof b.openAt !== 'string' || Number.isNaN(Date.parse(b.openAt)))) {
+      res.status(400).json({ error: 'เวลาเปิดขายไม่ถูกต้อง' });
+      return;
+    }
+    let state = await getSalesStatus();
+    if (typeof b.open === 'boolean') state = await setSalesOpen(b.open);
+    if (hasAt) state = await setSalesOpenAt(b.openAt as string | null);
+    res.json(state);
   }));
 
   app.get('/api/admin/settings', requireAdmin, h(async (_req, res) => {
