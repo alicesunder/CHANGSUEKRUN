@@ -106,6 +106,8 @@ export interface StoredOrder {
   paidAt?: string;
   /** the runner account that bought it (set when the buyer was logged in, or an order was claimed later) */
   runnerId?: string;
+  /** the runner asked for extra payment time once (+15 minutes) */
+  extendedAt?: string;
 }
 
 export interface PublicSettings {
@@ -131,7 +133,7 @@ const DEFAULT_SETTINGS: PublicSettings = {
     'โครงการช้างศึกรันเห็นช้างวิ่งวิ่งตามช้าง (CHANGSUEK RUN 2026)',
   bankLabel: process.env.BANK_LABEL || 'ธนาคารกรุงไทย',
   bankAccountNo: process.env.BANK_ACCOUNT_NO || '0340291354',
-  paymentTimeoutMinutes: 15,
+  paymentTimeoutMinutes: 30,
 };
 
 const asObj = <T>(v: unknown): T => (typeof v === 'string' ? JSON.parse(v) : (v as T));
@@ -295,16 +297,53 @@ export async function restoreOrderChecked(orderId: string, windTunnelLimit: numb
 }
 
 /** Inserts the order; if it takes wind-tunnel seats, checks the limit under a lock so two buyers can't both take the last seat. */
+const TOWER_USED_SQL = `select coalesce(sum((data->'addOns'->>'people')::int), 0)::text as n from csr.orders
+  where data->'addOns'->>'tower' = 'true' and not (data ? 'cancelledAt') and not (data ? 'isTest')
+    and (payment_status = 'PAID' or (data->>'expiresAt')::timestamptz > now())`;
+const GUN_USED_SQL = `select coalesce(sum((data->'addOns'->>'people')::int), 0)::text as n from csr.orders
+  where data->'addOns'->>'gun' in ('standard', 'premium') and not (data ? 'cancelledAt') and not (data ? 'isTest')
+    and (payment_status = 'PAID' or (data->>'expiresAt')::timestamptz > now())`;
+
+/** Optional seat limits for the tower and the shooting range (env TOWER_LIMIT / GUN_LIMIT; 0 or unset = no limit). */
+export const ACTIVITY_LIMITS = {
+  tower: Math.max(0, Math.floor(Number(process.env.TOWER_LIMIT) || 0)),
+  gun: Math.max(0, Math.floor(Number(process.env.GUN_LIMIT) || 0)),
+};
+
+export async function activitySeatsLeft(): Promise<{ tower: number | null; gun: number | null }> {
+  const [t, g] = await Promise.all([
+    ACTIVITY_LIMITS.tower ? dbQuery<{ n: string }>(TOWER_USED_SQL) : Promise.resolve(null),
+    ACTIVITY_LIMITS.gun ? dbQuery<{ n: string }>(GUN_USED_SQL) : Promise.resolve(null),
+  ]);
+  return {
+    tower: t ? Math.max(0, ACTIVITY_LIMITS.tower - Number(t[0]?.n ?? 0)) : null,
+    gun: g ? Math.max(0, ACTIVITY_LIMITS.gun - Number(g[0]?.n ?? 0)) : null,
+  };
+}
+
 export async function insertOrderChecked(
   o: StoredOrder,
   windTunnelLimit: number
-): Promise<{ ok: true } | { ok: false; remaining: number }> {
+): Promise<{ ok: true } | { ok: false; remaining: number; activity?: 'wind' | 'tower' | 'gun' }> {
   return dbTx(async (q) => {
+    const wantsTower = o.addOns?.tower && ACTIVITY_LIMITS.tower > 0 && !o.isTest;
+    const wantsGun = o.addOns && o.addOns.gun !== 'none' && ACTIVITY_LIMITS.gun > 0 && !o.isTest;
+    if (wantsTower || wantsGun) {
+      await q('select pg_advisory_xact_lock(727002)');
+      if (wantsTower) {
+        const used = Number((await q<{ n: string }>(TOWER_USED_SQL))[0]?.n ?? 0);
+        if (used + o.addOns!.people > ACTIVITY_LIMITS.tower) return { ok: false as const, remaining: Math.max(0, ACTIVITY_LIMITS.tower - used), activity: 'tower' as const };
+      }
+      if (wantsGun) {
+        const used = Number((await q<{ n: string }>(GUN_USED_SQL))[0]?.n ?? 0);
+        if (used + o.addOns!.people > ACTIVITY_LIMITS.gun) return { ok: false as const, remaining: Math.max(0, ACTIVITY_LIMITS.gun - used), activity: 'gun' as const };
+      }
+    }
     if (o.addOns?.windTunnel && !o.isTest) {
       await q('select pg_advisory_xact_lock(727001)');
       const rows = await q<{ n: string }>(WIND_TUNNEL_USED_SQL);
       const used = Number(rows[0]?.n ?? 0);
-      if (used + o.addOns.people > windTunnelLimit) return { ok: false as const, remaining: Math.max(0, windTunnelLimit - used) };
+      if (used + o.addOns.people > windTunnelLimit) return { ok: false as const, remaining: Math.max(0, windTunnelLimit - used), activity: 'wind' as const };
     }
     await q(INSERT_ORDER_SQL, orderParams(o));
     return { ok: true as const };

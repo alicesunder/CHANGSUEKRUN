@@ -51,6 +51,8 @@ import {
   updateOrder,
   updateSponsorCode,
   windTunnelSeatsUsed,
+  activitySeatsLeft,
+  ACTIVITY_LIMITS,
   formatBib,
   findOrderByCode,
   getWinners,
@@ -171,7 +173,7 @@ async function nextBibPreview() {
 }
 
 async function publicConfig() {
-  const [s, nextBib, key, windUsed, sales, early] = await Promise.all([getSettings(), nextBibPreview(), getEasySlipKey(), windTunnelSeatsUsed(), getSalesStatus(), getEarlyBird()]);
+  const [s, nextBib, key, windUsed, sales, early, seatsLeft] = await Promise.all([getSettings(), nextBibPreview(), getEasySlipKey(), windTunnelSeatsUsed(), getSalesStatus(), getEarlyBird(), activitySeatsLeft()]);
   return {
     /** the admin's open / close switch for ticket sales */
     salesOpen: sales.open,
@@ -179,6 +181,9 @@ async function publicConfig() {
     earlyBird: early.on,
     windTunnelLimit: WIND_TUNNEL_LIMIT,
     windTunnelRemaining: Math.max(0, WIND_TUNNEL_LIMIT - windUsed),
+    /** seats left at the tower / shooting range (null = no limit set) */
+    towerRemaining: seatsLeft.tower,
+    gunRemaining: seatsLeft.gun,
     promptPayId: s.promptPayId,
     qrPayload: s.qrPayload,
     accountName: s.accountName,
@@ -477,7 +482,7 @@ export function createApp(): express.Express {
     const now = new Date();
     const settings = await getSettings();
     // The transfer window is 15 minutes at most (an admin may shorten it, never lengthen it).
-    const timeoutMin = Math.min(15, Math.max(1, settings.paymentTimeoutMinutes || 15));
+    const timeoutMin = Math.min(60, Math.max(1, settings.paymentTimeoutMinutes || 30));
 
     const order: StoredOrder = {
       orderId: testMode ? newTestOrderId() : await nextOrderId(),
@@ -533,7 +538,7 @@ export function createApp(): express.Express {
       createdAt: now.toISOString(),
       expiresAt: new Date(now.getTime() + timeoutMin * 60 * 1000).toISOString(),
     };
-    let seats: { ok: true } | { ok: false; remaining: number };
+    let seats: { ok: true } | { ok: false; remaining: number; activity?: 'wind' | 'tower' | 'gun' };
     try {
       seats = await insertOrderChecked(order, WIND_TUNNEL_LIMIT);
     } catch (err) {
@@ -544,10 +549,12 @@ export function createApp(): express.Express {
       if (sponsorCode) await releaseSponsorCode(sponsorCode).catch(() => {});
       res.status(409).json({
         error:
-          seats.remaining > 0
-            ? `อุโมงค์ลมเหลือ ${seats.remaining} ที่ กรุณาลดจำนวนคนหรือเอาอุโมงค์ลมออก`
-            : `อุโมงค์ลมเต็มแล้ว (ครบ ${WIND_TUNNEL_LIMIT} ท่าน)`,
-        windTunnelRemaining: seats.remaining,
+          seats.activity === 'tower' || seats.activity === 'gun'
+            ? `${seats.activity === 'tower' ? 'หอสูง' : 'ยิงปืน'}${seats.remaining > 0 ? `เหลือ ${seats.remaining} ที่ กรุณาเอากิจกรรมนี้ออกจากคำสั่งซื้อ` : `เต็มแล้ว (ครบ ${seats.activity === 'tower' ? ACTIVITY_LIMITS.tower : ACTIVITY_LIMITS.gun} ที่)`}`
+            : seats.remaining > 0
+              ? `อุโมงค์ลมเหลือ ${seats.remaining} ที่ กรุณาลดจำนวนคนหรือเอาอุโมงค์ลมออก`
+              : `อุโมงค์ลมเต็มแล้ว (ครบ ${WIND_TUNNEL_LIMIT} ท่าน)`,
+        windTunnelRemaining: seats.activity === 'wind' || !seats.activity ? seats.remaining : undefined,
       });
       return;
     }
@@ -575,6 +582,26 @@ export function createApp(): express.Express {
 
     // The runner now transfers by PromptPay and uploads the slip (POST /api/orders/:orderId/slip).
     res.json({ order: runnerView(order), accessToken: token, config: await publicConfig() });
+  }));
+
+  // Extra time to pay: once per order, +15 minutes, only while it is still open (so its wind-tunnel / activity seats are still held).
+  app.post('/api/orders/:orderId/extend', smallJson, h(async (req, res) => {
+    const order = await loadOwnedOrder(req, res);
+    if (!order) return;
+    if (order.paymentStatus === 'PAID' || order.cancelledAt || Date.parse(order.expiresAt) <= Date.now()) {
+      res.status(400).json({ error: 'ขอเวลาเพิ่มไม่ได้ (คำสั่งซื้อชำระแล้ว ถูกยกเลิก หรือหมดเวลาแล้ว)' });
+      return;
+    }
+    if (order.extendedAt) {
+      res.status(400).json({ error: 'ขอเวลาเพิ่มได้ครั้งเดียวต่อคำสั่งซื้อ' });
+      return;
+    }
+    const updated = await updateOrder(order.orderId, (o) => {
+      if (o.extendedAt) return;
+      o.extendedAt = new Date().toISOString();
+      o.expiresAt = new Date(Math.max(Date.now(), Date.parse(o.expiresAt)) + 15 * 60 * 1000).toISOString();
+    });
+    res.json({ order: runnerView(updated || order) });
   }));
 
   // Order status for the runner who created it (requires the order's access token).
@@ -1073,7 +1100,7 @@ export function createApp(): express.Express {
       accountName: clean(s.accountName, 150) || cur.accountName,
       bankLabel: clean(s.bankLabel, 80) || cur.bankLabel,
       bankAccountNo,
-      paymentTimeoutMinutes: Math.min(15, Math.max(1, Math.floor(Number(s.paymentTimeoutMinutes) || 15))),
+      paymentTimeoutMinutes: Math.min(60, Math.max(1, Math.floor(Number(s.paymentTimeoutMinutes) || 30))),
     });
     console.log(`[admin] ${(req as any).admin.username} updated settings`);
     res.json({ settings: await getSettings(), bibCounters: await getBibCounters() });

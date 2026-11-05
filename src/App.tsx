@@ -40,7 +40,7 @@ import { EventCtaBanner } from './components/EventCtaBanner';
 import { Footer } from './components/Footer';
 import { AuthModal } from './components/AuthModal';
 import { useLang } from './i18n/lang';
-import { authApi, consumeLineLogin, useSession, type Session } from './utils/runnerAuth';
+import { authApi, consumeEmailLink, consumeLineLogin, useSession, type Session } from './utils/runnerAuth';
 import type { BuyKind } from './components/RunnerHub';
 
 // Pop-ups are loaded only when first opened (keeps the first page load small).
@@ -98,6 +98,8 @@ export default function App() {
   const pendingAfterLogin = React.useRef<(() => void) | null>(null);
   const [staffOpen, setStaffOpen] = useState(false);
   const [lineFailed, setLineFailed] = useState(false);
+  const [resetToken, setResetToken] = useState<string | undefined>(undefined);
+  const [mailNote, setMailNote] = useState<string | null>(null);
   const [adminModalOpen, setAdminModalOpen] = useState(false);
   const [easterEggActive, setEasterEggActive] = useState(false);
 
@@ -142,6 +144,16 @@ export default function App() {
       else if (r === 'error') setLineFailed(true);
     });
     authApi.refresh();
+    // links from our e-mails: set a new password / confirm the e-mail address
+    consumeEmailLink().then((r) => {
+      if (!r) return;
+      if (r.kind === 'reset') {
+        setResetToken(r.token);
+        setAuthOpen(true);
+      } else {
+        setMailNote(r.ok ? 'ยืนยันอีเมลเรียบร้อยแล้ว ✓ / E-mail confirmed ✓' : r.message || 'ลิงก์ยืนยันไม่ถูกต้อง');
+      }
+    });
   }, []);
 
   /** Runs `action` once a runner is logged in (asks to log in first). */
@@ -216,7 +228,7 @@ export default function App() {
   const handleShopCheckout = () => requireRunner(shopCheckoutNow);
 
   // From the Runner Center "buy more": open the form for that kind of ticket
-  const handleHubBuy = (kind: BuyKind) => {
+  const handleHubBuy = (kind: BuyKind, preset?: AddOnSelection) => {
     setRunnerCenterOpen(false);
     if (kind === 'RUN') {
       goToShop();
@@ -226,7 +238,7 @@ export default function App() {
     setRegisterConcertQty(1);
     setRegisterVipTables(0);
     setRegisterExtras({ people: 0, dogs: 0 });
-    setRegisterAddOns(undefined);
+    setRegisterAddOns(preset);
     setRegisterMode(kind);
     setRegisterModalOpen(true);
   };
@@ -449,7 +461,14 @@ export default function App() {
         {session?.role === 'staff' && <StaffConsole isOpen={staffOpen} session={session} onClose={() => setStaffOpen(false)} />}
       </Deferred>
 
-      <AuthModal isOpen={authOpen} onClose={() => setAuthOpen(false)} onAuthed={handleAuthed} reason={authReason} />
+      <AuthModal isOpen={authOpen} onClose={() => { setAuthOpen(false); setResetToken(undefined); }} onAuthed={(s) => { setResetToken(undefined); handleAuthed(s); }} reason={authReason} resetToken={resetToken} />
+
+      {mailNote && (
+        <div role="status" className="fixed left-1/2 top-20 z-[10200] -translate-x-1/2 rounded-2xl border-[3px] border-[#2A1450] bg-white px-4 py-3 text-sm font-extrabold text-[#2A1450] shadow-[0_5px_0_#2A1450]">
+          {mailNote}
+          <button type="button" onClick={() => setMailNote(null)} className="ml-3 rounded-lg bg-[#2A1450] px-2 py-0.5 text-xs text-white cursor-pointer">OK</button>
+        </div>
+      )}
 
       {lineFailed && (
         <div role="alert" className="fixed left-1/2 top-20 z-[10200] -translate-x-1/2 rounded-2xl border-[3px] border-[#2A1450] bg-white px-4 py-3 text-sm font-extrabold text-[#2A1450] shadow-[0_5px_0_#2A1450]">

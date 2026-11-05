@@ -1769,15 +1769,15 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
                       <input
                         type="number"
                         min={1}
-                        max={15}
+                        max={60}
                         required
-                        value={configForm.paymentTimeoutMinutes || 15}
+                        value={configForm.paymentTimeoutMinutes || 30}
                         onChange={(e) =>
                           setConfigForm({
                             ...configForm,
                             paymentTimeoutMinutes: Math.max(
                               1,
-                              parseInt(e.target.value || '15', 10)
+                              Math.min(60, parseInt(e.target.value || '30', 10))
                             ),
                           })
                         }
@@ -1965,7 +1965,7 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
                         ตัวอย่างป้ายสแกน PromptPay QR
                       </div>
                       <div className="text-[10px] text-[#67E8F9] font-bold">
-                        เวลาจับเวลาโอน: {Math.min(15, configForm.paymentTimeoutMinutes || 15)} นาที / รอบ
+                        เวลาจับเวลาโอน: {Math.min(60, configForm.paymentTimeoutMinutes || 30)} นาที / รอบ
                       </div>
                     </div>
                     <span className="px-2.5 py-0.5 rounded-full bg-[#00A699] text-[10px] font-extrabold">

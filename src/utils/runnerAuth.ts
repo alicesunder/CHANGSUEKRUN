@@ -25,6 +25,8 @@ export interface RunnerUser {
   username: string;
   phone: string;
   lineLinked?: boolean;
+  /** the e-mail address was confirmed (link in an e-mail, or a verified Google address) */
+  emailVerified?: boolean;
   /** social sign-ins linked to this account: 'line' | 'google' | 'facebook' */
   social?: string[];
   profile?: RunnerProfileData;
@@ -163,6 +165,26 @@ export const authApi = {
       return null;
     }
   },
+  /** Asks for a password-reset e-mail (the answer is always the same, whether or not the address has an account). */
+  async forgotPassword(email: string): Promise<string> {
+    return (await call<{ message: string }>('/api/auth/forgot', { method: 'POST', body: JSON.stringify({ email }) }, null)).message;
+  },
+  async resetPassword(token: string, password: string): Promise<Session> {
+    const s = toSession(await call<LoginResult>('/api/auth/reset', { method: 'POST', body: JSON.stringify({ token, password }) }, null));
+    saveSession(s);
+    return s;
+  },
+  async verifyEmail(token: string): Promise<void> {
+    await call('/api/auth/verify-email', { method: 'POST', body: JSON.stringify({ token }) }, null);
+    await authApi.refresh();
+  },
+  async resendVerification(): Promise<void> {
+    await call('/api/me/verify/resend', { method: 'POST', body: '{}' });
+  },
+  /** E-mails the ticket of one of my paid orders again; resolves with the masked address it went to. */
+  async resendTicket(orderId: string): Promise<string> {
+    return (await call<{ to: string }>(`/api/me/orders/${encodeURIComponent(orderId)}/resend-ticket`, { method: 'POST', body: '{}' })).to;
+  },
   async saveProfile(patch: { name?: string; phone?: string; email?: string; profile?: RunnerProfileData }): Promise<RunnerUser> {
     const r = await call<{ user: RunnerUser }>('/api/me', { method: 'PATCH', body: JSON.stringify(patch) });
     const cur = getSession();
@@ -182,6 +204,23 @@ export const staffApi = {
   lookup: (q: string) => call<{ order: ServerOrder }>(`/api/admin/lookup?q=${encodeURIComponent(q)}`),
   toggleKit: (orderId: string) => call<{ order: ServerOrder }>(`/api/admin/orders/${encodeURIComponent(orderId)}/kit`, { method: 'POST' }),
 };
+
+/**
+ * Links in our e-mails open /#reset=<token> (set a new password) or /#verify=<token> (confirm the address).
+ * Call once at start-up; it tidies the address bar and says what to show.
+ */
+export async function consumeEmailLink(): Promise<{ kind: 'reset'; token: string } | { kind: 'verify'; ok: boolean; message?: string } | null> {
+  const m = /^#(reset|verify)=([\w.\-]+)$/.exec(window.location.hash);
+  if (!m) return null;
+  history.replaceState(null, '', window.location.pathname + window.location.search);
+  if (m[1] === 'reset') return { kind: 'reset', token: m[2] };
+  try {
+    await authApi.verifyEmail(m[2]);
+    return { kind: 'verify', ok: true };
+  } catch (err) {
+    return { kind: 'verify', ok: false, message: err instanceof Error ? err.message : undefined };
+  }
+}
 
 /**
  * Back from a social sign-in (LINE / Google / Facebook) the server sends us to /#runner-auth=<token> (or /#login-error=...).

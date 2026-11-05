@@ -91,7 +91,7 @@ export const ArtworkViewerModal: React.FC<ArtworkViewerModalProps> = ({
                   activeTab === '3km' ? 'bg-[#2EAA59] text-white' : 'text-white/70 hover:text-white'
                 }`}
               >
-                ดาวเทียม Dog 4 km (4.08k)
+                ดาวเทียม Dog 4 km (≈4k)
               </button>
               <button
                 onClick={() => {

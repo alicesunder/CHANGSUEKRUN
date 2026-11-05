@@ -77,6 +77,33 @@ export function requireRunner(req: Request, res: Response, next: NextFunction) {
 }
 
 // ---------------------------------------------------------------------------
+// One-time links in e-mails: verify the address, reset the password.
+// The token is bound to a fingerprint (the current password hash / the e-mail), so it stops working once used.
+// ---------------------------------------------------------------------------
+export type ActionKind = 'reset' | 'verify';
+const fp = (s: string) => crypto.createHash('sha256').update(s).digest('hex').slice(0, 16);
+export const passwordFingerprint = (passwordHash: string | null) => fp(`pw|${passwordHash || ''}`);
+export const emailFingerprint = (email: string | null) => fp(`em|${(email || '').toLowerCase()}`);
+
+export function issueActionToken(kind: ActionKind, runnerId: string, fingerprint: string): string {
+  const ttl = kind === 'reset' ? 60 * 60 * 1000 : 3 * 24 * 60 * 60 * 1000;
+  const payload = b64(JSON.stringify({ k: kind, s: runnerId, f: fingerprint, exp: Date.now() + ttl }));
+  return `a1.${payload}.${hmac(`a1.${payload}`)}`;
+}
+
+export function readActionToken(kind: ActionKind, token: string | undefined): { runnerId: string; fp: string } | null {
+  const [v, payload, sig] = String(token || '').split('.');
+  if (v !== 'a1' || !payload || !sig || !safeEqual(sig, hmac(`a1.${payload}`))) return null;
+  try {
+    const d = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8'));
+    if (d.k !== kind || typeof d.exp !== 'number' || Date.now() > d.exp || typeof d.s !== 'string' || typeof d.f !== 'string') return null;
+    return { runnerId: d.s, fp: d.f };
+  } catch {
+    return null;
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Passwords
 // ---------------------------------------------------------------------------
 const SCRYPT_N = 16384;
@@ -146,6 +173,7 @@ export interface RunnerRow {
   password_hash: string | null;
   line_user_id: string | null;
   google_id?: string | null;
+  email_verified?: boolean;
   facebook_id?: string | null;
   profile: Record<string, unknown>;
   created_at: string;
@@ -169,6 +197,7 @@ export function ensureRunnerTables(): Promise<void> {
       )`);
       await dbQuery('create unique index if not exists runners_email_uidx on csr.runners (email) where email is not null');
       await dbQuery('create unique index if not exists runners_username_uidx on csr.runners (username) where username is not null');
+      await dbQuery('alter table csr.runners add column if not exists email_verified boolean not null default false');
       await dbQuery('alter table csr.runners add column if not exists google_id text');
       await dbQuery('alter table csr.runners add column if not exists facebook_id text');
       await dbQuery('create unique index if not exists runners_line_uidx on csr.runners (line_user_id) where line_user_id is not null');
@@ -273,7 +302,7 @@ export async function updateRunnerProfile(
   }
   if (name.length < 2) return { ok: false, error: 'กรุณากรอกชื่อ' };
   const rows = await dbQuery<RunnerRow>(
-    'update csr.runners set name = $2, phone = $3, email = $4, profile = $5::jsonb where runner_id = $1 returning *',
+    'update csr.runners set name = $2, phone = $3, email = $4, profile = $5::jsonb, email_verified = (email_verified and email is not distinct from $4) where runner_id = $1 returning *',
     [runnerId, name, phone, email, JSON.stringify(profile)]
   );
   return { ok: true, runner: rows[0] };
@@ -299,12 +328,12 @@ export async function upsertSocialRunner(provider: Provider, p: SocialProfile): 
   const email = p.email ? normEmail(p.email) : '';
   const byEmail = email && isEmail(email) ? await dbQuery<RunnerRow>('select * from csr.runners where email = $1', [email]) : [];
   if (byEmail[0] && p.emailVerified) {
-    const rows = await dbQuery<RunnerRow>(`update csr.runners set ${col} = $2, last_login_at = now() where runner_id = $1 returning *`, [byEmail[0].runner_id, p.id]);
+    const rows = await dbQuery<RunnerRow>(`update csr.runners set ${col} = $2, email_verified = true, last_login_at = now() where runner_id = $1 returning *`, [byEmail[0].runner_id, p.id]);
     return rows[0];
   }
   const rows = await dbQuery<RunnerRow>(
-    `insert into csr.runners (runner_id, name, email, ${col}, last_login_at) values ($1, $2, $3, $4, now()) returning *`,
-    [newRunnerId(), cleanText(p.name, 80) || (provider === 'line' ? 'นักวิ่ง LINE' : 'นักวิ่ง'), email && isEmail(email) && !byEmail[0] ? email : null, p.id]
+    `insert into csr.runners (runner_id, name, email, ${col}, email_verified, last_login_at) values ($1, $2, $3, $4, $5, now()) returning *`,
+    [newRunnerId(), cleanText(p.name, 80) || (provider === 'line' ? 'นักวิ่ง LINE' : 'นักวิ่ง'), email && isEmail(email) && !byEmail[0] ? email : null, p.id, Boolean(p.emailVerified && email && isEmail(email) && !byEmail[0])]
   );
   return rows[0];
 }
@@ -317,6 +346,7 @@ export function publicRunner(r: RunnerRow) {
     email: r.email || '',
     username: r.username || '',
     phone: r.phone || '',
+    emailVerified: Boolean(r.email_verified),
     lineLinked: Boolean(r.line_user_id),
     social: [r.line_user_id && 'line', r.google_id && 'google', r.facebook_id && 'facebook'].filter(Boolean) as string[],
     profile: r.profile || {},

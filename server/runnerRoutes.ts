@@ -11,13 +11,20 @@
 import express from 'express';
 import type { Express, Request, RequestHandler, Response } from 'express';
 import { docsSignature } from './auth';
+import { SITE_URL, maskEmail, sendAccountMail, sendTicketEmail } from './mailer';
 import { findOrderByCode, listOrdersByRunner, rateLimited, toRunnerView, updateOrder, getOrder } from './store';
 import {
+  type RunnerRow,
   checkStaff,
   createRunner,
   ensureRunnerTables,
+  emailFingerprint,
   getRunner,
+  hashPassword,
+  issueActionToken,
   issueSession,
+  passwordFingerprint,
+  readActionToken,
   loginRunner,
   normEmail,
   publicRunner,
@@ -27,6 +34,7 @@ import {
   upsertSocialRunner,
   type RunnerSession,
 } from './runners';
+import { dbQuery } from './db';
 import { authorizeUrl, fetchProfile, isProvider, newState, providerConfigured, stateOk } from './socialLogin';
 
 type Wrap = (fn: (req: Request, res: Response) => Promise<void>) => RequestHandler;
@@ -40,6 +48,15 @@ const cookieOf = (req: Request, name: string) => {
 
 export function registerRunnerRoutes(app: Express, h: Wrap, clientIp: (req: Request) => string) {
   const json = express.json({ limit: '50kb' });
+
+  /** Sends the "verify your e-mail" link (never throws; the account works without it, except claiming old orders). */
+  const sendVerifyMail = async (runnerId: string, email: string | null) => {
+    if (!email) return false;
+    const token = issueActionToken('verify', runnerId, emailFingerprint(email));
+    const r = await sendAccountMail(email, 'ยืนยันอีเมลบัญชีนักวิ่ง · CHANGSUEK RUN', 'ยืนยันอีเมลของคุณ', 'กดปุ่มด้านล่างเพื่อยืนยันว่าอีเมลนี้เป็นของคุณ จะได้ผูกคำสั่งซื้อเดิมและรับอีเมลตั๋วได้อย่างมั่นใจ ลิงก์ใช้ได้ 3 วัน', 'ยืนยันอีเมล', `${SITE_URL}/#verify=${token}`);
+    if (!r.ok) console.log(`[mail] verify ${runnerId}: not sent (${r.error})`);
+    return r.ok;
+  };
 
   const sessionBody = (token: string, expiresAt: number, role: 'runner' | 'staff', user: unknown) => ({ token, expiresAt, role, user });
 
@@ -55,7 +72,84 @@ export function registerRunnerRoutes(app: Express, h: Wrap, clientIp: (req: Requ
       return;
     }
     const s = issueSession('runner', made.runner.runner_id);
+    await sendVerifyMail(made.runner.runner_id, made.runner.email);
     res.json(sessionBody(s.token, s.expiresAt, 'runner', publicRunner(made.runner)));
+  }));
+
+  // ---- Forgot / reset password, verify e-mail ----------------------------
+  // Always answers the same way, so nobody can use it to find out which e-mails have an account.
+  app.post('/api/auth/forgot', json, h(async (req, res) => {
+    const email = normEmail(req.body?.email);
+    const generic = { ok: true, message: 'ถ้าอีเมลนี้มีบัญชีอยู่ เราได้ส่งลิงก์ตั้งรหัสผ่านใหม่ให้แล้ว (ลิงก์ใช้ได้ 1 ชั่วโมง)' };
+    if (!email || (await rateLimited(`forgot-ip:${clientIp(req)}`, 8, 60 * 60 * 1000)) || (await rateLimited(`forgot:${email}`, 3, 60 * 60 * 1000))) {
+      res.json(generic);
+      return;
+    }
+    await ensureRunnerTables();
+    const rows = await dbQuery<{ runner_id: string; password_hash: string | null }>('select runner_id, password_hash from csr.runners where email = $1', [email]);
+    const row = rows[0];
+    if (row && row.password_hash) {
+      const token = issueActionToken('reset', row.runner_id, passwordFingerprint(row.password_hash));
+      const r = await sendAccountMail(email, 'ตั้งรหัสผ่านใหม่ · CHANGSUEK RUN', 'ตั้งรหัสผ่านใหม่', 'มีคำขอตั้งรหัสผ่านใหม่สำหรับบัญชีนักวิ่งของคุณ กดปุ่มด้านล่างเพื่อตั้งรหัสผ่านใหม่ ลิงก์ใช้ได้ 1 ชั่วโมงและใช้ได้ครั้งเดียว', 'ตั้งรหัสผ่านใหม่', `${SITE_URL}/#reset=${token}`);
+      if (!r.ok) console.log(`[mail] reset ${row.runner_id}: not sent (${r.error})`);
+    }
+    res.json(generic);
+  }));
+
+  app.post('/api/auth/reset', json, h(async (req, res) => {
+    const pw = String(req.body?.password || '');
+    if (pw.length < 8 || pw.length > 200) {
+      res.status(400).json({ error: 'รหัสผ่านต้องยาวอย่างน้อย 8 ตัวอักษร' });
+      return;
+    }
+    if (await rateLimited(`reset-ip:${clientIp(req)}`, 20, 60 * 60 * 1000)) {
+      res.status(429).json({ error: 'ลองบ่อยเกินไป กรุณารอสักครู่' });
+      return;
+    }
+    const t = readActionToken('reset', String(req.body?.token || ''));
+    const row = t ? await getRunner(t.runnerId) : undefined;
+    if (!t || !row || !row.password_hash || passwordFingerprint(row.password_hash) !== t.fp) {
+      res.status(400).json({ error: 'ลิงก์หมดอายุหรือถูกใช้ไปแล้ว กรุณาขอลิงก์ใหม่' });
+      return;
+    }
+    // receiving this e-mail also proves the address, so it counts as verified
+    const rows = await dbQuery<RunnerRow>('update csr.runners set password_hash = $2, email_verified = true, last_login_at = now() where runner_id = $1 returning *', [row.runner_id, hashPassword(pw)]);
+    const s = issueSession('runner', row.runner_id);
+    res.json(sessionBody(s.token, s.expiresAt, 'runner', publicRunner(rows[0])));
+  }));
+
+  app.post('/api/auth/verify-email', json, h(async (req, res) => {
+    const t = readActionToken('verify', String(req.body?.token || ''));
+    const row = t ? await getRunner(t.runnerId) : undefined;
+    if (!t || !row || !row.email || emailFingerprint(row.email) !== t.fp) {
+      res.status(400).json({ error: 'ลิงก์ยืนยันหมดอายุหรือไม่ถูกต้อง กรุณาขอลิงก์ใหม่ในศูนย์นักวิ่ง' });
+      return;
+    }
+    await dbQuery('update csr.runners set email_verified = true where runner_id = $1', [row.runner_id]);
+    res.json({ ok: true });
+  }));
+
+  app.post('/api/me/verify/resend', requireRunner, h(async (req, res) => {
+    const s = (req as any).runner as RunnerSession;
+    if (await rateLimited(`verify-resend:${s.sub}`, 3, 60 * 60 * 1000)) {
+      res.status(429).json({ error: 'ขอลิงก์บ่อยเกินไป กรุณารอสักครู่' });
+      return;
+    }
+    const row = await getRunner(s.sub);
+    if (!row || !row.email) {
+      res.status(400).json({ error: 'ยังไม่มีอีเมลในบัญชี กรุณาเพิ่มอีเมลที่แท็บ "ข้อมูลของฉัน" ก่อน' });
+      return;
+    }
+    if (row.email_verified) {
+      res.json({ ok: true, already: true });
+      return;
+    }
+    const ok = await sendVerifyMail(row.runner_id, row.email);
+    if (!ok) {
+      res.status(503).json({ error: 'ส่งอีเมลไม่สำเร็จในขณะนี้ กรุณาลองใหม่ภายหลัง' });
+      return;
+    }
+    res.json({ ok: true, to: maskEmail(row.email) });
   }));
 
   app.post('/api/auth/login', json, h(async (req, res) => {
@@ -150,7 +244,30 @@ export function registerRunnerRoutes(app: Express, h: Wrap, clientIp: (req: Requ
       res.status(400).json({ error: out.error });
       return;
     }
+    // a new e-mail address has to be verified again
+    if (req.body?.email !== undefined && out.runner.email && !out.runner.email_verified) await sendVerifyMail(out.runner.runner_id, out.runner.email);
     res.json({ user: publicRunner(out.runner) });
+  }));
+
+  // Send the ticket e-mail again (the buyer's own paid order only; a few times per hour).
+  app.post('/api/me/orders/:orderId/resend-ticket', requireRunner, h(async (req, res) => {
+    const s = (req as any).runner as RunnerSession;
+    const id = String(req.params.orderId).slice(0, 40);
+    if (await rateLimited(`resend-me:${id}`, 3, 60 * 60 * 1000)) {
+      res.status(429).json({ error: 'ขอส่งอีเมลบ่อยเกินไป กรุณารอสักครู่แล้วลองใหม่' });
+      return;
+    }
+    const order = await getOrder(id);
+    if (!order || order.runnerId !== s.sub || order.paymentStatus !== 'PAID' || order.cancelledAt) {
+      res.status(404).json({ error: 'ไม่พบคำสั่งซื้อที่ชำระแล้วของคุณ' });
+      return;
+    }
+    const r = await sendTicketEmail(order);
+    if (!r.ok) {
+      res.status(503).json({ error: 'ส่งอีเมลไม่สำเร็จในขณะนี้ ลองใหม่ภายหลัง หรือเปิดเอกสาร A4 จากปุ่มด้านบนแทน' });
+      return;
+    }
+    res.json({ ok: true, to: maskEmail(order.email) });
   }));
 
   app.get('/api/me/orders', requireRunner, h(async (req, res) => {
@@ -175,6 +292,11 @@ export function registerRunnerRoutes(app: Express, h: Wrap, clientIp: (req: Requ
     }
     const code = String(req.body?.orderId || '').trim().slice(0, 80);
     const email = normEmail(req.body?.email);
+    const me = await getRunner(s.sub);
+    if (!me || !me.email || !me.email_verified || normEmail(me.email) !== email) {
+      res.status(403).json({ error: 'ต้องยืนยันอีเมลของบัญชีก่อน และอีเมลต้องตรงกับที่ใช้สั่งซื้อ (ดูปุ่ม "ส่งลิงก์ยืนยัน" ในแท็บ ข้อมูลของฉัน)', needVerify: true });
+      return;
+    }
     const found = code ? await findOrderByCode(code) : undefined;
     const order = found ? await getOrder(found.orderId) : undefined;
     if (!order || !email || normEmail(order.email) !== email) {

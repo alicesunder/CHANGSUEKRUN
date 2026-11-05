@@ -67,6 +67,8 @@ export type ServerOrder = TicketOrder & {
   cancelledBy?: string;
   cancelReason?: string;
   expiresAt: string;
+  /** the runner already asked for extra payment time */
+  extendedAt?: string;
   omiseChargeId?: string;
   omiseQrImageUrl?: string;
   hasSlip?: boolean;
@@ -229,6 +231,16 @@ export async function resendTicketEmail(orderId: string, phone: string): Promise
 export async function fetchOrder(ref: PendingOrderRef): Promise<ServerOrder> {
   const res = await request<{ order: ServerOrder }>(`/api/orders/${encodeURIComponent(ref.orderId)}`, {
     headers: { 'x-order-token': ref.accessToken },
+  });
+  return res.order;
+}
+
+/** Asks for 15 more minutes to pay (once per order). */
+export async function extendPaymentTime(ref: PendingOrderRef): Promise<ServerOrder> {
+  const res = await request<{ order: ServerOrder }>(`/api/orders/${encodeURIComponent(ref.orderId)}/extend`, {
+    method: 'POST',
+    headers: { ...jsonHeaders, 'x-order-token': ref.accessToken },
+    body: '{}',
   });
   return res.order;
 }

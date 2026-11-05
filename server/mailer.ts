@@ -275,6 +275,33 @@ async function sendViaBrevo(to: string, mail: MailParts): Promise<MailResult> {
   }
 }
 
+/** Small branded e-mail for account actions (verify address, reset password). Never throws. */
+export async function sendAccountMail(to: string, subject: string, heading: string, text: string, buttonLabel: string, url: string): Promise<MailResult> {
+  const provider = activeProvider();
+  if (!provider) return { ok: false, error: 'MAIL_NOT_CONFIGURED' };
+  if (!VALID_EMAIL.test(to)) return { ok: false, provider, error: 'NO_EMAIL' };
+  const html = `<!doctype html><html lang="th"><body style="margin:0;background:#F4EEFF;font-family:Arial,'Noto Sans Thai',sans-serif">
+  <table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:24px 12px">
+  <table width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;background:#fff;border-radius:24px;border:3px solid #2A1450;overflow:hidden">
+    <tr><td style="background:#2A1450;padding:18px 22px;color:#FFC928;font-weight:900;font-size:13px;letter-spacing:2px">CHANGSUEK RUN 2027</td></tr>
+    <tr><td style="padding:26px 24px;color:#2A1450">
+      <h1 style="margin:0 0 10px;font-size:22px">${esc(heading)}</h1>
+      <p style="margin:0 0 20px;font-size:15px;line-height:1.7">${esc(text)}</p>
+      <a href="${esc(url)}" style="display:inline-block;background:#FFC928;color:#2A1450;text-decoration:none;font-weight:900;font-size:16px;border-radius:14px;padding:14px 26px;border:3px solid #140826">${esc(buttonLabel)}</a>
+      <p style="margin:20px 0 0;font-size:12px;color:#6B5A85;line-height:1.6">ถ้าปุ่มกดไม่ได้ ให้คัดลอกลิงก์นี้ไปเปิดในเบราว์เซอร์:<br/><span style="word-break:break-all">${esc(url)}</span><br/>หากคุณไม่ได้เป็นผู้ขอ ไม่ต้องทำอะไร อีเมลนี้จะหมดอายุเอง</p>
+    </td></tr>
+  </table></td></tr></table></body></html>`;
+  const mail = { subject, html, attachments: [] } as unknown as MailParts;
+  try {
+    if (provider === 'brevo') return await sendViaBrevo(to, mail);
+    return await sendViaResend(to, mail, (process.env.RESEND_API_KEY || '').trim());
+  } catch (err: any) {
+    return { ok: false, provider, error: String(err?.message || 'NETWORK').slice(0, 200) };
+  }
+}
+
+export const SITE_URL = SITE;
+
 /** Sends the ticket e-mail to the address on the order. Never throws. */
 export async function sendTicketEmail(o: StoredOrder): Promise<MailResult> {
   const provider = activeProvider();

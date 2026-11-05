@@ -54,7 +54,11 @@ export const PaymentStep: React.FC<{
   onSlipFile: (file: File | undefined) => void;
   onDownloadQr: () => void;
   onCancel: () => void;
-}> = ({ order, amount, bank, qrDataUrl, qrError, hasPromptPay, slipBusy, slipMessage, onSlipFile, onDownloadQr, onCancel }) => {
+  /** asks the server for 15 more minutes (once); resolves with the updated order */
+  onExtend?: () => Promise<void>;
+}> = ({ order, amount, bank, qrDataUrl, qrError, hasPromptPay, slipBusy, slipMessage, onSlipFile, onDownloadQr, onCancel, onExtend }) => {
+  const [extendBusy, setExtendBusy] = useState(false);
+  const [extendMsg, setExtendMsg] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement | null>(null);
   const left = useSecondsLeft(order.expiresAt);
   const windowMin = Math.max(1, Math.round((Date.parse(order.expiresAt) - Date.parse(order.createdAt)) / 60000)) || 15;
@@ -107,6 +111,28 @@ export const PaymentStep: React.FC<{
         </div>
         <div className="min-w-0">
           <div className="text-[11px] font-mono font-extrabold uppercase tracking-wider text-[#6B5A85]">คำสั่งซื้อ {order.orderId}</div>
+          {!expired && onExtend && !order.extendedAt && order.paymentStatus !== 'PAID' && (
+            <button
+              type="button"
+              disabled={extendBusy}
+              onClick={async () => {
+                setExtendBusy(true);
+                setExtendMsg(null);
+                try {
+                  await onExtend();
+                } catch (e) {
+                  setExtendMsg(e instanceof Error ? e.message : 'ขอเวลาเพิ่มไม่สำเร็จ');
+                } finally {
+                  setExtendBusy(false);
+                }
+              }}
+              className="mt-1.5 inline-flex min-h-[40px] items-center gap-1.5 rounded-xl border-2 border-[#2A1450] bg-[#FFC928] px-3 text-xs font-black text-[#2A1450] cursor-pointer disabled:opacity-60"
+            >
+              <Clock className="h-3.5 w-3.5" /> {extendBusy ? 'กำลังขอเวลา…' : 'ขอเวลาเพิ่ม 15 นาที (ได้ 1 ครั้ง)'}
+            </button>
+          )}
+          {order.extendedAt && !expired && <div className="mt-1 text-[11px] font-bold text-[#15803D]">✓ ขยายเวลาให้แล้ว +15 นาที</div>}
+          {extendMsg && <div role="alert" className="mt-1 text-[11px] font-bold text-rose-700">{extendMsg}</div>}
           {expired ? (
             <>
               <h3 className="text-lg font-black text-rose-700 leading-tight">หมดเวลาโอนแล้ว</h3>

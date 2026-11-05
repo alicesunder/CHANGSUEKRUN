@@ -9,6 +9,7 @@ import { ACTIVITY_LOCATIONS } from '../data/activityLocations';
 import { SHIRT_SIZES } from '../data/shirts';
 import { BLOOD_TYPES, GENDERS, RELATIONSHIPS } from '../data/insurance';
 import { formatBaht } from '../data/eventData';
+import type { AddOnSelection } from '../data/addOns';
 
 type HubOrder = ServerOrder & { docsUrl?: string };
 type Tab = 'tickets' | 'activities' | 'buy' | 'profile';
@@ -47,7 +48,7 @@ export const RunnerHub: React.FC<{
   session: Session;
   onClose: () => void;
   /** start buying: the hub closes and the ticket form / shop opens */
-  onBuy: (kind: BuyKind) => void;
+  onBuy: (kind: BuyKind, preset?: AddOnSelection) => void;
 }> = ({ isOpen, session, onClose, onBuy }) => {
   const { t, lang } = useLang();
   const [tab, setTab] = useState<Tab>('tickets');
@@ -155,6 +156,8 @@ export const RunnerHub: React.FC<{
         </div>
 
         <div className="space-y-4 px-4 pb-6 pt-4 sm:px-6">
+          <VerifyBanner user={user} onGoProfile={() => setTab('profile')} />
+
           {tab !== 'buy' && tab !== 'profile' && (
             <>
               {loadError && (
@@ -232,6 +235,7 @@ export const RunnerHub: React.FC<{
                         </p>
                       )}
                       {o.cancelledAt && <p className="rounded-xl bg-slate-100 px-3 py-2 text-sm font-bold text-slate-700">{t('ยกเลิกแล้ว', 'Cancelled')}: {o.cancelReason || '-'}</p>}
+                      {o.paymentStatus === 'PAID' && !o.cancelledAt && <ResendTicket orderId={o.orderId} />}
                       {o.docsUrl && (
                         <a href={o.docsUrl} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-[48px] items-center gap-2 rounded-2xl border-[3px] border-[#140826] bg-[#FFC928] px-5 text-sm font-black shadow-[0_4px_0_#140826] hover:brightness-105">
                           <FileText className="h-4 w-4" /> {t('เปิด/พิมพ์เอกสาร A4 (BIB · ตั๋ว · ใบยืนยัน)', 'Open / print A4 documents (BIB · ticket · confirmation)')}
@@ -281,6 +285,13 @@ export const RunnerHub: React.FC<{
                         })}
                       </ul>
                       <p className="mt-2 text-xs font-bold text-[#6B5A85]">#{o.orderId} · {formatBaht(o.addOns!.total)} {t('บาท', 'THB')}</p>
+                      <button
+                        type="button"
+                        onClick={() => onBuy('ADDON', { tower: o.addOns!.tower, gun: o.addOns!.gun, windTunnel: o.addOns!.windTunnel, people: 1 })}
+                        className="mt-2 inline-flex min-h-[44px] items-center gap-1.5 rounded-xl border-2 border-[#2A1450] bg-[#FFC928] px-4 text-xs font-black cursor-pointer"
+                      >
+                        <Plus className="h-3.5 w-3.5" /> {t('สั่งชุดเดียวกันให้อีกคน (เพื่อน/ครอบครัว)', 'Order the same activities for another person')}
+                      </button>
                     </article>
                   );
                 })}
@@ -324,6 +335,78 @@ export const RunnerHub: React.FC<{
   );
 };
 
+/** Reminds the runner to confirm the e-mail (needed to claim older orders) or to add one (tickets are e-mailed). */
+const VerifyBanner: React.FC<{ user: Session['user']; onGoProfile: () => void }> = ({ user, onGoProfile }) => {
+  const { t } = useLang();
+  const [state, setState] = useState<{ ok: boolean; text: string } | null>(null);
+  const [busy, setBusy] = useState(false);
+  if (user.email && user.emailVerified) return null;
+  if (!user.email) {
+    return (
+      <div role="note" className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border-2 border-amber-300 bg-amber-50 px-3 py-2 text-sm font-bold text-amber-900">
+        <span>📧 {t('ยังไม่มีอีเมลในบัญชี — ตั๋วและใบเสร็จจะส่งทางอีเมล', 'No e-mail on your account yet — tickets and receipts are sent by e-mail')}</span>
+        <button type="button" onClick={onGoProfile} className="rounded-lg border-2 border-amber-400 bg-white px-3 py-1 text-xs font-extrabold cursor-pointer">{t('เพิ่มอีเมล', 'Add e-mail')}</button>
+      </div>
+    );
+  }
+  return (
+    <div role="note" className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border-2 border-amber-300 bg-amber-50 px-3 py-2 text-sm font-bold text-amber-900">
+      <span>📧 {t('อีเมลของคุณยังไม่ได้ยืนยัน', 'Your e-mail is not confirmed yet')} ({user.email})</span>
+      <button
+        type="button"
+        disabled={busy}
+        onClick={async () => {
+          setBusy(true);
+          setState(null);
+          try {
+            await authApi.resendVerification();
+            setState({ ok: true, text: t('ส่งลิงก์ยืนยันแล้ว ตรวจกล่องอีเมล (รวมถึงสแปม)', 'Link sent — check your inbox (and spam)') });
+          } catch (e) {
+            setState({ ok: false, text: e instanceof Error ? e.message : 'error' });
+          } finally {
+            setBusy(false);
+          }
+        }}
+        className="rounded-lg border-2 border-amber-400 bg-white px-3 py-1 text-xs font-extrabold cursor-pointer disabled:opacity-60"
+      >
+        {t('ส่งลิงก์ยืนยัน', 'Send confirmation link')}
+      </button>
+      {state && <span role="status" className={`w-full text-xs ${state.ok ? 'text-emerald-700' : 'text-rose-700'}`}>{state.text}</span>}
+    </div>
+  );
+};
+
+/** "Send my ticket e-mail again" for a paid order. */
+const ResendTicket: React.FC<{ orderId: string }> = ({ orderId }) => {
+  const { t } = useLang();
+  const [state, setState] = useState<{ ok: boolean; text: string } | null>(null);
+  const [busy, setBusy] = useState(false);
+  return (
+    <div>
+      <button
+        type="button"
+        disabled={busy}
+        onClick={async () => {
+          setBusy(true);
+          setState(null);
+          try {
+            const to = await authApi.resendTicket(orderId);
+            setState({ ok: true, text: `${t('ส่งอีเมลตั๋วไปที่', 'Ticket e-mail sent to')} ${to}` });
+          } catch (e) {
+            setState({ ok: false, text: e instanceof Error ? e.message : 'error' });
+          } finally {
+            setBusy(false);
+          }
+        }}
+        className="inline-flex min-h-[44px] items-center gap-2 rounded-2xl border-[3px] border-[#2A1450]/30 bg-white px-4 text-sm font-black text-[#4B2D78] hover:border-[#2A1450] disabled:opacity-60 cursor-pointer"
+      >
+        ✉️ {busy ? t('กำลังส่ง…', 'Sending…') : t('ส่งอีเมลตั๋วอีกครั้ง', 'Send my ticket e-mail again')}
+      </button>
+      {state && <p role="status" className={`mt-1 text-xs font-bold ${state.ok ? 'text-emerald-700' : 'text-rose-700'}`}>{state.text}</p>}
+    </div>
+  );
+};
+
 /** An order made before the account existed: order id + the e-mail on that order. */
 const ClaimBox: React.FC<{ onClaimed: () => void; defaultEmail: string }> = ({ onClaimed, defaultEmail }) => {
   const { t } = useLang();
@@ -351,7 +434,7 @@ const ClaimBox: React.FC<{ onClaimed: () => void; defaultEmail: string }> = ({ o
       className="rounded-3xl border-[3px] border-dashed border-[#7C3AED]/50 bg-white p-4"
     >
       <h3 className="flex items-center gap-2 text-base font-black"><Ticket className="h-4 w-4 text-[#7C3AED]" /> {t('มีตั๋วที่ซื้อไว้ก่อนสมัครสมาชิก?', 'Bought before you had an account?')}</h3>
-      <p className="text-xs font-semibold text-[#6B5A85]">{t('ใส่เลขคำสั่งซื้อ (หรือเลข BIB) และอีเมลที่ใช้สั่งซื้อ เพื่อเพิ่มเข้าบัญชีนี้', 'Enter the order number (or BIB) and the e-mail used for the order to add it to this account')}</p>
+      <p className="text-xs font-semibold text-[#6B5A85]">{t('ใส่เลขคำสั่งซื้อ (หรือเลข BIB) และอีเมลที่ใช้สั่งซื้อ เพื่อเพิ่มเข้าบัญชีนี้ — ต้องยืนยันอีเมลของบัญชีก่อน และอีเมลต้องตรงกับในคำสั่งซื้อ', 'Enter the order number (or BIB) and the e-mail used for the order to add it to this account — your account e-mail must be confirmed and match the one on the order')}</p>
       <div className="mt-3 grid gap-2 sm:grid-cols-[1fr_1fr_auto]">
         <input required value={orderId} onChange={(e) => setOrderId(e.target.value)} placeholder={t('เลขคำสั่งซื้อ / BIB', 'Order no. / BIB')} className="min-h-[46px] rounded-xl border-2 border-[#2A1450]/20 px-3 text-sm font-semibold" />
         <input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="email" className="min-h-[46px] rounded-xl border-2 border-[#2A1450]/20 px-3 text-sm font-semibold" />

@@ -60,6 +60,7 @@ import {
   createOrder,
   fetchOrder,
   uploadSlip,
+  extendPaymentTime,
   getPublicConfig,
   loadPendingOrderRef,
   savePendingOrderRef,
@@ -1727,6 +1728,10 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
               onSlipFile={handleSlipFile}
               onDownloadQr={handleDownloadQrImage}
               onCancel={handleCancelPendingOrder}
+              onExtend={async () => {
+                if (!pendingRef) return;
+                setServerOrder(await extendPaymentTime(pendingRef));
+              }}
             />
           )}
 

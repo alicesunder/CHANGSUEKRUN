@@ -39,6 +39,8 @@ interface AuthModalProps {
   /** why the page is asking: shown under the title */
   reason?: 'checkout' | 'center';
   initialTab?: Tab;
+  /** from the link in a password-reset e-mail: opens the "new password" screen */
+  resetToken?: string;
 }
 
 const field =
@@ -60,7 +62,7 @@ const Input: React.FC<React.InputHTMLAttributes<HTMLInputElement> & { icon: Reac
   </div>
 );
 
-export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthed, reason = 'center', initialTab = 'login' }) => {
+export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthed, reason = 'center', initialTab = 'login', resetToken }) => {
   const { t } = useLang();
   const [tab, setTab] = useState<Tab>(initialTab);
   const [method, setMethod] = useState<Method>('email');
@@ -76,6 +78,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthed,
   const [social, setSocial] = useState<Social>({ line: false, google: false, facebook: false });
   // the first screen lists the sign-in choices; the e-mail / username form opens from the first one
   const [showForm, setShowForm] = useState(false);
+  const [view, setView] = useState<'main' | 'forgot' | 'reset'>('main');
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [notice, setNotice] = useState<string | null>(null);
 
   const closeRef = React.useRef(onClose);
   closeRef.current = onClose;
@@ -84,13 +89,15 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthed,
     setTab(initialTab);
     setError(null);
     setShowForm(false);
+    setNotice(null);
+    setView(resetToken ? 'reset' : 'main');
     getPublicConfig()
       .then((c) => setSocial((c as { socialLogin?: Social }).socialLogin ?? { line: Boolean((c as { lineLoginReady?: boolean }).lineLoginReady), google: false, facebook: false }))
       .catch(() => {});
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && closeRef.current();
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [isOpen, initialTab]);
+  }, [isOpen, initialTab, resetToken]);
 
   if (!isOpen) return null;
 
@@ -168,7 +175,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthed,
         </div>
 
         {/* tabs */}
-        <div className="grid grid-cols-2 gap-2 px-5 pt-4">
+        <div className={`grid grid-cols-2 gap-2 px-5 pt-4 ${view === 'main' ? '' : 'hidden'}`}>
           {(['login', 'signup'] as const).map((k) => (
             <button
               key={k}
@@ -187,7 +194,49 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthed,
           ))}
         </div>
 
-        {!showForm && (
+        {view === 'forgot' && (
+          <form
+            className="space-y-3.5 px-5 pb-5 pt-5"
+            onSubmit={async (e) => {
+              e.preventDefault();
+              if (busy) return;
+              setBusy(true);
+              setError(null);
+              try {
+                setNotice(await authApi.forgotPassword(forgotEmail.trim()));
+              } catch (err) {
+                setError(err instanceof Error ? err.message : 'error');
+              } finally {
+                setBusy(false);
+              }
+            }}
+          >
+            <h3 className="text-lg font-black">{t('ลืมรหัสผ่าน?', 'Forgot your password?')}</h3>
+            <p className="text-xs font-semibold text-[#6B5A85]">{t('ใส่อีเมลที่ใช้สมัคร เราจะส่งลิงก์ตั้งรหัสผ่านใหม่ให้ (บัญชีที่สมัครด้วยชื่อผู้ใช้โดยไม่มีอีเมล กู้รหัสผ่านทางอีเมลไม่ได้ กรุณาติดต่อผู้จัดงาน)', 'Enter the e-mail you signed up with and we will send a link to set a new password (accounts with a username only and no e-mail cannot recover by e-mail — please contact the organiser)')}</p>
+            <Input id="auth-forgot" icon={<Mail className="h-4 w-4" />} label={t('อีเมล', 'Email')} type="email" required value={forgotEmail} onChange={(e) => setForgotEmail(e.target.value)} placeholder="you@example.com" autoComplete="email" />
+            {notice && <p role="status" className="rounded-xl border-2 border-emerald-300 bg-emerald-50 px-3 py-2 text-sm font-bold text-emerald-800">{notice}</p>}
+            {error && <p role="alert" className="rounded-xl border-2 border-rose-300 bg-rose-50 px-3 py-2 text-sm font-bold text-rose-700">{error}</p>}
+            <button type="submit" disabled={busy} className="min-h-[52px] w-full rounded-2xl border-[3px] border-[#140826] bg-[#FFC928] text-base font-black text-[#2A1450] shadow-[0_5px_0_#140826] disabled:opacity-60 cursor-pointer">{busy ? t('กำลังส่ง…', 'Sending…') : t('ส่งลิงก์ตั้งรหัสผ่านใหม่', 'Send reset link')}</button>
+            <button type="button" onClick={() => { setView('main'); setNotice(null); setError(null); }} className="text-xs font-extrabold text-[#5B20A8] underline underline-offset-2 cursor-pointer">← {t('กลับไปเข้าสู่ระบบ', 'Back to log in')}</button>
+          </form>
+        )}
+
+        {view === 'reset' && resetToken && (
+          <form
+            className="space-y-3.5 px-5 pb-5 pt-5"
+            onSubmit={(e) => {
+              e.preventDefault();
+              run(() => authApi.resetPassword(resetToken, password));
+            }}
+          >
+            <h3 className="text-lg font-black">{t('ตั้งรหัสผ่านใหม่', 'Set a new password')}</h3>
+            <Input id="auth-newpw" icon={<Lock className="h-4 w-4" />} label={t('รหัสผ่านใหม่ * (อย่างน้อย 8 ตัว)', 'New password * (at least 8 characters)')} type={showPw ? 'text' : 'password'} required minLength={8} value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="new-password" right={<button type="button" onClick={() => setShowPw((v) => !v)} aria-label={showPw ? t('ซ่อนรหัสผ่าน', 'Hide password') : t('แสดงรหัสผ่าน', 'Show password')} className="grid h-9 w-9 place-items-center rounded-full text-[#6D28D9] hover:bg-[#F3E8FF] cursor-pointer">{showPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}</button>} />
+            {error && <p role="alert" className="rounded-xl border-2 border-rose-300 bg-rose-50 px-3 py-2 text-sm font-bold text-rose-700">{error}</p>}
+            <button type="submit" disabled={busy} className="min-h-[52px] w-full rounded-2xl border-[3px] border-[#140826] bg-[#FFC928] text-base font-black text-[#2A1450] shadow-[0_5px_0_#140826] disabled:opacity-60 cursor-pointer">{busy ? t('กำลังบันทึก…', 'Saving…') : t('บันทึกและเข้าสู่ระบบ', 'Save & log in')}</button>
+          </form>
+        )}
+
+        {view === 'main' && !showForm && (
           <div className="space-y-2.5 px-5 pb-5 pt-4">
             <button
               type="button"
@@ -231,7 +280,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthed,
           </div>
         )}
 
-        <form onSubmit={submit} className={`space-y-3.5 px-5 pb-5 pt-4 ${showForm ? '' : 'hidden'}`}>
+        <form onSubmit={submit} className={`space-y-3.5 px-5 pb-5 pt-4 ${showForm && view === 'main' ? '' : 'hidden'}`}>
           <button type="button" onClick={() => setShowForm(false)} className="text-xs font-extrabold text-[#5B20A8] underline underline-offset-2 cursor-pointer">
             ← {t('ตัวเลือกอื่น (Facebook / Google / LINE)', 'Other options (Facebook / Google / LINE)')}
           </button>
@@ -288,6 +337,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthed,
               </button>
             }
           />
+
+          {tab === 'login' && (
+            <button type="button" onClick={() => { setView('forgot'); setError(null); setNotice(null); }} className="-mt-1 text-xs font-extrabold text-[#5B20A8] underline underline-offset-2 cursor-pointer">
+              {t('ลืมรหัสผ่าน?', 'Forgot password?')}
+            </button>
+          )}
 
           {error && (
             <p role="alert" className="rounded-xl border-2 border-rose-300 bg-rose-50 px-3 py-2 text-sm font-bold text-rose-700">

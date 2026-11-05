@@ -32871,9 +32871,10 @@ var routesData = {
     name: "4 km DOG RUN",
     title: "\u0E27\u0E34\u0E48\u0E07\u0E04\u0E39\u0E48\u0E19\u0E49\u0E2D\u0E07\u0E2A\u0E38\u0E19\u0E31\u0E02 \u0E23\u0E2D\u0E1A\u0E41\u0E01\u0E19\u0E01\u0E25\u0E32\u0E07\u0E04\u0E48\u0E32\u0E22\u0E19\u0E40\u0E23\u0E28\u0E27\u0E23",
     distanceKm: 4,
-    measuredPerimeterKm: 4.08,
+    // New 4 km route (Nov 2026): drawn on the map; its length is within ~1% of the old route that was surveyed at 4.08 km
+    measuredPerimeterKm: 4.04,
     measuredAreaSqM: 631710.65,
-    googleEarthSummary: "\u0E23\u0E31\u0E07\u0E27\u0E31\u0E14\u0E08\u0E32\u0E01\u0E20\u0E32\u0E1E\u0E16\u0E48\u0E32\u0E22\u0E14\u0E32\u0E27\u0E40\u0E17\u0E35\u0E22\u0E21 Google Earth: \u0E40\u0E2A\u0E49\u0E19\u0E02\u0E2D\u0E1A\u0E23\u0E2D\u0E1A\u0E17\u0E34\u0E28 4.08 \u0E01\u0E21. (\u0E1E\u0E37\u0E49\u0E19\u0E17\u0E35\u0E48\u0E23\u0E39\u0E1B\u0E2B\u0E25\u0E32\u0E22\u0E40\u0E2B\u0E25\u0E35\u0E48\u0E22\u0E21 631,710.65 \u0E21\xB2)",
+    googleEarthSummary: "\u0E40\u0E2A\u0E49\u0E19\u0E17\u0E32\u0E07 4 \u0E01\u0E21. \u0E09\u0E1A\u0E31\u0E1A\u0E43\u0E2B\u0E21\u0E48 (\u0E27\u0E32\u0E14\u0E1A\u0E19\u0E41\u0E1C\u0E19\u0E17\u0E35\u0E48 \u0E04\u0E27\u0E32\u0E21\u0E22\u0E32\u0E27\u0E43\u0E01\u0E25\u0E49\u0E40\u0E04\u0E35\u0E22\u0E07\u0E40\u0E2A\u0E49\u0E19\u0E40\u0E14\u0E34\u0E21\u0E17\u0E35\u0E48\u0E23\u0E31\u0E07\u0E27\u0E31\u0E14\u0E08\u0E32\u0E01\u0E20\u0E32\u0E1E\u0E16\u0E48\u0E32\u0E22\u0E14\u0E32\u0E27\u0E40\u0E17\u0E35\u0E22\u0E21\u0E44\u0E27\u0E49 4.08 \u0E01\u0E21. \u2014 \u0E1C\u0E39\u0E49\u0E08\u0E31\u0E14\u0E07\u0E32\u0E19\u0E08\u0E30\u0E22\u0E37\u0E19\u0E22\u0E31\u0E19\u0E23\u0E30\u0E22\u0E30\u0E08\u0E23\u0E34\u0E07\u0E14\u0E49\u0E27\u0E22 GPS \u0E01\u0E48\u0E2D\u0E19\u0E27\u0E31\u0E19\u0E07\u0E32\u0E19)",
     color: "#2EAA59",
     tagline: "\u0E27\u0E34\u0E48\u0E07\u0E04\u0E39\u0E48\u0E40\u0E1E\u0E37\u0E48\u0E2D\u0E19\u0E2A\u0E35\u0E48\u0E02\u0E32 \u0E40\u0E2B\u0E21\u0E32\u0E30\u0E01\u0E31\u0E1A\u0E04\u0E23\u0E2D\u0E1A\u0E04\u0E23\u0E31\u0E27\u0E41\u0E25\u0E30\u0E1C\u0E39\u0E49\u0E40\u0E23\u0E34\u0E48\u0E21\u0E15\u0E49\u0E19",
     type: "Road & Coastal Path (\u0E17\u0E32\u0E07\u0E40\u0E23\u0E35\u0E22\u0E1A\u0E40\u0E25\u0E35\u0E22\u0E1A\u0E17\u0E30\u0E40\u0E25\u0E41\u0E25\u0E30\u0E16\u0E19\u0E19\u0E04\u0E48\u0E32\u0E22)",
@@ -32881,7 +32882,7 @@ var routesData = {
     durationEstimate: "25 - 45 \u0E19\u0E32\u0E17\u0E35",
     startTime: "17.15 \u0E19.",
     cutoffTime: "18.15 \u0E19. (1 \u0E0A\u0E31\u0E48\u0E27\u0E42\u0E21\u0E07)",
-    description: "\u0E40\u0E2A\u0E49\u0E19\u0E17\u0E32\u0E07\u0E27\u0E34\u0E48\u0E07\u0E23\u0E2D\u0E1A\u0E41\u0E01\u0E19\u0E01\u0E25\u0E32\u0E07\u0E04\u0E48\u0E32\u0E22\u0E19\u0E40\u0E23\u0E28\u0E27\u0E23 \u0E27\u0E31\u0E14\u0E23\u0E30\u0E22\u0E30\u0E23\u0E2D\u0E1A\u0E02\u0E2D\u0E1A\u0E40\u0E02\u0E15 4.08 \u0E01\u0E21. \u0E1B\u0E25\u0E48\u0E2D\u0E22\u0E15\u0E31\u0E27\u0E08\u0E32\u0E01\u0E0A\u0E32\u0E22\u0E2B\u0E32\u0E14\u0E2B\u0E19\u0E49\u0E32\u0E42\u0E23\u0E07\u0E41\u0E23\u0E21 Sea Sand Sun \u0E27\u0E34\u0E48\u0E07\u0E23\u0E31\u0E1A\u0E25\u0E21\u0E17\u0E30\u0E40\u0E25\u0E44\u0E1B\u0E17\u0E32\u0E07\u0E17\u0E34\u0E28\u0E15\u0E30\u0E27\u0E31\u0E19\u0E2D\u0E2D\u0E01 \u0E1C\u0E48\u0E32\u0E19\u0E2B\u0E19\u0E49\u0E32\u0E01\u0E2D\u0E07\u0E23\u0E49\u0E2D\u0E22\u0E1D\u0E36\u0E01\u0E23\u0E1A\u0E1E\u0E34\u0E40\u0E28\u0E29 \u0E40\u0E25\u0E35\u0E49\u0E22\u0E27\u0E25\u0E07\u0E17\u0E34\u0E28\u0E43\u0E15\u0E49\u0E1C\u0E48\u0E32\u0E19\u0E16\u0E19\u0E19\u0E1D\u0E31\u0E48\u0E07\u0E15\u0E30\u0E27\u0E31\u0E19\u0E2D\u0E2D\u0E01 \u0E21\u0E38\u0E48\u0E07\u0E2A\u0E39\u0E48\u0E1E\u0E23\u0E30\u0E1A\u0E23\u0E21\u0E23\u0E32\u0E0A\u0E32\u0E19\u0E38\u0E2A\u0E32\u0E27\u0E23\u0E35\u0E22\u0E4C\u0E2A\u0E21\u0E40\u0E14\u0E47\u0E08\u0E1E\u0E23\u0E30\u0E19\u0E40\u0E23\u0E28\u0E27\u0E23\u0E21\u0E2B\u0E32\u0E23\u0E32\u0E0A \u0E41\u0E25\u0E49\u0E27\u0E15\u0E31\u0E14\u0E40\u0E25\u0E35\u0E49\u0E22\u0E27\u0E02\u0E36\u0E49\u0E19\u0E40\u0E2B\u0E19\u0E37\u0E2D\u0E1C\u0E48\u0E32\u0E19\u0E16\u0E19\u0E19\u0E41\u0E01\u0E19\u0E01\u0E25\u0E32\u0E07\u0E04\u0E48\u0E32\u0E22\u0E1D\u0E31\u0E48\u0E07\u0E2A\u0E23\u0E30\u0E19\u0E49\u0E33\u0E01\u0E25\u0E31\u0E1A\u0E2A\u0E39\u0E48\u0E2B\u0E32\u0E14\u0E41\u0E25\u0E30\u0E40\u0E02\u0E49\u0E32\u0E40\u0E2A\u0E49\u0E19\u0E0A\u0E31\u0E22",
+    description: "\u0E40\u0E2A\u0E49\u0E19\u0E17\u0E32\u0E07\u0E27\u0E34\u0E48\u0E07\u0E23\u0E2D\u0E1A\u0E41\u0E01\u0E19\u0E01\u0E25\u0E32\u0E07\u0E04\u0E48\u0E32\u0E22\u0E19\u0E40\u0E23\u0E28\u0E27\u0E23 \u0E23\u0E30\u0E22\u0E30\u0E1B\u0E23\u0E30\u0E21\u0E32\u0E13 4 \u0E01\u0E21. \u0E1B\u0E25\u0E48\u0E2D\u0E22\u0E15\u0E31\u0E27\u0E08\u0E32\u0E01\u0E0A\u0E32\u0E22\u0E2B\u0E32\u0E14\u0E2B\u0E19\u0E49\u0E32\u0E42\u0E23\u0E07\u0E41\u0E23\u0E21 Sea Sand Sun \u0E27\u0E34\u0E48\u0E07\u0E23\u0E31\u0E1A\u0E25\u0E21\u0E17\u0E30\u0E40\u0E25\u0E44\u0E1B\u0E17\u0E32\u0E07\u0E17\u0E34\u0E28\u0E15\u0E30\u0E27\u0E31\u0E19\u0E2D\u0E2D\u0E01 \u0E1C\u0E48\u0E32\u0E19\u0E2B\u0E19\u0E49\u0E32\u0E01\u0E2D\u0E07\u0E23\u0E49\u0E2D\u0E22\u0E1D\u0E36\u0E01\u0E23\u0E1A\u0E1E\u0E34\u0E40\u0E28\u0E29 \u0E40\u0E25\u0E35\u0E49\u0E22\u0E27\u0E25\u0E07\u0E17\u0E34\u0E28\u0E43\u0E15\u0E49\u0E1C\u0E48\u0E32\u0E19\u0E16\u0E19\u0E19\u0E1D\u0E31\u0E48\u0E07\u0E15\u0E30\u0E27\u0E31\u0E19\u0E2D\u0E2D\u0E01 \u0E21\u0E38\u0E48\u0E07\u0E2A\u0E39\u0E48\u0E1E\u0E23\u0E30\u0E1A\u0E23\u0E21\u0E23\u0E32\u0E0A\u0E32\u0E19\u0E38\u0E2A\u0E32\u0E27\u0E23\u0E35\u0E22\u0E4C\u0E2A\u0E21\u0E40\u0E14\u0E47\u0E08\u0E1E\u0E23\u0E30\u0E19\u0E40\u0E23\u0E28\u0E27\u0E23\u0E21\u0E2B\u0E32\u0E23\u0E32\u0E0A \u0E41\u0E25\u0E49\u0E27\u0E15\u0E31\u0E14\u0E40\u0E25\u0E35\u0E49\u0E22\u0E27\u0E02\u0E36\u0E49\u0E19\u0E40\u0E2B\u0E19\u0E37\u0E2D\u0E1C\u0E48\u0E32\u0E19\u0E16\u0E19\u0E19\u0E41\u0E01\u0E19\u0E01\u0E25\u0E32\u0E07\u0E04\u0E48\u0E32\u0E22\u0E1D\u0E31\u0E48\u0E07\u0E2A\u0E23\u0E30\u0E19\u0E49\u0E33\u0E01\u0E25\u0E31\u0E1A\u0E2A\u0E39\u0E48\u0E2B\u0E32\u0E14\u0E41\u0E25\u0E30\u0E40\u0E02\u0E49\u0E32\u0E40\u0E2A\u0E49\u0E19\u0E0A\u0E31\u0E22",
     terrainType: "\u0E16\u0E19\u0E19\u0E04\u0E2D\u0E19\u0E01\u0E23\u0E35\u0E15\u0E40\u0E23\u0E35\u0E22\u0E1A\u0E41\u0E25\u0E30\u0E17\u0E32\u0E07\u0E40\u0E25\u0E35\u0E22\u0E1A\u0E2B\u0E32\u0E14\u0E04\u0E48\u0E32\u0E22\u0E19\u0E40\u0E23\u0E28\u0E27\u0E23 \u0E44\u0E21\u0E48\u0E21\u0E35\u0E40\u0E19\u0E34\u0E19\u0E0A\u0E31\u0E19",
     roadCondition: "\u0E17\u0E32\u0E07\u0E40\u0E23\u0E35\u0E22\u0E1A 100% \u0E01\u0E27\u0E49\u0E32\u0E07\u0E02\u0E27\u0E32\u0E07 \u0E1B\u0E25\u0E2D\u0E14\u0E20\u0E31\u0E22 \u0E1B\u0E34\u0E14\u0E01\u0E32\u0E23\u0E08\u0E23\u0E32\u0E08\u0E23\u0E15\u0E25\u0E2D\u0E14\u0E40\u0E2A\u0E49\u0E19\u0E17\u0E32\u0E07 \u0E21\u0E35\u0E40\u0E08\u0E49\u0E32\u0E2B\u0E19\u0E49\u0E32\u0E17\u0E35\u0E48\u0E14\u0E39\u0E41\u0E25\u0E17\u0E38\u0E01\u0E08\u0E38\u0E14\u0E40\u0E25\u0E35\u0E49\u0E22\u0E27",
     recommendedFor: "\u0E04\u0E23\u0E2D\u0E1A\u0E04\u0E23\u0E31\u0E27, \u0E1C\u0E39\u0E49\u0E40\u0E23\u0E34\u0E48\u0E21\u0E15\u0E49\u0E19\u0E2D\u0E2D\u0E01\u0E01\u0E33\u0E25\u0E31\u0E07\u0E01\u0E32\u0E22, \u0E40\u0E08\u0E49\u0E32\u0E02\u0E2D\u0E07\u0E41\u0E25\u0E30\u0E19\u0E49\u0E2D\u0E07\u0E2A\u0E38\u0E19\u0E31\u0E02, \u0E1C\u0E39\u0E49\u0E17\u0E35\u0E48\u0E15\u0E49\u0E2D\u0E07\u0E01\u0E32\u0E23\u0E40\u0E14\u0E34\u0E19-\u0E27\u0E34\u0E48\u0E07\u0E1C\u0E48\u0E2D\u0E19\u0E04\u0E25\u0E32\u0E22\u0E23\u0E31\u0E1A\u0E25\u0E21\u0E17\u0E30\u0E40\u0E25",
@@ -33716,6 +33717,7 @@ create unique index if not exists runners_email_uidx on csr.runners (email) wher
 create unique index if not exists runners_username_uidx on csr.runners (username) where username is not null;
 create unique index if not exists runners_line_uidx on csr.runners (line_user_id) where line_user_id is not null;
 create index if not exists orders_runner_idx on csr.orders ((data->>'runnerId')) where data ? 'runnerId';
+alter table csr.runners add column if not exists email_verified boolean not null default false;
 alter table csr.runners add column if not exists google_id text;
 alter table csr.runners add column if not exists facebook_id text;
 create unique index if not exists runners_google_uidx on csr.runners (google_id) where google_id is not null;
@@ -33849,7 +33851,7 @@ var DEFAULT_SETTINGS = {
   accountName: process.env.PROMPTPAY_ACCOUNT_NAME || "\u0E42\u0E04\u0E23\u0E07\u0E01\u0E32\u0E23\u0E0A\u0E49\u0E32\u0E07\u0E28\u0E36\u0E01\u0E23\u0E31\u0E19\u0E40\u0E2B\u0E47\u0E19\u0E0A\u0E49\u0E32\u0E07\u0E27\u0E34\u0E48\u0E07\u0E27\u0E34\u0E48\u0E07\u0E15\u0E32\u0E21\u0E0A\u0E49\u0E32\u0E07 (CHANGSUEK RUN 2026)",
   bankLabel: process.env.BANK_LABEL || "\u0E18\u0E19\u0E32\u0E04\u0E32\u0E23\u0E01\u0E23\u0E38\u0E07\u0E44\u0E17\u0E22",
   bankAccountNo: process.env.BANK_ACCOUNT_NO || "0340291354",
-  paymentTimeoutMinutes: 15
+  paymentTimeoutMinutes: 30
 };
 var asObj = (v) => typeof v === "string" ? JSON.parse(v) : v;
 async function getSettings() {
@@ -33966,13 +33968,46 @@ async function restoreOrderChecked(orderId, windTunnelLimit) {
     return { ok: true, order: o };
   });
 }
+var TOWER_USED_SQL = `select coalesce(sum((data->'addOns'->>'people')::int), 0)::text as n from csr.orders
+  where data->'addOns'->>'tower' = 'true' and not (data ? 'cancelledAt') and not (data ? 'isTest')
+    and (payment_status = 'PAID' or (data->>'expiresAt')::timestamptz > now())`;
+var GUN_USED_SQL = `select coalesce(sum((data->'addOns'->>'people')::int), 0)::text as n from csr.orders
+  where data->'addOns'->>'gun' in ('standard', 'premium') and not (data ? 'cancelledAt') and not (data ? 'isTest')
+    and (payment_status = 'PAID' or (data->>'expiresAt')::timestamptz > now())`;
+var ACTIVITY_LIMITS = {
+  tower: Math.max(0, Math.floor(Number(process.env.TOWER_LIMIT) || 0)),
+  gun: Math.max(0, Math.floor(Number(process.env.GUN_LIMIT) || 0))
+};
+async function activitySeatsLeft() {
+  const [t, g] = await Promise.all([
+    ACTIVITY_LIMITS.tower ? dbQuery(TOWER_USED_SQL) : Promise.resolve(null),
+    ACTIVITY_LIMITS.gun ? dbQuery(GUN_USED_SQL) : Promise.resolve(null)
+  ]);
+  return {
+    tower: t ? Math.max(0, ACTIVITY_LIMITS.tower - Number(t[0]?.n ?? 0)) : null,
+    gun: g ? Math.max(0, ACTIVITY_LIMITS.gun - Number(g[0]?.n ?? 0)) : null
+  };
+}
 async function insertOrderChecked(o, windTunnelLimit) {
   return dbTx(async (q) => {
+    const wantsTower = o.addOns?.tower && ACTIVITY_LIMITS.tower > 0 && !o.isTest;
+    const wantsGun = o.addOns && o.addOns.gun !== "none" && ACTIVITY_LIMITS.gun > 0 && !o.isTest;
+    if (wantsTower || wantsGun) {
+      await q("select pg_advisory_xact_lock(727002)");
+      if (wantsTower) {
+        const used = Number((await q(TOWER_USED_SQL))[0]?.n ?? 0);
+        if (used + o.addOns.people > ACTIVITY_LIMITS.tower) return { ok: false, remaining: Math.max(0, ACTIVITY_LIMITS.tower - used), activity: "tower" };
+      }
+      if (wantsGun) {
+        const used = Number((await q(GUN_USED_SQL))[0]?.n ?? 0);
+        if (used + o.addOns.people > ACTIVITY_LIMITS.gun) return { ok: false, remaining: Math.max(0, ACTIVITY_LIMITS.gun - used), activity: "gun" };
+      }
+    }
     if (o.addOns?.windTunnel && !o.isTest) {
       await q("select pg_advisory_xact_lock(727001)");
       const rows = await q(WIND_TUNNEL_USED_SQL);
       const used = Number(rows[0]?.n ?? 0);
-      if (used + o.addOns.people > windTunnelLimit) return { ok: false, remaining: Math.max(0, windTunnelLimit - used) };
+      if (used + o.addOns.people > windTunnelLimit) return { ok: false, remaining: Math.max(0, windTunnelLimit - used), activity: "wind" };
     }
     await q(INSERT_ORDER_SQL, orderParams(o));
     return { ok: true };
@@ -47691,6 +47726,30 @@ async function sendViaBrevo(to, mail) {
     transport.close();
   }
 }
+async function sendAccountMail(to, subject, heading, text, buttonLabel, url) {
+  const provider = activeProvider();
+  if (!provider) return { ok: false, error: "MAIL_NOT_CONFIGURED" };
+  if (!VALID_EMAIL.test(to)) return { ok: false, provider, error: "NO_EMAIL" };
+  const html = `<!doctype html><html lang="th"><body style="margin:0;background:#F4EEFF;font-family:Arial,'Noto Sans Thai',sans-serif">
+  <table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:24px 12px">
+  <table width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;background:#fff;border-radius:24px;border:3px solid #2A1450;overflow:hidden">
+    <tr><td style="background:#2A1450;padding:18px 22px;color:#FFC928;font-weight:900;font-size:13px;letter-spacing:2px">CHANGSUEK RUN 2027</td></tr>
+    <tr><td style="padding:26px 24px;color:#2A1450">
+      <h1 style="margin:0 0 10px;font-size:22px">${esc2(heading)}</h1>
+      <p style="margin:0 0 20px;font-size:15px;line-height:1.7">${esc2(text)}</p>
+      <a href="${esc2(url)}" style="display:inline-block;background:#FFC928;color:#2A1450;text-decoration:none;font-weight:900;font-size:16px;border-radius:14px;padding:14px 26px;border:3px solid #140826">${esc2(buttonLabel)}</a>
+      <p style="margin:20px 0 0;font-size:12px;color:#6B5A85;line-height:1.6">\u0E16\u0E49\u0E32\u0E1B\u0E38\u0E48\u0E21\u0E01\u0E14\u0E44\u0E21\u0E48\u0E44\u0E14\u0E49 \u0E43\u0E2B\u0E49\u0E04\u0E31\u0E14\u0E25\u0E2D\u0E01\u0E25\u0E34\u0E07\u0E01\u0E4C\u0E19\u0E35\u0E49\u0E44\u0E1B\u0E40\u0E1B\u0E34\u0E14\u0E43\u0E19\u0E40\u0E1A\u0E23\u0E32\u0E27\u0E4C\u0E40\u0E0B\u0E2D\u0E23\u0E4C:<br/><span style="word-break:break-all">${esc2(url)}</span><br/>\u0E2B\u0E32\u0E01\u0E04\u0E38\u0E13\u0E44\u0E21\u0E48\u0E44\u0E14\u0E49\u0E40\u0E1B\u0E47\u0E19\u0E1C\u0E39\u0E49\u0E02\u0E2D \u0E44\u0E21\u0E48\u0E15\u0E49\u0E2D\u0E07\u0E17\u0E33\u0E2D\u0E30\u0E44\u0E23 \u0E2D\u0E35\u0E40\u0E21\u0E25\u0E19\u0E35\u0E49\u0E08\u0E30\u0E2B\u0E21\u0E14\u0E2D\u0E32\u0E22\u0E38\u0E40\u0E2D\u0E07</p>
+    </td></tr>
+  </table></td></tr></table></body></html>`;
+  const mail = { subject, html, attachments: [] };
+  try {
+    if (provider === "brevo") return await sendViaBrevo(to, mail);
+    return await sendViaResend(to, mail, (process.env.RESEND_API_KEY || "").trim());
+  } catch (err) {
+    return { ok: false, provider, error: String(err?.message || "NETWORK").slice(0, 200) };
+  }
+}
+var SITE_URL = SITE;
 async function sendTicketEmail(o) {
   const provider = activeProvider();
   if (!provider) return { ok: false, error: "MAIL_NOT_CONFIGURED" };
@@ -47752,6 +47811,25 @@ function requireRunner(req, res, next) {
   req.runner = s;
   next();
 }
+var fp = (s) => crypto10.createHash("sha256").update(s).digest("hex").slice(0, 16);
+var passwordFingerprint = (passwordHash) => fp(`pw|${passwordHash || ""}`);
+var emailFingerprint = (email) => fp(`em|${(email || "").toLowerCase()}`);
+function issueActionToken(kind, runnerId, fingerprint) {
+  const ttl = kind === "reset" ? 60 * 60 * 1e3 : 3 * 24 * 60 * 60 * 1e3;
+  const payload = b64(JSON.stringify({ k: kind, s: runnerId, f: fingerprint, exp: Date.now() + ttl }));
+  return `a1.${payload}.${hmac(`a1.${payload}`)}`;
+}
+function readActionToken(kind, token) {
+  const [v, payload, sig] = String(token || "").split(".");
+  if (v !== "a1" || !payload || !sig || !safeEqual2(sig, hmac(`a1.${payload}`))) return null;
+  try {
+    const d = JSON.parse(Buffer.from(payload, "base64url").toString("utf8"));
+    if (d.k !== kind || typeof d.exp !== "number" || Date.now() > d.exp || typeof d.s !== "string" || typeof d.f !== "string") return null;
+    return { runnerId: d.s, fp: d.f };
+  } catch {
+    return null;
+  }
+}
 var SCRYPT_N = 16384;
 function hashPassword(password) {
   const salt = crypto10.randomBytes(16);
@@ -47809,6 +47887,7 @@ function ensureRunnerTables() {
       )`);
       await dbQuery("create unique index if not exists runners_email_uidx on csr.runners (email) where email is not null");
       await dbQuery("create unique index if not exists runners_username_uidx on csr.runners (username) where username is not null");
+      await dbQuery("alter table csr.runners add column if not exists email_verified boolean not null default false");
       await dbQuery("alter table csr.runners add column if not exists google_id text");
       await dbQuery("alter table csr.runners add column if not exists facebook_id text");
       await dbQuery("create unique index if not exists runners_line_uidx on csr.runners (line_user_id) where line_user_id is not null");
@@ -47897,7 +47976,7 @@ async function updateRunnerProfile(runnerId, patch) {
   }
   if (name2.length < 2) return { ok: false, error: "\u0E01\u0E23\u0E38\u0E13\u0E32\u0E01\u0E23\u0E2D\u0E01\u0E0A\u0E37\u0E48\u0E2D" };
   const rows = await dbQuery(
-    "update csr.runners set name = $2, phone = $3, email = $4, profile = $5::jsonb where runner_id = $1 returning *",
+    "update csr.runners set name = $2, phone = $3, email = $4, profile = $5::jsonb, email_verified = (email_verified and email is not distinct from $4) where runner_id = $1 returning *",
     [runnerId, name2, phone, email, JSON.stringify(profile)]
   );
   return { ok: true, runner: rows[0] };
@@ -47914,12 +47993,12 @@ async function upsertSocialRunner(provider, p) {
   const email = p.email ? normEmail(p.email) : "";
   const byEmail = email && isEmail(email) ? await dbQuery("select * from csr.runners where email = $1", [email]) : [];
   if (byEmail[0] && p.emailVerified) {
-    const rows2 = await dbQuery(`update csr.runners set ${col} = $2, last_login_at = now() where runner_id = $1 returning *`, [byEmail[0].runner_id, p.id]);
+    const rows2 = await dbQuery(`update csr.runners set ${col} = $2, email_verified = true, last_login_at = now() where runner_id = $1 returning *`, [byEmail[0].runner_id, p.id]);
     return rows2[0];
   }
   const rows = await dbQuery(
-    `insert into csr.runners (runner_id, name, email, ${col}, last_login_at) values ($1, $2, $3, $4, now()) returning *`,
-    [newRunnerId(), cleanText(p.name, 80) || (provider === "line" ? "\u0E19\u0E31\u0E01\u0E27\u0E34\u0E48\u0E07 LINE" : "\u0E19\u0E31\u0E01\u0E27\u0E34\u0E48\u0E07"), email && isEmail(email) && !byEmail[0] ? email : null, p.id]
+    `insert into csr.runners (runner_id, name, email, ${col}, email_verified, last_login_at) values ($1, $2, $3, $4, $5, now()) returning *`,
+    [newRunnerId(), cleanText(p.name, 80) || (provider === "line" ? "\u0E19\u0E31\u0E01\u0E27\u0E34\u0E48\u0E07 LINE" : "\u0E19\u0E31\u0E01\u0E27\u0E34\u0E48\u0E07"), email && isEmail(email) && !byEmail[0] ? email : null, p.id, Boolean(p.emailVerified && email && isEmail(email) && !byEmail[0])]
   );
   return rows[0];
 }
@@ -47930,6 +48009,7 @@ function publicRunner(r) {
     email: r.email || "",
     username: r.username || "",
     phone: r.phone || "",
+    emailVerified: Boolean(r.email_verified),
     lineLinked: Boolean(r.line_user_id),
     social: [r.line_user_id && "line", r.google_id && "google", r.facebook_id && "facebook"].filter(Boolean),
     profile: r.profile || {},
@@ -48025,6 +48105,13 @@ var cookieOf = (req, name2) => {
 };
 function registerRunnerRoutes(app2, h2, clientIp2) {
   const json2 = import_express.default.json({ limit: "50kb" });
+  const sendVerifyMail = async (runnerId, email) => {
+    if (!email) return false;
+    const token = issueActionToken("verify", runnerId, emailFingerprint(email));
+    const r = await sendAccountMail(email, "\u0E22\u0E37\u0E19\u0E22\u0E31\u0E19\u0E2D\u0E35\u0E40\u0E21\u0E25\u0E1A\u0E31\u0E0D\u0E0A\u0E35\u0E19\u0E31\u0E01\u0E27\u0E34\u0E48\u0E07 \xB7 CHANGSUEK RUN", "\u0E22\u0E37\u0E19\u0E22\u0E31\u0E19\u0E2D\u0E35\u0E40\u0E21\u0E25\u0E02\u0E2D\u0E07\u0E04\u0E38\u0E13", "\u0E01\u0E14\u0E1B\u0E38\u0E48\u0E21\u0E14\u0E49\u0E32\u0E19\u0E25\u0E48\u0E32\u0E07\u0E40\u0E1E\u0E37\u0E48\u0E2D\u0E22\u0E37\u0E19\u0E22\u0E31\u0E19\u0E27\u0E48\u0E32\u0E2D\u0E35\u0E40\u0E21\u0E25\u0E19\u0E35\u0E49\u0E40\u0E1B\u0E47\u0E19\u0E02\u0E2D\u0E07\u0E04\u0E38\u0E13 \u0E08\u0E30\u0E44\u0E14\u0E49\u0E1C\u0E39\u0E01\u0E04\u0E33\u0E2A\u0E31\u0E48\u0E07\u0E0B\u0E37\u0E49\u0E2D\u0E40\u0E14\u0E34\u0E21\u0E41\u0E25\u0E30\u0E23\u0E31\u0E1A\u0E2D\u0E35\u0E40\u0E21\u0E25\u0E15\u0E31\u0E4B\u0E27\u0E44\u0E14\u0E49\u0E2D\u0E22\u0E48\u0E32\u0E07\u0E21\u0E31\u0E48\u0E19\u0E43\u0E08 \u0E25\u0E34\u0E07\u0E01\u0E4C\u0E43\u0E0A\u0E49\u0E44\u0E14\u0E49 3 \u0E27\u0E31\u0E19", "\u0E22\u0E37\u0E19\u0E22\u0E31\u0E19\u0E2D\u0E35\u0E40\u0E21\u0E25", `${SITE_URL}/#verify=${token}`);
+    if (!r.ok) console.log(`[mail] verify ${runnerId}: not sent (${r.error})`);
+    return r.ok;
+  };
   const sessionBody = (token, expiresAt, role, user) => ({ token, expiresAt, role, user });
   app2.post("/api/auth/register", json2, h2(async (req, res) => {
     if (await rateLimited(`signup:${clientIp2(req)}`, 10, 60 * 60 * 1e3)) {
@@ -48038,7 +48125,77 @@ function registerRunnerRoutes(app2, h2, clientIp2) {
       return;
     }
     const s = issueSession("runner", made.runner.runner_id);
+    await sendVerifyMail(made.runner.runner_id, made.runner.email);
     res.json(sessionBody(s.token, s.expiresAt, "runner", publicRunner(made.runner)));
+  }));
+  app2.post("/api/auth/forgot", json2, h2(async (req, res) => {
+    const email = normEmail(req.body?.email);
+    const generic = { ok: true, message: "\u0E16\u0E49\u0E32\u0E2D\u0E35\u0E40\u0E21\u0E25\u0E19\u0E35\u0E49\u0E21\u0E35\u0E1A\u0E31\u0E0D\u0E0A\u0E35\u0E2D\u0E22\u0E39\u0E48 \u0E40\u0E23\u0E32\u0E44\u0E14\u0E49\u0E2A\u0E48\u0E07\u0E25\u0E34\u0E07\u0E01\u0E4C\u0E15\u0E31\u0E49\u0E07\u0E23\u0E2B\u0E31\u0E2A\u0E1C\u0E48\u0E32\u0E19\u0E43\u0E2B\u0E21\u0E48\u0E43\u0E2B\u0E49\u0E41\u0E25\u0E49\u0E27 (\u0E25\u0E34\u0E07\u0E01\u0E4C\u0E43\u0E0A\u0E49\u0E44\u0E14\u0E49 1 \u0E0A\u0E31\u0E48\u0E27\u0E42\u0E21\u0E07)" };
+    if (!email || await rateLimited(`forgot-ip:${clientIp2(req)}`, 8, 60 * 60 * 1e3) || await rateLimited(`forgot:${email}`, 3, 60 * 60 * 1e3)) {
+      res.json(generic);
+      return;
+    }
+    await ensureRunnerTables();
+    const rows = await dbQuery("select runner_id, password_hash from csr.runners where email = $1", [email]);
+    const row2 = rows[0];
+    if (row2 && row2.password_hash) {
+      const token = issueActionToken("reset", row2.runner_id, passwordFingerprint(row2.password_hash));
+      const r = await sendAccountMail(email, "\u0E15\u0E31\u0E49\u0E07\u0E23\u0E2B\u0E31\u0E2A\u0E1C\u0E48\u0E32\u0E19\u0E43\u0E2B\u0E21\u0E48 \xB7 CHANGSUEK RUN", "\u0E15\u0E31\u0E49\u0E07\u0E23\u0E2B\u0E31\u0E2A\u0E1C\u0E48\u0E32\u0E19\u0E43\u0E2B\u0E21\u0E48", "\u0E21\u0E35\u0E04\u0E33\u0E02\u0E2D\u0E15\u0E31\u0E49\u0E07\u0E23\u0E2B\u0E31\u0E2A\u0E1C\u0E48\u0E32\u0E19\u0E43\u0E2B\u0E21\u0E48\u0E2A\u0E33\u0E2B\u0E23\u0E31\u0E1A\u0E1A\u0E31\u0E0D\u0E0A\u0E35\u0E19\u0E31\u0E01\u0E27\u0E34\u0E48\u0E07\u0E02\u0E2D\u0E07\u0E04\u0E38\u0E13 \u0E01\u0E14\u0E1B\u0E38\u0E48\u0E21\u0E14\u0E49\u0E32\u0E19\u0E25\u0E48\u0E32\u0E07\u0E40\u0E1E\u0E37\u0E48\u0E2D\u0E15\u0E31\u0E49\u0E07\u0E23\u0E2B\u0E31\u0E2A\u0E1C\u0E48\u0E32\u0E19\u0E43\u0E2B\u0E21\u0E48 \u0E25\u0E34\u0E07\u0E01\u0E4C\u0E43\u0E0A\u0E49\u0E44\u0E14\u0E49 1 \u0E0A\u0E31\u0E48\u0E27\u0E42\u0E21\u0E07\u0E41\u0E25\u0E30\u0E43\u0E0A\u0E49\u0E44\u0E14\u0E49\u0E04\u0E23\u0E31\u0E49\u0E07\u0E40\u0E14\u0E35\u0E22\u0E27", "\u0E15\u0E31\u0E49\u0E07\u0E23\u0E2B\u0E31\u0E2A\u0E1C\u0E48\u0E32\u0E19\u0E43\u0E2B\u0E21\u0E48", `${SITE_URL}/#reset=${token}`);
+      if (!r.ok) console.log(`[mail] reset ${row2.runner_id}: not sent (${r.error})`);
+    }
+    res.json(generic);
+  }));
+  app2.post("/api/auth/reset", json2, h2(async (req, res) => {
+    const pw = String(req.body?.password || "");
+    if (pw.length < 8 || pw.length > 200) {
+      res.status(400).json({ error: "\u0E23\u0E2B\u0E31\u0E2A\u0E1C\u0E48\u0E32\u0E19\u0E15\u0E49\u0E2D\u0E07\u0E22\u0E32\u0E27\u0E2D\u0E22\u0E48\u0E32\u0E07\u0E19\u0E49\u0E2D\u0E22 8 \u0E15\u0E31\u0E27\u0E2D\u0E31\u0E01\u0E29\u0E23" });
+      return;
+    }
+    if (await rateLimited(`reset-ip:${clientIp2(req)}`, 20, 60 * 60 * 1e3)) {
+      res.status(429).json({ error: "\u0E25\u0E2D\u0E07\u0E1A\u0E48\u0E2D\u0E22\u0E40\u0E01\u0E34\u0E19\u0E44\u0E1B \u0E01\u0E23\u0E38\u0E13\u0E32\u0E23\u0E2D\u0E2A\u0E31\u0E01\u0E04\u0E23\u0E39\u0E48" });
+      return;
+    }
+    const t = readActionToken("reset", String(req.body?.token || ""));
+    const row2 = t ? await getRunner(t.runnerId) : void 0;
+    if (!t || !row2 || !row2.password_hash || passwordFingerprint(row2.password_hash) !== t.fp) {
+      res.status(400).json({ error: "\u0E25\u0E34\u0E07\u0E01\u0E4C\u0E2B\u0E21\u0E14\u0E2D\u0E32\u0E22\u0E38\u0E2B\u0E23\u0E37\u0E2D\u0E16\u0E39\u0E01\u0E43\u0E0A\u0E49\u0E44\u0E1B\u0E41\u0E25\u0E49\u0E27 \u0E01\u0E23\u0E38\u0E13\u0E32\u0E02\u0E2D\u0E25\u0E34\u0E07\u0E01\u0E4C\u0E43\u0E2B\u0E21\u0E48" });
+      return;
+    }
+    const rows = await dbQuery("update csr.runners set password_hash = $2, email_verified = true, last_login_at = now() where runner_id = $1 returning *", [row2.runner_id, hashPassword(pw)]);
+    const s = issueSession("runner", row2.runner_id);
+    res.json(sessionBody(s.token, s.expiresAt, "runner", publicRunner(rows[0])));
+  }));
+  app2.post("/api/auth/verify-email", json2, h2(async (req, res) => {
+    const t = readActionToken("verify", String(req.body?.token || ""));
+    const row2 = t ? await getRunner(t.runnerId) : void 0;
+    if (!t || !row2 || !row2.email || emailFingerprint(row2.email) !== t.fp) {
+      res.status(400).json({ error: "\u0E25\u0E34\u0E07\u0E01\u0E4C\u0E22\u0E37\u0E19\u0E22\u0E31\u0E19\u0E2B\u0E21\u0E14\u0E2D\u0E32\u0E22\u0E38\u0E2B\u0E23\u0E37\u0E2D\u0E44\u0E21\u0E48\u0E16\u0E39\u0E01\u0E15\u0E49\u0E2D\u0E07 \u0E01\u0E23\u0E38\u0E13\u0E32\u0E02\u0E2D\u0E25\u0E34\u0E07\u0E01\u0E4C\u0E43\u0E2B\u0E21\u0E48\u0E43\u0E19\u0E28\u0E39\u0E19\u0E22\u0E4C\u0E19\u0E31\u0E01\u0E27\u0E34\u0E48\u0E07" });
+      return;
+    }
+    await dbQuery("update csr.runners set email_verified = true where runner_id = $1", [row2.runner_id]);
+    res.json({ ok: true });
+  }));
+  app2.post("/api/me/verify/resend", requireRunner, h2(async (req, res) => {
+    const s = req.runner;
+    if (await rateLimited(`verify-resend:${s.sub}`, 3, 60 * 60 * 1e3)) {
+      res.status(429).json({ error: "\u0E02\u0E2D\u0E25\u0E34\u0E07\u0E01\u0E4C\u0E1A\u0E48\u0E2D\u0E22\u0E40\u0E01\u0E34\u0E19\u0E44\u0E1B \u0E01\u0E23\u0E38\u0E13\u0E32\u0E23\u0E2D\u0E2A\u0E31\u0E01\u0E04\u0E23\u0E39\u0E48" });
+      return;
+    }
+    const row2 = await getRunner(s.sub);
+    if (!row2 || !row2.email) {
+      res.status(400).json({ error: '\u0E22\u0E31\u0E07\u0E44\u0E21\u0E48\u0E21\u0E35\u0E2D\u0E35\u0E40\u0E21\u0E25\u0E43\u0E19\u0E1A\u0E31\u0E0D\u0E0A\u0E35 \u0E01\u0E23\u0E38\u0E13\u0E32\u0E40\u0E1E\u0E34\u0E48\u0E21\u0E2D\u0E35\u0E40\u0E21\u0E25\u0E17\u0E35\u0E48\u0E41\u0E17\u0E47\u0E1A "\u0E02\u0E49\u0E2D\u0E21\u0E39\u0E25\u0E02\u0E2D\u0E07\u0E09\u0E31\u0E19" \u0E01\u0E48\u0E2D\u0E19' });
+      return;
+    }
+    if (row2.email_verified) {
+      res.json({ ok: true, already: true });
+      return;
+    }
+    const ok = await sendVerifyMail(row2.runner_id, row2.email);
+    if (!ok) {
+      res.status(503).json({ error: "\u0E2A\u0E48\u0E07\u0E2D\u0E35\u0E40\u0E21\u0E25\u0E44\u0E21\u0E48\u0E2A\u0E33\u0E40\u0E23\u0E47\u0E08\u0E43\u0E19\u0E02\u0E13\u0E30\u0E19\u0E35\u0E49 \u0E01\u0E23\u0E38\u0E13\u0E32\u0E25\u0E2D\u0E07\u0E43\u0E2B\u0E21\u0E48\u0E20\u0E32\u0E22\u0E2B\u0E25\u0E31\u0E07" });
+      return;
+    }
+    res.json({ ok: true, to: maskEmail(row2.email) });
   }));
   app2.post("/api/auth/login", json2, h2(async (req, res) => {
     const ip = clientIp2(req);
@@ -48123,7 +48280,27 @@ function registerRunnerRoutes(app2, h2, clientIp2) {
       res.status(400).json({ error: out.error });
       return;
     }
+    if (req.body?.email !== void 0 && out.runner.email && !out.runner.email_verified) await sendVerifyMail(out.runner.runner_id, out.runner.email);
     res.json({ user: publicRunner(out.runner) });
+  }));
+  app2.post("/api/me/orders/:orderId/resend-ticket", requireRunner, h2(async (req, res) => {
+    const s = req.runner;
+    const id = String(req.params.orderId).slice(0, 40);
+    if (await rateLimited(`resend-me:${id}`, 3, 60 * 60 * 1e3)) {
+      res.status(429).json({ error: "\u0E02\u0E2D\u0E2A\u0E48\u0E07\u0E2D\u0E35\u0E40\u0E21\u0E25\u0E1A\u0E48\u0E2D\u0E22\u0E40\u0E01\u0E34\u0E19\u0E44\u0E1B \u0E01\u0E23\u0E38\u0E13\u0E32\u0E23\u0E2D\u0E2A\u0E31\u0E01\u0E04\u0E23\u0E39\u0E48\u0E41\u0E25\u0E49\u0E27\u0E25\u0E2D\u0E07\u0E43\u0E2B\u0E21\u0E48" });
+      return;
+    }
+    const order = await getOrder(id);
+    if (!order || order.runnerId !== s.sub || order.paymentStatus !== "PAID" || order.cancelledAt) {
+      res.status(404).json({ error: "\u0E44\u0E21\u0E48\u0E1E\u0E1A\u0E04\u0E33\u0E2A\u0E31\u0E48\u0E07\u0E0B\u0E37\u0E49\u0E2D\u0E17\u0E35\u0E48\u0E0A\u0E33\u0E23\u0E30\u0E41\u0E25\u0E49\u0E27\u0E02\u0E2D\u0E07\u0E04\u0E38\u0E13" });
+      return;
+    }
+    const r = await sendTicketEmail(order);
+    if (!r.ok) {
+      res.status(503).json({ error: "\u0E2A\u0E48\u0E07\u0E2D\u0E35\u0E40\u0E21\u0E25\u0E44\u0E21\u0E48\u0E2A\u0E33\u0E40\u0E23\u0E47\u0E08\u0E43\u0E19\u0E02\u0E13\u0E30\u0E19\u0E35\u0E49 \u0E25\u0E2D\u0E07\u0E43\u0E2B\u0E21\u0E48\u0E20\u0E32\u0E22\u0E2B\u0E25\u0E31\u0E07 \u0E2B\u0E23\u0E37\u0E2D\u0E40\u0E1B\u0E34\u0E14\u0E40\u0E2D\u0E01\u0E2A\u0E32\u0E23 A4 \u0E08\u0E32\u0E01\u0E1B\u0E38\u0E48\u0E21\u0E14\u0E49\u0E32\u0E19\u0E1A\u0E19\u0E41\u0E17\u0E19" });
+      return;
+    }
+    res.json({ ok: true, to: maskEmail(order.email) });
   }));
   app2.get("/api/me/orders", requireRunner, h2(async (req, res) => {
     const s = req.runner;
@@ -48145,6 +48322,11 @@ function registerRunnerRoutes(app2, h2, clientIp2) {
     }
     const code = String(req.body?.orderId || "").trim().slice(0, 80);
     const email = normEmail(req.body?.email);
+    const me = await getRunner(s.sub);
+    if (!me || !me.email || !me.email_verified || normEmail(me.email) !== email) {
+      res.status(403).json({ error: '\u0E15\u0E49\u0E2D\u0E07\u0E22\u0E37\u0E19\u0E22\u0E31\u0E19\u0E2D\u0E35\u0E40\u0E21\u0E25\u0E02\u0E2D\u0E07\u0E1A\u0E31\u0E0D\u0E0A\u0E35\u0E01\u0E48\u0E2D\u0E19 \u0E41\u0E25\u0E30\u0E2D\u0E35\u0E40\u0E21\u0E25\u0E15\u0E49\u0E2D\u0E07\u0E15\u0E23\u0E07\u0E01\u0E31\u0E1A\u0E17\u0E35\u0E48\u0E43\u0E0A\u0E49\u0E2A\u0E31\u0E48\u0E07\u0E0B\u0E37\u0E49\u0E2D (\u0E14\u0E39\u0E1B\u0E38\u0E48\u0E21 "\u0E2A\u0E48\u0E07\u0E25\u0E34\u0E07\u0E01\u0E4C\u0E22\u0E37\u0E19\u0E22\u0E31\u0E19" \u0E43\u0E19\u0E41\u0E17\u0E47\u0E1A \u0E02\u0E49\u0E2D\u0E21\u0E39\u0E25\u0E02\u0E2D\u0E07\u0E09\u0E31\u0E19)', needVerify: true });
+      return;
+    }
     const found = code ? await findOrderByCode(code) : void 0;
     const order = found ? await getOrder(found.orderId) : void 0;
     if (!order || !email || normEmail(order.email) !== email) {
@@ -48225,7 +48407,7 @@ async function nextBibPreview() {
   return Object.fromEntries(ROUTE_IDS.map((r) => [r, formatBib(r, (counters[r] || 0) + 1)]));
 }
 async function publicConfig() {
-  const [s, nextBib, key, windUsed, sales, early] = await Promise.all([getSettings(), nextBibPreview(), getEasySlipKey(), windTunnelSeatsUsed(), getSalesStatus(), getEarlyBird()]);
+  const [s, nextBib, key, windUsed, sales, early, seatsLeft] = await Promise.all([getSettings(), nextBibPreview(), getEasySlipKey(), windTunnelSeatsUsed(), getSalesStatus(), getEarlyBird(), activitySeatsLeft()]);
   return {
     /** the admin's open / close switch for ticket sales */
     salesOpen: sales.open,
@@ -48233,6 +48415,9 @@ async function publicConfig() {
     earlyBird: early.on,
     windTunnelLimit: WIND_TUNNEL_LIMIT,
     windTunnelRemaining: Math.max(0, WIND_TUNNEL_LIMIT - windUsed),
+    /** seats left at the tower / shooting range (null = no limit set) */
+    towerRemaining: seatsLeft.tower,
+    gunRemaining: seatsLeft.gun,
     promptPayId: s.promptPayId,
     qrPayload: s.qrPayload,
     accountName: s.accountName,
@@ -48477,7 +48662,7 @@ function createApp() {
     const token = crypto12.randomBytes(24).toString("base64url");
     const now = /* @__PURE__ */ new Date();
     const settings = await getSettings();
-    const timeoutMin = Math.min(15, Math.max(1, settings.paymentTimeoutMinutes || 15));
+    const timeoutMin = Math.min(60, Math.max(1, settings.paymentTimeoutMinutes || 30));
     const order = {
       orderId: testMode ? newTestOrderId() : await nextOrderId(),
       ...testMode ? { isTest: true, testBy: testAdmin } : {},
@@ -48540,8 +48725,8 @@ function createApp() {
       if (sponsorCode) await releaseSponsorCode(sponsorCode).catch(() => {
       });
       res.status(409).json({
-        error: seats.remaining > 0 ? `\u0E2D\u0E38\u0E42\u0E21\u0E07\u0E04\u0E4C\u0E25\u0E21\u0E40\u0E2B\u0E25\u0E37\u0E2D ${seats.remaining} \u0E17\u0E35\u0E48 \u0E01\u0E23\u0E38\u0E13\u0E32\u0E25\u0E14\u0E08\u0E33\u0E19\u0E27\u0E19\u0E04\u0E19\u0E2B\u0E23\u0E37\u0E2D\u0E40\u0E2D\u0E32\u0E2D\u0E38\u0E42\u0E21\u0E07\u0E04\u0E4C\u0E25\u0E21\u0E2D\u0E2D\u0E01` : `\u0E2D\u0E38\u0E42\u0E21\u0E07\u0E04\u0E4C\u0E25\u0E21\u0E40\u0E15\u0E47\u0E21\u0E41\u0E25\u0E49\u0E27 (\u0E04\u0E23\u0E1A ${WIND_TUNNEL_LIMIT} \u0E17\u0E48\u0E32\u0E19)`,
-        windTunnelRemaining: seats.remaining
+        error: seats.activity === "tower" || seats.activity === "gun" ? `${seats.activity === "tower" ? "\u0E2B\u0E2D\u0E2A\u0E39\u0E07" : "\u0E22\u0E34\u0E07\u0E1B\u0E37\u0E19"}${seats.remaining > 0 ? `\u0E40\u0E2B\u0E25\u0E37\u0E2D ${seats.remaining} \u0E17\u0E35\u0E48 \u0E01\u0E23\u0E38\u0E13\u0E32\u0E40\u0E2D\u0E32\u0E01\u0E34\u0E08\u0E01\u0E23\u0E23\u0E21\u0E19\u0E35\u0E49\u0E2D\u0E2D\u0E01\u0E08\u0E32\u0E01\u0E04\u0E33\u0E2A\u0E31\u0E48\u0E07\u0E0B\u0E37\u0E49\u0E2D` : `\u0E40\u0E15\u0E47\u0E21\u0E41\u0E25\u0E49\u0E27 (\u0E04\u0E23\u0E1A ${seats.activity === "tower" ? ACTIVITY_LIMITS.tower : ACTIVITY_LIMITS.gun} \u0E17\u0E35\u0E48)`}` : seats.remaining > 0 ? `\u0E2D\u0E38\u0E42\u0E21\u0E07\u0E04\u0E4C\u0E25\u0E21\u0E40\u0E2B\u0E25\u0E37\u0E2D ${seats.remaining} \u0E17\u0E35\u0E48 \u0E01\u0E23\u0E38\u0E13\u0E32\u0E25\u0E14\u0E08\u0E33\u0E19\u0E27\u0E19\u0E04\u0E19\u0E2B\u0E23\u0E37\u0E2D\u0E40\u0E2D\u0E32\u0E2D\u0E38\u0E42\u0E21\u0E07\u0E04\u0E4C\u0E25\u0E21\u0E2D\u0E2D\u0E01` : `\u0E2D\u0E38\u0E42\u0E21\u0E07\u0E04\u0E4C\u0E25\u0E21\u0E40\u0E15\u0E47\u0E21\u0E41\u0E25\u0E49\u0E27 (\u0E04\u0E23\u0E1A ${WIND_TUNNEL_LIMIT} \u0E17\u0E48\u0E32\u0E19)`,
+        windTunnelRemaining: seats.activity === "wind" || !seats.activity ? seats.remaining : void 0
       });
       return;
     }
@@ -48567,6 +48752,24 @@ function createApp() {
       return;
     }
     res.json({ order: runnerView(order), accessToken: token, config: await publicConfig() });
+  }));
+  app2.post("/api/orders/:orderId/extend", smallJson, h(async (req, res) => {
+    const order = await loadOwnedOrder(req, res);
+    if (!order) return;
+    if (order.paymentStatus === "PAID" || order.cancelledAt || Date.parse(order.expiresAt) <= Date.now()) {
+      res.status(400).json({ error: "\u0E02\u0E2D\u0E40\u0E27\u0E25\u0E32\u0E40\u0E1E\u0E34\u0E48\u0E21\u0E44\u0E21\u0E48\u0E44\u0E14\u0E49 (\u0E04\u0E33\u0E2A\u0E31\u0E48\u0E07\u0E0B\u0E37\u0E49\u0E2D\u0E0A\u0E33\u0E23\u0E30\u0E41\u0E25\u0E49\u0E27 \u0E16\u0E39\u0E01\u0E22\u0E01\u0E40\u0E25\u0E34\u0E01 \u0E2B\u0E23\u0E37\u0E2D\u0E2B\u0E21\u0E14\u0E40\u0E27\u0E25\u0E32\u0E41\u0E25\u0E49\u0E27)" });
+      return;
+    }
+    if (order.extendedAt) {
+      res.status(400).json({ error: "\u0E02\u0E2D\u0E40\u0E27\u0E25\u0E32\u0E40\u0E1E\u0E34\u0E48\u0E21\u0E44\u0E14\u0E49\u0E04\u0E23\u0E31\u0E49\u0E07\u0E40\u0E14\u0E35\u0E22\u0E27\u0E15\u0E48\u0E2D\u0E04\u0E33\u0E2A\u0E31\u0E48\u0E07\u0E0B\u0E37\u0E49\u0E2D" });
+      return;
+    }
+    const updated = await updateOrder(order.orderId, (o) => {
+      if (o.extendedAt) return;
+      o.extendedAt = (/* @__PURE__ */ new Date()).toISOString();
+      o.expiresAt = new Date(Math.max(Date.now(), Date.parse(o.expiresAt)) + 15 * 60 * 1e3).toISOString();
+    });
+    res.json({ order: runnerView(updated || order) });
   }));
   app2.get("/api/orders/:orderId", h(async (req, res) => {
     let order = await loadOwnedOrder(req, res);
@@ -49013,7 +49216,7 @@ function createApp() {
       accountName: clean(s.accountName, 150) || cur.accountName,
       bankLabel: clean(s.bankLabel, 80) || cur.bankLabel,
       bankAccountNo,
-      paymentTimeoutMinutes: Math.min(15, Math.max(1, Math.floor(Number(s.paymentTimeoutMinutes) || 15)))
+      paymentTimeoutMinutes: Math.min(60, Math.max(1, Math.floor(Number(s.paymentTimeoutMinutes) || 30)))
     });
     console.log(`[admin] ${req.admin.username} updated settings`);
     res.json({ settings: await getSettings(), bibCounters: await getBibCounters() });
