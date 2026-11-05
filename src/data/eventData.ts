@@ -39,9 +39,9 @@ export const eventInfo = {
   routeStatus: 'เส้นทางตัวอย่างสำหรับวางแผนการเดินทาง',
   hotelCountNotice: '42 ที่พัก Pet-Friendly (ภาพเป็นเพียงภาพจำลอง)',
   contactEmail: 'contact@changsuekrun.com',
-  contactPhone: '084-789-4651 / 097-145-1945 / 095-449-9741',
+  contactPhone: '083-789-4651 / 097-145-1945 / 095-449-9741',
   /** Organiser numbers shown on the site, on the BIB (emergency contact) and in the e-mails */
-  contactPhones: ['084-789-4651', '097-145-1945', '095-449-9741'],
+  contactPhones: ['083-789-4651', '097-145-1945', '095-449-9741'],
   contactLine: '@changsuekrun',
   /** official LINE account: add-friend link (from the organiser's QR) and the QR picture */
   lineUrl: 'https://lin.ee/Y543CDb',
@@ -76,12 +76,12 @@ export const safetyContacts: SafetyContact[] = [
   {
     title: 'ศูนย์อำนวยการแข่งขัน (Race Center)',
     role: 'ฝ่ายประสานงานกลาง & ข้อมูลทั่วไป',
-    phone: '084-789-4651 / 097-145-1945 / 095-449-9741',
+    phone: '083-789-4651 / 097-145-1945 / 095-449-9741',
   },
   {
     title: 'หน่วยแพทย์กู้ชีพค่ายนเรศวร',
     role: 'การแพทย์และพยาบาลฉุกเฉินประจำงาน',
-    phone: '084-789-4651 / 097-145-1945 / 095-449-9741',
+    phone: '083-789-4651 / 097-145-1945 / 095-449-9741',
   },
   {
     title: 'โรงพยาบาลหัวหิน (Hua Hin Hospital)',

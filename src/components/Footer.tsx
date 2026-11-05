@@ -94,7 +94,7 @@ export const Footer: React.FC<FooterProps> = ({
             <div className="space-y-3 text-xs text-white/70">
               <div className="flex items-start gap-2">
                 <MapPin className="w-4 h-4 text-[#FFCC00] flex-shrink-0 mt-0.5" />
-                <span>{t('หาดชะอำ (ค่ายนเรศวร) อ.ชะอำ จ.เพชรบุรี', 'Cha-am Beach (Naresuan Camp), Cha-am, Phetchaburi')}</span>
+                <span>{t('ค่ายนเรศวร อ.ชะอำ จ.เพชรบุรี', 'Naresuan Camp, Cha-am, Phetchaburi')}</span>
               </div>
               <div className="flex items-start gap-2">
                 <Phone className="w-4 h-4 text-[#FFCC00] flex-shrink-0 mt-2" />
