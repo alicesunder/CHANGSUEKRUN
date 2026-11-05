@@ -504,7 +504,7 @@ const ProfileForm: React.FC<{ session: Session; onLogout: () => void }> = ({ ses
       className="space-y-4 rounded-3xl border-[3px] border-[#2A1450] bg-white p-4 shadow-[0_5px_0_#2A1450] sm:p-5"
     >
       <p className="rounded-xl bg-[#F3E8FF] px-3 py-2 text-xs font-bold text-[#4B2D78]">
-        {t('แก้ไขข้อมูลส่วนตัวได้ที่นี่ ใช้เติมในฟอร์มสั่งซื้ออัตโนมัติ (ไม่เก็บเลขบัตรประชาชน — กรอกตอนสั่งซื้อตั๋ววิ่ง 5 km / 10 km)', 'Edit your personal details here — they pre-fill the order form (your national ID is not stored; it is asked when you buy a 5 km / 10 km ticket)')}
+        {t('แก้ไขข้อมูลส่วนตัวได้ที่นี่ ใช้เติมในฟอร์มสั่งซื้ออัตโนมัติ (ไม่เก็บเลขบัตรประชาชน — ต้องกรอกใหม่ทุกครั้งที่ซื้อตั๋ววิ่ง เพื่อทำประกัน)', 'Edit your personal details here — they pre-fill the order form (your national ID is not stored; it is asked each time you buy a run ticket, for the accident insurance)')}
         {u.username && <span className="mt-1 block text-[#6B5A85]">{t('ชื่อผู้ใช้ (เปลี่ยนไม่ได้)', 'Username (cannot be changed)')}: @{u.username}</span>}
       </p>
       <div className="grid gap-3 sm:grid-cols-2">
