@@ -199,6 +199,11 @@ export const EN_EXACT: Record<string, string> = {
   [`เจ้าหน้าที่ ตชด. K-9 ยื่นมือสั่งน้องหมาโกลเด้นที่นั่งเชื่อฟังอยู่ข้างตัว`]: `A BPP K-9 officer holding out a hand to command an obedient Golden Retriever sitting beside them`,
   [`เต็ม 100 คะแนน`]: `100 points in total`,
 
+  [`น้องหมา 6 ตัวในชุดผจญภัยม่วงทอง ทั้งอัศวิน พ่อมด เจ้าหญิง นักบิน และนักสำรวจ กับเจ้าของที่กอดน้องอยู่`]: `Six dogs in purple-and-gold adventure costumes - knight, wizard, princess, pilot and explorer - with their owner hugging them`,
+  [`สัตวแพทย์ใช้หูฟังตรวจน้องชิบะที่เจ้าของกอดอยู่ ข้าง ๆ มีน้องซามอยด์และบีเกิ้ลผูกผ้าพันคอสีม่วง`]: `A vet listening to a shiba with a stethoscope while its owner hugs it, with a samoyed and a beagle in purple bandanas beside them`,
+  [`เจ้าหน้าที่ K-9 ให้สัญญาณมือกับน้องโกลเด้นที่นั่งตรง และเจ้าของสั่งน้องบอร์เดอร์คอลลี่ให้หมอบ`]: `A K-9 handler giving a hand signal to a golden retriever sitting upright, and an owner telling a border collie to lie down`,
+  [`ช้างศึกสีม่วง นักวิ่ง และน้องสุนัขโกลเด้น วิ่งริมชายหาดยามพระอาทิตย์ตก`]: `A purple elephant, a runner and a golden retriever running along the beach at sunset`,
+  [`ช้างศึกสีม่วง นักวิ่ง และน้องสุนัขโกลเด้น วิ่งเล่นน้ำริมหาดยามเย็น`]: `A purple elephant, a runner and a golden retriever splashing along the beach in the evening`,
   [`📌 กติการ่วมของทุกรายการ`]: `📌 Rules for every category`,
   [`ร่วมได้เฉพาะผู้ถือตั๋ว Dog Run (1K / 4K) ไม่เสียค่าสมัครเพิ่ม · 1 ตั๋ว ส่งน้องหมาได้ 1 ตัว และลงได้ทั้ง 3 รายการ`]: `Open only to Dog Run (1K / 4K) ticket holders, no extra fee · 1 ticket = 1 dog, and you can enter all 3 categories`,
   [`ลงทะเบียนที่เต็นท์ประกวด วันเสาร์ที่ 9 ม.ค. 2570 เวลา 08.00–09.30 น. (ประกวด 09.00–14.00 น. · มอบรางวัล 15.00–17.00 น.)`]: `Register at the contest tent on Saturday 9 Jan 2027, 08:00–09:30 (contest 09:00–14:00 · awards 15:00–17:00)`,

@@ -23,18 +23,17 @@ interface Contest {
 
 /** One picture for all three contests (organiser's artwork). */
 const DOG_SQUAD = {
-  src: '/images/costume/dog-squad.webp',
-  alt: 'น้องสุนัข 8 ตัวแต่งชุดธีมม่วงทอง มีทั้งมงกุฎ หมวกพ่อมด เกราะอัศวิน และแว่นนักบิน',
+  src: '/images/contest/costume-2027.webp',
+  alt: 'น้องหมา 6 ตัวในชุดผจญภัยม่วงทอง ทั้งอัศวิน พ่อมด เจ้าหญิง นักบิน และนักสำรวจ กับเจ้าของที่กอดน้องอยู่',
 };
 
 const HEALTHY_IMG = {
-  src: '/images/contest/healthy-vet.webp',
-  alt: 'สัตวแพทย์สวมหน้ากากกำลังพันผ้าให้น้องชิบะที่เจ้าของกอดไว้ มีทีมงานชุดม่วงทองยืนดูอยู่',
+  src: '/images/contest/healthy-2027.webp',
+  alt: 'สัตวแพทย์ใช้หูฟังตรวจน้องชิบะที่เจ้าของกอดอยู่ ข้าง ๆ มีน้องซามอยด์และบีเกิ้ลผูกผ้าพันคอสีม่วง',
 };
 const OBEDIENCE_IMG = {
-  src: '/images/contest/obedience.webp',
-  alt: 'เจ้าหน้าที่ ตชด. K-9 ยื่นมือสั่งน้องหมาโกลเด้นที่นั่งเชื่อฟังอยู่ข้างตัว',
-  tall: true,
+  src: '/images/contest/obedience-2027.webp',
+  alt: 'เจ้าหน้าที่ K-9 ให้สัญญาณมือกับน้องโกลเด้นที่นั่งตรง และเจ้าของสั่งน้องบอร์เดอร์คอลลี่ให้หมอบ',
 };
 
 /**
@@ -190,14 +189,14 @@ export const DogContestSection: React.FC = () => {
           >
             {/* picture side */}
             <div className="md:col-span-5 relative mx-auto w-full max-w-[400px]">
-              <div className={`rounded-[24px] bg-white border-[3px] border-[var(--ink)] shadow-[5px_6px_0_var(--ink)] p-2.5 ${c.id === 'healthy' ? 'rotate-1' : '-rotate-2'}`}>
+              <div className={c.image ? 'relative' : `rounded-[24px] bg-white border-[3px] border-[var(--ink)] shadow-[5px_6px_0_var(--ink)] p-2.5 ${c.id === 'healthy' ? 'rotate-1' : '-rotate-2'}`}>
                 {c.image ? (
                   <img
                     src={c.image.src}
                     alt={c.image.alt}
                     loading="lazy"
                     decoding="async"
-                    className={c.image.tall ? 'block w-full h-[320px] sm:h-[380px] object-contain rounded-[14px]' : 'block w-full h-auto rounded-[14px]'}
+                    className={c.image.tall ? 'block w-full h-[320px] sm:h-[380px] object-contain drop-shadow-[0_10px_14px_rgba(42,20,80,0.28)]' : 'block w-full h-auto drop-shadow-[0_10px_14px_rgba(42,20,80,0.28)]'}
                   />
                 ) : (
                   <div

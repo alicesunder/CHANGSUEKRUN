@@ -29,7 +29,7 @@ interface HeroProps {
   onSelectDistance: (distance: RouteId) => void;
 }
 
-const BEACH = '/images/hero/beach-run.webp';
+const BEACH = '/images/hero/sunset-run.webp';
 const COASTAL_SUNSET = '/images/hero/changsuek-run-coastal.webp';
 
 const fadeMask: React.CSSProperties = {
@@ -113,7 +113,7 @@ export const Hero: React.FC<HeroProps> = ({
         {/* Desktop Beach Artwork Anchored Right */}
         <img
           src={BEACH}
-          alt="ช้างศึก นักวิ่ง และน้องสุนัขโกลเด้น วิ่งริมชายหาด"
+          alt="ช้างศึกสีม่วง นักวิ่ง และน้องสุนัขโกลเด้น วิ่งริมชายหาดยามพระอาทิตย์ตก"
           className="hidden lg:block absolute bottom-0 right-0 w-[82%] max-w-[1340px] h-auto pointer-events-none select-none"
           style={fadeMask}
           loading="eager"
@@ -182,9 +182,9 @@ export const Hero: React.FC<HeroProps> = ({
           <picture>
             <source media="(min-width: 640px) and (orientation: landscape)" srcSet={BEACH} />
             <motion.img
-              src="/images/hero/hero-mobile.webp"
-              alt="ช้างศึกสีม่วง นักวิ่ง และน้องสุนัขโกลเด้น วิ่งริมชายหาดใต้แสงแดด"
-              className="absolute inset-0 w-full h-full object-cover object-[50%_46%] [@media(orientation:landscape)]:object-[62%_60%]"
+              src="/images/hero/sunset-run-mobile.webp"
+              alt="ช้างศึกสีม่วง นักวิ่ง และน้องสุนัขโกลเด้น วิ่งเล่นน้ำริมหาดยามเย็น"
+              className="absolute inset-0 w-full h-full object-cover object-[50%_70%] [@media(orientation:landscape)]:object-[62%_60%]"
               fetchPriority="high"
               loading="eager"
               decoding="async"
