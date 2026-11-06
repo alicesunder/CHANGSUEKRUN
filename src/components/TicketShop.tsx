@@ -41,7 +41,7 @@ import { PawIcon } from './brand/DogDecor';
 const BRAND_HEADER = 'linear-gradient(135deg, #2A1450 0%, #4C1D95 55%, #6D28D9 100%)';
 const STATIONS = {
   run: { n: 1, emoji: '🏃', title: 'ตั๋ววิ่ง', titleEn: 'Run ticket', hint: 'เลือก 1 ระยะ (ไม่วิ่งก็ข้ามได้)', hintEn: 'Pick 1 distance (skip it if you are not running)', grad: BRAND_HEADER },
-  concert: { n: 2, emoji: '🎶', title: 'ตั๋วคอนเสิร์ต', titleEn: 'Concert ticket', hint: 'ริมหาด Door Open 17.30 น. · เริ่ม 18.00 น. · GA หรือ VIP TABLE · ซื้อแยกได้', hintEn: 'On the beach · doors 17:30 · show 18:00 · GA or VIP table · can be bought separately', grad: BRAND_HEADER },
+  concert: { n: 2, emoji: '🎶', title: 'ตั๋วคอนเสิร์ต', titleEn: 'Concert ticket', hint: 'ริมหาด Door Open 17.30 น. · เริ่ม 18.00 น. · GA หรือ VIP TABLE · ซื้อแยกได้', hintEn: 'On the beach: Doors open 17:30 · Show starts 18:00 · GA or VIP table · can be bought separately', grad: BRAND_HEADER },
   addon: { n: 3, emoji: '🎢', title: 'กิจกรรมเสริม (เฉพาะบุคคล)', titleEn: 'Activities (individuals only)', hint: 'วันอาทิตย์ที่ 10 ม.ค. 2570 · ยิงปืน 09.00–11.00 · หอสูง 10.00–12.00 · อุโมงค์ลม 13.00–15.00 น.', hintEn: 'Sunday 10 Jan 2027 · shooting 09:00–11:00 · high tower 10:00–12:00 · wind tunnel 13:00–15:00', grad: BRAND_HEADER },
 } as const;
 type StationKey = keyof typeof STATIONS;
