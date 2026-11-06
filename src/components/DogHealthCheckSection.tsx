@@ -29,13 +29,13 @@ export const DogHealthCheckSection: React.FC = () => (
           transition={{ type: 'spring', stiffness: 140, damping: 16 }}
         >
           <div className="relative">
-            <div className="rounded-[24px] bg-white border-[3px] border-[var(--ink)] shadow-[5px_6px_0_var(--ink)] p-2.5 -rotate-1">
+            <div className="relative">
               <img
-                src="/images/contest/healthy-check.webp"
-                alt="สัตวแพทย์ใช้หูฟังตรวจหัวใจน้องชิบะที่เจ้าของสวมหมวกกอดไว้อย่างอารมณ์ดี มีทีมงานชุดม่วงทองยืนดูอยู่"
+                src="/images/contest/healthcheck-2027.webp"
+                alt="สัตวแพทย์ใช้หูฟังตรวจหัวใจน้องชิบะบนโต๊ะตรวจ เจ้าของกอดให้อุ่นใจ ผู้ช่วยตรวจฟันน้องโกลเด้น และน้องบีเกิ้ลยืนชั่งน้ำหนักข้างแบบตรวจสุขภาพ"
                 loading="lazy"
                 decoding="async"
-                className="block w-full h-auto rounded-[14px]"
+                className="block w-full h-auto drop-shadow-[0_10px_14px_rgba(42,20,80,0.28)]"
               />
             </div>
             <motion.span
