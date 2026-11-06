@@ -39,7 +39,7 @@ export const ConcertSection: React.FC = () => {
   return (
   <section id="concert" aria-labelledby="concert-heading" className="py-10 sm:py-14 scroll-mt-20">
     <div className="max-w-[1100px] mx-auto px-4 sm:px-6">
-      <div className="rounded-[32px] border-[3px] border-[#2A1450] shadow-[0_10px_0_#2A1450] bg-gradient-to-br from-[#241047] via-[#341866] to-[#4A1F8F] text-white overflow-hidden">
+      <div className="ds-frame-dark bg-gradient-to-br from-[#21113F] via-[#341866] to-[#4A1F8F] text-white overflow-hidden">
         <div
           aria-hidden="true"
           className="h-3 w-full"

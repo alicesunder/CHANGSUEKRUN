@@ -24,7 +24,7 @@ export const WinnersSection: React.FC = () => {
   return (
     <section id="winners" aria-labelledby="winners-heading" className="py-10 sm:py-14 scroll-mt-20">
       <div className="max-w-[1100px] mx-auto px-4 sm:px-6">
-        <div className="rounded-[32px] border-[3px] border-[#2A1450] shadow-[0_10px_0_#2A1450] bg-gradient-to-b from-[#FFF4D2] via-[#FFFBEB] to-white overflow-hidden">
+        <div className="ds-card overflow-hidden bg-gradient-to-b from-[#FFFCF7] via-white to-white">
           <div
             aria-hidden="true"
             className="h-3 w-full"
@@ -56,7 +56,7 @@ export const WinnersSection: React.FC = () => {
                     whileInView={{ opacity: 1, y: 0, scale: 1 }}
                     viewport={{ once: true }}
                     transition={{ delay: i * 0.06, type: 'spring', stiffness: 150, damping: 16 }}
-                    className="rounded-3xl bg-white border-[3px] border-[#2A1450] shadow-[0_6px_0_#2A1450] overflow-hidden"
+                    className="ds-card overflow-hidden"
                   >
                     {w.photo ? (
                       <img src={w.photo} alt={`ผู้ชนะ ${w.name}`} loading="lazy" className="block w-full aspect-[4/3] object-cover" />

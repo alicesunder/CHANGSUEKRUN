@@ -180,7 +180,7 @@ const StationCard: React.FC<{ id: string; k: StationKey; done: boolean; children
     <section
       id={id}
       aria-labelledby={`${id}-title`}
-      className="relative scroll-mt-24 rounded-[30px] bg-white border-[3px] border-[var(--ink)] shadow-[6px_7px_0_var(--ink)]"
+      className="relative scroll-mt-24 ds-card"
     >
       <header className="relative overflow-hidden flex items-center gap-3 px-4 sm:px-5 py-3 rounded-t-[27px] text-white" style={{ background: s.grad }}>
         <span aria-hidden="true" className="pointer-events-none absolute -top-10 -right-6 w-36 h-36 rounded-full bg-white/25 blur-2xl" />
@@ -643,7 +643,7 @@ export const TicketShop: React.FC<TicketShopProps> = ({
               <span id="concert-pass" className="block h-0 scroll-mt-28" aria-hidden="true" />
               <div className="relative">
               <DiscountCelebration active={concertDeal} burstKey={`concert-${concertQty > 0}`} kicker="วิ่ง + คอนเสิร์ต 🎶🏃" headline={`ลดทันที ${percentOf(CONCERT_BUNDLE_RATE)}%!!!`} discount={concertOff} pieces={60} />
-              <div className="relative overflow-hidden rounded-[24px] border-[3px] border-[var(--ink)] bg-gradient-to-br from-[#241047] via-[#341866] to-[#4A1F8F] text-white p-4 sm:p-5">
+              <div className="relative overflow-hidden ds-frame-dark bg-gradient-to-br from-[#241047] via-[#341866] to-[#4A1F8F] text-white p-4 sm:p-5">
                 <span aria-hidden="true" className="pointer-events-none absolute -top-14 -left-10 w-48 h-48 rounded-full bg-[#FFC928]/30 blur-3xl" />
                 <span aria-hidden="true" className="pointer-events-none absolute -bottom-16 -right-10 w-56 h-56 rounded-full bg-[#EC4899]/35 blur-3xl" />
                 <div className="relative flex flex-col sm:flex-row sm:items-center gap-4">
@@ -678,7 +678,7 @@ export const TicketShop: React.FC<TicketShopProps> = ({
               </div>
 
               {/* VIP table */}
-              <div className="relative mt-3 overflow-hidden rounded-[24px] border-[3px] border-[var(--ink)] bg-gradient-to-br from-[#1A0B33] via-[#2A1450] to-[#5B2A0E] text-white p-4 sm:p-5">
+              <div className="relative mt-3 overflow-hidden ds-frame-dark bg-gradient-to-br from-[#1A0B33] via-[#2A1450] to-[#5B2A0E] text-white p-4 sm:p-5">
                 <span aria-hidden="true" className="pointer-events-none absolute -top-14 -right-10 w-48 h-48 rounded-full bg-[#FFC928]/25 blur-3xl" />
                 <div className="relative flex flex-col sm:flex-row sm:items-start gap-4">
                   <div className="flex items-start gap-3 min-w-0 flex-1">
@@ -789,7 +789,7 @@ export const TicketShop: React.FC<TicketShopProps> = ({
 
           {/* ---------- Basket: side card on desktop, sticky bar on phones ---------- */}
           <aside className="hidden lg:block lg:col-span-4 lg:sticky lg:top-24" aria-label="ตะกร้า">
-            <div className="rounded-[30px] bg-white border-[3px] border-[var(--ink)] shadow-[6px_7px_0_var(--ink)] overflow-hidden">
+            <div className="ds-card overflow-hidden">
               <div className="relative overflow-hidden px-5 py-4 text-white flex items-center gap-2.5" style={{ background: 'linear-gradient(135deg, #2A1450 0%, #6D28D9 60%, #EC4899 100%)' }}>
                 <span aria-hidden="true" className="pointer-events-none absolute -top-10 -right-8 w-32 h-32 rounded-full bg-white/20 blur-2xl" />
                 <ShoppingBasket className="relative w-6 h-6 text-[#FFC928]" aria-hidden="true" />
@@ -874,7 +874,7 @@ export const TicketShop: React.FC<TicketShopProps> = ({
             transition={{ type: 'spring', stiffness: 420, damping: 26 }}
             className="lg:hidden sticky bottom-[76px] z-30"
           >
-            <div className="rounded-[24px] bg-white border-[3px] border-[var(--ink)] shadow-[4px_5px_0_var(--ink)] px-3.5 py-2.5 flex items-center gap-3">
+            <div className="ds-card px-3.5 py-2.5 flex items-center gap-3">
               <span className="w-10 h-10 shrink-0 rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #6D28D9, #EC4899)' }}>
                 <ShoppingBasket className="w-5 h-5 text-[#FFC928]" aria-hidden="true" />
               </span>

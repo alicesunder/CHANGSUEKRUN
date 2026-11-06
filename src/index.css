@@ -478,10 +478,11 @@ html.dark .leaflet-tile-pane {
   background-size: 90px 90px;
 }
 
+/* Section cards now use the Design System "soft card" (see the DESIGN SYSTEM block at the end of this file). */
 .sticker {
-  border: 3px solid var(--ink);
-  box-shadow: 5px 6px 0 var(--ink);
-  border-radius: 28px;
+  border: 1px solid var(--ds-line);
+  box-shadow: var(--ds-shadow-card);
+  border-radius: var(--ds-radius-frame);
   background: #fff;
 }
 
@@ -1135,3 +1136,74 @@ main button:active:not(:disabled), .btn-paw:active { scale: .96; }
 .rbib-perk-ic svg { width: 100%; height: 100%; display: block; }
 .rbib-perk-size { min-width: 5cqw; height: 4.2cqw; padding: 0 .8cqw; border-radius: 1cqw; border: .3cqw solid #3B1883; display: flex; align-items: center; justify-content: center; font: 900 2.2cqw 'Plus Jakarta Sans', sans-serif; color: #3B1883; }
 .rbib-perk small { font: 700 1.2cqw 'Mitr', 'Prompt', sans-serif; color: #2A1450; white-space: nowrap; }
+
+
+/* ====================================================================================
+   DESIGN SYSTEM v1 — "Royal Purple Tropical Dusk"
+   One set of tokens + a few shared classes. New work should use these instead of
+   hard-coded colours, shadows and radii.
+   ==================================================================================== */
+:root {
+  /* colour */
+  --ds-midnight: #21113F;      /* darkest sections, concert stage */
+  --ds-deep: #2A1450;          /* ink: text on light, dark sections, outlines */
+  --ds-royal: #4B1FA8;
+  --ds-accent: #7C3AED;
+  --ds-gold: #FFC928;          /* primary buttons, highlights */
+  --ds-gold-soft: #FFE268;
+  --ds-sunset: #FF8A3D;        /* small accents only */
+  --ds-lavender: #EDE7F6;      /* light section background */
+  --ds-line: #D9C9EF;          /* card borders on light backgrounds */
+  --ds-warm: #FFFCF7;          /* warm white section background */
+  --ds-text: #281A3B;
+  --ds-muted: #766A85;
+  /* shape */
+  --ds-radius-card: 20px;
+  --ds-radius-frame: 28px;
+  --ds-shadow-card: 0 8px 28px rgba(42, 20, 80, 0.10);
+  --ds-shadow-card-hover: 0 14px 36px rgba(42, 20, 80, 0.16);
+  --ds-shadow-frame: 0 24px 60px -22px rgba(33, 17, 63, 0.55);
+}
+
+@theme {
+  --color-ds-midnight: #21113F;
+  --color-ds-deep: #2A1450;
+  --color-ds-royal: #4B1FA8;
+  --color-ds-accent: #7C3AED;
+  --color-ds-gold: #FFC928;
+  --color-ds-gold-soft: #FFE268;
+  --color-ds-sunset: #FF8A3D;
+  --color-ds-lavender: #EDE7F6;
+  --color-ds-line: #D9C9EF;
+  --color-ds-warm: #FFFCF7;
+}
+
+/* soft card on light backgrounds */
+.ds-card {
+  background: #fff;
+  border: 1px solid var(--ds-line);
+  border-radius: var(--ds-radius-card);
+  box-shadow: var(--ds-shadow-card);
+}
+.ds-card-hover { transition: transform .2s ease, box-shadow .2s ease; }
+.ds-card-hover:hover { transform: translateY(-3px); box-shadow: var(--ds-shadow-card-hover); }
+
+/* frame of a dark section / panel (race pack, concert, dark info panels): gold hairline + deep shadow */
+.ds-frame-dark {
+  border: 1px solid rgba(255, 201, 40, 0.38);
+  border-radius: var(--ds-radius-frame);
+  box-shadow: var(--ds-shadow-frame);
+}
+
+/* light white tile that sits on a dark frame */
+.ds-tile-on-dark {
+  background: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  border-radius: var(--ds-radius-card);
+  box-shadow: 0 14px 30px -12px rgba(10, 4, 26, 0.55);
+}
+
+/* section backgrounds (alternate dark / light down the page) */
+.ds-bg-lavender { background: linear-gradient(180deg, #F6F1FD 0%, var(--ds-lavender) 100%); }
+.ds-bg-warm { background: var(--ds-warm); }
+.ds-bg-dark { background: linear-gradient(180deg, var(--ds-midnight) 0%, var(--ds-deep) 100%); color: #fff; }

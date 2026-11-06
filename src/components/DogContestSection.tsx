@@ -133,7 +133,7 @@ export const DogContestSection: React.FC = () => {
     <section id="dog-contest" aria-labelledby="dog-contest-heading" className="mt-10 sm:mt-14 scroll-mt-24">
       {/* old link target for the costume contest */}
       <span id="costume-contest" className="block -translate-y-24" aria-hidden="true" />
-      <div className="relative sticker overflow-hidden bg-gradient-to-br from-[#FFF4D2] via-[#FFF0F7] to-[#F1EBFF]">
+      <div className="relative sticker overflow-hidden bg-gradient-to-br from-[#FFFCF7] via-[#F6F1FD] to-[#EDE7F6]">
         <div className="text-center px-4 pt-5 sm:pt-7">
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white border-2 border-[var(--ink)] text-xs font-extrabold text-[#BE185D]">
             🐶 ประกวดน้องหมา 3 รายการ · วันเสาร์ที่ 9 ม.ค. 2570

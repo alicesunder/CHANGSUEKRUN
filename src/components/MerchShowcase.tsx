@@ -131,7 +131,7 @@ export const MerchShowcase: React.FC<MerchShowcaseProps> = ({ onOpenRegister, cl
   const renderTile = (item: KitItem, n: number, row: boolean) => (
     <li
       key={item.id}
-      className={`group relative flex flex-col overflow-hidden rounded-[24px] bg-white border-[3px] border-[#140826] shadow-[0_6px_0_#140826] transition-transform duration-300 hover:-translate-y-1 ${
+      className={`group relative flex flex-col overflow-hidden ds-tile-on-dark transition-transform duration-300 hover:-translate-y-1 ${
         item.wide ? 'col-span-2' : ''
       } ${row ? 'lg:flex-row lg:items-center' : ''}`}
     >
@@ -202,7 +202,7 @@ export const MerchShowcase: React.FC<MerchShowcaseProps> = ({ onOpenRegister, cl
     <section
       id="race-kit"
       aria-labelledby="race-kit-heading"
-      className={`relative overflow-hidden rounded-[32px] border-[3px] border-[#2A1450] shadow-[0_10px_0_#2A1450] bg-gradient-to-br from-[#241047] via-[#341866] to-[#4A1F8F] text-white ${className}`}
+      className={`relative overflow-hidden ds-frame-dark bg-gradient-to-br from-[#21113F] via-[#341866] to-[#4A1F8F] text-white ${className}`}
     >
       {/* race-tape edge + soft spotlight */}
       <div

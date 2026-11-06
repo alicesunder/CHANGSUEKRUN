@@ -371,7 +371,7 @@ export default function App() {
         >
           <details className="group">
             <summary className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8 py-5 cursor-pointer list-none [&::-webkit-details-marker]:hidden">
-              <span className="jelly flex items-center justify-between gap-3 min-h-[60px] rounded-[22px] bg-white border-[3px] border-[#2A1450] shadow-[0_5px_0_#2A1450] px-4 sm:px-5 py-2.5">
+              <span className="jelly ds-card flex items-center justify-between gap-3 min-h-[60px] px-4 sm:px-5 py-2.5">
                 <span className="flex items-center gap-3 text-base font-extrabold text-[#2A1450]">
                   <span className="animate-bounce-gentle inline-block text-2xl" aria-hidden="true">🌤️</span>
                   <span>

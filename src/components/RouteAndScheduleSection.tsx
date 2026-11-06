@@ -299,7 +299,7 @@ export const RouteAndScheduleSection: React.FC<RouteAndScheduleProps> = ({
           {/* -------------------------------------------------------------- */}
           <div
             id="schedule"
-            className="lg:col-span-5 bg-white rounded-[32px] border-[3px] border-[#2A1450] shadow-[0_20px_42px_-16px_rgba(42,20,80,0.32),0_7px_0_#2A1450] flex flex-col justify-between overflow-hidden relative"
+            className="lg:col-span-5 ds-card flex flex-col justify-between overflow-hidden relative"
           >
             {/* Top Colorful Accent Bar */}
             <div className="h-2 w-full bg-gradient-to-r from-[#5B20A8] via-[#FFC928] to-[#DB2777]" />
@@ -437,7 +437,7 @@ export const RouteAndScheduleSection: React.FC<RouteAndScheduleProps> = ({
           {/* RIGHT CARD: เส้นทางวิ่ง (GPS Survey)                            */}
           {/* -------------------------------------------------------------- */}
           <div className="lg:col-span-7 flex flex-col gap-6">
-          <div className="bg-white rounded-[32px] border-[3px] border-[#2A1450] shadow-[0_20px_42px_-16px_rgba(42,20,80,0.32),0_7px_0_#2A1450] flex flex-col justify-between overflow-hidden relative">
+          <div className="ds-card flex flex-col justify-between overflow-hidden relative">
             {/* Top Colorful Accent Bar */}
             <div className="h-2 w-full bg-gradient-to-r from-[#0284C7] via-[#16A34A] to-[#FFC928]" />
 

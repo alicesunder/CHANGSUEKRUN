@@ -18,7 +18,7 @@ const STEPS = [
 /** Free vet check by Thonglor Pet Hospital for the Dog Run (1K / 4K) runners, 09.00–14.00 on run day. */
 export const DogHealthCheckSection: React.FC = () => (
   <section id="dog-health-check" aria-labelledby="dog-health-heading" className="mt-10 sm:mt-14 scroll-mt-24">
-    <div className="relative sticker overflow-hidden bg-gradient-to-br from-[#E8FFF3] via-white to-[#EAF6FF]">
+    <div className="relative sticker overflow-hidden bg-gradient-to-br from-[#FFFCF7] via-white to-[#F6F1FD]">
       <div className="relative grid grid-cols-1 md:grid-cols-12 gap-5 md:gap-7 p-4 sm:p-6 items-start">
         {/* left: picture + the hospital, big */}
         <motion.div
@@ -49,7 +49,7 @@ export const DogHealthCheckSection: React.FC = () => (
           </div>
 
           {/* hospital: a proper card with a large logo */}
-          <div className="rounded-[22px] bg-white border-[3px] border-[var(--ink)] shadow-[0_5px_0_var(--ink)] p-3 sm:p-4 flex items-center gap-3 sm:gap-4">
+          <div className="ds-card p-3 sm:p-4 flex items-center gap-3 sm:gap-4">
             <img
               src="/images/sponsors/thonglor-pet-hospital.webp"
               alt="Thonglor Pet Hospital รพ.สัตว์ทองหล่อ"
