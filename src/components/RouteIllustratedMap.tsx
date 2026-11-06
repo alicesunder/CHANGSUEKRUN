@@ -132,13 +132,16 @@ const CAMP: MapDef = {
     },
     {
       id: 'camp',
-      pin: [900, 840],
+      // the Border Patrol Police school, marked by the organiser with a red circle on the map (Nov 2026):
+      // just below the small pond, beside the bottom of the 4 km loop
+      pin: [645, 1378],
       label: 'ค่ายนเรศวร',
       sub: 'กองบัญชาการ ตชด.',
-      labelAt: [900, 925],
-      anchor: 'middle',
+      labelAt: [690, 1308],
+      anchor: 'start',
+      fs: 40,
       color: '#7C3AED',
-      sticker: { id: 'camp', src: '/images/map/sticker-bpp-school.webp', x: 1010, y: 650, w: 240, h: 243, rotate: -4 },
+      sticker: { id: 'camp', src: '/images/map/sticker-bpp-school.webp', x: 560, y: 930, w: 240, h: 243, rotate: -4 },
     },
     {
       id: 'statue',
