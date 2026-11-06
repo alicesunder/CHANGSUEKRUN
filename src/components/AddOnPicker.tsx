@@ -2,6 +2,8 @@ import React from 'react';
 import { Check, Crosshair, ExternalLink, MapPin, Plus, Sparkles, Star, TowerControl, Wind } from 'lucide-react';
 import { ACTIVITY_LOCATIONS, type ActivityLocation } from '../data/activityLocations';
 import { showActivitySticker } from './ActivitySticker';
+import { motion } from 'motion/react';
+import { SelectBurst } from './SelectBurst';
 import {
   AddOnSelection,
   DiscountContext,
@@ -79,9 +81,10 @@ const Card: React.FC<{
         borderColor: active ? t.borderActive : t.border,
         boxShadow: active ? `0 14px 28px -14px ${t.glow}, 0 0 0 3px ${t.ring}` : '0 8px 28px rgba(42,20,80,0.10)',
       }}
-      className={`relative flex h-full flex-col overflow-hidden rounded-[20px] border transition-all duration-300 ${active ? '-translate-y-0.5' : ''} ${disabled ? 'opacity-60 grayscale' : ''}`}
+      className={`relative flex h-full flex-col rounded-[20px] border transition-all duration-300 ${active ? '-translate-y-0.5' : ''} ${disabled ? 'opacity-60 grayscale' : ''}`}
     >
-      <span aria-hidden="true" className="block h-1.5 shrink-0 bg-gradient-to-r from-[#4B1FA8] via-[#7C3AED] to-[#FFC928]" />
+      <SelectBurst active={active} count={16} className="left-1/2 top-1/2" spread={0.8} />
+      <span aria-hidden="true" className="block h-1.5 shrink-0 rounded-t-[19px] bg-gradient-to-r from-[#4B1FA8] via-[#7C3AED] to-[#FFC928]" />
       {active && (
         <span className="absolute top-3.5 right-3 z-10 inline-flex items-center gap-1 rounded-full bg-white px-2.5 py-1 text-[11px] font-black shadow-md" style={{ color: t.ink }}>
           <Check className="w-3.5 h-3.5 stroke-[3.5]" aria-hidden="true" /> {tr('เลือกแล้ว', 'Selected')}
@@ -89,9 +92,13 @@ const Card: React.FC<{
       )}
       <div className="flex-1 p-3.5 flex flex-col gap-2.5">
         <div className={`flex items-center gap-3 ${active ? "pr-20" : ""}`}>
-          <span className="shrink-0 w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-b from-[#F1EAFD] to-[#FFF4D1] flex items-center justify-center p-1.5">
+          <motion.span
+            animate={active ? { y: [0, -14, 0], rotate: [0, -10, 8, 0], scale: [1, 1.25, 1] } : { y: 0, rotate: 0, scale: 1 }}
+            transition={{ duration: 0.7, type: 'spring', stiffness: 260, damping: 11 }}
+            className="shrink-0 w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-b from-[#F1EAFD] to-[#FFF4D1] flex items-center justify-center p-1.5"
+          >
             {icon}
-          </span>
+          </motion.span>
           <div className="min-w-0">
             <h4 className="text-xl leading-tight font-black" style={{ color: t.ink }}>
               {title}

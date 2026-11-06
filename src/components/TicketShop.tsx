@@ -31,6 +31,7 @@ import {
 } from '../data/addOns';
 import { getPublicConfig } from '../utils/api';
 import { AddOnPicker } from './AddOnPicker';
+import { SelectBurst } from './SelectBurst';
 import { DealStrip, DiscountCelebration } from './PerkCelebration';
 import { LABRADOR_SVG_PATH } from './brand/LabradorMascot';
 import { PawIcon } from './brand/DogDecor';
@@ -226,7 +227,7 @@ const RunTicket: React.FC<{ id: RouteId; on: boolean; onPick: () => void }> = ({
       animate={on ? { y: -6, rotate: -0.6 } : { y: 0, rotate: 0 }}
       transition={{ type: 'spring', stiffness: 380, damping: 20 }}
       id={`run-ticket-${id}`}
-      className="group relative flex flex-col ds-card overflow-hidden shrink-0 w-[88%] snap-start sm:w-auto transition-colors duration-300"
+      className="group relative flex flex-col ds-card shrink-0 w-[88%] snap-start sm:w-auto transition-colors duration-300"
       style={
         on
           ? { background: 'linear-gradient(165deg, #2A1450 0%, #4B1FA8 60%, #6D28D9 100%)', borderColor: '#FFC928', boxShadow: '0 0 0 3px rgba(255,201,40,0.55), 0 22px 44px -14px rgba(75,31,168,0.65)' }
@@ -239,9 +240,9 @@ const RunTicket: React.FC<{ id: RouteId; on: boolean; onPick: () => void }> = ({
           {t.badge}
         </span>
       )}
-      <span aria-hidden="true" className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-[#4B1FA8] via-[#7C3AED] to-[#FFC928]" />
+      <span aria-hidden="true" className="absolute inset-x-0 top-0 h-1.5 rounded-t-[19px] bg-gradient-to-r from-[#4B1FA8] via-[#7C3AED] to-[#FFC928]" />
 
-      <div className={`px-4 pt-10 pb-3 text-center ${on ? 'bg-white/5' : 'bg-gradient-to-b from-[#EFE6FC] via-[#F8F4FE] to-white'}`}>
+      <div className={`rounded-t-[19px] px-4 pt-10 pb-3 text-center ${on ? 'bg-white/5' : 'bg-gradient-to-b from-[#EFE6FC] via-[#F8F4FE] to-white'}`}>
         <span className={`inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 shadow-sm ${on ? 'bg-[#FFC928] text-[#2A1450]' : 'bg-gradient-to-r from-[#4B1FA8] to-[#7C3AED] text-white'}`}>
           {isDog ? <PawIcon size={14} color={on ? '#2A1450' : '#FFC928'} /> : <Zap className={`w-3.5 h-3.5 ${on ? 'fill-[#2A1450] text-[#2A1450]' : 'fill-[#FFC928] text-[#FFC928]'}`} />}
           <span className="font-display text-2xl font-black leading-none">{t.distanceLabel}</span>
@@ -260,7 +261,14 @@ const RunTicket: React.FC<{ id: RouteId; on: boolean; onPick: () => void }> = ({
         <div className={`grid grid-cols-2 divide-x rounded-xl py-2.5 ${on ? 'divide-white/15 bg-white/10' : 'divide-[#EDE7F6] bg-gradient-to-b from-[#F6F1FD] to-[#FFF8E1]'}`}>
           {perks(isDog).slice(0, 2).map(({ title }, i) => (
             <div key={title} className="flex flex-col items-center gap-1 px-1.5 text-center">
-              <img src={i === 0 ? '/images/shop/shirt.webp' : '/images/shop/medal.webp'} alt="" loading="lazy" className="h-12 w-12 object-contain drop-shadow-[0_4px_6px_rgba(42,20,80,0.25)]" />
+              <motion.img
+                src={i === 0 ? '/images/shop/shirt.webp' : '/images/shop/medal.webp'}
+                alt=""
+                loading="lazy"
+                animate={on ? { y: [0, -16, 0], rotate: [0, i ? 14 : -14, 0], scale: [1, 1.35, 1.12] } : { y: 0, rotate: 0, scale: 1 }}
+                transition={{ duration: 0.7, delay: 0.12 + i * 0.1, type: 'spring', stiffness: 260, damping: 11 }}
+                className="h-12 w-12 object-contain drop-shadow-[0_4px_6px_rgba(42,20,80,0.25)]"
+              />
               <span className={`text-[11px] font-extrabold leading-tight ${on ? 'text-white' : 'text-[#281A3B]'}`}>{title}</span>
             </div>
           ))}
@@ -301,13 +309,17 @@ const RunTicket: React.FC<{ id: RouteId; on: boolean; onPick: () => void }> = ({
           role="radio"
           aria-checked={on}
           onClick={onPick}
-          whileTap={{ scale: 0.97 }}
+          whileTap={{ scale: 0.95 }}
+          animate={on ? { scale: [1, 1.1, 0.97, 1] } : { scale: 1 }}
+          transition={{ duration: 0.5 }}
           className={`w-full min-h-[48px] rounded-full px-4 flex items-center justify-center gap-2 font-extrabold text-sm cursor-pointer ${on ? 'bg-white text-[#2A1450] shadow-[0_6px_14px_-6px_rgba(0,0,0,0.5)]' : 'bg-gradient-to-b from-[#FFD84D] to-[#FFB300] text-[#261247] shadow-[0_6px_14px_-6px_rgba(255,179,0,0.7)]'}`}
         >
           {on ? <Check className="w-4 h-4 stroke-[3]" /> : <Ticket className="w-4 h-4" />}
           <span>{on ? `${tr('เลือกแล้ว', 'Selected')} · ${t.distanceLabel}` : `${tr('เลือกบัตร', 'Pick')} ${t.distanceLabel}`}</span>
         </motion.button>
       </div>
+
+      <SelectBurst active={on} className="left-1/2 bottom-14" />
 
       <AnimatePresence>
         {on && (
