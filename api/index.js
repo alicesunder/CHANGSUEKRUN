@@ -32762,6 +32762,115 @@ function parseDogProfile(raw, thisYear = (/* @__PURE__ */ new Date()).getFullYea
   return { ok: true, value };
 }
 
+// src/data/shootingRules.ts
+var SHOOTING_RULES_VERSION = "2026-11-04";
+
+// src/data/shooting.ts
+function isValidThaiId(id) {
+  if (!/^\d{13}$/.test(id)) return false;
+  let sum = 0;
+  for (let i = 0; i < 12; i++) sum += Number(id[i]) * (13 - i);
+  return (11 - sum % 11) % 10 === Number(id[12]);
+}
+var digitsOnly = (v) => typeof v === "string" ? v.replace(/\D/g, "") : "";
+function maskThaiId(id) {
+  const d = digitsOnly(id);
+  return d.length === 13 ? `x-xxxx-xxxxx-${d.slice(10, 12)}-${d[12]}` : "";
+}
+var clip2 = (v, n) => typeof v === "string" ? v.replace(/[\u0000-\u001f<>]/g, " ").trim().slice(0, n) : "";
+function parseShooting(raw, people, acknowledged) {
+  const list = Array.isArray(raw) ? raw.slice(0, people) : [];
+  const errors2 = [];
+  const shooters = [];
+  for (let i = 0; i < people; i++) {
+    const r = list[i] && typeof list[i] === "object" ? list[i] : {};
+    const fullName = clip2(r.fullName, 120);
+    if (fullName.length < 3) errors2.push(`\u0E01\u0E23\u0E38\u0E13\u0E32\u0E01\u0E23\u0E2D\u0E01\u0E0A\u0E37\u0E48\u0E2D-\u0E19\u0E32\u0E21\u0E2A\u0E01\u0E38\u0E25\u0E1C\u0E39\u0E49\u0E22\u0E34\u0E07\u0E1B\u0E37\u0E19\u0E04\u0E19\u0E17\u0E35\u0E48 ${i + 1}`);
+    shooters.push({ fullName });
+  }
+  if (!acknowledged) errors2.push("\u0E01\u0E23\u0E38\u0E13\u0E32\u0E2D\u0E48\u0E32\u0E19\u0E01\u0E0E\u0E04\u0E27\u0E32\u0E21\u0E1B\u0E25\u0E2D\u0E14\u0E20\u0E31\u0E22\u0E41\u0E25\u0E30\u0E01\u0E14\u0E23\u0E31\u0E1A\u0E17\u0E23\u0E32\u0E1A/\u0E22\u0E2D\u0E21\u0E23\u0E31\u0E1A\u0E01\u0E34\u0E08\u0E01\u0E23\u0E23\u0E21\u0E22\u0E34\u0E07\u0E1B\u0E37\u0E19");
+  if (errors2.length) return { ok: false, error: errors2.join(" \xB7 ") };
+  return { ok: true, value: { shooters, consentAt: (/* @__PURE__ */ new Date()).toISOString(), consentVersion: SHOOTING_RULES_VERSION } };
+}
+
+// src/data/insurance.ts
+var INSURANCE_ROUTES = ["1km", "3km", "5km", "10km"];
+var needsInsurance = (routeId) => INSURANCE_ROUTES.includes(routeId);
+var PREFIXES = ["\u0E19\u0E32\u0E22", "\u0E19\u0E32\u0E07", "\u0E19\u0E32\u0E07\u0E2A\u0E32\u0E27", "\u0E40\u0E14\u0E47\u0E01\u0E0A\u0E32\u0E22", "\u0E40\u0E14\u0E47\u0E01\u0E2B\u0E0D\u0E34\u0E07", "\u0E2D\u0E37\u0E48\u0E19\u0E46"];
+var GENDERS = ["\u0E0A\u0E32\u0E22", "\u0E2B\u0E0D\u0E34\u0E07", "\u0E44\u0E21\u0E48\u0E23\u0E30\u0E1A\u0E38"];
+var BLOOD_TYPES = ["A", "B", "AB", "O", "\u0E44\u0E21\u0E48\u0E17\u0E23\u0E32\u0E1A"];
+var RELATIONSHIPS = ["\u0E1A\u0E34\u0E14\u0E32", "\u0E21\u0E32\u0E23\u0E14\u0E32", "\u0E04\u0E39\u0E48\u0E2A\u0E21\u0E23\u0E2A", "\u0E1A\u0E38\u0E15\u0E23", "\u0E1E\u0E35\u0E48/\u0E19\u0E49\u0E2D\u0E07", "\u0E0D\u0E32\u0E15\u0E34", "\u0E40\u0E1E\u0E37\u0E48\u0E2D\u0E19", "\u0E2D\u0E37\u0E48\u0E19\u0E46"];
+function ageFromBirthDate(birthDate, today = /* @__PURE__ */ new Date()) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(birthDate);
+  if (!m) return null;
+  const y = Number(m[1]);
+  const mo = Number(m[2]);
+  const d = Number(m[3]);
+  const dt = new Date(Date.UTC(y, mo - 1, d));
+  if (dt.getUTCFullYear() !== y || dt.getUTCMonth() !== mo - 1 || dt.getUTCDate() !== d) return null;
+  let age = today.getFullYear() - y;
+  if (today.getMonth() + 1 < mo || today.getMonth() + 1 === mo && today.getDate() < d) age -= 1;
+  return age;
+}
+var clip3 = (v, n) => typeof v === "string" ? v.replace(/[\u0000-\u001f<>]/g, " ").trim().slice(0, n) : "";
+var oneOf2 = (v, list) => typeof v === "string" && list.includes(v) ? v : "";
+function parseInsurance(raw, consent) {
+  const r = raw && typeof raw === "object" ? raw : {};
+  const prefix = oneOf2(r.prefix, PREFIXES);
+  const firstName = clip3(r.firstName, 60);
+  const lastName = clip3(r.lastName, 60);
+  const idCard = digitsOnly(r.idCard).slice(0, 13);
+  const gender = oneOf2(r.gender, GENDERS);
+  const birthDate = typeof r.birthDate === "string" ? r.birthDate : "";
+  const age = ageFromBirthDate(birthDate);
+  const bloodType = oneOf2(r.bloodType, BLOOD_TYPES);
+  const medicalConditions = clip3(r.medicalConditions, 200) || "\u0E44\u0E21\u0E48\u0E21\u0E35";
+  const emergencyName = clip3(r.emergencyName, 80);
+  const relationship = oneOf2(r.relationship, RELATIONSHIPS);
+  const errors2 = [];
+  if (!prefix) errors2.push("\u0E01\u0E23\u0E38\u0E13\u0E32\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E04\u0E33\u0E19\u0E33\u0E2B\u0E19\u0E49\u0E32");
+  if (firstName.length < 1) errors2.push("\u0E01\u0E23\u0E38\u0E13\u0E32\u0E01\u0E23\u0E2D\u0E01\u0E0A\u0E37\u0E48\u0E2D");
+  if (lastName.length < 1) errors2.push("\u0E01\u0E23\u0E38\u0E13\u0E32\u0E01\u0E23\u0E2D\u0E01\u0E19\u0E32\u0E21\u0E2A\u0E01\u0E38\u0E25");
+  if (!isValidThaiId(idCard)) errors2.push("\u0E40\u0E25\u0E02\u0E1A\u0E31\u0E15\u0E23\u0E1B\u0E23\u0E30\u0E0A\u0E32\u0E0A\u0E19\u0E1C\u0E39\u0E49\u0E40\u0E2D\u0E32\u0E1B\u0E23\u0E30\u0E01\u0E31\u0E19\u0E44\u0E21\u0E48\u0E16\u0E39\u0E01\u0E15\u0E49\u0E2D\u0E07 (13 \u0E2B\u0E25\u0E31\u0E01)");
+  if (!gender) errors2.push("\u0E01\u0E23\u0E38\u0E13\u0E32\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E40\u0E1E\u0E28");
+  if (age === null || age < 0 || age > 110) errors2.push("\u0E27\u0E31\u0E19/\u0E40\u0E14\u0E37\u0E2D\u0E19/\u0E1B\u0E35\u0E40\u0E01\u0E34\u0E14 (\u0E04.\u0E28.) \u0E44\u0E21\u0E48\u0E16\u0E39\u0E01\u0E15\u0E49\u0E2D\u0E07");
+  if (!bloodType) errors2.push("\u0E01\u0E23\u0E38\u0E13\u0E32\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E01\u0E23\u0E38\u0E4A\u0E1B\u0E40\u0E25\u0E37\u0E2D\u0E14");
+  if (emergencyName.length < 2) errors2.push("\u0E01\u0E23\u0E38\u0E13\u0E32\u0E01\u0E23\u0E2D\u0E01\u0E0A\u0E37\u0E48\u0E2D\u0E1C\u0E39\u0E49\u0E15\u0E34\u0E14\u0E15\u0E48\u0E2D\u0E09\u0E38\u0E01\u0E40\u0E09\u0E34\u0E19");
+  if (!relationship) errors2.push("\u0E01\u0E23\u0E38\u0E13\u0E32\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E04\u0E27\u0E32\u0E21\u0E2A\u0E31\u0E21\u0E1E\u0E31\u0E19\u0E18\u0E4C\u0E01\u0E31\u0E1A\u0E1C\u0E39\u0E49\u0E15\u0E34\u0E14\u0E15\u0E48\u0E2D\u0E09\u0E38\u0E01\u0E40\u0E09\u0E34\u0E19");
+  if (consent !== true) errors2.push("\u0E01\u0E23\u0E38\u0E13\u0E32\u0E22\u0E34\u0E19\u0E22\u0E2D\u0E21\u0E43\u0E2B\u0E49\u0E2A\u0E48\u0E07\u0E02\u0E49\u0E2D\u0E21\u0E39\u0E25\u0E2A\u0E38\u0E02\u0E20\u0E32\u0E1E/\u0E1B\u0E23\u0E30\u0E01\u0E31\u0E19\u0E43\u0E2B\u0E49\u0E1A\u0E23\u0E34\u0E29\u0E31\u0E17\u0E1B\u0E23\u0E30\u0E01\u0E31\u0E19");
+  if (errors2.length) return { ok: false, error: errors2.join(" \xB7 ") };
+  return {
+    ok: true,
+    value: { prefix, firstName, lastName, idCard, gender, birthDate, age, bloodType, medicalConditions, emergencyName, relationship }
+  };
+}
+
+// src/data/shirts.ts
+var SHIRT_SIZES = ["XS", "S", "M", "L", "XL", "2XL", "3XL", "4XL", "5XL", "6XL", "7XL", "8XL", "9XL", "10XL"];
+var isSize = (v) => typeof v === "string" && SHIRT_SIZES.includes(v);
+var clip4 = (v, n) => typeof v === "string" ? v.replace(/[\u0000-\u001f<>]/g, " ").trim().slice(0, n) : "";
+var extraRunnersText = (list) => list.map((r) => `${r.name} (\u0E44\u0E0B\u0E2A\u0E4C ${r.shirtSize})`).join(", ");
+function parseExtraRunners(raw, count, withInsurance = false) {
+  const list = Array.isArray(raw) ? raw.slice(0, count) : [];
+  const out = [];
+  const errors2 = [];
+  for (let i = 0; i < count; i++) {
+    const r = list[i] && typeof list[i] === "object" ? list[i] : {};
+    let insurance;
+    if (withInsurance) {
+      const p = parseInsurance(r.insurance, true);
+      if (p.ok) insurance = p.value;
+      else errors2.push(`\u0E1C\u0E39\u0E49\u0E23\u0E48\u0E27\u0E21\u0E27\u0E34\u0E48\u0E07\u0E04\u0E19\u0E17\u0E35\u0E48 ${i + 2}: ${p.error}`);
+    }
+    const name2 = insurance ? `${insurance.firstName} ${insurance.lastName}`.slice(0, 80) : clip4(r.name, 80);
+    if (!withInsurance && name2.length < 2) errors2.push(`\u0E01\u0E23\u0E38\u0E13\u0E32\u0E01\u0E23\u0E2D\u0E01\u0E0A\u0E37\u0E48\u0E2D\u0E1C\u0E39\u0E49\u0E23\u0E48\u0E27\u0E21\u0E27\u0E34\u0E48\u0E07\u0E40\u0E1E\u0E34\u0E48\u0E21\u0E04\u0E19\u0E17\u0E35\u0E48 ${i + 1}`);
+    if (!isSize(r.shirtSize)) errors2.push(`\u0E01\u0E23\u0E38\u0E13\u0E32\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E44\u0E0B\u0E2A\u0E4C\u0E40\u0E2A\u0E37\u0E49\u0E2D\u0E1C\u0E39\u0E49\u0E23\u0E48\u0E27\u0E21\u0E27\u0E34\u0E48\u0E07\u0E04\u0E19\u0E17\u0E35\u0E48 ${i + 2}`);
+    out.push({ name: name2, shirtSize: isSize(r.shirtSize) ? r.shirtSize : "M", insurance });
+  }
+  if (errors2.length) return { ok: false, error: errors2.join(" \xB7 ") };
+  return { ok: true, value: out };
+}
+
 // src/data/eventData.ts
 var eventInfo = {
   name: "\u0E40\u0E2B\u0E47\u0E19\u0E0A\u0E49\u0E32\u0E07\u0E27\u0E34\u0E48\u0E07 \u0E27\u0E34\u0E48\u0E07\u0E15\u0E32\u0E21\u0E0A\u0E49\u0E32\u0E07",
@@ -33840,37 +33949,6 @@ async function dbTx(fn) {
   return (await getDriver()).tx(fn);
 }
 
-// src/data/shootingRules.ts
-var SHOOTING_RULES_VERSION = "2026-11-04";
-
-// src/data/shooting.ts
-function isValidThaiId(id) {
-  if (!/^\d{13}$/.test(id)) return false;
-  let sum = 0;
-  for (let i = 0; i < 12; i++) sum += Number(id[i]) * (13 - i);
-  return (11 - sum % 11) % 10 === Number(id[12]);
-}
-var digitsOnly = (v) => typeof v === "string" ? v.replace(/\D/g, "") : "";
-function maskThaiId(id) {
-  const d = digitsOnly(id);
-  return d.length === 13 ? `x-xxxx-xxxxx-${d.slice(10, 12)}-${d[12]}` : "";
-}
-var clip2 = (v, n) => typeof v === "string" ? v.replace(/[\u0000-\u001f<>]/g, " ").trim().slice(0, n) : "";
-function parseShooting(raw, people, acknowledged) {
-  const list = Array.isArray(raw) ? raw.slice(0, people) : [];
-  const errors2 = [];
-  const shooters = [];
-  for (let i = 0; i < people; i++) {
-    const r = list[i] && typeof list[i] === "object" ? list[i] : {};
-    const fullName = clip2(r.fullName, 120);
-    if (fullName.length < 3) errors2.push(`\u0E01\u0E23\u0E38\u0E13\u0E32\u0E01\u0E23\u0E2D\u0E01\u0E0A\u0E37\u0E48\u0E2D-\u0E19\u0E32\u0E21\u0E2A\u0E01\u0E38\u0E25\u0E1C\u0E39\u0E49\u0E22\u0E34\u0E07\u0E1B\u0E37\u0E19\u0E04\u0E19\u0E17\u0E35\u0E48 ${i + 1}`);
-    shooters.push({ fullName });
-  }
-  if (!acknowledged) errors2.push("\u0E01\u0E23\u0E38\u0E13\u0E32\u0E2D\u0E48\u0E32\u0E19\u0E01\u0E0E\u0E04\u0E27\u0E32\u0E21\u0E1B\u0E25\u0E2D\u0E14\u0E20\u0E31\u0E22\u0E41\u0E25\u0E30\u0E01\u0E14\u0E23\u0E31\u0E1A\u0E17\u0E23\u0E32\u0E1A/\u0E22\u0E2D\u0E21\u0E23\u0E31\u0E1A\u0E01\u0E34\u0E08\u0E01\u0E23\u0E23\u0E21\u0E22\u0E34\u0E07\u0E1B\u0E37\u0E19");
-  if (errors2.length) return { ok: false, error: errors2.join(" \xB7 ") };
-  return { ok: true, value: { shooters, consentAt: (/* @__PURE__ */ new Date()).toISOString(), consentVersion: SHOOTING_RULES_VERSION } };
-}
-
 // server/store.ts
 var ROUTES = ["10km", "5km", "3km", "1km"];
 var DEFAULT_SETTINGS = {
@@ -34566,58 +34644,6 @@ function normalizeAddOns(raw) {
   return hasAddOns(sel) ? sel : { ...EMPTY_ADD_ONS };
 }
 
-// src/data/insurance.ts
-var INSURANCE_ROUTES = ["1km", "3km", "5km", "10km"];
-var needsInsurance = (routeId) => INSURANCE_ROUTES.includes(routeId);
-var PREFIXES = ["\u0E19\u0E32\u0E22", "\u0E19\u0E32\u0E07", "\u0E19\u0E32\u0E07\u0E2A\u0E32\u0E27", "\u0E40\u0E14\u0E47\u0E01\u0E0A\u0E32\u0E22", "\u0E40\u0E14\u0E47\u0E01\u0E2B\u0E0D\u0E34\u0E07", "\u0E2D\u0E37\u0E48\u0E19\u0E46"];
-var GENDERS = ["\u0E0A\u0E32\u0E22", "\u0E2B\u0E0D\u0E34\u0E07", "\u0E44\u0E21\u0E48\u0E23\u0E30\u0E1A\u0E38"];
-var BLOOD_TYPES = ["A", "B", "AB", "O", "\u0E44\u0E21\u0E48\u0E17\u0E23\u0E32\u0E1A"];
-var RELATIONSHIPS = ["\u0E1A\u0E34\u0E14\u0E32", "\u0E21\u0E32\u0E23\u0E14\u0E32", "\u0E04\u0E39\u0E48\u0E2A\u0E21\u0E23\u0E2A", "\u0E1A\u0E38\u0E15\u0E23", "\u0E1E\u0E35\u0E48/\u0E19\u0E49\u0E2D\u0E07", "\u0E0D\u0E32\u0E15\u0E34", "\u0E40\u0E1E\u0E37\u0E48\u0E2D\u0E19", "\u0E2D\u0E37\u0E48\u0E19\u0E46"];
-function ageFromBirthDate(birthDate, today = /* @__PURE__ */ new Date()) {
-  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(birthDate);
-  if (!m) return null;
-  const y = Number(m[1]);
-  const mo = Number(m[2]);
-  const d = Number(m[3]);
-  const dt = new Date(Date.UTC(y, mo - 1, d));
-  if (dt.getUTCFullYear() !== y || dt.getUTCMonth() !== mo - 1 || dt.getUTCDate() !== d) return null;
-  let age = today.getFullYear() - y;
-  if (today.getMonth() + 1 < mo || today.getMonth() + 1 === mo && today.getDate() < d) age -= 1;
-  return age;
-}
-var clip3 = (v, n) => typeof v === "string" ? v.replace(/[\u0000-\u001f<>]/g, " ").trim().slice(0, n) : "";
-var oneOf2 = (v, list) => typeof v === "string" && list.includes(v) ? v : "";
-function parseInsurance(raw, consent) {
-  const r = raw && typeof raw === "object" ? raw : {};
-  const prefix = oneOf2(r.prefix, PREFIXES);
-  const firstName = clip3(r.firstName, 60);
-  const lastName = clip3(r.lastName, 60);
-  const idCard = digitsOnly(r.idCard).slice(0, 13);
-  const gender = oneOf2(r.gender, GENDERS);
-  const birthDate = typeof r.birthDate === "string" ? r.birthDate : "";
-  const age = ageFromBirthDate(birthDate);
-  const bloodType = oneOf2(r.bloodType, BLOOD_TYPES);
-  const medicalConditions = clip3(r.medicalConditions, 200) || "\u0E44\u0E21\u0E48\u0E21\u0E35";
-  const emergencyName = clip3(r.emergencyName, 80);
-  const relationship = oneOf2(r.relationship, RELATIONSHIPS);
-  const errors2 = [];
-  if (!prefix) errors2.push("\u0E01\u0E23\u0E38\u0E13\u0E32\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E04\u0E33\u0E19\u0E33\u0E2B\u0E19\u0E49\u0E32");
-  if (firstName.length < 1) errors2.push("\u0E01\u0E23\u0E38\u0E13\u0E32\u0E01\u0E23\u0E2D\u0E01\u0E0A\u0E37\u0E48\u0E2D");
-  if (lastName.length < 1) errors2.push("\u0E01\u0E23\u0E38\u0E13\u0E32\u0E01\u0E23\u0E2D\u0E01\u0E19\u0E32\u0E21\u0E2A\u0E01\u0E38\u0E25");
-  if (!isValidThaiId(idCard)) errors2.push("\u0E40\u0E25\u0E02\u0E1A\u0E31\u0E15\u0E23\u0E1B\u0E23\u0E30\u0E0A\u0E32\u0E0A\u0E19\u0E1C\u0E39\u0E49\u0E40\u0E2D\u0E32\u0E1B\u0E23\u0E30\u0E01\u0E31\u0E19\u0E44\u0E21\u0E48\u0E16\u0E39\u0E01\u0E15\u0E49\u0E2D\u0E07 (13 \u0E2B\u0E25\u0E31\u0E01)");
-  if (!gender) errors2.push("\u0E01\u0E23\u0E38\u0E13\u0E32\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E40\u0E1E\u0E28");
-  if (age === null || age < 0 || age > 110) errors2.push("\u0E27\u0E31\u0E19/\u0E40\u0E14\u0E37\u0E2D\u0E19/\u0E1B\u0E35\u0E40\u0E01\u0E34\u0E14 (\u0E04.\u0E28.) \u0E44\u0E21\u0E48\u0E16\u0E39\u0E01\u0E15\u0E49\u0E2D\u0E07");
-  if (!bloodType) errors2.push("\u0E01\u0E23\u0E38\u0E13\u0E32\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E01\u0E23\u0E38\u0E4A\u0E1B\u0E40\u0E25\u0E37\u0E2D\u0E14");
-  if (emergencyName.length < 2) errors2.push("\u0E01\u0E23\u0E38\u0E13\u0E32\u0E01\u0E23\u0E2D\u0E01\u0E0A\u0E37\u0E48\u0E2D\u0E1C\u0E39\u0E49\u0E15\u0E34\u0E14\u0E15\u0E48\u0E2D\u0E09\u0E38\u0E01\u0E40\u0E09\u0E34\u0E19");
-  if (!relationship) errors2.push("\u0E01\u0E23\u0E38\u0E13\u0E32\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E04\u0E27\u0E32\u0E21\u0E2A\u0E31\u0E21\u0E1E\u0E31\u0E19\u0E18\u0E4C\u0E01\u0E31\u0E1A\u0E1C\u0E39\u0E49\u0E15\u0E34\u0E14\u0E15\u0E48\u0E2D\u0E09\u0E38\u0E01\u0E40\u0E09\u0E34\u0E19");
-  if (consent !== true) errors2.push("\u0E01\u0E23\u0E38\u0E13\u0E32\u0E22\u0E34\u0E19\u0E22\u0E2D\u0E21\u0E43\u0E2B\u0E49\u0E2A\u0E48\u0E07\u0E02\u0E49\u0E2D\u0E21\u0E39\u0E25\u0E2A\u0E38\u0E02\u0E20\u0E32\u0E1E/\u0E1B\u0E23\u0E30\u0E01\u0E31\u0E19\u0E43\u0E2B\u0E49\u0E1A\u0E23\u0E34\u0E29\u0E31\u0E17\u0E1B\u0E23\u0E30\u0E01\u0E31\u0E19");
-  if (errors2.length) return { ok: false, error: errors2.join(" \xB7 ") };
-  return {
-    ok: true,
-    value: { prefix, firstName, lastName, idCard, gender, birthDate, age, bloodType, medicalConditions, emergencyName, relationship }
-  };
-}
-
 // src/data/activityWaivers.ts
 var WAIVER_VERSION = "2026-11-02";
 var WAIVER_ACTIVITY_DATE = "2027-01-10";
@@ -34649,7 +34675,7 @@ var WAIVER_LABEL = { tower: "\u0E42\u0E14\u0E14\u0E2B\u0E2D\u0E2A\u0E39\u0E07", 
 function waiversFor(addOns) {
   return [...addOns?.tower ? ["tower"] : [], ...addOns?.windTunnel ? ["wind"] : []];
 }
-var clip4 = (v, n) => typeof v === "string" ? v.replace(/[\u0000-\u001f<>]/g, " ").trim().slice(0, n) : "";
+var clip5 = (v, n) => typeof v === "string" ? v.replace(/[\u0000-\u001f<>]/g, " ").trim().slice(0, n) : "";
 function participantProblems(p, i, activities) {
   const n = `\u0E1C\u0E39\u0E49\u0E23\u0E48\u0E27\u0E21\u0E01\u0E34\u0E08\u0E01\u0E23\u0E23\u0E21\u0E04\u0E19\u0E17\u0E35\u0E48 ${i + 1}`;
   const errs = [];
@@ -34679,13 +34705,13 @@ function parseActivityWaiver(raw, people, activities) {
     const x = list[i] && typeof list[i] === "object" ? list[i] : {};
     const hRaw = x.windHealth && typeof x.windHealth === "object" ? x.windHealth : {};
     const p = {
-      fullName: clip4(x.fullName, 120),
+      fullName: clip5(x.fullName, 120),
       birthDate: /^\d{4}-\d{2}-\d{2}$/.test(String(x.birthDate || "")) ? String(x.birthDate) : "",
       phone: digitsOnly(x.phone).slice(0, 15),
       idCard: digitsOnly(x.idCard).slice(0, 13)
     };
     const age = ageOn(p.birthDate);
-    if (age !== null && age < WAIVER_GUARDIAN_AGE) p.guardianName = clip4(x.guardianName, 120);
+    if (age !== null && age < WAIVER_GUARDIAN_AGE) p.guardianName = clip5(x.guardianName, 120);
     if (activities.includes("wind")) {
       p.windHealth = {};
       for (const q of WIND_HEALTH_QUESTIONS) if (hRaw[q.id] === "ok" || hRaw[q.id] === "risk") p.windHealth[q.id] = hRaw[q.id];
@@ -34703,32 +34729,6 @@ function parseActivityWaiver(raw, people, activities) {
   }
   if (errors2.length) return { ok: false, error: errors2.join(" \xB7 ") };
   return { ok: true, value: { activities, participants, acceptedAt, version: WAIVER_VERSION } };
-}
-
-// src/data/shirts.ts
-var SHIRT_SIZES = ["XS", "S", "M", "L", "XL", "2XL", "3XL", "4XL", "5XL"];
-var isSize = (v) => typeof v === "string" && SHIRT_SIZES.includes(v);
-var clip5 = (v, n) => typeof v === "string" ? v.replace(/[\u0000-\u001f<>]/g, " ").trim().slice(0, n) : "";
-var extraRunnersText = (list) => list.map((r) => `${r.name} (\u0E44\u0E0B\u0E2A\u0E4C ${r.shirtSize})`).join(", ");
-function parseExtraRunners(raw, count, withInsurance = false) {
-  const list = Array.isArray(raw) ? raw.slice(0, count) : [];
-  const out = [];
-  const errors2 = [];
-  for (let i = 0; i < count; i++) {
-    const r = list[i] && typeof list[i] === "object" ? list[i] : {};
-    let insurance;
-    if (withInsurance) {
-      const p = parseInsurance(r.insurance, true);
-      if (p.ok) insurance = p.value;
-      else errors2.push(`\u0E1C\u0E39\u0E49\u0E23\u0E48\u0E27\u0E21\u0E27\u0E34\u0E48\u0E07\u0E04\u0E19\u0E17\u0E35\u0E48 ${i + 2}: ${p.error}`);
-    }
-    const name2 = insurance ? `${insurance.firstName} ${insurance.lastName}`.slice(0, 80) : clip5(r.name, 80);
-    if (!withInsurance && name2.length < 2) errors2.push(`\u0E01\u0E23\u0E38\u0E13\u0E32\u0E01\u0E23\u0E2D\u0E01\u0E0A\u0E37\u0E48\u0E2D\u0E1C\u0E39\u0E49\u0E23\u0E48\u0E27\u0E21\u0E27\u0E34\u0E48\u0E07\u0E40\u0E1E\u0E34\u0E48\u0E21\u0E04\u0E19\u0E17\u0E35\u0E48 ${i + 1}`);
-    if (!isSize(r.shirtSize)) errors2.push(`\u0E01\u0E23\u0E38\u0E13\u0E32\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E44\u0E0B\u0E2A\u0E4C\u0E40\u0E2A\u0E37\u0E49\u0E2D\u0E1C\u0E39\u0E49\u0E23\u0E48\u0E27\u0E21\u0E27\u0E34\u0E48\u0E07\u0E04\u0E19\u0E17\u0E35\u0E48 ${i + 2}`);
-    out.push({ name: name2, shirtSize: isSize(r.shirtSize) ? r.shirtSize : "M", insurance });
-  }
-  if (errors2.length) return { ok: false, error: errors2.join(" \xB7 ") };
-  return { ok: true, value: out };
 }
 
 // src/data/vipParking.ts
@@ -48749,7 +48749,7 @@ var runnerView = (o) => ({
 var PRIVACY_POLICY_VERSION = "2026-11-02";
 var TERMS_VERSION = "2026-11-01";
 var ROUTE_IDS = ticketCategories.map((t) => t.id);
-var SHIRT_SIZES2 = ["XS", "S", "M", "L", "XL", "2XL", "3XL", "4XL", "5XL"];
+var SHIRT_SIZES2 = [...SHIRT_SIZES];
 var MAX_EXTRA = 9;
 var SPONSOR_INVALID_MSG = "\u0E23\u0E2B\u0E31\u0E2A\u0E2A\u0E1B\u0E2D\u0E19\u0E40\u0E0B\u0E2D\u0E23\u0E4C\u0E44\u0E21\u0E48\u0E16\u0E39\u0E01\u0E15\u0E49\u0E2D\u0E07 \u0E2B\u0E23\u0E37\u0E2D\u0E16\u0E39\u0E01\u0E43\u0E0A\u0E49\u0E04\u0E23\u0E1A\u0E2A\u0E34\u0E17\u0E18\u0E34\u0E4C\u0E41\u0E25\u0E49\u0E27";
 function clean(input, max) {

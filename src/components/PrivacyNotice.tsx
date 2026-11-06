@@ -87,14 +87,14 @@ export const PrivacyNotice: React.FC = () => {
                 )}
               </li>
               <li>{t('สถานะการชำระเงินและผลการตรวจสลิป', 'Payment status and slip-check result')}</li>
-              <li>{t('ข้อมูลสำหรับทำประกันอุบัติเหตุของนักวิ่งทุกระยะ: คำนำหน้า ชื่อ เพศ วันเกิด กรุ๊ปเลือด โรคประจำตัว และผู้ติดต่อฉุกเฉิน', 'Accident-insurance details for runners of every distance: title, name, gender, date of birth, blood group, medical conditions and emergency contact')}</li>
+              <li>{t('ข้อมูลสำหรับทำประกันอุบัติเหตุของนักวิ่งทุกระยะ: คำนำหน้า ชื่อ เพศ วันเกิด เลขบัตรประจำตัวประชาชน กรุ๊ปเลือด โรคประจำตัว และผู้ติดต่อฉุกเฉิน (ซึ่งจะเป็นผู้รับผลประโยชน์ของประกันด้วย)', 'Accident-insurance details for runners of every distance: title, name, gender, date of birth, national ID number, blood group, medical conditions and emergency contact (who is also named as the insurance beneficiary)')}</li>
               <li>{t('ผู้ซื้อกิจกรรมยิงปืน: ชื่อ-นามสกุลและเลขบัตรประจำตัวประชาชนของผู้ยิงทุกคน และเวลาที่ยอมรับใบยินยอม', 'Shooting activity buyers: full name and national ID number of every shooter, and the time the consent form was accepted')}</li>
               <li>{t('ผู้ซื้อ VIP TABLE: ทะเบียนรถและจังหวัด สำหรับออกบัตรจอดรถ', 'VIP TABLE buyers: licence plate and province, used to issue the parking pass')}</li>
             </ul>
             <p className="mt-1">
               {t(
-                'เราใช้รูปสลิปเพื่อยืนยันการชำระเงินเท่านั้น โดยส่งรูปสลิปให้ EasySlip (ผู้ให้บริการตรวจสอบสลิป) ตรวจกับข้อมูลของธนาคาร เลขบัตรประชาชนเก็บเฉพาะผู้ร่วมกิจกรรมยิงปืน เพื่อลงทะเบียนกับสนามยิงปืนเท่านั้น และแสดงให้เฉพาะเจ้าหน้าที่ เราไม่เก็บเลขหนังสือเดินทาง ข้อมูลบัตร หรือเลขบัญชีธนาคารเต็มของคุณ',
-                'We use the slip image only to confirm payment, by sending it to EasySlip (the slip-verification provider) to check against bank records. National ID numbers are collected only from shooting-activity participants, only to register them with the shooting range, and are shown to authorised staff only. We do not store passport numbers, card details or your full bank account number.'
+                'เราใช้รูปสลิปเพื่อยืนยันการชำระเงินเท่านั้น โดยส่งรูปสลิปให้ EasySlip (ผู้ให้บริการตรวจสอบสลิป) ตรวจกับข้อมูลของธนาคาร เลขบัตรประชาชนเก็บเพื่อสองวัตถุประสงค์เท่านั้น คือแจ้งชื่อผู้เอาประกันกับบริษัทประกัน และลงทะเบียนผู้ร่วมกิจกรรมยิงปืนกับสนามยิงปืน และแสดงให้เฉพาะเจ้าหน้าที่ที่เกี่ยวข้อง เราไม่เก็บเลขหนังสือเดินทาง ข้อมูลบัตร หรือเลขบัญชีธนาคารเต็มของคุณ',
+                'We use the slip image only to confirm payment, by sending it to EasySlip (the slip-verification provider) to check against bank records. National ID numbers are collected for two purposes only: to enrol you with the insurer, and to register shooting-activity participants with the shooting range. They are shown to authorised staff only. We do not store passport numbers, card details or your full bank account number.'
               )}
             </p>
           </section>

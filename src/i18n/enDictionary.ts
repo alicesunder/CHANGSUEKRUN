@@ -43,6 +43,8 @@ export const EN_EXACT: Record<string, string> = {
   [`ลดเพิ่มค่ากิจกรรม`]: `Extra off activities`,
   [`เงื่อนไข: มีตั๋วคอนเสิร์ต + กิจกรรม`]: `Condition: a concert ticket + activities`,
 
+  [`ไซส์ 4XL ขึ้นไปเป็นไซส์พิเศษ · วัดรอบอกกับความยาวเสื้อเป็นนิ้ว ดูตารางไซส์ได้ที่หน้า Race Pack`]: `4XL and above are special sizes · chest and shirt length are in inches, see the size chart in the Race Pack section`,
+
   // ---- run tickets
   [`เริ่มต้นง่าย`]: `Easy start`,
   [`1 km วิ่งคู่น้องสุนัข`]: `1 km run with your dog`,
@@ -683,6 +685,7 @@ export const EN_PATTERNS: [RegExp, (m: RegExpExecArray) => string][] = [
   [/^ข้อมูลผู้สมัครวิ่ง \((.+)\)$/, (m) => `Runner details (${EN_EXACT[m[1]] ?? m[1]})`],
   [/^· น้องสุนัข (\d+) ตัว$/, (m) => `· ${m[1]} dog(s)`],
   [/^อก (\d+)"$/, (m) => `Chest ${m[1]}"`],
+  [/^อก (\d+)" · ยาว (\d+)"( · พิเศษ)?$/, (m) => `Chest ${m[1]}" · Length ${m[2]}"${m[3] ? ' · special' : ''}`],
   [/^(\d+) ปี$/, (m) => `${m[1]} yr`],
   [/^QR พร้อมเพย์ ([\d.,]+) บาท$/, (m) => `PromptPay QR for ${m[1]} THB`],
   [/^([\d,]+) บาท \(1 คน \+ 1 น้องสุนัข\)$/, (m) => `${m[1]} THB (1 person + 1 dog)`],

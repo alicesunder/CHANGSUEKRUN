@@ -1,7 +1,7 @@
 import React from 'react';
 import { BLOOD_TYPES, GENDERS, PREFIXES, RELATIONSHIPS, ageFromBirthDate, type InsuranceInfo } from '../data/insurance';
 import { digitsOnly, formatThaiId, isValidThaiId } from '../data/shooting';
-import { SHIRT_SIZES as SHIRT_SIZE_IDS, type ShirtSize } from '../data/shirts';
+import { SHIRT_CHART, SHIRT_SIZES as SHIRT_SIZE_IDS, isSpecialShirtSize, type ShirtSize } from '../data/shirts';
 
 /**
  * Runner details of the registration form: one colourful card per runner (tabs on top), each with the
@@ -109,7 +109,7 @@ export function toInsurance(r: RunnerEntry, main: RunnerEntry): InsuranceInfo {
 }
 
 const COLORS = ['#7C3AED', '#EC4899', '#0EA5E9', '#F59E0B', '#10B981', '#EF4444'];
-const CHEST: Record<string, string> = { XS: '34"', S: '36"', M: '38"', L: '40"', XL: '42"', '2XL': '44"', '3XL': '46"', '4XL': '48"', '5XL': '50"' };
+const CHEST: Record<string, string> = Object.fromEntries(Object.entries(SHIRT_CHART).map(([k, v]) => [k, `${v.chest}"`]));
 const todayIso = new Date().toISOString().slice(0, 10);
 
 const lbl = 'block text-xs font-extrabold text-[#2A1450] mb-1.5';
@@ -316,11 +316,12 @@ export const RunnerDetailsForm: React.FC<{
           )}
 
           <Group icon="👕" title="ไซส์เสื้อวิ่ง" tint="#FFF7DB">
-            <Pills label="ไซส์เสื้อ" options={SHIRT_SIZE_IDS} value={r.shirtSize} onPick={(v) => set({ shirtSize: v as ShirtSize })} color={color} sub={(v) => (CHEST[v] ? `อก ${CHEST[v]}` : undefined)} />
+            <Pills label="ไซส์เสื้อ" options={SHIRT_SIZE_IDS} value={r.shirtSize} onPick={(v) => set({ shirtSize: v as ShirtSize })} color={color} sub={(v) => (CHEST[v] ? `อก ${CHEST[v]} · ยาว ${SHIRT_CHART[v as ShirtSize].length}"${isSpecialShirtSize(v) ? ' · พิเศษ' : ''}` : undefined)} />
+            <p className="mt-2 text-[11px] font-bold text-[#6B5A85]">ไซส์ 4XL ขึ้นไปเป็นไซส์พิเศษ · วัดรอบอกกับความยาวเสื้อเป็นนิ้ว ดูตารางไซส์ได้ที่หน้า Race Pack</p>
           </Group>
 
           {insured && (
-            <Group icon="🆘" title="ผู้ติดต่อกรณีฉุกเฉิน" tint="#FFEFF3" note={i === 0 ? 'เบอร์โทรของผู้ติดต่อกรอกในส่วน "ช่องทางติดต่อ" ด้านล่าง' : undefined}>
+            <Group icon="🆘" title="ผู้ติดต่อกรณีฉุกเฉิน / ผู้รับผลประโยชน์ประกัน" tint="#FFEFF3" note={i === 0 ? 'บุคคลนี้จะเป็นผู้รับผลประโยชน์ของประกันอุบัติเหตุด้วย · เบอร์โทรกรอกในส่วน "ช่องทางติดต่อ" ด้านล่าง' : 'บุคคลนี้จะเป็นผู้รับผลประโยชน์ของประกันอุบัติเหตุด้วย'}>
               {i > 0 && (
                 <label className="flex items-center gap-2.5 rounded-xl bg-white border-2 border-[#2A1450]/15 px-3 py-2.5 cursor-pointer">
                   <input type="checkbox" checked={r.sameEmergency} onChange={(e) => set({ sameEmergency: e.target.checked })} className="w-5 h-5 accent-[#7C3AED] shrink-0" />

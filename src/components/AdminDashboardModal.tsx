@@ -48,16 +48,16 @@ import {
   PaymentVerificationStatus,
   DEFAULT_PROMPTPAY_CONFIG,
   exportTicketOrdersToCsv,
-  exportInsuranceCsv,
   formatBibNumber,
 } from '../utils/runnerStorage';
 import { ServerOrder, adminApi, adminLogin, clearAdminToken, getAdminRole, getAdminToken, type AdminRole } from '../utils/api';
+import { exportInsuranceXlsx } from '../utils/insuranceXlsx';
 import { AuditAdmin } from './AuditAdmin';
 import { AdminAccountsAdmin } from './AdminAccountsAdmin';
 import { ActivityLimitsCard } from './ActivityLimitsCard';
 import { formatThaiId } from '../data/shooting';
 import { AdminStationRoster, OrderFullDetails } from './AdminStationRoster';
-import { countShirts } from '../data/shirts';
+import { SHIRT_SIZES, countShirts } from '../data/shirts';
 import { setTestMode, useTestMode } from '../utils/testMode';
 import {
   formatPromptPayDisplay,
@@ -125,7 +125,7 @@ const ROUTE_BADGE_STYLE: Record<
   },
 };
 
-const SHIRT_SIZE_LIST = ['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL', '4XL', '5XL'];
+const SHIRT_SIZE_LIST: readonly string[] = SHIRT_SIZES;
 
 /** Counts in totals: not cancelled, and paid or still inside its payment window. */
 const isLiveOrder = (o: ServerOrder) =>
@@ -1047,16 +1047,16 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
                       onClick={() => {
                         adminApi
                           .exportOrders('insurance')
-                          .then((r) => {
-                            const n = exportInsuranceCsv(r.orders.filter((o) => !o.isTest), adminUser);
-                            showToast(n > 0 ? `ส่งออกรายชื่อทำประกัน ${n} คน (เฉพาะที่ชำระเงินแล้ว) — บันทึกในบันทึกการใช้งานแล้ว` : 'ยังไม่มีนักวิ่ง 5K/10K ที่ชำระเงินแล้วสำหรับทำประกัน');
+                          .then((r) => exportInsuranceXlsx(r.orders.filter((o) => !o.isTest), adminUser))
+                          .then((n) => {
+                            showToast(n > 0 ? `ส่งออกไฟล์ Excel ทำประกัน (แบบฟอร์ม MTI) ${n} คน (เฉพาะที่ชำระเงินแล้ว) — บันทึกในบันทึกการใช้งานแล้ว` : 'ยังไม่มีนักวิ่งที่ชำระเงินแล้วสำหรับทำประกัน');
                           })
                           .catch((err) => showToast(err instanceof Error ? err.message : 'ส่งออกไม่สำเร็จ'));
                       }}
                       className="px-3.5 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-700 text-white text-xs font-extrabold flex items-center gap-1.5 shadow-xs cursor-pointer"
                     >
                       <span aria-hidden="true">🛡️</span>
-                      <span>CSV ทำประกัน (ทุกระยะ)</span>
+                      <span>Excel ทำประกัน (แบบฟอร์ม MTI)</span>
                     </button>}
 
                     {/* Export Full CSV */}
@@ -1149,7 +1149,7 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
                       onChange={(e) => setShirtFilter(e.target.value)}
                       className="px-2.5 py-1.5 rounded-lg border border-slate-300 bg-white font-bold text-slate-700 text-xs"
                     >
-                      <option value="ALL">ทุกไซส์เสื้อ (XS–5XL)</option>
+                      <option value="ALL">ทุกไซส์เสื้อ (XS–10XL)</option>
                       {SHIRT_SIZE_LIST.map((sz) => (
                         <option key={sz} value={sz}>
                           เสื้อไซส์ {sz}

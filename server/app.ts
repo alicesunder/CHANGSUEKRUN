@@ -16,6 +16,7 @@ import express from 'express';
 import crypto from 'crypto';
 import type { RouteId } from '../src/types';
 import { parseDogProfile, type DogProfile } from '../src/data/dogProfile';
+import { SHIRT_SIZES as SHIRT_SIZE_LIST } from '../src/data/shirts';
 import { MAX_VIP_TABLES, VIP_TABLE_SEATS, calcTicketTotal, concertPassPrice, vipTablePrice, isDogCategory, ticketById, ticketCategories } from '../src/data/eventData';
 import {
   rollbackNewOrder,
@@ -103,7 +104,7 @@ const PRIVACY_POLICY_VERSION = '2026-11-02';
 const TERMS_VERSION = '2026-11-01';
 
 const ROUTE_IDS: RouteId[] = ticketCategories.map((t) => t.id);
-const SHIRT_SIZES = ['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL', '4XL', '5XL'];
+const SHIRT_SIZES: string[] = [...SHIRT_SIZE_LIST];
 const MAX_EXTRA = 9;
 const SPONSOR_INVALID_MSG = 'รหัสสปอนเซอร์ไม่ถูกต้อง หรือถูกใช้ครบสิทธิ์แล้ว';
 

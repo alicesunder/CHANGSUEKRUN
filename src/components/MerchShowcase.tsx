@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { ArrowRight, PawPrint, Sparkles, X, ZoomIn } from 'lucide-react';
 import { useLang } from '../i18n/lang';
 import { RaceBib } from './RaceBib';
+import { SHIRT_CHART, SHIRT_SIZES } from '../data/shirts';
 
 interface MerchShowcaseProps {
   onOpenRegister?: () => void;
@@ -107,16 +108,9 @@ const KIT: KitItem[] = [
   },
 ];
 
-const SIZES = [
-  { size: 'XS', chest: '34"' },
-  { size: 'S', chest: '36"' },
-  { size: 'M', chest: '38"' },
-  { size: 'L', chest: '40"' },
-  { size: 'XL', chest: '42"' },
-  { size: '2XL', chest: '44"' },
-  { size: '3XL', chest: '46"' },
-  { size: '4XL', chest: '48"' },
-  { size: '5XL', chest: '50"' },
+const SIZE_ROWS = [
+  { special: false, sizes: SHIRT_SIZES.slice(0, 7) },
+  { special: true, sizes: SHIRT_SIZES.slice(7) },
 ];
 
 export const MerchShowcase: React.FC<MerchShowcaseProps> = ({ onOpenRegister, className = '' }) => {
@@ -181,15 +175,23 @@ export const MerchShowcase: React.FC<MerchShowcaseProps> = ({ onOpenRegister, cl
         <p className="mt-1 text-xs sm:text-sm font-medium leading-relaxed text-[#5B4A78]">{t(item.desc, item.descEn)}</p>
         {item.id === 'jersey' && (
           <div className="mt-2.5">
-            <p className="text-[11px] font-extrabold tracking-wide text-[#7C3AED]">{t('ไซซ์ (รอบอก)', 'Size (chest)')}</p>
-            <ul className="mt-1 grid grid-cols-7 gap-1">
-              {SIZES.map((sz) => (
-                <li key={sz.size} className="rounded-lg bg-[#F3ECFF] py-1 text-center leading-none">
-                  <span className="block text-[11px] font-black text-[#2A1450]">{sz.size}</span>
-                  <span className="block mt-0.5 text-[11px] font-semibold text-[#6D28D9]">{sz.chest}</span>
-                </li>
-              ))}
-            </ul>
+            <p className="text-[11px] font-extrabold tracking-wide text-[#7C3AED]">
+              {t('ตารางไซส์เสื้อ (นิ้ว): รอบอก / ความยาว', 'Shirt size chart (inches): chest / length')}
+            </p>
+            {SIZE_ROWS.map((row) => (
+              <div key={row.special ? 'special' : 'regular'} className="mt-1.5">
+                {row.special && <p className="mb-1 text-[11px] font-extrabold text-[#6B5A85]">{t('*ไซส์พิเศษ*', '*Special sizes*')}</p>}
+                <ul className="grid grid-cols-7 gap-1">
+                  {row.sizes.map((size) => (
+                    <li key={size} className={`rounded-lg py-1 text-center leading-none ${row.special ? 'bg-[#E5E1EC]' : 'bg-[#F3ECFF]'}`}>
+                      <span className="block text-[11px] font-black text-[#2A1450]">{size}</span>
+                      <span className="block mt-0.5 text-[11px] font-semibold text-[#6D28D9]">{SHIRT_CHART[size].chest}"</span>
+                      <span className="block mt-0.5 text-[11px] font-semibold text-[#4B2D78]">{SHIRT_CHART[size].length}"</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
           </div>
         )}
       </div>

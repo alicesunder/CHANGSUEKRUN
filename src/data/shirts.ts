@@ -2,8 +2,29 @@
 // Shared by the form, the server and the admin console.
 import { parseInsurance, type InsuranceInfo } from './insurance';
 
-export const SHIRT_SIZES = ['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL', '4XL', '5XL'] as const;
+export const SHIRT_SIZES = ['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL', '4XL', '5XL', '6XL', '7XL', '8XL', '9XL', '10XL'] as const;
 export type ShirtSize = (typeof SHIRT_SIZES)[number];
+
+/** The organiser's size chart (inches): chest width and shirt length. 4XL and up are special sizes. */
+export const SHIRT_CHART: Record<ShirtSize, { chest: number; length: number }> = {
+  XS: { chest: 34, length: 24 },
+  S: { chest: 36, length: 25 },
+  M: { chest: 38, length: 26 },
+  L: { chest: 40, length: 27 },
+  XL: { chest: 42, length: 28 },
+  '2XL': { chest: 44, length: 29 },
+  '3XL': { chest: 46, length: 30 },
+  '4XL': { chest: 48, length: 31 },
+  '5XL': { chest: 50, length: 32 },
+  '6XL': { chest: 52, length: 33 },
+  '7XL': { chest: 54, length: 34 },
+  '8XL': { chest: 56, length: 35 },
+  '9XL': { chest: 58, length: 36 },
+  '10XL': { chest: 60, length: 37 },
+};
+/** Special sizes ("ไซส์พิเศษ"): 4XL and larger. */
+export const SPECIAL_SHIRT_SIZES: readonly ShirtSize[] = ['4XL', '5XL', '6XL', '7XL', '8XL', '9XL', '10XL'];
+export const isSpecialShirtSize = (s: string): boolean => (SPECIAL_SHIRT_SIZES as readonly string[]).includes(s);
 
 export interface ExtraRunner {
   name: string;
@@ -81,7 +102,7 @@ export function countShirts(orders: ShirtCountOrder[]): ShirtCount {
       unknown += Math.max(0, extra - o.extraRunners.length);
       continue;
     }
-    const found = [...(o.extraRunnerNames || '').toUpperCase().matchAll(/(?:ไซส์|ไซซ์|SIZE)\s*:?\s*(5XL|4XL|3XL|2XL|XXXL|XXL|XS|XL|S|M|L)\b/g)]
+    const found = [...(o.extraRunnerNames || '').toUpperCase().matchAll(/(?:ไซส์|ไซซ์|SIZE)\s*:?\s*(10XL|9XL|8XL|7XL|6XL|5XL|4XL|3XL|2XL|XXXL|XXL|XS|XL|S|M|L)\b/g)]
       .map((m) => (m[1] === 'XXL' ? '2XL' : m[1] === 'XXXL' ? '3XL' : m[1]))
       .filter(isSize)
       .slice(0, extra);
