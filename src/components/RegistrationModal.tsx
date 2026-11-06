@@ -1246,7 +1246,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                             🎉 ส่วนลดกิจกรรม {percentOf(addOnDiscountRate(addOns, discountCtx))}%
                             {' ('}
                             {[
-                              addOnCountRate(addOns, discountCtx) > 0 && `${addOns.tower && addOns.gun !== 'none' && addOns.windTunnel && wantRun ? 'วิ่ง + ครบ 3' : '2'} กิจกรรม ${percentOf(addOnCountRate(addOns, discountCtx))}%`,
+                              addOnCountRate(addOns, discountCtx) > 0 && `${wantRun ? 'วิ่ง + ครบ 3' : 'ครบ 3'} กิจกรรม ${percentOf(addOnCountRate(addOns, discountCtx))}%`,
                               addOnConcertRate(addOns, discountCtx) > 0 && `มีคอนเสิร์ต +${percentOf(addOnConcertRate(addOns, discountCtx))}%`,
                             ]
                               .filter(Boolean)

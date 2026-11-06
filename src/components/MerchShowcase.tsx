@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { ArrowRight, PawPrint, Sparkles, X, ZoomIn } from 'lucide-react';
 import { useLang } from '../i18n/lang';
+import { RaceBib } from './RaceBib';
 
 interface MerchShowcaseProps {
   onOpenRegister?: () => void;
@@ -21,6 +22,11 @@ interface KitItem {
   /** takes two grid columns */
   wide?: boolean;
 }
+
+/** The BIB tile shows the real BIB design (the same one printed in the ticket e-mail) filled with sample data. */
+const SampleBib: React.FC<{ className?: string; sampleName: string }> = ({ className = '', sampleName }) => (
+  <RaceBib bib="10-0001" routeId="10km" name={sampleName} orderId="SAMPLE" gender="ชาย" age={32} shirtSize="M" className={className} />
+);
 
 export const MOCKUP_NOTICE = 'ภาพจำลองเพื่อการประชาสัมพันธ์เท่านั้น';
 
@@ -141,13 +147,19 @@ export const MerchShowcase: React.FC<MerchShowcaseProps> = ({ onOpenRegister, cl
         aria-label={`${t('ดูภาพ', 'View')} ${t(item.name, item.nameEn)} ${t('ขนาดใหญ่', 'larger')}`}
         className={`relative block w-full overflow-hidden cursor-zoom-in ${row ? 'lg:w-[58%] lg:shrink-0' : ''}`}
       >
-        <img
-          src={item.image}
-          alt={t(item.name, item.nameEn)}
-          loading="lazy"
-          decoding="async"
-          className="block w-full aspect-[3/2] object-contain p-2 transition-transform duration-500 group-hover:scale-[1.04]"
-        />
+        {item.id === 'bib' ? (
+          <div className="p-2" role="img" aria-label={t(item.name, item.nameEn)}>
+            <SampleBib sampleName={t('ชื่อ นามสกุล', 'First Last')} />
+          </div>
+        ) : (
+          <img
+            src={item.image}
+            alt={t(item.name, item.nameEn)}
+            loading="lazy"
+            decoding="async"
+            className="block w-full aspect-[3/2] object-contain p-2 transition-transform duration-500 group-hover:scale-[1.04]"
+          />
+        )}
         <MockupWatermark />
         <span className="absolute top-2.5 left-2.5 z-10 grid h-8 w-8 place-items-center rounded-full bg-[#FFC928] border-2 border-[#140826] text-[13px] font-black text-[#2A1450]">
           {String(n).padStart(2, '0')}
@@ -267,7 +279,13 @@ export const MerchShowcase: React.FC<MerchShowcaseProps> = ({ onOpenRegister, cl
               <X className="w-5 h-5" />
             </button>
             <div className="relative overflow-hidden rounded-2xl bg-white">
-              <img src={zoom.image} alt={zoom.name} className="w-full max-h-[80vh] object-contain" />
+              {zoom.id === 'bib' ? (
+                <div className="p-3 sm:p-6">
+                  <SampleBib sampleName={t('ชื่อ นามสกุล', 'First Last')} />
+                </div>
+              ) : (
+                <img src={zoom.image} alt={zoom.name} className="w-full max-h-[80vh] object-contain" />
+              )}
               <MockupWatermark size="lg" />
             </div>
             <p className="mt-2 text-center font-hero text-lg text-white">{zoom.name}</p>

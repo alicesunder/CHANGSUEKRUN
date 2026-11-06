@@ -190,11 +190,12 @@ export function addOnSavingPerPerson(s: AddOnSelection): number {
 
 // ---------------------------------------------------------------------------
 // Bundle discounts (none applies with a sponsor code):
-//   run + concert (GA)           → each GA concert ticket 10% off
-//   any 2+ activities            → activities 10% off (no run ticket needed)
-//   run + all 3 activities       → activities 15% off (instead of the 10% above)
-//   concert (GA or VIP) + any activity → activities a further 10% off
-// The activity discounts add up, capped at 20%. The VIP table itself is never discounted.
+//   run + concert (GA)                 → each GA concert ticket 10% off
+//   all 3 activities (no run needed)   → activities 10% off   (only the full set earns a discount)
+//   run + all 3 activities             → activities 15% off (instead of the 10% above)
+//   concert (GA or VIP) + all 3        → activities a further 10% off
+// The activity discounts add up, capped at 20%. 1 or 2 activities get no discount (the package prices already
+// make them cheaper than buying separately). The VIP table itself is never discounted.
 // ---------------------------------------------------------------------------
 export const CONCERT_BUNDLE_RATE = 0.1;
 export const ADDON_TWO_RATE = 0.1;
@@ -227,12 +228,13 @@ export function hasAllThree(s: AddOnSelection): boolean {
 export function addOnCountRate(s: AddOnSelection, ctx: DiscountContext): number {
   if (ctx.sponsor || !hasAddOns(s)) return 0;
   const n = activityCount(s);
-  return n >= 3 && ctx.hasRun ? ADDON_THREE_RATE : n >= 2 ? ADDON_TWO_RATE : 0;
+  if (n < 3) return 0;
+  return ctx.hasRun ? ADDON_THREE_RATE : ADDON_TWO_RATE;
 }
 
 /** The extra part that comes from having a concert ticket in the same order. */
 export function addOnConcertRate(s: AddOnSelection, ctx: DiscountContext): number {
-  return !ctx.sponsor && ctx.hasConcert && hasAddOns(s) ? ADDON_CONCERT_RATE : 0;
+  return !ctx.sponsor && ctx.hasConcert && hasAllThree(s) ? ADDON_CONCERT_RATE : 0;
 }
 
 /** Total discount rate on the activities, capped at 20%. */

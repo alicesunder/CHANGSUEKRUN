@@ -34520,13 +34520,17 @@ var ADDON_MAX_RATE = 0.2;
 function activityCount(s) {
   return (s.tower ? 1 : 0) + (s.gun !== "none" ? 1 : 0) + (s.windTunnel ? 1 : 0);
 }
+function hasAllThree(s) {
+  return s.tower && s.gun !== "none" && s.windTunnel;
+}
 function addOnCountRate(s, ctx) {
   if (ctx.sponsor || !hasAddOns(s)) return 0;
   const n = activityCount(s);
-  return n >= 3 && ctx.hasRun ? ADDON_THREE_RATE : n >= 2 ? ADDON_TWO_RATE : 0;
+  if (n < 3) return 0;
+  return ctx.hasRun ? ADDON_THREE_RATE : ADDON_TWO_RATE;
 }
 function addOnConcertRate(s, ctx) {
-  return !ctx.sponsor && ctx.hasConcert && hasAddOns(s) ? ADDON_CONCERT_RATE : 0;
+  return !ctx.sponsor && ctx.hasConcert && hasAllThree(s) ? ADDON_CONCERT_RATE : 0;
 }
 function addOnDiscountRate(s, ctx) {
   const sum = addOnCountRate(s, ctx) + addOnConcertRate(s, ctx);

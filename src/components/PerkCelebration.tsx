@@ -146,9 +146,9 @@ export const DealStrip: React.FC<DealStripProps> = ({ hasRun, hasGaConcert, hasC
   const concertNet = concertUnit - Math.round(concertUnit * CONCERT_BUNDLE_RATE);
   const deals = [
     { key: 'concert', icon: '🏃🎶', label: 'วิ่ง + คอนเสิร์ต GA', big: `-${percentOf(CONCERT_BUNDLE_RATE)}%`, note: `เหลือ ${formatBaht(concertNet)} บาท/ใบ`, how: 'ซื้อตั๋ววิ่ง + ตั๋วคอนเสิร์ต GA', color: '#EC4899', on: hasRun && hasGaConcert },
-    { key: 'two', icon: '✌️', label: '2 กิจกรรมขึ้นไป', big: `-${percentOf(ADDON_TWO_RATE)}%`, note: 'ค่ากิจกรรมเสริม', how: 'เลือกกิจกรรมเสริม 2 อย่าง', color: '#0EA5E9', on: activities >= 2 },
+    { key: 'two', icon: '🎯', label: 'ครบ 3 กิจกรรม', big: `-${percentOf(ADDON_TWO_RATE)}%`, note: 'ค่ากิจกรรมเสริม', how: 'เลือกกิจกรรมเสริมให้ครบ 3 อย่าง', color: '#0EA5E9', on: activities >= 3 },
     { key: 'three', icon: '🏆', label: 'วิ่ง + ครบ 3 กิจกรรม', big: `-${percentOf(ADDON_THREE_RATE)}%`, note: 'แทนส่วนลด 10%', how: 'ตั๋ววิ่ง + ครบ 3 กิจกรรม', color: '#10B981', on: hasRun && activities >= 3 },
-    { key: 'concert-addon', icon: '🎤✨', label: 'คอนเสิร์ต + กิจกรรม', big: `+${percentOf(ADDON_CONCERT_RATE)}%`, note: 'ลดเพิ่มค่ากิจกรรม', how: 'มีตั๋วคอนเสิร์ต + กิจกรรม', color: '#F59E0B', on: hasConcert && activities >= 1 },
+    { key: 'concert-addon', icon: '🎤✨', label: 'คอนเสิร์ต + ครบ 3', big: `+${percentOf(ADDON_CONCERT_RATE)}%`, note: 'ลดเพิ่มค่ากิจกรรม', how: 'มีตั๋วคอนเสิร์ต + ครบ 3 กิจกรรม', color: '#F59E0B', on: hasConcert && activities >= 3 },
   ];
   const unlocked = deals.filter((d) => d.on).length;
 

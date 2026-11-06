@@ -483,7 +483,7 @@ export const TicketShop: React.FC<TicketShopProps> = ({
   const count = (run ? 1 : 0) + (hasConcert ? 1 : 0) + (picked ? 1 : 0);
   const concertDeal = eligible && concertQty > 0;
   const addOnDealLabel = [
-    countRate > 0 && (countRate >= ADDON_THREE_RATE ? 'วิ่ง + ครบ 3 กิจกรรม' : `${activityCount} กิจกรรม`),
+    countRate > 0 && (countRate >= ADDON_THREE_RATE ? 'วิ่ง + ครบ 3 กิจกรรม' : 'ครบ 3 กิจกรรม'),
     concertBonusRate > 0 && 'มีคอนเสิร์ต',
   ]
     .filter(Boolean)
@@ -492,13 +492,11 @@ export const TicketShop: React.FC<TicketShopProps> = ({
   const nudge =
     count === 0
       ? ''
-      : activityCount === 1 && !hasConcert
-        ? 'อีก 1 กิจกรรม หรือเพิ่มตั๋วคอนเสิร์ต กิจกรรมลด 10% ทันที! 🎢'
+      : picked && activityCount < 3
+        ? `เลือกกิจกรรมให้ครบ 3 อย่าง ลดค่ากิจกรรม ${percentOf(run ? ADDON_THREE_RATE : ADDON_TWO_RATE)}% ทันที! 🎢`
         : picked && !hasConcert
           ? `เพิ่มตั๋วคอนเสิร์ต กิจกรรมลดเพิ่มอีก ${percentOf(ADDON_CONCERT_RATE)}%! 🎶`
-          : activityCount === 1
-            ? `อีก 1 กิจกรรม ลดรวมเป็น ${percentOf(ADDON_MAX_RATE)}%! 🔥`
-            : run && concertQty === 0
+          : run && concertQty === 0
               ? `เพิ่มตั๋วคอนเสิร์ต GA ลดทันที ${formatBaht(Math.round(concertUnit * CONCERT_BUNDLE_RATE))} บาท/ใบ 🎶`
               : !run && concertQty > 0
                 ? `เพิ่มตั๋ววิ่ง ตั๋วคอนเสิร์ต GA ลด ${percentOf(CONCERT_BUNDLE_RATE)}%! 🏃`
@@ -736,14 +734,12 @@ export const TicketShop: React.FC<TicketShopProps> = ({
                   }
                 >
                   <span id="addons" className="block h-0 scroll-mt-28" aria-hidden="true" />
-                  {(activityCount === 1 || addOnRate > 0) && <p className={`mb-3 rounded-2xl px-3 py-2 text-sm font-extrabold text-center border-2 ${addOnRate > 0 ? 'bg-[#FFE268] border-[var(--ink)] text-[var(--ink)]' : 'bg-gradient-to-r from-[#E0F7FA] to-[#ECFDF5] border-[#0EA5E9]/30 text-[#0369A1]'}`}>
+                  {(activityCount >= 1 || addOnRate > 0) && <p className={`mb-3 rounded-2xl px-3 py-2 text-sm font-extrabold text-center border-2 ${addOnRate > 0 ? 'bg-[#FFE268] border-[var(--ink)] text-[var(--ink)]' : 'bg-gradient-to-r from-[#E0F7FA] to-[#ECFDF5] border-[#0EA5E9]/30 text-[#0369A1]'}`}>
                     {addOnRate >= ADDON_MAX_RATE
                       ? `🎉🎉 กิจกรรมลด ${percentOf(addOnRate)}% สูงสุดแล้ว! สุดคุ้ม!!!`
                       : addOnRate > 0
                         ? `🎉 กิจกรรมลด ${percentOf(addOnRate)}% แล้ว!${hasConcert ? '' : ` เพิ่มตั๋วคอนเสิร์ต ลดเพิ่มอีก ${percentOf(ADDON_CONCERT_RATE)}%`}`
-                        : activityCount === 1
-                          ? `อีก 1 กิจกรรม หรือเพิ่มตั๋วคอนเสิร์ต ลด ${percentOf(ADDON_TWO_RATE)}% ทันที! 🎁`
-                          : `2 กิจกรรมขึ้นไปลด ${percentOf(ADDON_TWO_RATE)}% · มีคอนเสิร์ตลดเพิ่มอีก ${percentOf(ADDON_CONCERT_RATE)}% (สูงสุด ${percentOf(ADDON_MAX_RATE)}%) 🎁`}
+                        : `เลือกให้ครบ 3 กิจกรรม ลด ${percentOf(ADDON_TWO_RATE)}% (มีตั๋ววิ่งลด ${percentOf(ADDON_THREE_RATE)}%) · มีคอนเสิร์ตลดเพิ่มอีก ${percentOf(ADDON_CONCERT_RATE)}% (สูงสุด ${percentOf(ADDON_MAX_RATE)}%) 🎁`}
                   </p>}
                   <AddOnPicker value={addOns} onChange={onAddOnsChange} windTunnelRemaining={windRemaining} showResult={false} layout="rows" discountCtx={discountCtx} />
                   <details className="group mt-3 rounded-2xl bg-[#FAF7FF] border-2 border-[var(--ink)]/10">
@@ -759,8 +755,8 @@ export const TicketShop: React.FC<TicketShopProps> = ({
                             <tr className="text-[11px] text-[#6B5A85]">
                               <th className="text-left font-bold pb-1">แพ็กเกจ</th>
                               <th className="text-right font-bold pb-1">ปกติ</th>
-                              <th className="text-right font-bold pb-1">−{percentOf(ADDON_TWO_RATE)}%</th>
-                              <th className="text-right font-bold pb-1">+คอนเสิร์ต −{percentOf(ADDON_MAX_RATE)}%</th>
+                              <th className="text-right font-bold pb-1">ครบ 3: −{percentOf(ADDON_TWO_RATE)}%</th>
+                              <th className="text-right font-bold pb-1">ครบ 3 + คอนเสิร์ต −{percentOf(ADDON_MAX_RATE)}%</th>
                             </tr>
                           </thead>
                           <tbody className="tabular-nums">
@@ -768,14 +764,14 @@ export const TicketShop: React.FC<TicketShopProps> = ({
                               <tr key={p.name} className={p.strong ? 'font-extrabold' : ''}>
                                 <td className="py-0.5 pr-2">{p.name}</td>
                                 <td className="py-0.5 text-right">{formatBaht(p.price)}</td>
-                                <td className="py-0.5 text-right">{formatBaht(p.price - Math.round(p.price * ADDON_TWO_RATE))}</td>
-                                <td className="py-0.5 text-right">{formatBaht(p.price - Math.round(p.price * ADDON_MAX_RATE))}</td>
+                                <td className="py-0.5 text-right">{p.name.startsWith('ครบ 3') ? formatBaht(p.price - Math.round(p.price * ADDON_TWO_RATE)) : '—'}</td>
+                                <td className="py-0.5 text-right">{p.name.startsWith('ครบ 3') ? formatBaht(p.price - Math.round(p.price * ADDON_MAX_RATE)) : '—'}</td>
                               </tr>
                             ))}
                           </tbody>
                         </table>
                         <p className="mt-1.5 text-xs font-bold text-[#6B5A85]">
-                          มีตั๋ววิ่ง + ครบ 3 กิจกรรม ลด {percentOf(ADDON_THREE_RATE)}% · เลือก 1 กิจกรรม + คอนเสิร์ต ลด {percentOf(ADDON_CONCERT_RATE)}% · ส่วนลดกิจกรรมรวมสูงสุด {percentOf(ADDON_MAX_RATE)}%
+                          ส่วนลดกิจกรรมมีเฉพาะเมื่อเลือกครบ 3 กิจกรรม: ลด {percentOf(ADDON_TWO_RATE)}% · มีตั๋ววิ่งลด {percentOf(ADDON_THREE_RATE)}% · มีตั๋วคอนเสิร์ตลดเพิ่ม {percentOf(ADDON_CONCERT_RATE)}% · รวมสูงสุด {percentOf(ADDON_MAX_RATE)}%
                         </p>
                       </div>
                       <div>

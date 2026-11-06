@@ -1189,6 +1189,17 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
                 </div>
               </div>
 
+              {!showTests && orders.some((o) => (o as ServerOrder).isTest) && (
+                <div role="status" className="rounded-2xl border-2 border-amber-300 bg-amber-50 px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+                  <p className="text-sm font-bold text-amber-900">
+                    🧪 มีออเดอร์ทดสอบ 1 บาท {orders.filter((o) => (o as ServerOrder).isTest).length} รายการ ซ่อนอยู่ (ไม่นับในยอดขายและสถิติ) · ออเดอร์ที่คุณซื้อลองด้วยโหมดทดสอบจะอยู่ตรงนี้
+                  </p>
+                  <button type="button" onClick={() => setShowTests(true)} className="min-h-[44px] px-4 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-sm font-black cursor-pointer">
+                    แสดงออเดอร์ทดสอบ
+                  </button>
+                </div>
+              )}
+
               {/* Buyers, Slip Verification & BIB Table */}
               <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
                 <div className="overflow-x-auto">
