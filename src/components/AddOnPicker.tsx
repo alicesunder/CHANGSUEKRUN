@@ -37,14 +37,14 @@ const baht = (n: number) => `${formatBaht(n)} บาท`;
 const ADD_ON_PALETTE = {
   panel: 'linear-gradient(160deg, #8B5CF6 0%, #6D28D9 55%, #4B1FA8 100%)',
   soft: '#FFFFFF',
-  on: 'linear-gradient(165deg, #F6F1FD 0%, #EADFFB 100%)',
+  on: 'linear-gradient(165deg, #FFF8DC 0%, #FFE9A6 100%)',
   border: '#D9C9EF',
-  borderActive: '#7C3AED',
+  borderActive: '#FFB300',
   ink: '#4B1FA8',
   chip: '#F1EAFD',
   button: 'linear-gradient(180deg, #FFD84D, #FFB300)',
-  glow: 'rgba(124, 58, 237, 0.45)',
-  ring: 'rgba(124, 58, 237, 0.22)',
+  glow: 'rgba(255, 179, 0, 0.55)',
+  ring: 'rgba(255, 179, 0, 0.30)',
 } as const;
 export const ADD_ON_THEMES = { tower: ADD_ON_PALETTE, gun: ADD_ON_PALETTE, wind: ADD_ON_PALETTE } as const;
 

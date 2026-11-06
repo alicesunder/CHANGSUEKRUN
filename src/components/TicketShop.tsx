@@ -212,21 +212,26 @@ const StationCard: React.FC<{ id: string; k: StationKey; done: boolean; children
   );
 };
 
-/** One run ticket: a single calm card style for every distance (Design System v2 / ChatGPT mockup). */
+/** One run ticket: one calm card style; when picked the whole card turns royal purple with gold. */
 const RunTicket: React.FC<{ id: RouteId; on: boolean; onPick: () => void }> = ({ id, on, onPick }) => {
   const earlyBird = useEarlyBird();
   const { t: tr } = useLang();
   const t = ticketById(id);
   const l = LOOK[id];
   const isDog = isDogCategory(id);
+  const sub = on ? 'text-white/75' : 'text-[#766A85]';
   return (
     <motion.article
       whileHover={{ y: -4 }}
-      animate={on ? { y: -4 } : { y: 0 }}
-      transition={{ type: 'spring', stiffness: 380, damping: 22 }}
+      animate={on ? { y: -6, rotate: -0.6 } : { y: 0, rotate: 0 }}
+      transition={{ type: 'spring', stiffness: 380, damping: 20 }}
       id={`run-ticket-${id}`}
-      className="group relative flex flex-col ds-card overflow-hidden shrink-0 w-[88%] snap-start sm:w-auto"
-      style={on ? { borderColor: '#7C3AED', boxShadow: '0 0 0 4px rgba(124,58,237,0.25), var(--ds-shadow-card-hover)' } : undefined}
+      className="group relative flex flex-col ds-card overflow-hidden shrink-0 w-[88%] snap-start sm:w-auto transition-colors duration-300"
+      style={
+        on
+          ? { background: 'linear-gradient(165deg, #2A1450 0%, #4B1FA8 60%, #6D28D9 100%)', borderColor: '#FFC928', boxShadow: '0 0 0 3px rgba(255,201,40,0.55), 0 22px 44px -14px rgba(75,31,168,0.65)' }
+          : undefined
+      }
     >
       {t.badge && (
         <span className="absolute left-0 top-3 z-10 inline-flex items-center gap-1 rounded-r-full bg-gradient-to-r from-[#FFC928] to-[#FFE268] pl-2.5 pr-3 py-0.5 text-[11px] font-black text-[#2A1450] shadow-sm">
@@ -234,67 +239,62 @@ const RunTicket: React.FC<{ id: RouteId; on: boolean; onPick: () => void }> = ({
           {t.badge}
         </span>
       )}
-      {on && (
-        <span className="absolute right-3 top-3 z-10 inline-flex items-center gap-1 rounded-full bg-[#7C3AED] px-2.5 py-0.5 text-[11px] font-black text-white shadow-sm" aria-hidden="true">
-          <Check className="w-3 h-3 stroke-[3.5]" /> {tr('เลือกแล้ว', 'Selected')}
-        </span>
-      )}
-
       <span aria-hidden="true" className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-[#4B1FA8] via-[#7C3AED] to-[#FFC928]" />
-      <div className="px-4 pt-10 pb-3 text-center bg-gradient-to-b from-[#EFE6FC] via-[#F8F4FE] to-white">
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-[#4B1FA8] to-[#7C3AED] px-4 py-1.5 text-white shadow-sm">
-          {isDog ? <PawIcon size={14} color="#FFC928" /> : <Zap className="w-3.5 h-3.5 fill-[#FFC928] text-[#FFC928]" />}
+
+      <div className={`px-4 pt-10 pb-3 text-center ${on ? 'bg-white/5' : 'bg-gradient-to-b from-[#EFE6FC] via-[#F8F4FE] to-white'}`}>
+        <span className={`inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 shadow-sm ${on ? 'bg-[#FFC928] text-[#2A1450]' : 'bg-gradient-to-r from-[#4B1FA8] to-[#7C3AED] text-white'}`}>
+          {isDog ? <PawIcon size={14} color={on ? '#2A1450' : '#FFC928'} /> : <Zap className={`w-3.5 h-3.5 ${on ? 'fill-[#2A1450] text-[#2A1450]' : 'fill-[#FFC928] text-[#FFC928]'}`} />}
           <span className="font-display text-2xl font-black leading-none">{t.distanceLabel}</span>
         </span>
-        <h4 className="mt-2.5 font-display text-lg font-black leading-tight text-[#2A1450] break-words">{t.name}</h4>
-        <p className="mt-1 text-xs font-semibold leading-snug text-[#766A85]">{l.sub}</p>
+        <h4 className={`mt-2.5 font-display text-lg font-black leading-tight break-words ${on ? 'text-white' : 'text-[#2A1450]'}`}>{t.name}</h4>
+        <p className={`mt-1 text-xs font-semibold leading-snug ${sub}`}>{l.sub}</p>
       </div>
 
-      <div className="flex flex-col items-center gap-1.5 px-4 text-sm font-bold text-[#281A3B]">
-        <span className="inline-flex items-center gap-2"><Clock className="w-4 h-4 text-[#7C3AED]" />{tr('ปล่อยตัว', 'Start')} {l.startTime}</span>
-        <span className="inline-flex items-center gap-2"><Flame className="w-4 h-4 text-[#7C3AED]" />{tr('เวลาจำกัด', 'Cut-off')} {l.cutoff}</span>
-        <span className="inline-flex items-center gap-2"><Droplets className="w-4 h-4 text-[#7C3AED]" />{tr('น้ำ', 'Water')} {routesData[id].waterStationCount} {tr('จุด', 'stops')}</span>
+      <div className={`flex flex-col items-center gap-1.5 px-4 pt-1 text-sm font-bold ${on ? 'text-white' : 'text-[#281A3B]'}`}>
+        <span className="inline-flex items-center gap-2"><Clock className={`w-4 h-4 ${on ? 'text-[#FFC928]' : 'text-[#7C3AED]'}`} />{tr('ปล่อยตัว', 'Start')} {l.startTime}</span>
+        <span className="inline-flex items-center gap-2"><Flame className={`w-4 h-4 ${on ? 'text-[#FFC928]' : 'text-[#7C3AED]'}`} />{tr('เวลาจำกัด', 'Cut-off')} {l.cutoff}</span>
+        <span className="inline-flex items-center gap-2"><Droplets className={`w-4 h-4 ${on ? 'text-[#FFC928]' : 'text-[#7C3AED]'}`} />{tr('น้ำ', 'Water')} {routesData[id].waterStationCount} {tr('จุด', 'stops')}</span>
       </div>
 
       <div className="flex-1 px-4 pt-3">
-        <div className="grid grid-cols-2 divide-x divide-[#EDE7F6] rounded-xl bg-gradient-to-b from-[#F6F1FD] to-[#FFF8E1] py-2.5">
+        <div className={`grid grid-cols-2 divide-x rounded-xl py-2.5 ${on ? 'divide-white/15 bg-white/10' : 'divide-[#EDE7F6] bg-gradient-to-b from-[#F6F1FD] to-[#FFF8E1]'}`}>
           {perks(isDog).slice(0, 2).map(({ title }, i) => (
             <div key={title} className="flex flex-col items-center gap-1 px-1.5 text-center">
               <img src={i === 0 ? '/images/shop/shirt.webp' : '/images/shop/medal.webp'} alt="" loading="lazy" className="h-12 w-12 object-contain drop-shadow-[0_4px_6px_rgba(42,20,80,0.25)]" />
-              <span className="text-[11px] font-extrabold text-[#281A3B] leading-tight">{title}</span>
+              <span className={`text-[11px] font-extrabold leading-tight ${on ? 'text-white' : 'text-[#281A3B]'}`}>{title}</span>
             </div>
           ))}
         </div>
-        <div className="mt-2 flex items-center justify-between gap-2 rounded-xl border border-dashed border-[#D9C9EF] bg-[#FFFCF7] px-3 py-1.5 text-xs font-extrabold">
+        <div className={`mt-2 flex items-center justify-between gap-2 rounded-xl border border-dashed px-3 py-1.5 text-xs font-extrabold ${on ? 'border-white/35 bg-white/10 text-white' : 'border-[#D9C9EF] bg-[#FFFCF7] text-[#4B2D78]'}`}>
           {isDog ? (
             <>
-              <span className="text-[#4B2D78]">เพิ่มผู้ร่วมวิ่ง</span>
-              <span className="tabular-nums text-[#4B1FA8]">+{t.addPersonPrice}฿/คน</span>
+              <span>เพิ่มผู้ร่วมวิ่ง</span>
+              <span className={`tabular-nums ${on ? 'text-[#FFE268]' : 'text-[#4B1FA8]'}`}>+{t.addPersonPrice}฿/คน</span>
             </>
           ) : id === '10km' ? (
             <>
-              <span className="text-[#4B2D78]">⏱️ ติดชิปจับเวลา (Timing Chip)</span>
-              <span className="text-[#4B1FA8]">ทุกคน</span>
+              <span>⏱️ ติดชิปจับเวลา (Timing Chip)</span>
+              <span className={on ? 'text-[#FFE268]' : 'text-[#4B1FA8]'}>ทุกคน</span>
             </>
           ) : (
             <>
-              <span className="text-[#4B2D78]">เส้นทาง</span>
-              <span className="text-[#4B1FA8]">{l.elevationText}</span>
+              <span>เส้นทาง</span>
+              <span className={on ? 'text-[#FFE268]' : 'text-[#4B1FA8]'}>{l.elevationText}</span>
             </>
           )}
         </div>
       </div>
 
-      <div className="mt-3 border-t border-[#EDE7F6] px-4 pb-4 pt-3">
+      <div className={`mt-3 border-t px-4 pb-4 pt-3 ${on ? 'border-white/20' : 'border-[#EDE7F6]'}`}>
         <div className="mb-2.5 flex items-end justify-between gap-2">
           <span>
-            <span className="block text-xs font-bold text-[#766A85]">{tr('ราคาบัตร', 'Ticket price')} ({t.baseLabel})</span>
-            <span className="font-display text-3xl font-black tabular-nums leading-none text-[#4B1FA8]">
+            <span className={`block text-xs font-bold ${sub}`}>{tr('ราคาบัตร', 'Ticket price')} ({t.baseLabel})</span>
+            <span className={`font-display text-3xl font-black tabular-nums leading-none ${on ? 'text-[#FFE268]' : 'text-[#4B1FA8]'}`}>
               <EarlyBirdPrice list={t.basePrice} now={runBasePrice(id, earlyBird)} />
             </span>
-            <span className="ml-1 text-xs font-extrabold text-[#281A3B]">{tr('บาท', 'THB')}</span>
+            <span className={`ml-1 text-xs font-extrabold ${on ? 'text-white' : 'text-[#281A3B]'}`}>{tr('บาท', 'THB')}</span>
           </span>
-          <span className="shrink-0 whitespace-nowrap text-[10px] font-mono font-bold tracking-wider text-[#766A85]/70">{l.serialCode}</span>
+          <span className={`shrink-0 whitespace-nowrap text-[10px] font-mono font-bold tracking-wider ${on ? 'text-white/50' : 'text-[#766A85]/70'}`}>{l.serialCode}</span>
         </div>
         <motion.button
           type="button"
@@ -302,12 +302,27 @@ const RunTicket: React.FC<{ id: RouteId; on: boolean; onPick: () => void }> = ({
           aria-checked={on}
           onClick={onPick}
           whileTap={{ scale: 0.97 }}
-          className={`w-full min-h-[48px] rounded-full px-4 flex items-center justify-center gap-2 font-extrabold text-sm cursor-pointer ${on ? 'bg-[#2A1450] text-[#FFE268]' : 'bg-gradient-to-b from-[#FFD84D] to-[#FFB300] text-[#261247] shadow-[0_6px_14px_-6px_rgba(255,179,0,0.7)]'}`}
+          className={`w-full min-h-[48px] rounded-full px-4 flex items-center justify-center gap-2 font-extrabold text-sm cursor-pointer ${on ? 'bg-white text-[#2A1450] shadow-[0_6px_14px_-6px_rgba(0,0,0,0.5)]' : 'bg-gradient-to-b from-[#FFD84D] to-[#FFB300] text-[#261247] shadow-[0_6px_14px_-6px_rgba(255,179,0,0.7)]'}`}
         >
           {on ? <Check className="w-4 h-4 stroke-[3]" /> : <Ticket className="w-4 h-4" />}
           <span>{on ? `${tr('เลือกแล้ว', 'Selected')} · ${t.distanceLabel}` : `${tr('เลือกบัตร', 'Pick')} ${t.distanceLabel}`}</span>
         </motion.button>
       </div>
+
+      <AnimatePresence>
+        {on && (
+          <motion.span
+            initial={{ scale: 0, rotate: -40 }}
+            animate={{ scale: 1, rotate: -8 }}
+            exit={{ scale: 0 }}
+            transition={{ type: 'spring', stiffness: 420, damping: 14 }}
+            className="absolute right-3 top-3 z-30 px-2.5 py-1 rounded-full bg-[#FFE268] text-xs font-black text-[#2A1450] shadow-lg"
+            aria-hidden="true"
+          >
+            ✓ ปั๊มแล้ว!
+          </motion.span>
+        )}
+      </AnimatePresence>
     </motion.article>
   );
 };
