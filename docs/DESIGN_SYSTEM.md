@@ -37,6 +37,14 @@ Tailwind names exist too: `bg-ds-deep`, `text-ds-gold`, `border-ds-line`, ...
 Race Pack frame and tiles, concert frame, shop station cards and dark info panels, route/schedule cards, top status banner,
 dog health check, dog contest, winners section.
 
-## Still to do (v2)
-Modals (registration, login, payment, ticket e-mail preview, runner hub), FAQ/hotel/sponsor/transport sections' own cards,
-the shop's small inner chips, the countdown band's old morning artwork, ticket-card artwork, Facebook follow banner.
+## Done in v2
+Modals (login, runner hub, registration cards, payment, payment success, ticket e-mail preview, parking pass, terms, privacy,
+waiver, route map zoom) use `.ds-modal` / `.ds-card`; FAQ, hotel, sponsor, transport, leaderboard, weather and checklist cards;
+shop chips, steppers and notices; Facebook follow banner (`.ds-frame-dark`); toasts. The countdown band, event intro and
+1 km ticket card now use the dusk hero painting.
+
+`.ds-modal` = dialog shell (lavender-white, 28px radius, deep shadow). Buttons and selected-state chips deliberately keep
+their gold/dark outline.
+
+## Still open
+Admin back office (internal, not restyled), celebration popups, add-on picker tier colours.

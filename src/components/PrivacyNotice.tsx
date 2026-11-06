@@ -50,7 +50,7 @@ export const PrivacyNotice: React.FC = () => {
         aria-modal="true"
         aria-labelledby="privacy-title"
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-2xl max-h-[88vh] overflow-y-auto rounded-[24px] bg-white border-[3px] border-[#2A1450] shadow-[0_10px_0_#2A1450]"
+        className="w-full max-w-2xl max-h-[88vh] overflow-y-auto ds-modal"
       >
         <div className="sticky top-0 bg-white border-b border-[#2A1450]/10 px-5 sm:px-7 py-4 flex items-center justify-between gap-3">
           <h2 id="privacy-title" className="text-lg sm:text-xl font-bold text-[#2A1450]">

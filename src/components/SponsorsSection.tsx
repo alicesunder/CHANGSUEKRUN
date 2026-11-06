@@ -105,7 +105,7 @@ export const SponsorsSection: React.FC = () => {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, amount: 0.25 }}
           transition={{ duration: 0.5, ease: 'easeOut' }}
-          className="sponsor-board relative rounded-[28px] bg-white border-[3px] border-[#2A1450] shadow-[0_10px_0_#2A1450] overflow-hidden"
+          className="sponsor-board relative ds-card overflow-hidden"
         >
           {/* Race-tape edge along the top of the board */}
           <div

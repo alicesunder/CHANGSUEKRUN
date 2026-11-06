@@ -61,7 +61,7 @@ export const FAQSection: React.FC = () => {
         </div>
 
         {/* Search & Category Filter */}
-        <div className="bg-white rounded-3xl p-4 sm:p-5 border-2 border-[#2A1450] shadow-[0_10px_24px_-12px_rgba(42,20,80,0.22),0_4px_0_#2A1450] mb-6 space-y-3">
+        <div className="ds-card p-4 sm:p-5 mb-6 space-y-3">
           <div className="relative">
             <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-[#6B5A85]" />
             <input
@@ -101,7 +101,7 @@ export const FAQSection: React.FC = () => {
                 key={item.id}
                 className={`rounded-2xl border-2 transition-all overflow-hidden ${
                   isOpen
-                    ? 'border-[#2A1450] bg-white shadow-[0_10px_22px_-12px_rgba(42,20,80,0.25),0_4px_0_#2A1450]'
+                    ? 'border-[#7C3AED] bg-white shadow-[0_10px_22px_-12px_rgba(42,20,80,0.25)]'
                     : 'border-purple-200 bg-white/90 hover:border-[#5B20A8]'
                 }`}
               >

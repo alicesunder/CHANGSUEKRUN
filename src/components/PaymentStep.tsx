@@ -91,8 +91,8 @@ export const PaymentStep: React.FC<{
       <div
         role="timer"
         aria-live={urgent ? 'assertive' : 'off'}
-        className={`rounded-3xl border-[3px] p-4 sm:p-5 flex items-center gap-4 ${
-          expired ? 'bg-rose-50 border-rose-500' : urgent ? 'bg-amber-50 border-amber-500' : 'bg-[#F5F0FF] border-[#2A1450]'
+        className={`rounded-3xl border-2 p-4 sm:p-5 flex items-center gap-4 ${
+          expired ? 'bg-rose-50 border-rose-500' : urgent ? 'bg-amber-50 border-amber-500' : 'bg-[#F5F0FF] border-[#D9C9EF]'
         }`}
       >
         <div
@@ -151,7 +151,7 @@ export const PaymentStep: React.FC<{
 
       {/* amount (hidden once the time is up, so nobody transfers late) */}
       {!expired && (
-      <div className="rounded-3xl border-[3px] border-[#2A1450] bg-white p-4 sm:p-5 shadow-[0_6px_0_#2A1450]">
+      <div className="ds-card p-4 sm:p-5">
         <div className="flex items-center justify-between gap-3">
           <div>
             <div className="text-xs font-extrabold text-[#6B5A85]">ยอดที่ต้องโอน (ให้ตรงทุกสตางค์)</div>
@@ -166,7 +166,7 @@ export const PaymentStep: React.FC<{
 
       {/* bank account */}
       {bank.accountNo && !expired && (
-        <div className="rounded-3xl border-[3px] border-[#1E3A8A] bg-[#EFF6FF] overflow-hidden">
+        <div className="rounded-3xl border border-[#BFD3F5] bg-[#EFF6FF] overflow-hidden">
           <div className="bg-[#1E3A8A] text-white px-4 py-2.5 text-sm font-black flex items-center gap-2">
             <ShieldCheck className="w-4 h-4 text-[#7DD3FC]" /> โอนเข้าบัญชี {bank.label}
           </div>
@@ -206,7 +206,7 @@ export const PaymentStep: React.FC<{
       )}
 
       {/* slip */}
-      <div className="rounded-3xl border-[3px] border-[#2A1450] bg-white p-4 sm:p-5 shadow-[0_6px_0_#2A1450] space-y-3">
+      <div className="ds-card p-4 sm:p-5 space-y-3">
         <div className="flex items-center gap-2.5">
           <span className="w-10 h-10 rounded-xl bg-emerald-100 border-2 border-emerald-600 text-emerald-800 flex items-center justify-center shrink-0">
             <ScanLine className="w-5 h-5" />

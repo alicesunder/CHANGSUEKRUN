@@ -89,7 +89,7 @@ const PassCard: React.FC<{ orderId: string; plate: ParkingPlate; n: number }> = 
   }, [orderId, plate.plate, plate.province]);
 
   return (
-    <div className="relative overflow-hidden rounded-[22px] bg-white border-[3px] border-[#2A1450] shadow-[0_6px_0_#2A1450]">
+    <div className="relative overflow-hidden ds-card">
       <span aria-hidden="true" className="absolute -top-10 -left-12 w-32 h-20 rounded-full bg-[#5B20A8] -rotate-12" />
       <span aria-hidden="true" className="absolute -bottom-10 -right-10 w-44 h-24 rounded-full bg-[#FFC928] -rotate-12" />
       <div className="relative p-4 sm:p-5">

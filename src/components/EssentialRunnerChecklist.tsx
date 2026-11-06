@@ -106,7 +106,7 @@ export const EssentialRunnerChecklist: React.FC = () => {
   return (
     <div
       id="runner-checklist"
-      className="h-full bg-white rounded-[32px] border-[3px] border-[#2A1450] shadow-[0_18px_38px_-14px_rgba(42,20,80,0.28),0_6px_0_#2A1450] overflow-hidden flex flex-col justify-between"
+      className="h-full ds-card overflow-hidden flex flex-col justify-between"
     >
       {/* Top Accent Bar */}
       <div className="h-2 w-full bg-gradient-to-r from-[#16A34A] via-[#FFC928] to-[#7B3FC6]" />

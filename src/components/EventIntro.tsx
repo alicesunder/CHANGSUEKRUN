@@ -59,7 +59,7 @@ export const EventIntro: React.FC<EventIntroProps> = ({ onOpenVideoModal }) => {
               
               {/* Elephant + Runner + Dog coastal sunset photograph with parallax scrolling */}
               <motion.img
-                src="/images/hero/changsuek-run-coastal.webp"
+                src="/images/hero/sunset-cinematic.webp"
                 alt="ช้าง คนวิ่ง และน้องสุนัข วิ่งไปด้วยกันริมชายหาดยามพระอาทิตย์ตก"
                 style={{
                   y: bannerY,

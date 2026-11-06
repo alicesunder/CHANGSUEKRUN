@@ -222,7 +222,7 @@ export const RunnerDetailsForm: React.FC<{
         </div>
       )}
 
-      <div role={runners.length > 1 ? 'tabpanel' : undefined} className="rounded-3xl border-[3px] border-[#2A1450] bg-white overflow-hidden shadow-[0_6px_0_#2A1450]">
+      <div role={runners.length > 1 ? 'tabpanel' : undefined} className="ds-card overflow-hidden">
         <div className="relative px-4 sm:px-5 py-3 text-white flex flex-wrap items-center justify-between gap-2" style={{ background: `linear-gradient(120deg, ${color}, #2A1450)` }}>
           <span aria-hidden="true" className="absolute right-3 -top-3 text-6xl opacity-15 select-none">🏃</span>
           <div className="relative">

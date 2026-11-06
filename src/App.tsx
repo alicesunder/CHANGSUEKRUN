@@ -475,14 +475,14 @@ export default function App() {
       <AuthModal isOpen={authOpen} onClose={() => { setAuthOpen(false); setResetToken(undefined); }} onAuthed={(s) => { setResetToken(undefined); handleAuthed(s); }} reason={authReason} resetToken={resetToken} />
 
       {mailNote && (
-        <div role="status" className="fixed left-1/2 top-20 z-[10200] -translate-x-1/2 rounded-2xl border-[3px] border-[#2A1450] bg-white px-4 py-3 text-sm font-extrabold text-[#2A1450] shadow-[0_5px_0_#2A1450]">
+        <div role="status" className="fixed left-1/2 top-20 z-[10200] -translate-x-1/2 ds-card px-4 py-3 text-sm font-extrabold text-[#2A1450]">
           {mailNote}
           <button type="button" onClick={() => setMailNote(null)} className="ml-3 rounded-lg bg-[#2A1450] px-2 py-0.5 text-xs text-white cursor-pointer">OK</button>
         </div>
       )}
 
       {lineFailed && (
-        <div role="alert" className="fixed left-1/2 top-20 z-[10200] -translate-x-1/2 rounded-2xl border-[3px] border-[#2A1450] bg-white px-4 py-3 text-sm font-extrabold text-[#2A1450] shadow-[0_5px_0_#2A1450]">
+        <div role="alert" className="fixed left-1/2 top-20 z-[10200] -translate-x-1/2 ds-card px-4 py-3 text-sm font-extrabold text-[#2A1450]">
           {t('เข้าสู่ระบบด้วย LINE ไม่สำเร็จ กรุณาลองใหม่หรือใช้อีเมล', 'LINE login failed — please try again or use e-mail')}
           <button type="button" onClick={() => setLineFailed(false)} className="ml-3 rounded-lg bg-[#2A1450] px-2 py-0.5 text-xs text-white cursor-pointer">OK</button>
         </div>

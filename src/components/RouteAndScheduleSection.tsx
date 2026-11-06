@@ -554,7 +554,7 @@ export const RouteAndScheduleSection: React.FC<RouteAndScheduleProps> = ({
             aria-modal="true"
             aria-label="แผนที่เส้นทางวิ่ง"
             onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-[1400px] max-h-[92vh] overflow-auto rounded-[24px] bg-white border-[3px] border-[#2A1450] p-3 sm:p-5"
+            className="w-full max-w-[1400px] max-h-[92vh] overflow-auto ds-modal p-3 sm:p-5"
           >
             <div className="flex items-center justify-between gap-3 mb-3">
               <h3 className="text-base sm:text-lg font-black text-[#2A1450]">แผนที่เส้นทางวิ่ง</h3>

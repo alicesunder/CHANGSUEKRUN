@@ -142,7 +142,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthed,
         aria-modal="true"
         aria-label={t('เข้าสู่ระบบนักวิ่ง', 'Runner login')}
         onClick={(e) => e.stopPropagation()}
-        className="relative w-full max-w-md my-auto overflow-hidden rounded-[30px] border-[3px] border-[#2A1450] bg-[#FAF8FF] text-[#2A1450] shadow-[0_10px_0_#2A1450,0_30px_70px_-20px_rgba(20,8,38,0.7)]"
+        className="relative w-full max-w-md my-auto overflow-hidden ds-modal text-[#2A1450]"
       >
         {/* header */}
         <div className="relative overflow-hidden bg-gradient-to-br from-[#2D1052] via-[#4C1D95] to-[#7C3AED] px-5 pt-5 pb-6 text-white">

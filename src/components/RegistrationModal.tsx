@@ -995,7 +995,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                 </div>
 
                 {wantConcert && (
-                  <div className="rounded-3xl bg-gradient-to-br from-[#241047] via-[#341866] to-[#4A1F8F] text-white border-[3px] border-[#2A1450] p-4 sm:p-5 space-y-3 shadow-[0_8px_0_#2A1450]">
+                  <div className="ds-frame-dark bg-gradient-to-br from-[#241047] via-[#341866] to-[#4A1F8F] text-white p-4 sm:p-5 space-y-3">
                     <div className="flex items-center gap-3">
                       <span className="w-12 h-12 rounded-2xl bg-[#FFC928] text-2xl flex items-center justify-center" aria-hidden="true">🎶</span>
                       <div>
@@ -1033,7 +1033,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                 )}
 
                 {isAddonOnly && (
-                  <div className="rounded-3xl bg-gradient-to-br from-[#FDF2F8] to-[#F3E8FF] border-[3px] border-[#2A1450] p-4 shadow-[0_8px_0_#2A1450] flex items-start gap-3">
+                  <div className="ds-card bg-gradient-to-br from-[#FDF2F8] to-[#F3E8FF] p-4 flex items-start gap-3">
                     <span className="w-12 h-12 shrink-0 rounded-2xl bg-[#EC4899] text-2xl flex items-center justify-center" aria-hidden="true">🎢</span>
                     <div>
                       <h3 className="text-lg font-black text-[#2A1450] leading-tight">ซื้อกิจกรรมเสริมอย่างเดียว</h3>
@@ -1297,7 +1297,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
           {step === 2 && (
             <form onSubmit={handleProceedToPayment} className="space-y-5">
               {/* Main Registration Container */}
-              <div className="relative bg-white rounded-3xl border-[3px] border-[#2A1450] px-4 sm:px-6 py-5 space-y-5 shadow-[0_8px_0_#2A1450]">
+              <div className="relative ds-card px-4 sm:px-6 py-5 space-y-5">
                 {/* Header Banner */}
                 <div className="rounded-2xl bg-[#FAF7FF] border-2 border-[#2A1450] p-3.5 flex flex-wrap items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
@@ -1368,7 +1368,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                     </FormSection>
                   ) : (
                     <FormSection n={1} icon="👤" color="#C4B5FD" title={isAddonOnly ? 'ข้อมูลผู้ซื้อกิจกรรมเสริม' : 'ข้อมูลผู้ซื้อตั๋ว'}>
-                      <div className="rounded-3xl border-[3px] border-[#2A1450] bg-gradient-to-br from-[#F5F0FF] via-white to-[#FFF7DB] p-4 sm:p-5 shadow-[0_6px_0_#2A1450]">
+                      <div className="ds-card bg-gradient-to-br from-[#F5F0FF] via-white to-[#FFF7DB] p-4 sm:p-5">
                         <label className={labelCls} htmlFor="buyer-name">ชื่อ - นามสกุล *</label>
                         <div className="relative">
                           <User className="w-4 h-4 text-[#6B5A85] absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -1379,7 +1379,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                   )}
 
                   <FormSection n={2} icon="📞" color="#7DD3FC" title="ช่องทางติดต่อ & รับบัตร" sub="ระบบส่งบัตร BIB / ตั๋ว และใบเสร็จไปที่อีเมลนี้ให้อัตโนมัติหลังชำระเงิน">
-                    <div className="rounded-3xl border-[3px] border-[#2A1450] bg-gradient-to-br from-[#E0F2FE] via-white to-[#F5F0FF] p-4 sm:p-5 shadow-[0_6px_0_#2A1450] grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                    <div className="ds-card bg-gradient-to-br from-[#E0F2FE] via-white to-[#F5F0FF] p-4 sm:p-5 grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                       <div>
                         <label className={labelCls} htmlFor="buyer-phone">เบอร์โทรศัพท์ *</label>
                         <div className="relative">
@@ -1406,7 +1406,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
 
                   {isDog && (
                     <FormSection n={3} icon="🐶" color="#86EFAC" title={`ข้อมูลน้องสุนัขคู่ใจ (${dogCount} ตัว)`} sub="ชื่อน้องจะพิมพ์ลงบนป้าย Dog Pass">
-                      <div className="rounded-3xl border-[3px] border-[#2A1450] bg-gradient-to-br from-emerald-50 via-white to-teal-50 p-4 sm:p-5 shadow-[0_6px_0_#2A1450] grid grid-cols-1 sm:grid-cols-[1fr_1fr_auto] gap-3.5 items-end">
+                      <div className="ds-card bg-gradient-to-br from-emerald-50 via-white to-teal-50 p-4 sm:p-5 grid grid-cols-1 sm:grid-cols-[1fr_1fr_auto] gap-3.5 items-end">
                         <div>
                           <label className={labelCls} htmlFor="dog-name">ชื่อน้องสุนัข {dogCount > 1 ? `(ระบุ ${dogCount} ตัว)` : '*'}</label>
                           <input id="dog-name" type="text" required value={dogName} onChange={(e) => setDogName(e.target.value)} placeholder={dogCount > 1 ? 'เช่น ลัคกี้, ถุงทอง' : 'เช่น ลัคกี้'} className="w-full min-h-[48px] px-3.5 rounded-xl border-2 border-emerald-300 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/15 bg-white text-sm font-semibold text-[#14532D] outline-none" />

@@ -203,7 +203,7 @@ export const HotelExplorer: React.FC<HotelExplorerProps> = () => {
         {/* ================================================================ */}
         {/* WHITE FEATURED HOTELS STRIP ("ที่พักใกล้สนาม วิ่งสบาย พักสบาย")     */}
         {/* ================================================================ */}
-        <div className="relative rounded-[36px] bg-white p-6 sm:p-8 lg:p-10 shadow-[0_20px_50px_-16px_rgba(42,20,80,0.18),0_7px_0_#2A1450] overflow-hidden border-[3px] border-[#2A1450]">
+        <div className="relative ds-card p-6 sm:p-8 lg:p-10 overflow-hidden">
           {/* Top Golden & Purple Stripe */}
           <div className="absolute top-0 inset-x-0 h-2 bg-gradient-to-r from-[#5B20A8] via-[#FFC928] to-[#5B20A8]" />
 

@@ -35,7 +35,7 @@ export const TICKET_CARD_IMAGES: Record<
     skyGrad: 'linear-gradient(135deg, #E2CEFF 0%, #9F65EB 55%, #4A1C88 100%)',
   },
   '1km': {
-    src: '/images/hero/beach-run.webp',
+    src: '/images/hero/sunset-cinematic.webp',
     objectPosition: '58% 45%',
     alt: 'บัตรวิ่ง 1 km Dog Run - ช้างศึกสีม่วง นักวิ่ง และน้องสุนัขวิ่งเล่นสนุกสนานริมชายหาด',
     sceneTag: 'BEACH PUPPY FUN RUN',

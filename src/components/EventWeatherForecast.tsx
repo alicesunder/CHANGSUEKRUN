@@ -160,7 +160,7 @@ export const EventWeatherForecast: React.FC = () => {
   return (
     <div
       id="weather-forecast"
-      className="h-full bg-white rounded-[32px] border-[3px] border-[#2A1450] shadow-[0_18px_38px_-14px_rgba(42,20,80,0.28),0_6px_0_#2A1450] overflow-hidden flex flex-col justify-between"
+      className="h-full ds-card overflow-hidden flex flex-col justify-between"
     >
       {/* Top Coastal Sky Bar */}
       <div className="h-2 w-full bg-gradient-to-r from-[#0284C7] via-[#38BDF8] to-[#FFC928]" />

@@ -30,7 +30,7 @@ interface HeroProps {
 }
 
 const BEACH = '/images/hero/sunset-cinematic.webp';
-const COASTAL_SUNSET = '/images/hero/changsuek-run-coastal.webp';
+const COASTAL_SUNSET = '/images/hero/sunset-cinematic.webp';
 
 const fadeMask: React.CSSProperties = {
   WebkitMaskImage:

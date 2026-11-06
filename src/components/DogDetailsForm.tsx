@@ -53,7 +53,7 @@ export const DogDetailsForm: React.FC<{
   const bad = (what: string) => showErrors && problems.includes(what);
   const set = (patch: Partial<DogExtra>) => onChange({ ...extra, ...patch });
   return (
-    <div className="mt-3.5 rounded-3xl border-[3px] border-[#2A1450] bg-white p-4 sm:p-5 shadow-[0_6px_0_#2A1450] space-y-4">
+    <div className="mt-3.5 ds-card p-4 sm:p-5 space-y-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
         <div>
           <label className={lbl} htmlFor="dog-year">ปีเกิดน้อง (ประมาณเอาก็ได้) *</label>

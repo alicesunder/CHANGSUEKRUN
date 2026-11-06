@@ -42,7 +42,7 @@ export const DogHealthCheckSection: React.FC = () => (
               aria-hidden="true"
               animate={{ y: [0, -6, 0], rotate: [-8, 8, -8] }}
               transition={{ duration: 2.6, repeat: Infinity, ease: 'easeInOut' }}
-              className="absolute -top-4 -right-2 px-3.5 py-1.5 rounded-full bg-[#FFC928] border-[3px] border-[var(--ink)] text-base font-black text-[var(--ink)] shadow-[0_3px_0_var(--ink)]"
+              className="absolute -top-4 -right-2 px-3.5 py-1.5 rounded-full bg-[#FFC928] border-2 border-white text-base font-black text-[var(--ink)] shadow-lg"
             >
               ฟรี!
             </motion.span>

@@ -189,7 +189,7 @@ export const DogContestSection: React.FC = () => {
           >
             {/* picture side */}
             <div className="md:col-span-5 relative mx-auto w-full max-w-[400px]">
-              <div className={c.image ? 'relative' : `rounded-[24px] bg-white border-[3px] border-[var(--ink)] shadow-[5px_6px_0_var(--ink)] p-2.5 ${c.id === 'healthy' ? 'rotate-1' : '-rotate-2'}`}>
+              <div className={c.image ? 'relative' : `ds-card p-2.5 ${c.id === 'healthy' ? 'rotate-1' : '-rotate-2'}`}>
                 {c.image ? (
                   <img
                     src={c.image.src}
@@ -228,7 +228,7 @@ export const DogContestSection: React.FC = () => {
                 aria-hidden="true"
                 animate={{ y: [0, -6, 0], rotate: [-8, 8, -8] }}
                 transition={{ duration: 2.6, repeat: Infinity, ease: 'easeInOut' }}
-                className="absolute -top-4 -right-3 px-3 py-1.5 rounded-full bg-[#FFC928] border-[3px] border-[var(--ink)] text-sm font-black text-[var(--ink)] shadow-[0_3px_0_var(--ink)]"
+                className="absolute -top-4 -right-3 px-3 py-1.5 rounded-full bg-[#FFC928] border-2 border-white text-sm font-black text-[var(--ink)] shadow-lg"
               >
                 ฟรี!
               </motion.span>

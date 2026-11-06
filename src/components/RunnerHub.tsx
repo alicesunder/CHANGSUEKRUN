@@ -37,7 +37,7 @@ const KIND_STYLE: Record<BuyKind, { emoji: string; grad: string; th: string; en:
 };
 
 const Stat: React.FC<{ emoji: string; value: React.ReactNode; label: string; tint: string }> = ({ emoji, value, label, tint }) => (
-  <div className="rounded-2xl border-[3px] border-[#2A1450] px-3 py-2.5 shadow-[0_4px_0_#2A1450]" style={{ background: tint }}>
+  <div className="rounded-2xl border border-[#D9C9EF] px-3 py-2.5 shadow-sm" style={{ background: tint }}>
     <div className="text-xl" aria-hidden="true">{emoji}</div>
     <div className="text-2xl font-black leading-none text-[#2A1450] tabular-nums">{value}</div>
     <div className="mt-0.5 text-[11px] font-extrabold text-[#4B2D78]">{label}</div>
@@ -107,7 +107,7 @@ export const RunnerHub: React.FC<{
         aria-modal="true"
         aria-label={t('ศูนย์นักวิ่ง', 'Runner Center')}
         onClick={(e) => e.stopPropagation()}
-        className="my-auto w-full max-w-4xl overflow-hidden rounded-[30px] border-[3px] border-[#2A1450] bg-[#FAF8FF] text-[#2A1450] shadow-[0_10px_0_#2A1450,0_30px_70px_-20px_rgba(20,8,38,0.7)]"
+        className="my-auto w-full max-w-4xl overflow-hidden ds-modal text-[#2A1450]"
       >
         {/* header */}
         <div className="relative overflow-hidden bg-gradient-to-br from-[#2D1052] via-[#4C1D95] to-[#7C3AED] px-4 pb-5 pt-4 text-white sm:px-6">
@@ -195,7 +195,7 @@ export const RunnerHub: React.FC<{
                 ...(o.extraRunners || []).map((r) => ({ name: r.name, ins: r.insurance, shirt: r.shirtSize })),
               ];
               return (
-                <article key={o.orderId} className="overflow-hidden rounded-3xl border-[3px] border-[#2A1450] bg-white shadow-[0_5px_0_#2A1450]">
+                <article key={o.orderId} className="overflow-hidden ds-card">
                   <button type="button" onClick={() => setOpen(isOpen2 ? null : o.orderId)} aria-expanded={isOpen2} className="flex w-full items-center gap-3 p-3 text-left cursor-pointer sm:p-4">
                     <span className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl text-3xl text-white" style={{ background: ks.grad }} aria-hidden="true">{ks.emoji}</span>
                     <span className="min-w-0 flex-1">
@@ -267,7 +267,7 @@ export const RunnerHub: React.FC<{
                     o.addOns!.windTunnel && { id: 'wind' as const, emoji: '🌪️', th: 'อุโมงค์ลม', en: 'Wind tunnel' },
                   ].filter(Boolean) as { id: 'tower' | 'gun' | 'wind'; emoji: string; th: string; en: string }[];
                   return (
-                    <article key={o.orderId} className="rounded-3xl border-[3px] border-[#2A1450] bg-white p-4 shadow-[0_5px_0_#2A1450]">
+                    <article key={o.orderId} className="ds-card p-4">
                       <div className="flex flex-wrap items-center justify-between gap-2">
                         <p className="flex items-center gap-1.5 text-sm font-black"><CalendarDays className="h-4 w-4 text-[#7C3AED]" /> {t('วันอาทิตย์ที่ 10 ม.ค. 2570', 'Sunday 10 Jan 2027')}</p>
                         <span className={`rounded-full border px-2 py-0.5 text-[11px] font-extrabold ${st.cls}`}>{t(st.th, st.en)}</span>
@@ -317,7 +317,7 @@ export const RunnerHub: React.FC<{
                     CONCERT: t('GA หรือ VIP TABLE', 'GA or VIP table'),
                   }[k];
                   return (
-                    <button key={k} type="button" onClick={() => onBuy(k)} className="group rounded-3xl border-[3px] border-[#2A1450] p-4 text-left text-white shadow-[0_6px_0_#2A1450] transition hover:-translate-y-0.5 cursor-pointer" style={{ background: ks.grad }}>
+                    <button key={k} type="button" onClick={() => onBuy(k)} className="group rounded-3xl border border-white/20 p-4 text-left text-white shadow-lg transition hover:-translate-y-0.5 cursor-pointer" style={{ background: ks.grad }}>
                       <span className="text-4xl" aria-hidden="true">{ks.emoji}</span>
                       <span className="mt-2 block text-lg font-black">{t(ks.th, ks.en)}</span>
                       <span className="block text-xs font-bold text-white/90">{sub}</span>
@@ -466,7 +466,7 @@ const ProfileForm: React.FC<{ session: Session; onLogout: () => void }> = ({ ses
           setBusy(false);
         }
       }}
-      className="space-y-4 rounded-3xl border-[3px] border-[#2A1450] bg-white p-4 shadow-[0_5px_0_#2A1450] sm:p-5"
+      className="space-y-4 ds-card p-4 sm:p-5"
     >
       <p className="rounded-xl bg-[#F3E8FF] px-3 py-2 text-xs font-bold text-[#4B2D78]">
         {t('แก้ไขข้อมูลส่วนตัวได้ที่นี่ ใช้เติมในฟอร์มสั่งซื้ออัตโนมัติ (ไม่เก็บเลขบัตรประชาชน — ต้องกรอกใหม่ทุกครั้งที่ซื้อตั๋ววิ่ง เพื่อทำประกัน)', 'Edit your personal details here — they pre-fill the order form (your national ID is not stored; it is asked each time you buy a run ticket, for the accident insurance)')}

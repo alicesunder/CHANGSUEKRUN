@@ -119,7 +119,7 @@ export const TicketPrintEmailModal: React.FC<TicketPrintEmailModalProps> = ({
 
   const modalContent = (
     <div className="dedicated-print-portal fixed inset-0 z-[10050] flex items-center justify-center p-2 sm:p-4 bg-[#140826]/85 backdrop-blur-md overflow-y-auto">
-      <div className="relative w-full max-w-4xl my-auto rounded-[28px] border-[3px] border-[#2A1450] bg-[#FAF7FF] text-[#2A1450] shadow-[0_24px_60px_rgba(0,0,0,0.6),0_8px_0_#2A1450] overflow-hidden max-h-[95vh] flex flex-col print-sheet-wrapper">
+      <div className="relative w-full max-w-4xl my-auto ds-modal text-[#2A1450] overflow-hidden max-h-[95vh] flex flex-col print-sheet-wrapper">
         {/* ============================================================ */}
         {/* TOP HEADER (HIDDEN ON PAPER PRINT)                           */}
         {/* ============================================================ */}
@@ -319,7 +319,7 @@ export const TicketPrintEmailModal: React.FC<TicketPrintEmailModalProps> = ({
         {/* MAIN SCROLLABLE PREVIEW & PRINTABLE DOCUMENT SHEET           */}
         {/* ============================================================ */}
         <div className="p-4 sm:p-6 overflow-y-auto flex-1 bg-slate-200/70 print:bg-white print:p-0">
-          <div className="max-w-3xl mx-auto bg-white rounded-3xl border-[3px] border-[#2A1450] p-5 sm:p-7 shadow-xl print:shadow-none print:border-0 print:rounded-none printable-active-document space-y-6">
+          <div className="max-w-3xl mx-auto bg-white rounded-3xl border border-[#D9C9EF] p-5 sm:p-7 shadow-xl print:shadow-none print:border-0 print:rounded-none printable-active-document space-y-6">
             {/* ======================================================== */}
             {/* TAB 1: PRINTABLE FORMATS                                 */}
             {/* ======================================================== */}
@@ -378,7 +378,7 @@ export const TicketPrintEmailModal: React.FC<TicketPrintEmailModalProps> = ({
 
                 {/* PART B: E-TICKET & QR RACE KIT PICKUP PASS (Shown in eticket_pass & full_a4_receipt) */}
                 {(printFormat === 'eticket_pass' || printFormat === 'full_a4_receipt') && (
-                  <div className="border-[3px] border-[#2A1450] rounded-3xl overflow-hidden bg-white page-break-avoid">
+                  <div className="border border-[#D9C9EF] rounded-3xl overflow-hidden bg-white page-break-avoid">
                     <div
                       style={{
                         background: `linear-gradient(135deg, ${meta.primary} 0%, ${meta.secondary} 100%)`,
@@ -492,10 +492,10 @@ export const TicketPrintEmailModal: React.FC<TicketPrintEmailModalProps> = ({
                 {(printFormat === 'bib_only' || printFormat === 'full_a4_receipt') && (
                   <div className="relative rounded-[28px] border-[4px] border-[#2A1450] bg-white overflow-hidden page-break-avoid">
                     {/* 4 Corner Safety Pin Holes */}
-                    <div className="absolute top-3.5 left-3.5 w-4 h-4 rounded-full bg-white border-[3px] border-[#2A1450] z-20" />
-                    <div className="absolute top-3.5 right-3.5 w-4 h-4 rounded-full bg-white border-[3px] border-[#2A1450] z-20" />
-                    <div className="absolute bottom-3.5 left-3.5 w-4 h-4 rounded-full bg-white border-[3px] border-[#2A1450] z-20" />
-                    <div className="absolute bottom-3.5 right-3.5 w-4 h-4 rounded-full bg-white border-[3px] border-[#2A1450] z-20" />
+                    <div className="absolute top-3.5 left-3.5 w-4 h-4 rounded-full bg-white border border-[#D9C9EF] z-20" />
+                    <div className="absolute top-3.5 right-3.5 w-4 h-4 rounded-full bg-white border border-[#D9C9EF] z-20" />
+                    <div className="absolute bottom-3.5 left-3.5 w-4 h-4 rounded-full bg-white border border-[#D9C9EF] z-20" />
+                    <div className="absolute bottom-3.5 right-3.5 w-4 h-4 rounded-full bg-white border border-[#D9C9EF] z-20" />
 
                     {/* Top Wave Banner */}
                     <div

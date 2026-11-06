@@ -1180,10 +1180,17 @@ main button:active:not(:disabled), .btn-paw:active { scale: .96; }
 
 /* soft card on light backgrounds */
 .ds-card {
-  background: #fff;
+  background-color: #fff;
   border: 1px solid var(--ds-line);
   border-radius: var(--ds-radius-card);
   box-shadow: var(--ds-shadow-card);
+}
+/* modal / dialog shell */
+.ds-modal {
+  background-color: #FAF8FF;
+  border: 1px solid var(--ds-line);
+  border-radius: var(--ds-radius-frame);
+  box-shadow: 0 30px 70px -20px rgba(20, 8, 38, 0.7);
 }
 .ds-card-hover { transition: transform .2s ease, box-shadow .2s ease; }
 .ds-card-hover:hover { transform: translateY(-3px); box-shadow: var(--ds-shadow-card-hover); }

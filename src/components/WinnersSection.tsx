@@ -34,7 +34,7 @@ export const WinnersSection: React.FC = () => {
             <motion.span
               animate={{ rotate: [-8, 8, -8], y: [0, -4, 0] }}
               transition={{ duration: 2.6, repeat: Infinity, ease: 'easeInOut' }}
-              className="inline-flex w-16 h-16 rounded-3xl bg-[#FFC928] border-[3px] border-[#2A1450] items-center justify-center shadow-[0_6px_0_#2A1450]"
+              className="inline-flex w-16 h-16 rounded-3xl bg-[#FFC928] items-center justify-center shadow-lg"
               aria-hidden="true"
             >
               <Trophy className="w-8 h-8 text-[#2A1450]" />

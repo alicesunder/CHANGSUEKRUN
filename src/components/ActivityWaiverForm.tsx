@@ -228,7 +228,7 @@ const WaiverReader: React.FC<{ activity: WaiverActivity; people: WaiverParticipa
         aria-modal="true"
         aria-label={`เอกสารสละสิทธิ์ฟ้องร้อง ${WAIVER_LABEL[activity]}`}
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-3xl max-h-[94vh] flex flex-col rounded-[22px] bg-white border-[3px] border-[#2A1450] overflow-hidden"
+        className="w-full max-w-3xl max-h-[94vh] flex flex-col ds-modal overflow-hidden"
       >
         <div className="flex items-center justify-between gap-3 px-4 py-3 bg-[#2A1450] text-white">
           <div>

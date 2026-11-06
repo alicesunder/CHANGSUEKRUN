@@ -8,12 +8,12 @@ export const FollowFacebook: React.FC = () => (
     <div className="max-w-[1100px] mx-auto px-4 sm:px-6">
       <div
         data-reveal="pop"
-        className="relative overflow-hidden rounded-[28px] border-[3px] border-[#2A1450] shadow-[0_8px_0_#2A1450] bg-gradient-to-r from-[#1877F2] via-[#5B3FD9] to-[#7C3AED] text-white px-5 sm:px-8 py-5 sm:py-6 flex flex-col sm:flex-row items-center gap-4 sm:gap-6"
+        className="relative overflow-hidden ds-frame-dark bg-gradient-to-r from-[#1B4FB8] via-[#4B1FA8] to-[#7C3AED] text-white px-5 sm:px-8 py-5 sm:py-6 flex flex-col sm:flex-row items-center gap-4 sm:gap-6"
       >
         <span aria-hidden="true" className="absolute -right-6 -top-8 text-[120px] opacity-15 rotate-12 select-none">🐾</span>
         <span
           aria-hidden="true"
-          className="shrink-0 w-16 h-16 rounded-2xl bg-white text-[#1877F2] flex items-center justify-center text-4xl font-black border-[3px] border-[#2A1450] shadow-[0_4px_0_#2A1450] animate-bobble"
+          className="shrink-0 w-16 h-16 rounded-2xl bg-white text-[#1877F2] flex items-center justify-center text-4xl font-black shadow-lg animate-bobble"
         >
           f
         </span>

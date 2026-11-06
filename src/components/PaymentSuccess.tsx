@@ -50,7 +50,7 @@ export const PaymentSuccess: React.FC<{
           initial={{ scale: 0.4, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ type: 'spring', stiffness: 300, damping: 16 }}
-          className="mx-auto w-16 h-16 rounded-full bg-emerald-500 border-[3px] border-[#2A1450] flex items-center justify-center shadow-[0_4px_0_#2A1450]"
+          className="mx-auto w-16 h-16 rounded-full bg-emerald-500 flex items-center justify-center shadow-lg shadow-emerald-500/30"
         >
           <CheckCircle2 className="w-9 h-9 text-white" />
         </motion.div>
@@ -89,7 +89,7 @@ export const PaymentSuccess: React.FC<{
         initial={{ opacity: 0, y: 18 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.08 }}
-        className="rounded-[28px] border-[3px] border-[#2A1450] bg-white shadow-[0_8px_0_#2A1450] overflow-hidden"
+        className="ds-card overflow-hidden"
       >
         <div style={{ background: headerGrad }} className="px-5 py-3.5 text-white flex items-center justify-between gap-3">
           <div className="min-w-0">

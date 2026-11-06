@@ -523,7 +523,7 @@ export const LeaderboardSection: React.FC = () => {
         <h2 id="leaderboard-heading" className="text-3xl sm:text-4xl font-extrabold text-[#2A1450]">
           ผลการแข่งขัน
         </h2>
-        <div className="mt-6 rounded-[28px] bg-white border-[3px] border-[#2A1450] shadow-[0_8px_0_#2A1450] px-6 py-8 sm:py-10 flex flex-col items-center gap-3">
+        <div className="mt-6 ds-card px-6 py-8 sm:py-10 flex flex-col items-center gap-3">
           <span className="w-14 h-14 rounded-2xl bg-[#FFF4D2] border-2 border-[#2A1450] flex items-center justify-center">
             <Trophy className="w-7 h-7 text-[#B45309]" />
           </span>

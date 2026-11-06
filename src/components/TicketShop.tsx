@@ -189,7 +189,7 @@ const StationCard: React.FC<{ id: string; k: StationKey; done: boolean; children
           aria-hidden="true"
           animate={done ? { rotate: [0, -14, 14, 0], scale: [1, 1.18, 1] } : { rotate: 0, scale: 1 }}
           transition={{ duration: 0.5 }}
-          className="relative w-11 h-11 shrink-0 rounded-2xl bg-white border-[3px] border-[var(--ink)] flex items-center justify-center text-xl shadow-[0_3px_0_var(--ink)]"
+          className="relative w-11 h-11 shrink-0 rounded-2xl bg-white border border-[var(--ds-line)] flex items-center justify-center text-xl shadow-sm"
         >
           {s.emoji}
           <span
@@ -373,7 +373,7 @@ const QtyStepper: React.FC<{ value: number; onChange: (n: number) => void; label
       onClick={() => onChange(Math.max(0, value - 1))}
       disabled={value <= 0}
       aria-label={`ลด${label}`}
-      className="w-12 h-12 rounded-2xl border-[3px] border-[var(--ink)] bg-white text-[var(--ink)] flex items-center justify-center shadow-[0_3px_0_var(--ink)] active:translate-y-0.5 active:shadow-none disabled:opacity-40 cursor-pointer"
+      className="w-12 h-12 rounded-2xl border border-[var(--ds-line)] bg-white text-[var(--ink)] flex items-center justify-center shadow-sm active:translate-y-0.5 active:shadow-none disabled:opacity-40 cursor-pointer"
     >
       <Minus className="w-5 h-5 stroke-[3]" />
     </button>
@@ -561,7 +561,7 @@ export const TicketShop: React.FC<TicketShopProps> = ({
           <DealStrip hasRun={eligible} hasGaConcert={concertQty > 0} hasConcert={hasConcert} activities={activityCount} />
         </div>
         {salesClosed && (
-          <div role="status" className="mx-auto mt-5 max-w-2xl rounded-2xl border-[3px] border-[#2A1450] bg-[#FFE4E6] px-4 py-3 text-center shadow-[0_5px_0_#2A1450]">
+          <div role="status" className="mx-auto mt-5 max-w-2xl rounded-2xl border border-[#F5B5BD] bg-[#FFE4E6] px-4 py-3 text-center shadow-sm">
             <p className="text-base sm:text-lg font-black text-[#9F1239]">
               {opensAt
                 ? tr('⏳ เปิดขายบัตร ' + formatOpenAt(opensAt, false), '⏳ Tickets go on sale ' + formatOpenAt(opensAt, true))
@@ -834,7 +834,7 @@ export const TicketShop: React.FC<TicketShopProps> = ({
                     initial={{ scale: 0.8, rotate: -3 }}
                     animate={{ scale: 1, rotate: 0 }}
                     transition={{ type: 'spring', stiffness: 400, damping: 12 }}
-                    className="mt-3 rounded-2xl border-[3px] border-[var(--ink)] px-3 py-2 text-center text-[var(--ink)] shadow-[0_4px_0_var(--ink)]"
+                    className="mt-3 rounded-2xl border border-[var(--ds-line)] px-3 py-2 text-center text-[var(--ink)] shadow-sm"
                     style={{ background: 'linear-gradient(135deg, #FFE268, #FFC928 50%, #FF7A59)' }}
                   >
                     <span className="block text-xs font-extrabold">{tr('🎉 คุณประหยัดไปแล้ว', '🎉 You are saving')}</span>

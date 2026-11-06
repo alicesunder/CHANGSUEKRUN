@@ -119,7 +119,7 @@ export const TransportationSection: React.FC = () => {
             return (
               <div
                 key={item.id}
-                className="bg-white rounded-3xl border-2 border-[#EEE4FA] p-6 shadow-md hover:shadow-xl hover:-translate-y-1 transition-all flex flex-col justify-between"
+                className="ds-card ds-card-hover p-6 flex flex-col justify-between"
               >
                 <div>
                   <div className="flex items-center justify-between mb-4">
@@ -154,7 +154,7 @@ export const TransportationSection: React.FC = () => {
         </div>
 
         {/* SECTION 25: PARKING & SHUTTLE SERVICE */}
-        <div className="bg-white rounded-3xl p-6 sm:p-8 border-2 border-[#EEE4FA] shadow-xl mb-8">
+        <div className="ds-card p-6 sm:p-8 mb-8">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
             <div>
               <span className="text-xs font-black uppercase tracking-wider text-[#54239A] bg-[#EEE4FA] px-3 py-1 rounded-full">
