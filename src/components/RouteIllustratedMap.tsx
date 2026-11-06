@@ -137,9 +137,10 @@ const CAMP: MapDef = {
       pin: [645, 1378],
       label: 'ค่ายนเรศวร',
       sub: 'กองบัญชาการ ตชด.',
-      labelAt: [690, 1308],
-      anchor: 'start',
-      fs: 40,
+      // the name sits in the open space inside the loop (the spot the organiser marked), not beside the pin
+      labelAt: [916, 835],
+      anchor: 'middle',
+      fs: 44,
       color: '#7C3AED',
       sticker: { id: 'camp', src: '/images/map/sticker-bpp-school.webp', x: 560, y: 930, w: 240, h: 243, rotate: -4 },
     },
