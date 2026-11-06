@@ -72,9 +72,9 @@ const LOOK: Record<RouteId, TicketLook> = {
   '1km': {
     grad: 'linear-gradient(165deg, #FFFFFF 0%, #FFF6F1 55%, #FFE6D8 100%)',
     headerGrad: 'linear-gradient(135deg, #FF7A59 0%, #FF4E88 100%)',
-    accent: '#FF5A5F',
-    accentDark: '#C2410C',
-    accentSoft: '#FFF0E8',
+    accent: '#7C3AED',
+    accentDark: '#4B1FA8',
+    accentSoft: '#F1EAFD',
     borderIdle: 'rgba(255, 122, 89, 0.45)',
     shadowIdle: '0 18px 38px -14px rgba(255, 90, 95, 0.3)',
     shadowActive: '0 24px 48px -12px rgba(255, 90, 95, 0.5), 0 0 0 4px rgba(255, 90, 95, 0.3)',
@@ -92,9 +92,9 @@ const LOOK: Record<RouteId, TicketLook> = {
   '3km': {
     grad: 'linear-gradient(165deg, #FFFFFF 0%, #F0FDF9 55%, #CCFBF1 100%)',
     headerGrad: 'linear-gradient(135deg, #10B981 0%, #0EA5E9 100%)',
-    accent: '#0D9488',
-    accentDark: '#0F766E',
-    accentSoft: '#E6FFFA',
+    accent: '#7C3AED',
+    accentDark: '#4B1FA8',
+    accentSoft: '#F1EAFD',
     borderIdle: 'rgba(16, 185, 129, 0.45)',
     shadowIdle: '0 18px 38px -14px rgba(16, 185, 129, 0.3)',
     shadowActive: '0 24px 48px -12px rgba(16, 185, 129, 0.5), 0 0 0 4px rgba(16, 185, 129, 0.3)',
@@ -112,9 +112,9 @@ const LOOK: Record<RouteId, TicketLook> = {
   '5km': {
     grad: 'linear-gradient(165deg, #FFFFFF 0%, #FFFBEB 55%, #FEF08A 100%)',
     headerGrad: 'linear-gradient(135deg, #F59E0B 0%, #FF6B6B 100%)',
-    accent: '#B45309',
-    accentDark: '#B45309',
-    accentSoft: '#FEF3C7',
+    accent: '#7C3AED',
+    accentDark: '#4B1FA8',
+    accentSoft: '#F1EAFD',
     borderIdle: 'rgba(245, 158, 11, 0.5)',
     shadowIdle: '0 18px 38px -14px rgba(245, 158, 11, 0.3)',
     shadowActive: '0 24px 48px -12px rgba(245, 158, 11, 0.5), 0 0 0 4px rgba(245, 158, 11, 0.32)',
@@ -132,9 +132,9 @@ const LOOK: Record<RouteId, TicketLook> = {
   '10km': {
     grad: 'linear-gradient(165deg, #FFFFFF 0%, #F5F3FF 55%, #E9D5FF 100%)',
     headerGrad: 'linear-gradient(135deg, #6366F1 0%, #9333EA 52%, #EC4899 100%)',
-    accent: '#8B5CF6',
-    accentDark: '#5B21B6',
-    accentSoft: '#F3E8FF',
+    accent: '#7C3AED',
+    accentDark: '#4B1FA8',
+    accentSoft: '#F1EAFD',
     borderIdle: 'rgba(139, 92, 246, 0.45)',
     shadowIdle: '0 18px 38px -14px rgba(139, 92, 246, 0.3)',
     shadowActive: '0 24px 48px -12px rgba(139, 92, 246, 0.5), 0 0 0 4px rgba(139, 92, 246, 0.32)',
@@ -212,7 +212,7 @@ const StationCard: React.FC<{ id: string; k: StationKey; done: boolean; children
   );
 };
 
-/** One collectible run ticket (colours + details from the original ticket cards). */
+/** One run ticket: a single calm card style for every distance (Design System v2 / ChatGPT mockup). */
 const RunTicket: React.FC<{ id: RouteId; on: boolean; onPick: () => void }> = ({ id, on, onPick }) => {
   const earlyBird = useEarlyBird();
   const { t: tr } = useLang();
@@ -222,146 +222,93 @@ const RunTicket: React.FC<{ id: RouteId; on: boolean; onPick: () => void }> = ({
   return (
     <motion.article
       whileHover={{ y: -4 }}
-      animate={on ? { y: -6, rotate: -0.6 } : { y: 0, rotate: 0 }}
-      transition={{ type: 'spring', stiffness: 380, damping: 20 }}
+      animate={on ? { y: -4 } : { y: 0 }}
+      transition={{ type: 'spring', stiffness: 380, damping: 22 }}
       id={`run-ticket-${id}`}
-      className="group relative flex flex-col rounded-[26px] overflow-hidden shrink-0 w-[88%] snap-start sm:w-auto"
-      style={{ background: l.grad, border: on ? '3px solid var(--ink)' : `2px solid ${l.borderIdle}`, boxShadow: on ? l.shadowActive : l.shadowIdle }}
+      className="group relative flex flex-col ds-card overflow-hidden shrink-0 w-[88%] snap-start sm:w-auto"
+      style={on ? { borderColor: '#7C3AED', boxShadow: '0 0 0 4px rgba(124,58,237,0.25), var(--ds-shadow-card-hover)' } : undefined}
     >
-      {/* foil sheen on hover */}
-      <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-20 overflow-hidden opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-        <div className="absolute -inset-y-12 w-28 bg-gradient-to-r from-transparent via-white/70 to-transparent animate-ticket-shimmer" />
+      {t.badge && (
+        <span className="absolute left-0 top-3 z-10 inline-flex items-center gap-1 rounded-r-full bg-gradient-to-r from-[#FFC928] to-[#FFE268] pl-2.5 pr-3 py-0.5 text-[11px] font-black text-[#2A1450] shadow-sm">
+          <Sparkles className="w-3 h-3" />
+          {t.badge}
+        </span>
+      )}
+      {on && (
+        <span className="absolute right-3 top-3 z-10 inline-flex items-center gap-1 rounded-full bg-[#7C3AED] px-2.5 py-0.5 text-[11px] font-black text-white shadow-sm" aria-hidden="true">
+          <Check className="w-3 h-3 stroke-[3.5]" /> {tr('เลือกแล้ว', 'Selected')}
+        </span>
+      )}
+
+      <div className="px-4 pt-10 pb-3 text-center">
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-[#4B1FA8] to-[#7C3AED] px-4 py-1.5 text-white shadow-sm">
+          {isDog ? <PawIcon size={14} color="#FFC928" /> : <Zap className="w-3.5 h-3.5 fill-[#FFC928] text-[#FFC928]" />}
+          <span className="font-display text-2xl font-black leading-none">{t.distanceLabel}</span>
+        </span>
+        <h4 className="mt-2.5 font-display text-lg font-black leading-tight text-[#2A1450] break-words">{t.name}</h4>
+        <p className="mt-1 text-xs font-semibold leading-snug text-[#766A85]">{l.sub}</p>
       </div>
 
-      {/* header */}
-      <div className="relative px-4 pt-3.5 pb-3.5 text-white overflow-hidden" style={{ background: l.headerGrad }}>
-        <div aria-hidden="true" className="absolute inset-x-0 top-0 h-px bg-white/60" />
-        <div aria-hidden="true" className="absolute -top-10 -right-10 w-32 h-32 rounded-full bg-white/25 blur-2xl" />
-        <div className="relative z-10 flex items-center gap-1.5 mb-2">
-          <span className="inline-flex items-center gap-1 text-[11px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full" style={{ background: l.badgeBg, color: l.badgeText }}>
-            {isDog ? <PawIcon size={11} color="currentColor" /> : <Zap className="w-3 h-3 fill-current" />}
-            {isDog ? 'DOG RUN' : 'RUNNER'}
-          </span>
-          {t.badge && (
-            <span className="inline-flex items-center gap-1 text-[11px] font-extrabold px-2 py-0.5 rounded-full bg-black/25 border border-white/25">
-              <Sparkles className="w-3 h-3 text-[#FFE28A]" />
-              {t.badge}
-            </span>
-          )}
-        </div>
-        <div className="relative z-10 flex items-center justify-between gap-2">
-          <div className="min-w-0">
-            <div className="flex items-baseline gap-2 flex-wrap">
-              <span className="font-display text-4xl font-black leading-none tracking-tight drop-shadow-[0_3px_8px_rgba(0,0,0,0.22)]">{t.distanceLabel}</span>
-              <span className="text-[11px] font-mono font-extrabold px-2 py-0.5 rounded-md bg-black/25 border border-white/20">BIB {l.bibPrefix}</span>
-            </div>
-            <h4 className="mt-1 text-sm font-extrabold text-white/95 break-words">{t.name}</h4>
-          </div>
-          <motion.span
-            animate={on ? { y: [0, -6, 0], rotate: [0, -8, 8, 0] } : { y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="w-14 h-14 shrink-0 rounded-2xl bg-white/95 border-2 border-white shadow-[0_10px_20px_-6px_rgba(0,0,0,0.28)] flex items-center justify-center overflow-hidden"
-            aria-hidden="true"
-          >
-            {isDog ? <img src={LABRADOR_SVG_PATH} alt="" loading="lazy" className="w-12 h-12 object-contain translate-y-0.5" /> : <span className="text-3xl">{t.emoji}</span>}
-          </motion.span>
-        </div>
-        <div className="relative z-10 mt-3 pt-2 border-t border-white/25 flex items-center justify-between gap-1 text-xs font-bold text-white/95">
-          <span className="inline-flex items-center gap-1"><Clock className="w-3.5 h-3.5 text-[#FFE28A]" />{l.startTime}</span>
-          <span className="inline-flex items-center gap-1"><Flame className="w-3.5 h-3.5 text-[#FFE28A]" />{l.cutoff}</span>
-          <span className="inline-flex items-center gap-1"><Droplets className="w-3.5 h-3.5 text-[#FFE28A]" />น้ำ {routesData[id].waterStationCount} จุด</span>
-        </div>
+      <div className="flex flex-col items-center gap-1.5 px-4 text-sm font-bold text-[#281A3B]">
+        <span className="inline-flex items-center gap-2"><Clock className="w-4 h-4 text-[#7C3AED]" />{tr('ปล่อยตัว', 'Start')} {l.startTime}</span>
+        <span className="inline-flex items-center gap-2"><Flame className="w-4 h-4 text-[#7C3AED]" />{tr('เวลาจำกัด', 'Cut-off')} {l.cutoff}</span>
+        <span className="inline-flex items-center gap-2"><Droplets className="w-4 h-4 text-[#7C3AED]" />{tr('น้ำ', 'Water')} {routesData[id].waterStationCount} {tr('จุด', 'stops')}</span>
       </div>
 
-      {/* body */}
-      <div className="relative z-10 p-3.5 flex-1">
-        <p className="text-xs font-bold text-[#4B2D78] leading-snug mb-2.5">{l.sub}</p>
+      <div className="flex-1 px-4 pt-3">
         <div className="grid grid-cols-2 gap-1.5">
           {perks(isDog).map(({ Icon, title }) => (
-            <div key={title} className="flex items-center gap-1.5 bg-white/90 rounded-xl px-2 py-1.5 border border-white shadow-[0_2px_8px_-2px_rgba(42,20,80,0.08)]">
-              <span className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0" style={{ background: l.accentSoft, color: l.accent }}>
+            <div key={title} className="flex items-center gap-1.5 rounded-xl bg-[#F6F1FD] px-2 py-1.5">
+              <span className="w-6 h-6 rounded-lg bg-white flex items-center justify-center shrink-0 text-[#7C3AED]">
                 <Icon className="w-3.5 h-3.5 stroke-[2.3]" />
               </span>
-              <span className="text-xs font-extrabold text-[#261247] leading-tight">{title}</span>
+              <span className="text-xs font-extrabold text-[#281A3B] leading-tight">{title}</span>
             </div>
           ))}
         </div>
-        <div className="mt-2 px-3 py-1.5 rounded-xl bg-white/90 border border-dashed flex items-center justify-between gap-2 text-xs font-extrabold" style={{ borderColor: l.accent }}>
+        <div className="mt-2 flex items-center justify-between gap-2 rounded-xl border border-dashed border-[#D9C9EF] bg-[#FFFCF7] px-3 py-1.5 text-xs font-extrabold">
           {isDog ? (
             <>
               <span className="text-[#4B2D78]">เพิ่มผู้ร่วมวิ่ง</span>
-              <span className="tabular-nums" style={{ color: l.accentDark }}>+{t.addPersonPrice}฿/คน</span>
+              <span className="tabular-nums text-[#4B1FA8]">+{t.addPersonPrice}฿/คน</span>
             </>
           ) : id === '10km' ? (
             <>
               <span className="text-[#4B2D78]">⏱️ ติดชิปจับเวลา (Timing Chip)</span>
-              <span style={{ color: l.accentDark }}>ทุกคน</span>
+              <span className="text-[#4B1FA8]">ทุกคน</span>
             </>
           ) : (
             <>
               <span className="text-[#4B2D78]">เส้นทาง</span>
-              <span style={{ color: l.accentDark }}>{l.elevationText}</span>
+              <span className="text-[#4B1FA8]">{l.elevationText}</span>
             </>
           )}
         </div>
       </div>
 
-      {/* perforation */}
-      <div className="relative z-10 flex items-center px-2" aria-hidden="true">
-        <span className="-ml-4 w-5 h-5 rounded-full bg-[#FBF3FF] shrink-0" />
-        <span className="w-full border-t-2 border-dashed border-[#261247]/15 mx-1.5" />
-        <span className="text-[11px] font-mono font-extrabold tracking-widest px-2 py-0.5 rounded-full shrink-0" style={{ background: l.accentSoft, color: l.accentDark }}>
-          {l.serialCode}
-        </span>
-        <span className="w-full border-t-2 border-dashed border-[#261247]/15 mx-1.5" />
-        <span className="-mr-4 w-5 h-5 rounded-full bg-[#FBF3FF] shrink-0" />
-      </div>
-
-      {/* stub: price + pick */}
-      <div className="relative z-10 p-3.5 pt-2.5 bg-white/90">
-        <div className="flex items-end justify-between mb-2.5">
+      <div className="mt-3 border-t border-[#EDE7F6] px-4 pb-4 pt-3">
+        <div className="mb-2.5 flex items-end justify-between gap-2">
           <span>
-            <span className="block text-xs font-bold text-[#6B5A85]">{tr('ราคาบัตร', 'Ticket price')} ({t.baseLabel})</span>
-            <span className="font-display text-3xl font-black tabular-nums leading-none" style={{ color: l.accentDark }}>
+            <span className="block text-xs font-bold text-[#766A85]">{tr('ราคาบัตร', 'Ticket price')} ({t.baseLabel})</span>
+            <span className="font-display text-3xl font-black tabular-nums leading-none text-[#4B1FA8]">
               <EarlyBirdPrice list={t.basePrice} now={runBasePrice(id, earlyBird)} />
             </span>
-            <span className="ml-1 text-xs font-extrabold text-[#261247]">{tr('บาท', 'THB')}</span>
+            <span className="ml-1 text-xs font-extrabold text-[#281A3B]">{tr('บาท', 'THB')}</span>
           </span>
-          <span aria-hidden="true" className="inline-flex items-end gap-[2px] h-5 opacity-60">
-            {[2, 3.5, 1.5, 3, 1.5, 3.5, 2, 1.5, 3, 2].map((w, i) => (
-              <span key={i} className="bg-[#261247] rounded-full" style={{ width: w, height: i % 2 ? '75%' : '100%' }} />
-            ))}
-          </span>
+          <span className="shrink-0 whitespace-nowrap text-[10px] font-mono font-bold tracking-wider text-[#766A85]/70">{l.serialCode}</span>
         </div>
         <motion.button
           type="button"
           role="radio"
           aria-checked={on}
           onClick={onPick}
-          whileTap={{ scale: 0.95 }}
-          className="relative overflow-hidden w-full min-h-[48px] rounded-2xl px-4 flex items-center justify-center gap-2 font-extrabold text-sm cursor-pointer border-2"
-          style={on ? { background: 'var(--ink)', color: '#FFE268', borderColor: 'var(--ink)' } : { background: l.btnGrad, color: l.btnText, borderColor: 'transparent' }}
+          whileTap={{ scale: 0.97 }}
+          className={`w-full min-h-[48px] rounded-full px-4 flex items-center justify-center gap-2 font-extrabold text-sm cursor-pointer ${on ? 'bg-[#2A1450] text-[#FFE268]' : 'bg-gradient-to-b from-[#FFD84D] to-[#FFB300] text-[#261247] shadow-[0_6px_14px_-6px_rgba(255,179,0,0.7)]'}`}
         >
-          <span className="absolute inset-0 ticket-foil-shimmer opacity-40 pointer-events-none" />
-          {on ? <Check className="w-4 h-4 stroke-[3] relative" /> : <Ticket className="w-4 h-4 relative" />}
-          <span className="relative">{on ? `${tr('เลือกแล้ว', 'Selected')} · ${t.distanceLabel}` : `${tr('เลือกบัตร', 'Pick')} ${t.distanceLabel}`}</span>
+          {on ? <Check className="w-4 h-4 stroke-[3]" /> : <Ticket className="w-4 h-4" />}
+          <span>{on ? `${tr('เลือกแล้ว', 'Selected')} · ${t.distanceLabel}` : `${tr('เลือกบัตร', 'Pick')} ${t.distanceLabel}`}</span>
         </motion.button>
       </div>
-
-      <AnimatePresence>
-        {on && (
-          <motion.span
-            initial={{ scale: 0, rotate: -40 }}
-            animate={{ scale: 1, rotate: -8 }}
-            exit={{ scale: 0 }}
-            transition={{ type: 'spring', stiffness: 420, damping: 14 }}
-            className="absolute right-3 bottom-[76px] z-30 px-2.5 py-1 rounded-full bg-[#FFE268] border-2 border-[var(--ink)] text-xs font-black text-[var(--ink)] shadow-[0_3px_0_var(--ink)]"
-            aria-hidden="true"
-          >
-            ✓ ปั๊มแล้ว!
-          </motion.span>
-        )}
-      </AnimatePresence>
     </motion.article>
   );
 };

@@ -34,44 +34,19 @@ interface AddOnPickerProps {
 const baht = (n: number) => `${formatBaht(n)} บาท`;
 
 /** One strong colour per activity: the sticker panel, the badge and the selected state all share it. */
-export const ADD_ON_THEMES = {
-  tower: {
-    panel: 'linear-gradient(160deg, #34D399 0%, #10B981 45%, #0EA5E9 100%)',
-    soft: 'linear-gradient(165deg, #FFFFFF 0%, #ECFDF5 60%, #D1FAE5 100%)',
-    on: 'linear-gradient(165deg, #D1FAE5 0%, #A7F3D0 100%)',
-    border: '#6EE7B7',
-    borderActive: '#059669',
-    ink: '#065F46',
-    chip: '#D1FAE5',
-    button: 'linear-gradient(180deg, #34D399, #059669)',
-    glow: 'rgba(16, 185, 129, 0.5)',
-    ring: 'rgba(16, 185, 129, 0.22)',
-  },
-  gun: {
-    panel: 'linear-gradient(160deg, #818CF8 0%, #9333EA 50%, #EC4899 100%)',
-    soft: 'linear-gradient(165deg, #FFFFFF 0%, #F5F3FF 60%, #EDE9FE 100%)',
-    on: 'linear-gradient(165deg, #EDE9FE 0%, #DDD6FE 100%)',
-    border: '#C4B5FD',
-    borderActive: '#7C3AED',
-    ink: '#5B21B6',
-    chip: '#EDE9FE',
-    button: 'linear-gradient(180deg, #A78BFA, #7C3AED)',
-    glow: 'rgba(124, 58, 237, 0.45)',
-    ring: 'rgba(124, 58, 237, 0.22)',
-  },
-  wind: {
-    panel: 'linear-gradient(160deg, #7DD3FC 0%, #38BDF8 45%, #6366F1 100%)',
-    soft: 'linear-gradient(165deg, #FFFFFF 0%, #F0F9FF 60%, #E0F2FE 100%)',
-    on: 'linear-gradient(165deg, #E0F2FE 0%, #BAE6FD 100%)',
-    border: '#7DD3FC',
-    borderActive: '#0284C7',
-    ink: '#075985',
-    chip: '#E0F2FE',
-    button: 'linear-gradient(180deg, #38BDF8, #0284C7)',
-    glow: 'rgba(14, 165, 233, 0.45)',
-    ring: 'rgba(14, 165, 233, 0.22)',
-  },
+const ADD_ON_PALETTE = {
+  panel: 'linear-gradient(160deg, #8B5CF6 0%, #6D28D9 55%, #4B1FA8 100%)',
+  soft: '#FFFFFF',
+  on: 'linear-gradient(165deg, #F6F1FD 0%, #EADFFB 100%)',
+  border: '#D9C9EF',
+  borderActive: '#7C3AED',
+  ink: '#4B1FA8',
+  chip: '#F1EAFD',
+  button: 'linear-gradient(180deg, #FFD84D, #FFB300)',
+  glow: 'rgba(124, 58, 237, 0.45)',
+  ring: 'rgba(124, 58, 237, 0.22)',
 } as const;
+export const ADD_ON_THEMES = { tower: ADD_ON_PALETTE, gun: ADD_ON_PALETTE, wind: ADD_ON_PALETTE } as const;
 
 type ThemeKey = keyof typeof ADD_ON_THEMES;
 
@@ -102,9 +77,9 @@ const Card: React.FC<{
       style={{
         background: active ? t.on : t.soft,
         borderColor: active ? t.borderActive : t.border,
-        boxShadow: active ? `0 14px 28px -14px ${t.glow}, 0 0 0 3px ${t.ring}` : '0 8px 18px -14px rgba(42,20,80,0.4)',
+        boxShadow: active ? `0 14px 28px -14px ${t.glow}, 0 0 0 3px ${t.ring}` : '0 8px 28px rgba(42,20,80,0.10)',
       }}
-      className={`relative flex h-full flex-col overflow-hidden rounded-[22px] border-[3px] transition-all duration-300 ${active ? '-translate-y-0.5' : ''} ${disabled ? 'opacity-60 grayscale' : ''}`}
+      className={`relative flex h-full flex-col overflow-hidden rounded-[20px] border transition-all duration-300 ${active ? '-translate-y-0.5' : ''} ${disabled ? 'opacity-60 grayscale' : ''}`}
     >
       <span aria-hidden="true" style={{ background: t.panel }} className="block h-2 shrink-0" />
       {active && (
@@ -163,8 +138,8 @@ const PickButton: React.FC<{ theme: ThemeKey; active: boolean; disabled?: boolea
       aria-label={`${active ? tr('ยกเลิก', 'Remove') : tr('เลือก', 'Pick')} ${label}`}
       disabled={disabled}
       onClick={onClick}
-      style={active ? { background: '#fff', color: t.ink, borderColor: t.borderActive } : { background: t.button, color: '#fff', borderColor: '#2A1450', boxShadow: '0 4px 0 #2A1450' }}
-      className="flex-1 min-w-[170px] min-h-[48px] px-3 rounded-2xl border-[2.5px] text-[15px] font-black flex items-center justify-center gap-2 cursor-pointer active:translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60 focus:outline-none focus-visible:ring-4 focus-visible:ring-[#7B3FC6]/50"
+      style={active ? { background: '#fff', color: t.ink, borderColor: t.borderActive } : { background: t.button, color: '#261247', borderColor: 'transparent', boxShadow: '0 6px 14px -6px rgba(255,179,0,0.7)' }}
+      className="flex-1 min-w-[170px] min-h-[48px] px-3 rounded-full border-2 text-[15px] font-black flex items-center justify-center gap-2 cursor-pointer active:translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60 focus:outline-none focus-visible:ring-4 focus-visible:ring-[#7B3FC6]/50"
     >
       {active ? (
         <>
@@ -269,7 +244,7 @@ export const AddOnPicker: React.FC<AddOnPickerProps> = ({ value, onChange, windT
                       if (!on) showActivitySticker(o.id === 'premium' ? 'gunPremium' : 'gun', `ยิงปืน ${o.label} · เลือกแล้ว!`);
                       set({ gun: on ? 'none' : o.id });
                     }}
-                    style={on ? { background: g.button, color: '#fff', borderColor: '#2A1450', boxShadow: '0 4px 0 #2A1450' } : { background: '#fff', color: g.ink, borderColor: g.border }}
+                    style={on ? { background: g.button, color: '#261247', borderColor: 'transparent', boxShadow: '0 4px 10px -4px rgba(255,179,0,0.7)' } : { background: '#fff', color: g.ink, borderColor: g.border }}
                     className="min-h-[56px] px-3 py-1.5 rounded-2xl border-[2.5px] flex items-center justify-between gap-2 text-left cursor-pointer active:translate-y-0.5 focus:outline-none focus-visible:ring-4 focus-visible:ring-[#7B3FC6]/50"
                   >
                     <span className="min-w-0">
