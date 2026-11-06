@@ -81,15 +81,15 @@ const Card: React.FC<{
       }}
       className={`relative flex h-full flex-col overflow-hidden rounded-[20px] border transition-all duration-300 ${active ? '-translate-y-0.5' : ''} ${disabled ? 'opacity-60 grayscale' : ''}`}
     >
-      <span aria-hidden="true" style={{ background: t.panel }} className="block h-2 shrink-0" />
+      <span aria-hidden="true" className="block h-1.5 shrink-0 bg-gradient-to-r from-[#4B1FA8] via-[#7C3AED] to-[#FFC928]" />
       {active && (
         <span className="absolute top-3.5 right-3 z-10 inline-flex items-center gap-1 rounded-full bg-white px-2.5 py-1 text-[11px] font-black shadow-md" style={{ color: t.ink }}>
           <Check className="w-3.5 h-3.5 stroke-[3.5]" aria-hidden="true" /> {tr('เลือกแล้ว', 'Selected')}
         </span>
       )}
       <div className="flex-1 p-3.5 flex flex-col gap-2.5">
-        <div className="flex items-center gap-3 pr-20">
-          <span style={{ background: t.panel }} className="shrink-0 w-11 h-11 rounded-2xl flex items-center justify-center text-white shadow-[0_6px_12px_-4px_rgba(0,0,0,0.35)]">
+        <div className={`flex items-center gap-3 ${active ? "pr-20" : ""}`}>
+          <span className="shrink-0 w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-b from-[#F1EAFD] to-[#FFF4D1] flex items-center justify-center p-1.5">
             {icon}
           </span>
           <div className="min-w-0">
@@ -202,7 +202,7 @@ export const AddOnPicker: React.FC<AddOnPickerProps> = ({ value, onChange, windT
       {/* three columns only when the box itself is wide enough (the box is narrow inside the booking window) */}
       <div className={layout === 'rows' ? 'grid grid-cols-1 gap-3' : 'grid grid-cols-1 @[620px]:grid-cols-3 gap-3 sm:gap-4'}>
         <div className="flex flex-col gap-1">
-          <Card theme="tower" title={tr('หอสูง', 'High tower')} tagline={tr('มีครูฝึกดูแลตลอดกิจกรรม', 'An instructor looks after you throughout')} perks={[tr('🧑‍🏫 ครูฝึกดูแล', '🧑‍🏫 Instructor'), tr('📜 ได้ใบประกาศ / ปีก', '📜 Certificate / wings')]} active={value.tower} icon={<TowerControl className="w-6 h-6" aria-hidden="true" />}>
+          <Card theme="tower" title={tr('หอสูง', 'High tower')} tagline={tr('มีครูฝึกดูแลตลอดกิจกรรม', 'An instructor looks after you throughout')} perks={[tr('🧑‍🏫 ครูฝึกดูแล', '🧑‍🏫 Instructor'), tr('📜 ได้ใบประกาศ / ปีก', '📜 Certificate / wings')]} active={value.tower} icon={<img src="/images/shop/tower.webp" alt="" loading="lazy" className="w-full h-full object-contain" />}>
             <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
             <PriceTag price={350 - off} listPrice={off ? 350 : undefined} ink={ADD_ON_THEMES.tower.ink} />
             <PickButton
@@ -227,7 +227,7 @@ export const AddOnPicker: React.FC<AddOnPickerProps> = ({ value, onChange, windT
             tagline={tr('ครูฝึกส่วนตัวดูแลใกล้ชิด', 'A personal instructor by your side')}
             perks={[tr('🎯 ยิง 10 นัด', '🎯 10 rounds'), tr('🧑‍🏫 ครูฝึกส่วนตัว', '🧑‍🏫 Personal instructor')]}
             active={gunOn}
-            icon={<Crosshair className="w-6 h-6" aria-hidden="true" />}
+            icon={<img src="/images/shop/target.webp" alt="" loading="lazy" className="w-full h-full object-contain" />}
           >
             <div role="radiogroup" aria-label={tr('ยิงปืน', 'Shooting')} className="grid grid-cols-1 gap-2">
               {GUN_SEGMENTS.map((o) => {
@@ -276,7 +276,7 @@ export const AddOnPicker: React.FC<AddOnPickerProps> = ({ value, onChange, windT
             perks={[tr('🌪️ ลอยตัวในอุโมงค์ลม', '🌪️ Fly in the wind tunnel')]}
             active={value.windTunnel && !windFull}
             disabled={windFull}
-            icon={<Wind className="w-6 h-6" aria-hidden="true" />}
+            icon={<img src="/images/shop/wind.webp" alt="" loading="lazy" className="w-full h-full object-contain" />}
             badge={
               <span
                 className={`self-start inline-block px-3 py-1 rounded-full text-xs font-black shadow-[0_4px_10px_-4px_rgba(0,0,0,0.35)] ${

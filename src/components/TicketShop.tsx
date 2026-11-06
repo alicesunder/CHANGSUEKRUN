@@ -240,7 +240,8 @@ const RunTicket: React.FC<{ id: RouteId; on: boolean; onPick: () => void }> = ({
         </span>
       )}
 
-      <div className="px-4 pt-10 pb-3 text-center">
+      <span aria-hidden="true" className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-[#4B1FA8] via-[#7C3AED] to-[#FFC928]" />
+      <div className="px-4 pt-10 pb-3 text-center bg-gradient-to-b from-[#EFE6FC] via-[#F8F4FE] to-white">
         <span className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-[#4B1FA8] to-[#7C3AED] px-4 py-1.5 text-white shadow-sm">
           {isDog ? <PawIcon size={14} color="#FFC928" /> : <Zap className="w-3.5 h-3.5 fill-[#FFC928] text-[#FFC928]" />}
           <span className="font-display text-2xl font-black leading-none">{t.distanceLabel}</span>
@@ -256,12 +257,10 @@ const RunTicket: React.FC<{ id: RouteId; on: boolean; onPick: () => void }> = ({
       </div>
 
       <div className="flex-1 px-4 pt-3">
-        <div className="grid grid-cols-2 divide-x divide-[#EDE7F6] rounded-xl bg-[#F6F1FD] py-2">
-          {perks(isDog).slice(0, 2).map(({ Icon, title }) => (
+        <div className="grid grid-cols-2 divide-x divide-[#EDE7F6] rounded-xl bg-gradient-to-b from-[#F6F1FD] to-[#FFF8E1] py-2.5">
+          {perks(isDog).slice(0, 2).map(({ title }, i) => (
             <div key={title} className="flex flex-col items-center gap-1 px-1.5 text-center">
-              <span className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-[#7C3AED] shadow-sm">
-                <Icon className="w-4 h-4 stroke-[2.3]" />
-              </span>
+              <img src={i === 0 ? '/images/shop/shirt.webp' : '/images/shop/medal.webp'} alt="" loading="lazy" className="h-12 w-12 object-contain drop-shadow-[0_4px_6px_rgba(42,20,80,0.25)]" />
               <span className="text-[11px] font-extrabold text-[#281A3B] leading-tight">{title}</span>
             </div>
           ))}
@@ -595,8 +594,8 @@ export const TicketShop: React.FC<TicketShopProps> = ({
                 <span aria-hidden="true" className="pointer-events-none absolute -bottom-16 -right-10 w-56 h-56 rounded-full bg-[#EC4899]/35 blur-3xl" />
                 <div className="relative flex flex-col sm:flex-row sm:items-center gap-4">
                   <div className="flex items-center gap-3 min-w-0 flex-1">
-                    <span className="w-16 h-16 shrink-0 rounded-2xl bg-black/30 border-2 border-white/25 flex items-center justify-center">
-                      <Equaliser on={concertQty > 0} />
+                    <span className="w-24 h-24 shrink-0 flex items-center justify-center">
+                      <img src="/images/shop/concert.webp" alt="" loading="lazy" className="h-full w-full object-contain drop-shadow-[0_8px_14px_rgba(0,0,0,0.45)]" />
                     </span>
                     <div className="min-w-0">
                       <p className="text-lg font-extrabold leading-tight">บัตร GA · คอนเสิร์ตริมหาด</p>
