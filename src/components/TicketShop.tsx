@@ -256,13 +256,13 @@ const RunTicket: React.FC<{ id: RouteId; on: boolean; onPick: () => void }> = ({
       </div>
 
       <div className="flex-1 px-4 pt-3">
-        <div className="grid grid-cols-2 gap-1.5">
-          {perks(isDog).map(({ Icon, title }) => (
-            <div key={title} className="flex items-center gap-1.5 rounded-xl bg-[#F6F1FD] px-2 py-1.5">
-              <span className="w-6 h-6 rounded-lg bg-white flex items-center justify-center shrink-0 text-[#7C3AED]">
-                <Icon className="w-3.5 h-3.5 stroke-[2.3]" />
+        <div className="grid grid-cols-2 divide-x divide-[#EDE7F6] rounded-xl bg-[#F6F1FD] py-2">
+          {perks(isDog).slice(0, 2).map(({ Icon, title }) => (
+            <div key={title} className="flex flex-col items-center gap-1 px-1.5 text-center">
+              <span className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-[#7C3AED] shadow-sm">
+                <Icon className="w-4 h-4 stroke-[2.3]" />
               </span>
-              <span className="text-xs font-extrabold text-[#281A3B] leading-tight">{title}</span>
+              <span className="text-[11px] font-extrabold text-[#281A3B] leading-tight">{title}</span>
             </div>
           ))}
         </div>
@@ -522,9 +522,9 @@ export const TicketShop: React.FC<TicketShopProps> = ({
           </div>
         )}
 
-        <div className="relative grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-7 items-start">
+        <div className="relative grid grid-cols-1 gap-5 lg:gap-7 items-start">
           {/* ---------- The three parts ---------- */}
-          <div className="lg:col-span-8 space-y-6">
+          <div className="space-y-6">
             {/* 1. Run */}
             <StationCard
               id="shop-run"
@@ -559,7 +559,7 @@ export const TicketShop: React.FC<TicketShopProps> = ({
               <div
                 role="radiogroup"
                 aria-label="เลือกระยะวิ่ง"
-                className="flex gap-4 overflow-x-auto snap-x snap-mandatory -mx-3.5 px-3.5 pt-3 pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:px-0 sm:pt-2 sm:pb-1 sm:grid sm:grid-cols-2 sm:overflow-visible"
+                className="flex gap-4 overflow-x-auto snap-x snap-mandatory -mx-3.5 px-3.5 pt-3 pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:px-0 sm:pt-2 sm:pb-1 sm:grid sm:grid-cols-2 lg:grid-cols-4 sm:overflow-visible"
               >
                 {RUN_ORDER.map((id) => (
                   <RunTicket key={id} id={id} on={run === id} onPick={() => onRunChange(run === id ? null : id)} />
@@ -588,7 +588,7 @@ export const TicketShop: React.FC<TicketShopProps> = ({
             {/* 2. Concert */}
             <StationCard id="shop-concert" k="concert" done={hasConcert}>
               <span id="concert-pass" className="block h-0 scroll-mt-28" aria-hidden="true" />
-              <div className="relative">
+              <div className="relative lg:grid lg:grid-cols-2 lg:gap-4">
               <DiscountCelebration active={concertDeal} burstKey={`concert-${concertQty > 0}`} kicker="วิ่ง + คอนเสิร์ต 🎶🏃" headline={`ลดทันที ${percentOf(CONCERT_BUNDLE_RATE)}%!!!`} discount={concertOff} pieces={60} />
               <div className="relative overflow-hidden ds-frame-dark bg-gradient-to-br from-[#241047] via-[#341866] to-[#4A1F8F] text-white p-4 sm:p-5">
                 <span aria-hidden="true" className="pointer-events-none absolute -top-14 -left-10 w-48 h-48 rounded-full bg-[#FFC928]/30 blur-3xl" />
@@ -625,7 +625,7 @@ export const TicketShop: React.FC<TicketShopProps> = ({
               </div>
 
               {/* VIP table */}
-              <div className="relative mt-3 overflow-hidden ds-frame-dark bg-gradient-to-br from-[#1A0B33] via-[#2A1450] to-[#5B2A0E] text-white p-4 sm:p-5">
+              <div className="relative mt-3 lg:mt-0 overflow-hidden ds-frame-dark bg-gradient-to-br from-[#1A0B33] via-[#2A1450] to-[#5B2A0E] text-white p-4 sm:p-5">
                 <span aria-hidden="true" className="pointer-events-none absolute -top-14 -right-10 w-48 h-48 rounded-full bg-[#FFC928]/25 blur-3xl" />
                 <div className="relative flex flex-col sm:flex-row sm:items-start gap-4">
                   <div className="flex items-start gap-3 min-w-0 flex-1">
@@ -688,7 +688,7 @@ export const TicketShop: React.FC<TicketShopProps> = ({
                         ? `🎉 กิจกรรมลด ${percentOf(addOnRate)}% แล้ว!${hasConcert ? '' : ` เพิ่มตั๋วคอนเสิร์ต ลดเพิ่มอีก ${percentOf(ADDON_CONCERT_RATE)}%`}`
                         : `เลือกให้ครบ 3 กิจกรรม ลด ${percentOf(ADDON_TWO_RATE)}% (มีตั๋ววิ่งลด ${percentOf(ADDON_THREE_RATE)}%) · มีคอนเสิร์ตลดเพิ่มอีก ${percentOf(ADDON_CONCERT_RATE)}% (สูงสุด ${percentOf(ADDON_MAX_RATE)}%) 🎁`}
                   </p>}
-                  <AddOnPicker value={addOns} onChange={onAddOnsChange} windTunnelRemaining={windRemaining} showResult={false} layout="rows" discountCtx={discountCtx} />
+                  <AddOnPicker value={addOns} onChange={onAddOnsChange} windTunnelRemaining={windRemaining} showResult={false} layout="grid" discountCtx={discountCtx} />
                   <details className="group mt-3 rounded-2xl bg-[#FAF7FF] border-2 border-[var(--ink)]/10">
                     <summary className="list-none cursor-pointer flex items-center justify-between gap-3 px-4 py-2.5 min-h-[48px] text-sm font-extrabold text-[var(--ink)]">
                       <span>ราคาแพ็กเกจ & รายชื่อปืนที่เลือกได้</span>
@@ -734,84 +734,7 @@ export const TicketShop: React.FC<TicketShopProps> = ({
             </div>
           </div>
 
-          {/* ---------- Basket: side card on desktop, sticky bar on phones ---------- */}
-          <aside className="hidden lg:block lg:col-span-4 lg:sticky lg:top-24" aria-label="ตะกร้า">
-            <div className="ds-card overflow-hidden">
-              <div className="relative overflow-hidden px-5 py-4 text-white flex items-center gap-2.5" style={{ background: 'linear-gradient(135deg, #2A1450 0%, #6D28D9 60%, #EC4899 100%)' }}>
-                <span aria-hidden="true" className="pointer-events-none absolute -top-10 -right-8 w-32 h-32 rounded-full bg-white/20 blur-2xl" />
-                <ShoppingBasket className="relative w-6 h-6 text-[#FFC928]" aria-hidden="true" />
-                <h3 className="relative text-lg font-extrabold">{tr('ตะกร้าของคุณ', 'Your basket')}</h3>
-                <span className="relative ml-auto px-2.5 py-0.5 rounded-full bg-[#FFC928] text-[var(--ink)] text-xs font-black">{count}/3</span>
-              </div>
-              <div className="p-5">
-                {lines.length === 0 ? (
-                  <div className="text-center py-6">
-                    <motion.span className="inline-block text-5xl" animate={{ rotate: [-8, 8, -8] }} transition={{ duration: 2.2, repeat: Infinity }} aria-hidden="true">
-                      🐶
-                    </motion.span>
-                    <p className="mt-2 text-sm font-extrabold text-[var(--ink)]">{tr('ตะกร้ายังว่างอยู่', 'Your basket is empty')}</p>
-                    <p className="text-xs font-bold text-[#6B5A85]">{tr('แตะเลือกตั๋วทางซ้ายได้เลย', 'Tap a ticket on the left to add it')}</p>
-                  </div>
-                ) : (
-                  <ul className="space-y-2.5">
-                    <AnimatePresence initial={false}>
-                      {lines.map((l) => (
-                        <motion.li key={l.key} layout initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -24 }} className="flex items-start gap-2.5">
-                          <span className="w-9 h-9 shrink-0 rounded-xl flex items-center justify-center text-lg border-2 border-[var(--ink)]/10" style={{ background: l.tint }} aria-hidden="true">
-                            {l.emoji}
-                          </span>
-                          <span className="min-w-0 flex-1">
-                            <span className="block text-sm font-extrabold text-[var(--ink)] break-words">{l.label}</span>
-                            {l.sub && <span className="block text-xs font-bold text-[#6B5A85] break-words">{l.sub}</span>}
-                          </span>
-                          <span className="text-right shrink-0">
-                            <span className="block text-sm font-black text-[var(--ink)] tabular-nums">{formatBaht(l.price)}</span>
-                            <button type="button" onClick={l.onRemove} className="text-xs font-bold text-rose-500 underline underline-offset-2 cursor-pointer min-h-[28px]">
-                              เอาออก
-                            </button>
-                          </span>
-                        </motion.li>
-                      ))}
-                    </AnimatePresence>
-                  </ul>
-                )}
-                {totalSaved > 0 && (
-                  <motion.div
-                    key={totalSaved}
-                    initial={{ scale: 0.8, rotate: -3 }}
-                    animate={{ scale: 1, rotate: 0 }}
-                    transition={{ type: 'spring', stiffness: 400, damping: 12 }}
-                    className="mt-3 rounded-2xl border border-[var(--ds-line)] px-3 py-2 text-center text-[var(--ink)] shadow-sm"
-                    style={{ background: 'linear-gradient(135deg, #FFE268, #FFC928 50%, #FF7A59)' }}
-                  >
-                    <span className="block text-xs font-extrabold">{tr('🎉 คุณประหยัดไปแล้ว', '🎉 You are saving')}</span>
-                    <span className="block text-2xl font-black tabular-nums leading-tight">{formatBaht(totalSaved)} {tr('บาท', 'THB')}!</span>
-                  </motion.div>
-                )}
-                {nudge && (
-                  <p className="mt-3 rounded-2xl bg-[#FDF0FF] border-2 border-dashed border-[#9333EA]/50 px-3 py-2 text-center text-xs font-extrabold text-[#6D28D9]">{nudge}</p>
-                )}
-                <div className="my-4 border-t-[3px] border-dashed border-[var(--ink)]/15" />
-                <div className="flex items-end justify-between mb-4">
-                  <span className="text-sm font-extrabold text-[#6B5A85]">{tr('ยอดรวม', 'Total')}{totalSaved > 0 && <s className="ml-2 text-xs font-bold opacity-70 tabular-nums">{formatBaht(total + totalSaved)}</s>}</span>
-                  <motion.span
-                    key={total}
-                    initial={{ scale: 1.25, color: '#EC4899' }}
-                    animate={{ scale: 1, color: '#2A1450' }}
-                    transition={{ type: 'spring', stiffness: 300, damping: 15 }}
-                    className="text-4xl font-black tabular-nums leading-none"
-                  >
-                    {formatBaht(total)}
-                    <span className="text-base font-bold ml-1">{tr('บาท', 'THB')}</span>
-                  </motion.span>
-                </div>
-                {checkoutBtn()}
-                <p className="mt-2.5 text-center text-xs font-bold text-[#6B5A85]">{tr('ชำระด้วย QR หรือโอนเข้าบัญชี · ได้ตั๋วทันที', 'Pay by QR or bank transfer · get your ticket right away')}</p>
-                <p className="mt-1 text-center text-xs font-semibold text-[#6B5A85]">{tr('ต้องเข้าสู่ระบบก่อนชำระเงิน (Google / LINE / อีเมล) · ไม่มีการคืนเงินและโอนสิทธิ์', 'Sign in before paying (Google / LINE / e-mail) · no refunds or transfers')}</p>
-              </div>
-            </div>
-          </aside>
-
+          {/* ---------- Basket: one sticky summary bar on every screen ---------- */}
           <AnimatePresence>
           {count > 0 && (
           <motion.div
@@ -819,7 +742,7 @@ export const TicketShop: React.FC<TicketShopProps> = ({
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 40, opacity: 0 }}
             transition={{ type: 'spring', stiffness: 420, damping: 26 }}
-            className="lg:hidden sticky bottom-[76px] z-30"
+            className="sticky bottom-[76px] lg:bottom-4 z-30 mx-auto w-full lg:max-w-3xl"
           >
             <div className="ds-card px-3.5 py-2.5 flex items-center gap-3">
               <span className="w-10 h-10 shrink-0 rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #6D28D9, #EC4899)' }}>
@@ -827,6 +750,7 @@ export const TicketShop: React.FC<TicketShopProps> = ({
               </span>
               <span className="min-w-0 flex-1">
                 <span className="block text-xs font-extrabold text-[#6B5A85] break-words">
+                  {nudge && <span className="hidden lg:block text-[#6D28D9]">{nudge}</span>}
                   {lines.length ? lines.map((l) => l.emoji).join(' ') + ` · ${count} ${tr('อย่าง', 'item(s)')}` : tr('ตะกร้ายังว่าง', 'Basket is empty')}
                 </span>
                 <motion.span key={total} initial={{ scale: 1.15 }} animate={{ scale: 1 }} className="block origin-left text-xl font-black text-[var(--ink)] tabular-nums leading-tight">
