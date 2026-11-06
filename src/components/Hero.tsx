@@ -34,9 +34,9 @@ const COASTAL_SUNSET = '/images/hero/changsuek-run-coastal.webp';
 
 const fadeMask: React.CSSProperties = {
   WebkitMaskImage:
-    'linear-gradient(to right, transparent 0%, #000 22%), linear-gradient(to bottom, transparent 0%, #000 8%)',
+    'linear-gradient(to right, transparent 0%, #000 30%), linear-gradient(to bottom, transparent 0%, #000 10%)',
   maskImage:
-    'linear-gradient(to right, transparent 0%, #000 22%), linear-gradient(to bottom, transparent 0%, #000 8%)',
+    'linear-gradient(to right, transparent 0%, #000 30%), linear-gradient(to bottom, transparent 0%, #000 10%)',
   WebkitMaskComposite: 'source-in',
   maskComposite: 'intersect',
 };
@@ -90,20 +90,20 @@ export const Hero: React.FC<HeroProps> = ({
       {/* ================================================================= */}
       <section
         id="hero"
-        className="relative overflow-hidden text-[#261247]"
+        className="relative overflow-hidden text-white"
         style={{
           background:
-            'linear-gradient(180deg, #6BC8F5 0%, #B4E6FC 32%, #EAF7FC 64%, #FDE6AD 100%)',
+            'linear-gradient(180deg, #1B0838 0%, #2E1157 36%, #4A1B7E 70%, #2E1157 100%)',
         }}
       >
         {/* Multi-Layered Ambient Sunbeams & Light Orbs */}
         <div
           aria-hidden="true"
-          className="absolute -top-20 left-1/2 -translate-x-1/2 lg:left-1/4 w-80 h-80 sm:w-[460px] sm:h-[460px] rounded-full bg-white/55 blur-3xl pointer-events-none"
+          className="absolute -top-20 left-1/2 -translate-x-1/2 lg:left-1/4 w-80 h-80 sm:w-[460px] sm:h-[460px] rounded-full bg-[#A855F7]/30 blur-3xl pointer-events-none"
         />
         <div
           aria-hidden="true"
-          className="absolute top-28 -left-16 w-64 h-64 rounded-full bg-[#FFE28A]/45 blur-3xl pointer-events-none"
+          className="absolute top-28 -left-16 w-64 h-64 rounded-full bg-[#FF8A3D]/25 blur-3xl pointer-events-none"
         />
         <div
           aria-hidden="true"
@@ -304,7 +304,8 @@ export const Hero: React.FC<HeroProps> = ({
               <img
                 src="/images/brand/changsuek-run-logo.webp"
                 alt="CHANGSUEK RUN - เห็นช้างวิ่ง วิ่งตามช้าง"
-                className="h-22 sm:h-28 lg:h-32 w-auto object-contain drop-shadow-[0_8px_16px_rgba(42,20,80,0.2)]"
+                className="h-22 sm:h-28 lg:h-32 w-auto object-contain"
+                style={{ filter: 'drop-shadow(0 0 2px #fff) drop-shadow(0 0 10px rgba(255,255,255,.7)) drop-shadow(0 6px 14px rgba(20,5,50,.45))' }}
                 referrerPolicy="no-referrer"
               />
             </div>
@@ -316,41 +317,41 @@ export const Hero: React.FC<HeroProps> = ({
                 transition={{ duration: 3.2, repeat: Infinity, ease: 'easeInOut' }}
                 className="absolute -top-2 -right-6 sm:-top-3 sm:-right-8 opacity-90 pointer-events-none"
               >
-                <PawIcon size={22} color="#8B4FD8" />
+                <PawIcon size={22} color="#FFD84D" />
               </motion.div>
               <motion.div
                 animate={{ y: [0, 4, 0], rotate: [12, 4, 12] }}
                 transition={{ duration: 3.8, repeat: Infinity, ease: 'easeInOut', delay: 0.4 }}
                 className="absolute bottom-1 -right-7 sm:-right-9 opacity-90 pointer-events-none"
               >
-                <PawIcon size={20} color="#5B20A8" />
+                <PawIcon size={20} color="#FFC928" />
               </motion.div>
               {/* Thai needs generous line-height for upper/lower vowel & tone marks; the
                   gradient line gets vertical padding so bg-clip-text doesn't cut them off. */}
-              <h1 className="font-hero text-[38px] sm:text-[56px] lg:text-[62px] font-semibold leading-[1.28] text-[#2D1052] drop-shadow-[0_2px_0_rgba(255,255,255,0.95)]">
+              <h1 className="font-hero text-[38px] sm:text-[56px] lg:text-[62px] font-semibold leading-[1.28] text-white drop-shadow-[0_3px_0_#2A1450]">
                 <span className="block">{t('วิ่งสนุกไปกับ', 'Run for fun with')}</span>
                 <BouncyText
                   text={t('เพื่อนสี่ขาคู่ใจ', 'your four-legged friend')}
                   className="inline-block pt-1 pb-2 -mt-1 font-bold drop-shadow-none cursor-default"
-                  gradient="linear-gradient(90deg, #5B20A8, #7C3AED, #C026D3)"
+                  gradient="linear-gradient(90deg, #FFE268, #FFC928, #FFB300)"
                   delayMs={350}
                 />
               </h1>
             </div>
 
-            <p className="mt-2 sm:mt-3 text-xs sm:text-base font-bold text-[#3A1F5D] max-w-[360px] sm:max-w-[520px] mx-auto lg:mx-0 leading-relaxed text-balance">
+            <p className="mt-2 sm:mt-3 text-xs sm:text-base font-bold text-white/92 max-w-[360px] sm:max-w-[520px] mx-auto lg:mx-0 leading-relaxed text-balance">
               {t('งานวิ่งการกุศลและพัฒนาศูนย์ฝึกสุนัขตำรวจ', 'A charity run supporting the Police K-9 Training Center')}{' '}
               <span className="whitespace-nowrap">{t('ค่ายนเรศวร อ.ชะอำ จ.เพชรบุรี', 'Naresuan Camp, Cha-am, Phetchaburi')}</span> {t('บรรยากาศอบอุ่นสำหรับทุกครอบครัว', '— a warm day out for the whole family')}
             </p>
 
             {/* Desktop Date & Venue Glass Pills */}
-            <div className="hidden lg:flex mt-6 flex-wrap gap-2.5 justify-start text-xs sm:text-[13px] font-bold text-[#2A1450]">
-              <span className="inline-flex items-center gap-2 bg-white/90 backdrop-blur-md rounded-full px-4 py-2 shadow-[0_8px_20px_-6px_rgba(42,20,80,0.18)] border border-white">
-                <Calendar className="w-4 h-4 text-[#6D28D9]" />
+            <div className="hidden lg:flex mt-6 flex-wrap gap-2.5 justify-start text-xs sm:text-[13px] font-bold text-white">
+              <span className="inline-flex items-center gap-2 bg-white/12 backdrop-blur-md rounded-full px-4 py-2 border border-white/35">
+                <Calendar className="w-4 h-4 text-[#FFD84D]" />
                 <span>{t('9 ม.ค. 2570', '9 Jan 2027')}</span>
               </span>
-              <span className="inline-flex items-center gap-2 bg-white/90 backdrop-blur-md rounded-full px-4 py-2 shadow-[0_8px_20px_-6px_rgba(42,20,80,0.18)] border border-white">
-                <MapPin className="w-4 h-4 text-[#C2410C]" />
+              <span className="inline-flex items-center gap-2 bg-white/12 backdrop-blur-md rounded-full px-4 py-2 border border-white/35">
+                <MapPin className="w-4 h-4 text-[#FFD84D]" />
                 <span>{t('ค่ายนเรศวร อ.ชะอำ จ.เพชรบุรี', 'Naresuan Camp, Cha-am, Phetchaburi')}</span>
               </span>
             </div>
