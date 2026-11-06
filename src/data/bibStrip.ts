@@ -1,10 +1,9 @@
 // The bottom strip of the race BIB: sponsor logos on the left half, what the runner gets on the right half
 // (medal, food, drink, jersey size). Used by the website's BIB (RaceBib.tsx) and the printable BIB (server/documents.tsx).
 
-/** Sponsor logos in the order of the organiser's artwork: two rows of nine. */
+/** Sponsor logos: 17, shown as two centred rows (9 + 8). */
 export const BIB_SPONSOR_LOGOS: string[] = [
   'bpp',
-  'tat',
   'chang',
   'thonglor-pet-hospital',
   'bpp-police',

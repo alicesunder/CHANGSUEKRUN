@@ -657,7 +657,6 @@ export const EN_EXACT: Record<string, string> = {
   [`เวทีคอนเสิร์ตยามเย็นพร้อมจอ LED และแสงสีม่วง มีผู้ชมถือโทรศัพท์ถ่ายภาพ`]: `An evening concert stage with an LED screen and purple lights, with spectators taking photos on their phones`,
   [`ผู้ชมนั่งบนสนามหญ้าชมคอนเสิร์ตริมหาดตอนพลบค่ำ`]: `Spectators sitting on the grass watching a beachside concert at dusk`,
   [`รีเซ็ตเช็กลิสต์`]: `Reset checklist`,
-  [`การท่องเที่ยวแห่งประเทศไทย (ททท.)`]: `Tourism Authority of Thailand (TAT)`,
   [`Chang เครื่องดื่มตราช้าง`]: `Chang Beer`,
   [`ตชด. Border Patrol Police`]: `Border Patrol Police (BPP)`,
   [`น้องลาบราดอร์`]: `Labrador mascot`,

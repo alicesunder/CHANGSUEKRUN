@@ -256,8 +256,9 @@ const CSS = `
   .bib-qr small { display:block; margin-top:.5cqw; font:800 .95cqw 'Montserrat',sans-serif; color:#2A1450; }
   .bib-sos { position:absolute; left:84.8%; top:64.2%; width:13.4%; text-align:center; border-top:.3cqw solid var(--gold); padding-top:.5cqw; }
   .bib-strip { position:absolute; left:2.73%; top:81.84%; width:94.4%; height:12.6%; background:#fff; border-radius:1cqw; display:flex; align-items:stretch; }
-  .bib-logos { flex:0 0 57%; min-height:0; overflow:hidden; display:grid; grid-template-columns:repeat(9,minmax(0,1fr)); grid-template-rows:repeat(2,minmax(0,1fr)); gap:.2cqw .45cqw; padding:.7cqw 1cqw; box-sizing:border-box; }
-  .bib-logos img { width:100%; height:100%; min-height:0; object-fit:contain; }
+  .bib-logos { flex:0 0 57%; min-height:0; overflow:hidden; display:grid; grid-template-columns:repeat(18,minmax(0,1fr)); grid-template-rows:repeat(2,minmax(0,1fr)); gap:.2cqw .45cqw; padding:.7cqw 1cqw; box-sizing:border-box; }
+  .bib-logos img { grid-column:span 2; width:100%; height:100%; min-height:0; object-fit:contain; }
+  .bib-logos img:nth-child(10) { grid-column:2 / span 2; }
   .bib-perks { flex:1; display:flex; border-left:.25cqw solid #E4DAF5; margin:.8cqw 0; }
   .bib-perk { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:.35cqw; }
   .bib-perk-ic { width:4.2cqw; height:4.2cqw; border-radius:50%; border:.3cqw dashed #3B1883; display:flex; align-items:center; justify-content:center; padding:.55cqw; box-sizing:border-box; }

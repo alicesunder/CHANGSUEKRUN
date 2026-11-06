@@ -17,37 +17,32 @@ interface Sponsor {
   tile?: boolean;
 }
 
-/** Rows follow the organiser's layout: 5 / 5 / 5 / 3, all logos the same visual size. */
+/** 17 logos, laid out 6 / 6 / 5 (centred) so every row looks full and balanced; all logos get the same visual weight. */
 const ROWS: { items: Sponsor[] }[] = [
   {
     items: [
       { name: 'กองบัญชาการตำรวจตระเวนชายแดน', file: 'bpp', ratio: 1.36 },
-      { name: 'การท่องเที่ยวแห่งประเทศไทย (ททท.)', file: 'tat', ratio: 1.01 },
+      { name: 'ตชด. Border Patrol Police', file: 'bpp-police', ratio: 2.33 },
       { name: 'Chang เครื่องดื่มตราช้าง', file: 'chang', ratio: 1.17, tile: true },
       { name: 'Thonglor Pet Hospital', file: 'thonglor-pet-hospital', ratio: 1.47 },
-      { name: 'ตชด. Border Patrol Police', file: 'bpp-police', ratio: 2.33 },
+      { name: 'MSD Animal Health', file: 'msd-animal-health', ratio: 2.57 },
+      { name: 'Kitchen Flavor', file: 'kitchen-flavor', ratio: 1.44 },
     ],
   },
   {
     items: [
-      { name: 'MSD Animal Health', file: 'msd-animal-health', ratio: 2.57 },
-      { name: 'Kitchen Flavor', file: 'kitchen-flavor', ratio: 1.44 },
       { name: 'VIF', file: 'vif', ratio: 1.47 },
       { name: 'Dr.Choice', file: 'dr-choice', ratio: 1.56 },
       { name: 'Konvy', file: 'konvy', ratio: 3.42 },
-    ],
-  },
-  {
-    items: [
       { name: 'We are family for PET', file: 'we-are-family-for-pet', ratio: 1.2 },
       { name: 'Solid Gold', file: 'solid-gold', ratio: 3.6 },
       { name: 'CREDO PLUS', file: 'credo-plus', ratio: 2.47 },
-      { name: 'VetSynova', file: 'vetsynova', ratio: 0.75 },
-      { name: 'Bestie', file: 'bestie', ratio: 2.31 },
     ],
   },
   {
     items: [
+      { name: 'VetSynova', file: 'vetsynova', ratio: 0.75 },
+      { name: 'Bestie', file: 'bestie', ratio: 2.31 },
       { name: 'Dogster', file: 'dogster', ratio: 1.92, tile: true },
       { name: 'Amor', file: 'amor', ratio: 2.29, tile: true },
       { name: 'YuMOVE', file: 'yumove', ratio: 3.31 },
@@ -143,7 +138,7 @@ export const SponsorsSection: React.FC = () => {
               {row.items.map((sp) => (
                 <li
                   key={sp.file}
-                  className="basis-1/3 sm:basis-1/5 flex items-center justify-center px-2 py-2 sm:py-3 min-h-[64px] sm:min-h-[96px] lg:min-h-[108px]"
+                  className="basis-1/3 lg:basis-1/6 flex items-center justify-center px-2 py-2 sm:py-3 min-h-[64px] sm:min-h-[96px] lg:min-h-[108px]"
                 >
                   <SponsorLogo s={sp} size={logoSize(sp.ratio, 9000, 170, 92)} />
                 </li>
