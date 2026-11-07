@@ -1,5 +1,5 @@
 import React from 'react';
-import { Music } from 'lucide-react';
+import { CalendarDays, Clock, Music } from 'lucide-react';
 import { CONCERT_LINEUP, CONCERT_PASS_PRICE, VIP_TABLE_PRICE, concertPassPrice, vipTablePrice } from '../data/eventData';
 import { EarlyBirdPrice } from './EarlyBirdPrice';
 import { useEarlyBird } from '../utils/earlyBird';
@@ -69,18 +69,18 @@ export const ConcertSection: React.FC = () => {
                     <span className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#F43F5E] via-[#A855F7] to-[#7C3AED] px-4 py-1.5 text-xs font-black tracking-wider text-white shadow-[0_0_18px_rgba(168,85,247,0.7)] sm:text-sm">
                       ✨ LINE-UP 2027
                     </span>
-                    <h3 className="mt-2 font-hero text-2xl font-black italic leading-tight sm:text-4xl lg:text-5xl">
-                      <span className="lineup-title">ศิลปินชั้นนำ จัดเต็มริมชายหาด!</span>
+                    <h3 className="mt-2 font-hero text-[1.75rem] font-black italic leading-[1.2] sm:text-4xl lg:text-5xl">
+                      <span className="bg-gradient-to-b from-white via-[#FFE268] to-[#FFC928] bg-clip-text text-transparent [filter:drop-shadow(0_3px_6px_rgba(20,8,38,0.8))]">ศิลปินชั้นนำ จัดเต็มริมชายหาด!</span>
                     </h3>
                     <svg aria-hidden="true" className="mt-0.5 h-3 w-44 sm:w-72" viewBox="0 0 300 12" fill="none">
                       <path d="M2 9 C 80 0, 160 12, 298 2" stroke="#FFC928" strokeWidth="3" strokeLinecap="round" />
                     </svg>
                   </div>
                   <span className="inline-flex w-fit shrink-0 items-center gap-2 rounded-full bg-gradient-to-r from-[#FFC928] to-[#FFE268] px-4 py-2 text-xs font-black text-[#2A1450] shadow-lg sm:text-sm">
-                    📅 9 ม.ค. 2570 <span aria-hidden="true">·</span> 🕕 18.00–24.00 น.
+                    <CalendarDays className="h-4 w-4 sm:h-5 sm:w-5" aria-hidden="true" /> 9 ม.ค. 2570 <span aria-hidden="true">·</span> <Clock className="h-4 w-4 sm:h-5 sm:w-5" aria-hidden="true" /> 18.00–24.00 น.
                   </span>
                 </div>
-                <figure className="relative z-[2] mx-auto mt-2 w-full max-w-[880px] px-2 sm:mt-0 sm:px-6">
+                <figure className="relative z-[2] mx-auto mt-1 w-full max-w-[880px] px-2 max-sm:left-1/2 max-sm:w-[112%] max-sm:max-w-none max-sm:-translate-x-1/2 sm:mt-0 sm:px-6">
                   <img
                     src="/images/concert/lineup-cut.webp"
                     alt="ศิลปินคอนเสิร์ต CHANGSUEK RUN 2027: LomoSonic, ดาเอนโดฟิน, จ่ะ อาร์สยาม และศิลปินรับเชิญพิเศษ"
@@ -107,8 +107,8 @@ export const ConcertSection: React.FC = () => {
                     className="lineup-slot rounded-2xl border-2 bg-white/[0.06] px-3 py-3 text-center sm:px-4 sm:py-4"
                     style={{ ['--glow' as string]: a.color, borderColor: a.color }}
                   >
-                    <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-black text-[#0B0418] sm:text-sm" style={{ background: a.color }}>
-                      🕐 {a.time}
+                    <span className="inline-flex items-center gap-1 whitespace-nowrap rounded-full px-2 py-0.5 text-[10.5px] font-black tracking-tight text-[#0B0418] sm:px-2.5 sm:text-sm" style={{ background: a.color }}>
+                      {a.time}
                     </span>
                     <p className="mt-2 text-base font-black leading-tight text-white sm:text-xl">{a.artist}</p>
                     {a.tba && <p className="mt-1 text-xs font-bold text-[#FFE28A] sm:text-sm">พบกับเซอร์ไพรส์สุดพิเศษ! 🎁</p>}
