@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { RouteId } from '../types';
 import { RouteIllustratedMap } from './RouteIllustratedMap';
 import { ActivityMap } from './ActivityMap';
+import { ACTIVITY_LOCATIONS } from '../data/activityLocations';
 import { eventInfo, routesData } from '../data/eventData';
 import {
   ArrowRight,
@@ -41,6 +42,24 @@ export const RouteAndScheduleSection: React.FC<RouteAndScheduleProps> = ({
 }) => {
   const { t } = useLang();
   const [printModalOpen, setPrintModalOpen] = useState(false);
+  const [scheduleDay, setScheduleDay] = useState<'run' | 'activity'>('run');
+  const [showActMap, setShowActMap] = useState(false);
+  /** one-line names for the timeline (the full names stay in the tooltip and in the PDF) */
+  const shortTitle: Record<string, [string, string]> = {
+    'race-kit': ['รับอุปกรณ์ Race Kit (BIB · เสื้อ)', 'Race Kit pick-up (BIB · shirt)'],
+    'dog-contest': ['การแข่งขันประกวดน้องสุนัข', 'Dog contests'],
+    'dog-health-check': ['ตรวจสุขภาพสุนัข (ไม่มีค่าใช้จ่าย)', 'Dog health check (free of charge)'],
+    'dog-awards': ['พิธีมอบรางวัลการประกวดน้องสุนัข', 'Dog contest awards'],
+    'start-10k': ['ปล่อยตัวนักวิ่ง 10 กิโลเมตร', '10 km start'],
+    'start-5k': ['ปล่อยตัว 5 กิโลเมตร', '5 km start'],
+    'start-3k': ['ปล่อยตัว 4 กิโลเมตร (วิ่งกับน้องสุนัข)', '4 km start (with your dog)'],
+    'start-1k': ['ปล่อยตัว 1 กิโลเมตร (วิ่งกับน้องสุนัข)', '1 km start (with your dog)'],
+    'door-open': ['Door Open', 'Door Open'],
+    concert: ['การแสดงดนตรีและคอนเสิร์ต', 'Music show & concert'],
+    'station-1': ['สถานีที่ 1 ยิงปืน', 'Station 1 · Shooting'],
+    'station-2': ['สถานีที่ 2 หอสูง', 'Station 2 · High tower'],
+    'station-3': ['สถานีที่ 3 อุโมงค์ลม', 'Station 3 · Wind tunnel'],
+  };
   const activeRouteData = routesData[selectedRoute] || routesData['5km'];
 
   const timelineRows = [
@@ -276,45 +295,46 @@ export const RouteAndScheduleSection: React.FC<RouteAndScheduleProps> = ({
           className="relative isolate overflow-hidden rounded-[32px] border border-[#E4D6F7] text-[#2A1450] shadow-[0_26px_56px_-24px_rgba(45,16,82,0.35)]"
           style={{ background: 'linear-gradient(180deg, #FFFFFF 0%, #FAF6FF 60%, #F3EBFF 100%)' }}
         >
-          {/* ================== header banner ================== */}
-          <div className="relative overflow-hidden px-5 pt-6 pb-6 sm:px-8 sm:pt-8 lg:px-10 text-center text-white" style={{ background: 'linear-gradient(180deg, #5E2FBA 0%, #4A1F9B 100%)' }}>
-            <div aria-hidden="true" className="pointer-events-none absolute -top-16 right-[6%] w-[420px] h-[240px] rounded-full bg-[#FF9A5A]/35 blur-3xl" />
+          {/* ================== header banner (light sunset) ================== */}
+          <div
+            className="relative overflow-hidden px-5 pt-7 pb-8 sm:px-8 sm:pt-9 sm:pb-10 lg:px-10 text-center"
+            style={{ background: '#E9DDFB' }}
+          >
             <img
-              src="/images/objective/scene.webp"
+              src="/images/schedule/header.webp"
               alt=""
               aria-hidden="true"
-              loading="lazy"
               decoding="async"
               draggable={false}
-              className="hidden lg:block absolute -left-[1%] top-0 h-[250px] w-auto max-w-none pointer-events-none select-none"
-              style={{ WebkitMaskImage: 'linear-gradient(90deg, #000 0%, #000 55%, transparent 100%), linear-gradient(180deg, #000 0%, #000 78%, transparent 100%)', maskImage: 'linear-gradient(90deg, #000 0%, #000 55%, transparent 100%), linear-gradient(180deg, #000 0%, #000 78%, transparent 100%)', WebkitMaskComposite: 'source-in', maskComposite: 'intersect' } as React.CSSProperties}
+              className="absolute inset-0 w-full h-full object-cover object-[18%_center] sm:object-center pointer-events-none select-none"
             />
-            <div className="relative">
-              <h2 className="font-hero font-bold leading-[1.25] text-[1.9rem] sm:text-[2.6rem] lg:text-[3.1rem]">
-                <span className="flex items-center justify-center gap-2.5 sm:gap-3 bg-gradient-to-b from-white to-[#E4D4FF] bg-clip-text text-transparent">
-                  <Calendar className="hidden sm:block w-10 h-10 text-[#FFC928] shrink-0" aria-hidden="true" />
+            <div aria-hidden="true" className="absolute inset-0 pointer-events-none bg-gradient-to-b from-white/45 via-white/25 to-[#F3EBFF]/85 sm:from-white/10 sm:via-transparent sm:to-[#F3EBFF]/80" />
+            <div className="relative lg:pl-[22%]">
+              <h2 className="font-hero font-bold leading-[1.2] text-[#3B1780] text-[1.7rem] sm:text-[2.5rem] lg:text-[3rem] [text-shadow:0_2px_0_rgba(255,255,255,0.85),0_0_18px_rgba(255,255,255,0.8)]">
+                <span className="flex items-center justify-center gap-2.5 sm:gap-3">
+                  <Calendar className="hidden sm:block w-9 h-9 text-[#F5B800] shrink-0" aria-hidden="true" />
                   <span>{t('กำหนดการ & เส้นทางวิ่ง', 'Schedule & running routes')}</span>
                 </span>
-                <span className="flex items-center justify-center gap-2.5 sm:gap-3 bg-gradient-to-b from-[#FFF1B8] to-[#F5B800] bg-clip-text text-transparent">
-                  <MapPin className="w-6 h-6 sm:w-10 sm:h-10 text-[#FFC928] shrink-0" aria-hidden="true" />
+                <span className="mt-1 inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-b from-[#4B1FA8] to-[#2A1450] px-5 sm:px-8 py-0.5 text-[#FFD35C] [text-shadow:none] shadow-[0_8px_18px_-8px_rgba(42,20,80,0.7)]">
+                  <MapPin className="w-6 h-6 sm:w-8 sm:h-8 shrink-0" aria-hidden="true" />
                   <span>{t('มาตรฐาน GPS', 'GPS-surveyed')}</span>
                 </span>
               </h2>
-              <div className="mt-3 sm:mt-4 inline-flex items-center gap-2.5 rounded-full border-2 border-[#F3CB62]/70 bg-gradient-to-r from-[#F6EFFF] to-[#E6D8FA] px-4 sm:px-6 py-2 sm:py-2.5 text-[13px] sm:text-lg font-black text-[#2A1450] shadow-[0_8px_18px_-8px_rgba(0,0,0,0.5)]">
+              <div className="mt-3 sm:mt-4 inline-flex items-center gap-2.5 rounded-full border border-white/80 bg-white/90 px-4 sm:px-6 py-2 sm:py-2.5 text-[13px] sm:text-lg font-black text-[#2A1450] shadow-[0_10px_22px_-10px_rgba(42,20,80,0.45)] backdrop-blur">
                 <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-[#6D28D9] shrink-0" aria-hidden="true" />
                 {t('วันเสาร์ที่ 9 ม.ค. 2570 · กิจกรรมเสริม 10 ม.ค. 2570', 'Saturday 9 Jan 2027 · Activities 10 Jan 2027')}
               </div>
-              <p className="mt-3 text-[12.5px] sm:text-base font-bold text-white/95">
+              <p className="mt-3 text-[12.5px] sm:text-base font-extrabold text-[#2A1450] [text-shadow:0_1px_0_rgba(255,255,255,0.9)]">
                 <span aria-hidden="true">👆 </span>
                 {t('คลิกที่ช่วงเวลาปล่อยตัว ', 'Tap a start time ')}
-                <span className="text-[#FFD35C] font-black">{t('(16.30 - 17.30 น.)', '(16:30 - 17:30)')}</span>
+                <span className="text-[#B45309] font-black">{t('(16.30 - 17.30 น.)', '(16:30 - 17:30)')}</span>
                 {t(' เพื่อดูพิกัดเส้นทางวิ่งแต่ละระยะได้ทันที', ' to see the course of each distance right away')}
               </p>
             </div>
           </div>
 
           {/* ================== the two panels ================== */}
-          <div className="px-3 pb-5 sm:px-6 sm:pb-7 lg:px-8 lg:pb-9 grid grid-cols-1 lg:grid-cols-[minmax(0,4fr)_minmax(0,8fr)] gap-4 sm:gap-5 items-start">
+          <div className="px-3 pb-5 sm:px-6 sm:pb-7 lg:px-8 lg:pb-9 grid grid-cols-1 lg:grid-cols-[minmax(0,4.8fr)_minmax(0,7.2fr)] gap-4 sm:gap-5 items-start">
             {/* ---------- schedule ---------- */}
             <div id="schedule" className="rounded-[26px] border border-[#E4D6F7] bg-white p-3 sm:p-4 shadow-[0_14px_34px_-20px_rgba(42,20,80,0.3)]">
               <div className="flex flex-wrap items-center gap-x-3 gap-y-2 px-1 pb-3">
@@ -322,55 +342,73 @@ export const RouteAndScheduleSection: React.FC<RouteAndScheduleProps> = ({
                   <Calendar className="w-7 h-7" aria-hidden="true" />
                 </span>
                 <h3 className="text-2xl sm:text-3xl font-black leading-none">{t('กำหนดการ', 'Schedule')}</h3>
-                <div className="ml-auto rounded-2xl bg-gradient-to-r from-[#F6EFFF] to-[#E4D6F8] px-3.5 py-2 text-[#2A1450] text-[11.5px] sm:text-[13px] font-extrabold leading-snug">
-                  <span className="flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5 text-[#6D28D9] shrink-0" aria-hidden="true" />{t('ทุกกิจกรรม ณ Sea Sand Sun Hua Hin Resort', 'All activities at Sea Sand Sun Hua Hin Resort')}</span>
+                <div className="ml-auto rounded-2xl bg-[#F3ECFF] px-3.5 py-2 text-[#2A1450] text-[11.5px] sm:text-[12.5px] font-extrabold leading-snug">
+                  <span className="flex items-start gap-1.5"><MapPin className="w-3.5 h-3.5 mt-0.5 text-[#6D28D9] shrink-0" aria-hidden="true" />{t('ทุกกิจกรรม ณ Sea Sand Sun Hua Hin Resort', 'All activities at Sea Sand Sun Hua Hin Resort')}</span>
                   <span className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5 text-[#6D28D9] shrink-0" aria-hidden="true" />{t('เวลา 09.00 – 24.00 น.', '09:00 – 24:00')}</span>
                 </div>
               </div>
 
-              <div className="rounded-[20px] bg-[#FBF8FF] border border-[#EDE3FB] p-2.5 sm:p-3.5 text-[#2A1450] space-y-1.5">
-                {timelineRows.map((row, idx) => {
-                  const Icon = row.Icon;
-                  const isSelectedRouteRow = row.routeId && row.routeId === selectedRoute;
-                  const day = dayOf(row.id);
-                  const newDay = idx === 0 || day !== dayOf(timelineRows[idx - 1].id);
+              {/* the two days are tabs, so only one day is on screen */}
+              <div role="tablist" aria-label={t('เลือกวัน', 'Choose a day')} className="grid grid-cols-2 gap-2 mb-3">
+                {(['run', 'activity'] as const).map((d) => {
+                  const on = scheduleDay === d;
                   return (
-                    <React.Fragment key={row.id}>
-                      {newDay && (
-                        <div className={`flex items-center gap-2 rounded-full bg-[#EFE7FF] border border-[#D9C9EF] px-3.5 py-1.5 text-[#4B1FA8] text-[12.5px] sm:text-sm font-black ${idx > 0 ? 'mt-3' : ''}`}>
-                          <Calendar className="w-4 h-4 text-[#7C3AED] shrink-0" aria-hidden="true" /> {dayHeading(day)}
-                        </div>
-                      )}
+                    <button
+                      key={d}
+                      type="button"
+                      role="tab"
+                      aria-selected={on}
+                      onClick={() => setScheduleDay(d)}
+                      className={`rounded-2xl px-2.5 py-2 text-center leading-tight cursor-pointer border-2 transition-all ${
+                        on ? 'border-[#2A1450] bg-gradient-to-b from-[#6D3FD0] to-[#4B1FA8] text-white shadow-[0_5px_0_#2A1450] -translate-y-0.5' : 'border-[#D9C9EF] bg-[#F6F0FF] text-[#4B1FA8] hover:border-[#B79AE8]'
+                      }`}
+                    >
+                      <span className="flex items-center justify-center gap-1.5 text-[13px] sm:text-[15px] font-black">
+                        <Calendar className={`w-4 h-4 shrink-0 ${on ? 'text-[#FFD35C]' : 'text-[#7C3AED]'}`} aria-hidden="true" />
+                        {d === 'run' ? t('เสาร์ที่ 9 ม.ค. 2570', 'Sat 9 Jan 2027') : t('อาทิตย์ที่ 10 ม.ค. 2570', 'Sun 10 Jan 2027')}
+                      </span>
+                      <span className={`block text-[11px] sm:text-xs font-extrabold ${on ? 'text-white/85' : 'text-[#6B5A85]'}`}>{d === 'run' ? t('วันวิ่ง & คอนเสิร์ต', 'Run day & concert') : t('กิจกรรมเสริม', 'Add-on activities')}</span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div role="tabpanel" className="rounded-[20px] bg-[#FBF8FF] border border-[#EDE3FB] p-2 sm:p-3 text-[#2A1450]">
+                {timelineRows
+                  .filter((row) => dayOf(row.id) === scheduleDay)
+                  .map((row) => {
+                    const Icon = row.Icon;
+                    const isSelectedRouteRow = row.routeId && row.routeId === selectedRoute;
+                    const short = shortTitle[row.id];
+                    return (
                       <div
+                        key={row.id}
                         onClick={() => {
                           if (row.routeId && onSelectRoute) onSelectRoute(row.routeId);
                         }}
-                        className={`flex items-center gap-2.5 sm:gap-3 rounded-xl px-2 py-1.5 transition-all ${row.routeId ? 'cursor-pointer hover:brightness-95' : ''} ${
-                          isSelectedRouteRow
-                            ? 'bg-gradient-to-r from-[#FFE27A] to-[#FFF1B8] ring-2 ring-[#2A1450]/70'
-                            : row.isGoldDot
-                              ? 'bg-gradient-to-r from-[#FFEFB3] to-[#FFF8DE]'
-                              : 'border-b border-[#2A1450]/8'
+                        className={`my-1 grid grid-cols-[104px_26px_minmax(0,1fr)] sm:grid-cols-[116px_28px_minmax(0,1fr)] items-center gap-2 sm:gap-2.5 rounded-xl px-1.5 min-h-[42px] transition-all ${row.routeId ? 'cursor-pointer hover:brightness-95' : ''} ${
+                          isSelectedRouteRow ? 'bg-gradient-to-r from-[#FFE27A] to-[#FFF1B8] ring-2 ring-[#2A1450]/70' : row.isGoldDot ? 'bg-gradient-to-r from-[#FFEFB3] to-[#FFF8DE]' : ''
                         }`}
                       >
                         <span
-                          className={`shrink-0 min-w-[92px] sm:min-w-[108px] rounded-full px-2.5 py-1 text-center font-mono text-[11.5px] sm:text-[13px] font-black tabular-nums ${
+                          className={`rounded-full px-2 py-1 text-center font-mono text-[11.5px] sm:text-[13px] font-black tabular-nums whitespace-nowrap ${
                             row.isGoldDot || isSelectedRouteRow ? 'bg-gradient-to-b from-[#FFD35C] to-[#F5B800] text-[#2A1450]' : 'bg-[#EFE7FF] text-[#4B1FA8]'
                           }`}
                         >
                           {row.time}
                         </span>
-                        <span className="shrink-0 w-7 h-7 flex items-center justify-center" style={{ color: row.iconColor }}>
+                        <span className="flex items-center justify-center" style={{ color: row.iconColor }}>
                           <Icon className="w-[22px] h-[22px] stroke-[2.2]" aria-hidden="true" />
                         </span>
-                        <div className="min-w-0 flex-1">
-                          <div className="text-[12.5px] sm:text-[14px] font-extrabold leading-snug">{row.title}</div>
-                          {row.desc && <div className="text-[11px] text-[#5B4878] font-semibold leading-snug">{row.desc}</div>}
+                        <div className="min-w-0">
+                          <div className="text-[13px] sm:text-[14.5px] font-extrabold leading-snug" title={row.title}>
+                            {short ? t(short[0], short[1]) : row.title}
+                          </div>
+                          {row.id === 'race-kit' && row.desc && <div className="text-[11px] text-[#5B4878] font-semibold leading-snug">{row.desc}</div>}
                         </div>
                       </div>
-                    </React.Fragment>
-                  );
-                })}
+                    );
+                  })}
               </div>
 
               <div className="flex justify-center pt-4 pb-1">
@@ -400,7 +438,7 @@ export const RouteAndScheduleSection: React.FC<RouteAndScheduleProps> = ({
 
               <div className="rounded-[20px] bg-[#FBF8FF] border border-[#EDE3FB] p-2.5 sm:p-3.5 text-[#2A1450] space-y-3">
                 {/* distance tabs */}
-                <div role="tablist" aria-label={t('เลือกระยะวิ่ง', 'Choose a distance')} className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                <div role="tablist" aria-label={t('เลือกระยะวิ่ง', 'Choose a distance')} className="grid grid-cols-4 gap-1.5 sm:gap-2">
                   {routeTabs.map((tab) => {
                     const on = selectedRoute === tab.id;
                     return (
@@ -460,9 +498,39 @@ export const RouteAndScheduleSection: React.FC<RouteAndScheduleProps> = ({
                   </div>
                 </div>
 
-                {/* activity map */}
-                <div className="rounded-2xl border-2 border-[#D9C9EF] bg-white p-2.5 sm:p-3.5">
-                  <ActivityMap />
+                {/* activity locations: three links; the real map opens only when asked */}
+                <div className="rounded-2xl border border-[#E4D6F7] bg-white p-2.5 sm:p-3.5">
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+                    <div className="flex items-center gap-2 mr-auto">
+                      <span className="w-9 h-9 rounded-full bg-[#F3ECFF] flex items-center justify-center shrink-0"><MapPin className="w-5 h-5 text-[#6D28D9]" aria-hidden="true" /></span>
+                      <div className="leading-tight">
+                        <div className="text-[15px] font-black">{t('ตำแหน่งกิจกรรมเสริม', 'Add-on activity locations')}</div>
+                        <div className="text-[11.5px] font-bold text-[#6B5A85]">{t('วันอาทิตย์ที่ 10 ม.ค. 2570', 'Sunday 10 Jan 2027')}</div>
+                      </div>
+                    </div>
+                    {ACTIVITY_LOCATIONS.filter((a) => a.id !== 'resort').map((a) => (
+                      <a
+                        key={a.id}
+                        href={a.mapsUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 min-h-[44px] rounded-xl border-2 border-[#E4D6F7] bg-[#FBF8FF] px-3 text-[13px] font-extrabold text-[#2A1450] hover:border-[#B79AE8]"
+                      >
+                        <img src={a.id === 'tower' ? '/images/shop/tower-v2.webp' : a.id === 'gun' ? '/images/shop/shoot-v2.webp' : '/images/shop/wind-v2.webp'} alt="" className="w-8 h-8 object-contain mix-blend-multiply" loading="lazy" />
+                        {a.id === 'tower' ? t('หอสูง', 'High tower') : a.id === 'gun' ? t('ยิงปืน', 'Shooting') : t('อุโมงค์ลม', 'Wind tunnel')}
+                        <ArrowRight className="w-3.5 h-3.5 text-[#6D28D9]" aria-hidden="true" />
+                      </a>
+                    ))}
+                    <button
+                      type="button"
+                      aria-expanded={showActMap}
+                      onClick={() => setShowActMap((v) => !v)}
+                      className="inline-flex items-center gap-1.5 min-h-[44px] rounded-xl border-2 border-[#D9C9EF] bg-[#F3ECFF] px-3 text-[13px] font-black text-[#4B1FA8] cursor-pointer hover:bg-[#E9DDFB]"
+                    >
+                      {showActMap ? t('ซ่อนแผนที่', 'Hide map') : t('ดูบนแผนที่', 'Show on map')}
+                    </button>
+                  </div>
+                  {showActMap && <ActivityMap className="mt-3" />}
                 </div>
               </div>
             </div>
