@@ -1372,7 +1372,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                         <label className={labelCls} htmlFor="buyer-name">ชื่อ - นามสกุล *</label>
                         <div className="relative">
                           <User className="w-4 h-4 text-[#6B5A85] absolute left-3.5 top-1/2 -translate-y-1/2" />
-                          <input id="buyer-name" type="text" required value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="เช่น สมชาย ใจดี" className={inputCls} />
+                          <input id="buyer-name" type="text" required value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="เช่น ชัยโรจน์ สหัสภูริพัฒน์" className={inputCls} />
                         </div>
                       </div>
                     </FormSection>

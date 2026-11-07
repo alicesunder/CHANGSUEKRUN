@@ -300,7 +300,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthed,
                 })}
               </div>
 
-              <Input id="auth-name" icon={<User className="h-4 w-4" />} label={t('ชื่อ - นามสกุล *', 'Full name *')} required value={name} onChange={(e) => setName(e.target.value)} placeholder={t('เช่น สมชาย ใจดี', 'e.g. Somchai Jaidee')} autoComplete="name" maxLength={80} />
+              <Input id="auth-name" icon={<User className="h-4 w-4" />} label={t('ชื่อ - นามสกุล *', 'Full name *')} required value={name} onChange={(e) => setName(e.target.value)} placeholder={t('เช่น ชัยโรจน์ สหัสภูริพัฒน์', 'e.g. Chairoj Sahasphuripat')} autoComplete="name" maxLength={80} />
               {method === 'email' ? (
                 <Input id="auth-email" icon={<Mail className="h-4 w-4" />} label={t('อีเมล *', 'Email *')} type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" autoComplete="email" />
               ) : (

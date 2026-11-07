@@ -253,11 +253,11 @@ export const RunnerDetailsForm: React.FC<{
               )}
               <div className={insured ? '' : 'sm:col-span-2'}>
                 <label className={lbl} htmlFor={`r${i}-first`}>ชื่อ *</label>
-                <input id={`r${i}-first`} type="text" maxLength={60} value={r.firstName} onChange={(e) => set({ firstName: e.target.value })} placeholder="เช่น สมชาย" autoComplete={i === 0 ? 'given-name' : 'off'} className={box(bad('firstName'))} />
+                <input id={`r${i}-first`} type="text" maxLength={60} value={r.firstName} onChange={(e) => set({ firstName: e.target.value })} placeholder="เช่น ชัยโรจน์" autoComplete={i === 0 ? 'given-name' : 'off'} className={box(bad('firstName'))} />
               </div>
               <div>
                 <label className={lbl} htmlFor={`r${i}-last`}>นามสกุล *</label>
-                <input id={`r${i}-last`} type="text" maxLength={60} value={r.lastName} onChange={(e) => set({ lastName: e.target.value })} placeholder="เช่น ใจดี" autoComplete={i === 0 ? 'family-name' : 'off'} className={box(bad('lastName'))} />
+                <input id={`r${i}-last`} type="text" maxLength={60} value={r.lastName} onChange={(e) => set({ lastName: e.target.value })} placeholder="เช่น สหัสภูริพัฒน์" autoComplete={i === 0 ? 'family-name' : 'off'} className={box(bad('lastName'))} />
               </div>
             </div>
           </Group>
