@@ -25,6 +25,7 @@ import {
   X,
 } from 'lucide-react';
 import { PawIcon } from './brand/DogDecor';
+import { useLang } from '../i18n/lang';
 
 interface RouteAndScheduleProps {
   selectedRoute?: RouteId;
@@ -38,6 +39,7 @@ export const RouteAndScheduleSection: React.FC<RouteAndScheduleProps> = ({
   onSelectRoute,
   onOpenSimulation,
 }) => {
+  const { t } = useLang();
   const [printModalOpen, setPrintModalOpen] = useState(false);
   const activeRouteData = routesData[selectedRoute] || routesData['5km'];
 
@@ -203,7 +205,9 @@ export const RouteAndScheduleSection: React.FC<RouteAndScheduleProps> = ({
   /** The add-on activities (stations) are the day after the run. */
   const dayOf = (id: string) => (id.startsWith('station-') ? 'activity' : 'run');
   const dayHeading = (day: string) =>
-    day === 'run' ? `วัน${eventInfo.dateNotice.replace('วัน', '')} · วันวิ่ง & คอนเสิร์ต` : `${eventInfo.activityDateNotice} · กิจกรรมเสริม (หอสูง · ยิงปืน · อุโมงค์ลม)`;
+    day === 'run'
+      ? t('วันเสาร์ที่ 9 ม.ค. 2570 (วันวิ่ง & คอนเสิร์ต)', 'Saturday 9 Jan 2027 (run day & concert)')
+      : t('วันอาทิตย์ที่ 10 ม.ค. 2570 (กิจกรรมเสริม)', 'Sunday 10 Jan 2027 (add-on activities)');
 
   const routePills: {
     id: RouteId;
@@ -248,6 +252,14 @@ export const RouteAndScheduleSection: React.FC<RouteAndScheduleProps> = ({
   ];
 
 
+  const routeTabs: { id: RouteId; big: string; sub: string; time: string; dog: boolean }[] = [
+    { id: '10km', big: '10K', sub: t('บุคคลทั่วไป', 'General'), time: t('16.30 น.', '16:30'), dog: false },
+    { id: '5km', big: '5K', sub: t('บุคคลทั่วไป', 'General'), time: t('17.00 น.', '17:00'), dog: false },
+    { id: '3km', big: '4K', sub: t('วิ่งกับน้องสุนัข', 'With your dog'), time: t('17.15 น.', '17:15'), dog: true },
+    { id: '1km', big: '1K', sub: t('วิ่งกับน้องสุนัข', 'With your dog'), time: t('17.30 น.', '17:30'), dog: true },
+  ];
+  const activeTab = routeTabs.find((x) => x.id === selectedRoute);
+
   const [mapFull, setMapFull] = useState(false);
   useEffect(() => {
     if (!mapFull) return;
@@ -258,290 +270,208 @@ export const RouteAndScheduleSection: React.FC<RouteAndScheduleProps> = ({
   const scrollToFullMap = () => setMapFull(true);
 
   return (
-    <section
-      id="schedule-and-map"
-      className="py-12 sm:py-16 relative overflow-hidden scroll-mt-20"
-      style={{
-        background:
-          'linear-gradient(180deg, #EFE6FC 0%, #E0F2FE 48%, #FFF4D2 100%)',
-      }}
-    >
-      {/* Ambient Coastal Sun & Ocean Orbs */}
-      <div className="absolute -top-20 left-10 w-80 h-80 bg-[#7B3FC6]/15 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-0 right-10 w-96 h-96 bg-[#FFC928]/25 rounded-full blur-3xl pointer-events-none" />
-
-      <div
-        id="schedule-section"
-        className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8 relative z-10"
-      >
-        {/* Section Eyebrow Header */}
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 mb-7">
-          <div>
-            <span className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white border-2 border-[#2A1450] text-[#5B20A8] text-xs font-extrabold uppercase shadow-[0_3px_0_#2A1450] mb-2">
-              <Sparkles className="w-3.5 h-3.5 text-[#B45309]" />
-              <span>วันวิ่ง 9 ม.ค. 2570 · กิจกรรมเสริม 10 ม.ค. 2570</span>
-            </span>
-            <h2 className="squiggle text-2xl sm:text-4xl font-extrabold text-[#2A1450]">
-              กำหนดการ & <span className="whitespace-nowrap">เส้นทางวิ่ง</span>มาตรฐาน GPS
-            </h2>
+    <section id="schedule-and-map" className="relative overflow-hidden scroll-mt-20 py-8 sm:py-12" style={{ background: 'linear-gradient(180deg, #EFE6FC 0%, #F5F0FF 100%)' }}>
+      <div id="schedule-section" className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div
+          className="relative isolate overflow-hidden rounded-[32px] border border-[#FFC928]/45 text-white shadow-[0_30px_64px_-20px_rgba(45,16,82,0.55)]"
+          style={{ background: 'linear-gradient(180deg, #5A2BB5 0%, #3E1784 20%, #2D1258 52%, #2A1450 100%)' }}
+        >
+          {/* dusk glow (decoration) */}
+          <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10">
+            <div className="absolute -top-16 right-[6%] w-[420px] h-[260px] rounded-full bg-[#FF9A5A]/40 blur-3xl" />
+            <div className="absolute top-10 left-[30%] w-[460px] h-[220px] rounded-full bg-[#B57BFF]/25 blur-3xl" />
           </div>
-          <p className="text-xs sm:text-sm font-bold text-[#4B2D78]">
-            คลิกที่ช่วงเวลาปล่อยตัว (16.30 - 17.30 น.) เพื่อดูพิกัดเส้นทางวิ่งแต่ละระยะได้ทันที
-          </p>
-        </div>
 
-        {/* ================================================================ */}
-        {/* 2-COLUMN SIDE-BY-SIDE: SCHEDULE (LEFT) & GPS SURVEY MAP (RIGHT) */}
-        {/* ================================================================ */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-7 items-start">
-          {/* -------------------------------------------------------------- */}
-          {/* LEFT CARD: กำหนดการ (OFFICIAL SCHEDULE)                        */}
-          {/* -------------------------------------------------------------- */}
-          <div
-            id="schedule"
-            className="lg:col-span-5 ds-card flex flex-col justify-between overflow-hidden relative"
-          >
-            {/* Top Colorful Accent Bar */}
-            <div className="h-2 w-full bg-gradient-to-r from-[#5B20A8] via-[#FFC928] to-[#DB2777]" />
+          {/* ================== header banner ================== */}
+          <div className="relative px-5 pt-6 pb-5 sm:px-8 sm:pt-8 lg:px-10 text-center">
+            <img
+              src="/images/objective/scene.webp"
+              alt=""
+              aria-hidden="true"
+              loading="lazy"
+              decoding="async"
+              draggable={false}
+              className="hidden lg:block absolute -left-[1%] top-0 h-[250px] w-auto max-w-none pointer-events-none select-none"
+              style={{ WebkitMaskImage: 'linear-gradient(90deg, #000 0%, #000 55%, transparent 100%), linear-gradient(180deg, #000 0%, #000 78%, transparent 100%)', maskImage: 'linear-gradient(90deg, #000 0%, #000 55%, transparent 100%), linear-gradient(180deg, #000 0%, #000 78%, transparent 100%)', WebkitMaskComposite: 'source-in', maskComposite: 'intersect' } as React.CSSProperties}
+            />
+            <div className="relative">
+              <h2 className="font-hero font-bold leading-[1.25] text-[1.9rem] sm:text-[2.6rem] lg:text-[3.1rem]">
+                <span className="flex items-center justify-center gap-2.5 sm:gap-3 bg-gradient-to-b from-white to-[#E4D4FF] bg-clip-text text-transparent">
+                  <Calendar className="hidden sm:block w-10 h-10 text-[#FFC928] shrink-0" aria-hidden="true" />
+                  <span>{t('กำหนดการ & เส้นทางวิ่ง', 'Schedule & running routes')}</span>
+                </span>
+                <span className="flex items-center justify-center gap-2.5 sm:gap-3 bg-gradient-to-b from-[#FFF1B8] to-[#F5B800] bg-clip-text text-transparent">
+                  <MapPin className="w-6 h-6 sm:w-10 sm:h-10 text-[#FFC928] shrink-0" aria-hidden="true" />
+                  <span>{t('มาตรฐาน GPS', 'GPS-surveyed')}</span>
+                </span>
+              </h2>
+              <div className="mt-3 sm:mt-4 inline-flex items-center gap-2.5 rounded-full border-2 border-[#F3CB62]/70 bg-gradient-to-r from-[#F6EFFF] to-[#E6D8FA] px-4 sm:px-6 py-2 sm:py-2.5 text-[13px] sm:text-lg font-black text-[#2A1450] shadow-[0_8px_18px_-8px_rgba(0,0,0,0.5)]">
+                <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-[#6D28D9] shrink-0" aria-hidden="true" />
+                {t('วันเสาร์ที่ 9 ม.ค. 2570 · กิจกรรมเสริม 10 ม.ค. 2570', 'Saturday 9 Jan 2027 · Activities 10 Jan 2027')}
+              </div>
+              <p className="mt-3 text-[12.5px] sm:text-base font-bold text-white/95">
+                <span aria-hidden="true">👆 </span>
+                {t('คลิกที่ช่วงเวลาปล่อยตัว ', 'Tap a start time ')}
+                <span className="text-[#FFD35C] font-black">{t('(16.30 - 17.30 น.)', '(16:30 - 17:30)')}</span>
+                {t(' เพื่อดูพิกัดเส้นทางวิ่งแต่ละระยะได้ทันที', ' to see the course of each distance right away')}
+              </p>
+            </div>
+          </div>
 
-            <div className="p-5 sm:p-7 flex-1 flex flex-col justify-between">
-              <div>
-                {/* Card Header */}
-                <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b-2 border-dashed border-[#2A1450]/15">
-                  <div className="flex items-center gap-3.5">
-                    <span className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-br from-[#5B20A8] to-[#3A1564] text-[#FFC928] border-2 border-[#2A1450] shadow-[2px_3px_0_#2A1450] flex items-center justify-center shrink-0">
-                      <PawIcon size={22} color="#FFC928" />
-                    </span>
-                    <div>
-                      <h3 className="text-xl sm:text-2xl font-extrabold text-[#2A1450] leading-tight">
-                        กำหนดการ
-                      </h3>
-                      <span className="block text-[11px] font-mono font-extrabold text-[#7B3FC6] uppercase mt-0.5">
-                        09.00 – 24.00 น.
-                      </span>
-                      <span className="block text-[11px] font-bold text-[#2A1450]/70 mt-0.5">
-                        กิจกรรมทั้งหมด ณ Sea Sand Sun Hua Hin Resort
-                      </span>
-                    </div>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => setPrintModalOpen(true)}
-                    className="inline-flex items-center gap-1.5 rounded-full bg-[#FFC928] hover:bg-[#F5B800] text-[#2A1450] border-2 border-[#2A1450] shadow-[0_3px_0_#2A1450] px-4 py-2 text-xs font-extrabold transition-transform hover:scale-105 cursor-pointer"
-                  >
-                    <Printer className="w-3.5 h-3.5" />
-                    <span>ดูตารางฉบับเต็ม (PDF)</span>
-                  </button>
+          {/* ================== the two panels ================== */}
+          <div className="px-3 pb-5 sm:px-6 sm:pb-7 lg:px-8 lg:pb-9 grid grid-cols-1 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] gap-4 sm:gap-5 items-start">
+            {/* ---------- schedule ---------- */}
+            <div id="schedule" className="rounded-[26px] border-2 border-[#F3CB62]/55 bg-gradient-to-b from-[#43198A]/70 to-[#2A1450]/70 p-3 sm:p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.15)]">
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-2 px-1 pb-3">
+                <span className="w-12 h-12 shrink-0 rounded-2xl bg-gradient-to-b from-[#FFD35C] to-[#F5B800] flex items-center justify-center text-[#2A1450] shadow-md">
+                  <Calendar className="w-7 h-7" aria-hidden="true" />
+                </span>
+                <h3 className="text-2xl sm:text-3xl font-black leading-none">{t('กำหนดการ', 'Schedule')}</h3>
+                <div className="ml-auto rounded-2xl bg-gradient-to-r from-[#F6EFFF] to-[#E4D6F8] px-3.5 py-2 text-[#2A1450] text-[11.5px] sm:text-[13px] font-extrabold leading-snug">
+                  <span className="flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5 text-[#6D28D9] shrink-0" aria-hidden="true" />{t('ทุกกิจกรรม ณ Sea Sand Sun Hua Hin Resort', 'All activities at Sea Sand Sun Hua Hin Resort')}</span>
+                  <span className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5 text-[#6D28D9] shrink-0" aria-hidden="true" />{t('เวลา 09.00 – 24.00 น.', '09:00 – 24:00')}</span>
                 </div>
+              </div>
 
-                {/* Timeline List with Bold Time Pills & Interactive Highlighting */}
-                <div className="mt-4 relative space-y-2" data-reveal-stagger="left">
-                  {/* Continuous Vertical Line */}
-                  <div
-                    aria-hidden="true"
-                    className="absolute left-[13px] top-4 bottom-4 w-[3px] bg-gradient-to-b from-[#7B3FC6] via-[#FFC928] to-[#16A34A] rounded-full"
-                  />
-
-                  {timelineRows.map((row, idx) => {
-                    const Icon = row.Icon;
-                    const isSelectedRouteRow = row.routeId && row.routeId === selectedRoute;
-                    const day = dayOf(row.id);
-                    const newDay = idx === 0 || day !== dayOf(timelineRows[idx - 1].id);
-                    return (
-                      <React.Fragment key={row.id}>
+              <div className="rounded-[20px] bg-gradient-to-b from-[#FFFFFF] to-[#F4ECFF] p-2.5 sm:p-3.5 text-[#2A1450] space-y-1.5">
+                {timelineRows.map((row, idx) => {
+                  const Icon = row.Icon;
+                  const isSelectedRouteRow = row.routeId && row.routeId === selectedRoute;
+                  const day = dayOf(row.id);
+                  const newDay = idx === 0 || day !== dayOf(timelineRows[idx - 1].id);
+                  return (
+                    <React.Fragment key={row.id}>
                       {newDay && (
-                        <div className="relative z-10 flex items-center gap-2 pt-1 pl-1">
-                          <span className={`inline-flex items-center gap-1.5 rounded-full border-2 border-[#2A1450] px-3 py-1 text-[11px] sm:text-xs font-extrabold shadow-[0_3px_0_#2A1450] ${day === 'run' ? 'bg-[#FFC928] text-[#2A1450]' : 'bg-[#7B3FC6] text-white'}`}>
-                            <Calendar className="w-3.5 h-3.5" /> {dayHeading(day)}
-                          </span>
+                        <div className={`flex items-center gap-2 rounded-full bg-gradient-to-r from-[#5B21B6] to-[#7C3AED] px-3.5 py-1.5 text-white text-[12.5px] sm:text-sm font-black shadow-md ${idx > 0 ? 'mt-3' : ''}`}>
+                          <Calendar className="w-4 h-4 text-[#FFD35C] shrink-0" aria-hidden="true" /> {dayHeading(day)}
                         </div>
                       )}
                       <div
                         onClick={() => {
-                          if (row.routeId && onSelectRoute) {
-                            onSelectRoute(row.routeId);
-                          }
+                          if (row.routeId && onSelectRoute) onSelectRoute(row.routeId);
                         }}
-                        className={`group relative flex items-start sm:items-center gap-2.5 sm:gap-3 py-2 px-2.5 rounded-2xl transition-all border ${
-                          row.routeId ? 'cursor-pointer' : ''
-                        } ${
+                        className={`flex items-center gap-2.5 sm:gap-3 rounded-xl px-2 py-1.5 transition-all ${row.routeId ? 'cursor-pointer hover:brightness-95' : ''} ${
                           isSelectedRouteRow
-                            ? 'bg-gradient-to-r from-[#FFF9E5] to-[#F3E8FF] border-[#2A1450] shadow-[0_4px_0_#2A1450] -translate-y-0.5'
-                            : 'bg-[#FAF8FF]/90 hover:bg-white border-purple-100/80 hover:border-purple-300'
+                            ? 'bg-gradient-to-r from-[#FFE27A] to-[#FFF1B8] ring-2 ring-[#2A1450]/70'
+                            : row.isGoldDot
+                              ? 'bg-gradient-to-r from-[#FFEFB3] to-[#FFF8DE]'
+                              : 'border-b border-[#2A1450]/8'
                         }`}
                       >
-                        {/* Timeline Node Ring */}
-                        <div
-                          className={`relative z-10 w-5 h-5 mt-1 sm:mt-0 rounded-full bg-white flex items-center justify-center shrink-0 border-2 ${
-                            row.isGoldDot
-                              ? 'border-[#D97706] shadow-[0_0_0_3px_rgba(245,184,0,0.28)]'
-                              : 'border-[#6D28D9]'
-                          }`}
-                        >
-                          <span
-                            className={`w-2 h-2 rounded-full ${
-                              row.isGoldDot ? 'bg-[#F59E0B]' : 'bg-[#6D2FC4]'
-                            }`}
-                          />
-                        </div>
-
-                        {/* Bold Time Badge */}
                         <span
-                          className={`px-2 py-1 rounded-xl font-mono text-[11px] sm:text-xs font-black tabular-nums shrink-0 border min-w-[88px] sm:min-w-[100px] text-center ${
-                            isSelectedRouteRow
-                              ? 'bg-[#2A1450] text-[#FFC928] border-[#2A1450]'
-                              : row.isGoldDot
-                              ? 'bg-[#FFF7D6] text-[#2A1450] border-[#F59E0B]/50'
-                              : 'bg-white text-[#2A1450] border-purple-200'
+                          className={`shrink-0 min-w-[92px] sm:min-w-[108px] rounded-full px-2.5 py-1 text-center font-mono text-[11.5px] sm:text-[13px] font-black tabular-nums ${
+                            row.isGoldDot || isSelectedRouteRow ? 'bg-gradient-to-b from-[#FFD35C] to-[#F5B800] text-[#2A1450]' : 'bg-gradient-to-b from-[#7C3AED] to-[#5B21B6] text-white'
                           }`}
                         >
                           {row.time}
                         </span>
-
-                        {/* Pastel Icon Box */}
-                        <span
-                          className="hidden sm:flex w-8 h-8 rounded-xl items-center justify-center shrink-0 border border-white shadow-xs transition-transform duration-300 group-hover:-rotate-12 group-hover:scale-125"
-                          style={{ background: row.iconBg, color: row.iconColor }}
-                        >
-                          <Icon className="w-4 h-4 stroke-[2.4]" />
+                        <span className="shrink-0 w-7 h-7 flex items-center justify-center" style={{ color: row.iconColor }}>
+                          <Icon className="w-[22px] h-[22px] stroke-[2.2]" aria-hidden="true" />
                         </span>
-
-                        {/* Activity Title & Subtitle (the badge sits above the title so the title gets the full width) */}
-                        <div className="flex-1 min-w-0">
-                          <span
-                            className="hidden xl:inline-block text-[9.5px] font-extrabold px-2 py-px rounded-full mb-0.5 tracking-wide"
-                            style={{ background: row.iconBg, color: row.iconColor }}
-                          >
-                            {row.badge}
-                          </span>
-                          <div className="text-xs sm:text-sm font-extrabold text-[#2A1450] leading-snug">
-                            {row.title}
-                          </div>
-                          {row.desc && (
-                            <div className="text-[11px] text-[#5B4878] font-semibold leading-snug mt-0.5">
-                              {row.desc}
-                            </div>
-                          )}
+                        <div className="min-w-0 flex-1">
+                          <div className="text-[12.5px] sm:text-[14px] font-extrabold leading-snug">{row.title}</div>
+                          {row.desc && <div className="text-[11px] text-[#5B4878] font-semibold leading-snug">{row.desc}</div>}
                         </div>
                       </div>
-                      </React.Fragment>
-                    );
-                  })}
-                </div>
+                    </React.Fragment>
+                  );
+                })}
+              </div>
+
+              <div className="flex justify-center pt-4 pb-1">
+                <button
+                  type="button"
+                  onClick={() => setPrintModalOpen(true)}
+                  className="inline-flex items-center gap-2.5 min-h-[52px] rounded-full border-2 border-[#F3CB62] bg-gradient-to-b from-[#4F22A0] to-[#2E1058] px-7 text-[15px] sm:text-base font-black shadow-[0_8px_18px_-8px_rgba(0,0,0,0.6)] hover:brightness-110 cursor-pointer"
+                >
+                  <Printer className="w-5 h-5 text-[#FFD35C]" aria-hidden="true" />
+                  {t('ดูตารางฉบับเต็ม (PDF)', 'Full schedule (PDF)')}
+                  <ArrowRight className="w-4 h-4 text-[#FFD35C]" aria-hidden="true" />
+                </button>
               </div>
             </div>
-          </div>
 
-          {/* -------------------------------------------------------------- */}
-          {/* RIGHT CARD: เส้นทางวิ่ง (GPS Survey)                            */}
-          {/* -------------------------------------------------------------- */}
-          <div className="lg:col-span-7 flex flex-col gap-6">
-          <div className="ds-card flex flex-col justify-between overflow-hidden relative">
-            {/* Top Colorful Accent Bar */}
-            <div className="h-2 w-full bg-gradient-to-r from-[#0284C7] via-[#16A34A] to-[#FFC928]" />
-
-            <div className="p-5 sm:p-7 flex-1 flex flex-col justify-between">
-              <div>
-                {/* Header */}
-                <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b-2 border-dashed border-[#2A1450]/15">
-                  <div className="flex items-center gap-3.5">
-                    <span className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-br from-[#0284C7] to-[#0369A1] text-white border-2 border-[#2A1450] shadow-[2px_3px_0_#2A1450] flex items-center justify-center shrink-0">
-                      <MapPin className="w-5 h-5" />
-                    </span>
-                    <div>
-                      <h3 className="text-xl sm:text-2xl font-extrabold text-[#2A1450] leading-tight">
-                        เส้นทางวิ่ง (GPS Survey)
-                      </h3>
-                      <span className="block text-xs font-bold text-[#6B5A85] mt-0.5">
-                        เลียบชายหาด – ค่ายนเรศวร (ปล่อยตัวยามเย็น 16.30 - 17.30 น.)
-                      </span>
-                    </div>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={scrollToFullMap}
-                    className="inline-flex items-center gap-1.5 rounded-full bg-[#F3ECFF] hover:bg-[#E6D6FC] text-[#4B1C8C] border-2 border-[#2A1450] shadow-[0_3px_0_#2A1450] px-4 py-2 text-xs font-extrabold transition-transform hover:scale-105 cursor-pointer"
-                  >
-                    <span>ดูเส้นทางเต็มจอ</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
+            {/* ---------- GPS survey ---------- */}
+            <div className="rounded-[26px] border-2 border-[#F3CB62]/55 bg-gradient-to-b from-[#43198A]/70 to-[#2A1450]/70 p-3 sm:p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.15)] space-y-3">
+              <div className="flex items-center gap-3 px-1">
+                <span className="w-12 h-12 shrink-0 rounded-2xl bg-gradient-to-b from-[#FFD35C] to-[#F5B800] flex items-center justify-center text-[#2A1450] shadow-md">
+                  <MapPin className="w-7 h-7" aria-hidden="true" />
+                </span>
+                <div className="min-w-0">
+                  <h3 className="text-xl sm:text-3xl font-black leading-tight">{t('เส้นทางวิ่ง (GPS Survey)', 'Running route (GPS Survey)')}</h3>
+                  <p className="text-[11.5px] sm:text-[13px] font-bold text-white/80">{t('เลียบชายหาด – ค่ายนเรศวร (ปล่อยตัวยามเย็น 16.30 - 17.30 น.)', 'Along the beach to the Naresuan camp (evening start 16:30 - 17:30)')}</p>
                 </div>
+              </div>
 
-                {/* 4 Route Selector Pills + Simulator CTA */}
-                <div className="flex flex-wrap items-center gap-2 my-4">
-                  {routePills.map((pill) => {
-                    const isSelected = selectedRoute === pill.id;
+              <div className="rounded-[20px] bg-gradient-to-b from-[#FFFFFF] to-[#F4ECFF] p-2.5 sm:p-3.5 text-[#2A1450] space-y-3">
+                {/* distance tabs */}
+                <div role="tablist" aria-label={t('เลือกระยะวิ่ง', 'Choose a distance')} className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  {routeTabs.map((tab) => {
+                    const on = selectedRoute === tab.id;
                     return (
                       <button
-                        key={pill.id}
+                        key={tab.id}
                         type="button"
-                        onClick={() => onSelectRoute && onSelectRoute(pill.id)}
-                        className={`px-3 py-1.5 rounded-full text-xs font-extrabold transition-all cursor-pointer border-2 ${
-                          isSelected
-                            ? 'border-[#2A1450] shadow-[0_3px_0_#2A1450] -translate-y-0.5'
-                            : 'border-transparent hover:border-[#2A1450]/30'
+                        role="tab"
+                        aria-selected={on}
+                        onClick={() => onSelectRoute && onSelectRoute(tab.id)}
+                        className={`rounded-2xl border-2 px-2 py-2 text-center leading-tight cursor-pointer transition-all ${
+                          on ? 'border-[#B8860B] bg-gradient-to-b from-[#FFE27A] to-[#FFC928] shadow-[0_6px_0_#2A1450] -translate-y-0.5' : 'border-[#D9C9EF] bg-gradient-to-b from-[#FFFFFF] to-[#F1E8FF] hover:border-[#B79AE8]'
                         }`}
-                        style={{
-                          background: isSelected ? pill.activeBg : pill.idleBg,
-                          color: isSelected ? pill.activeText : pill.idleText,
-                        }}
                       >
-                        {pill.label}
+                        <span className="flex items-center justify-center gap-1.5 text-xl sm:text-2xl font-black">
+                          {tab.dog ? <PawIcon size={18} color={on ? '#2A1450' : '#6D28D9'} /> : <span aria-hidden="true" className="text-base">🏃</span>}
+                          {tab.big}
+                        </span>
+                        <span className="block text-[11.5px] sm:text-xs font-extrabold text-[#4B2D78]">{tab.sub}</span>
+                        <span className={`mt-1 inline-block rounded-full px-2.5 py-0.5 text-[11.5px] sm:text-xs font-black tabular-nums ${on ? 'bg-[#2A1450] text-[#FFD35C]' : 'bg-[#EDE3FB] text-[#4B1FA8]'}`}>{tab.time}</span>
                       </button>
                     );
                   })}
-
                 </div>
 
-                {/* Illustrated course map (organiser's artwork) */}
-                <RouteIllustratedMap
-                  selectedRoute={selectedRoute}
-                  onSelectRoute={onSelectRoute}
-                  showLegend={false}
-                  className="mb-3.5"
-                />
+                {/* map + summary */}
+                <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_212px] gap-3 items-start">
+                  <RouteIllustratedMap selectedRoute={selectedRoute} onSelectRoute={onSelectRoute} showLegend={false} />
+                  <div className="rounded-2xl border-2 border-[#D9C9EF] bg-white p-2.5 space-y-2">
+                    <div className="rounded-full bg-gradient-to-r from-[#5B21B6] to-[#7C3AED] px-3 py-1.5 text-white text-sm font-black text-center">
+                      {t('สรุประยะ', 'Summary')} {activeTab?.big}
+                    </div>
+                    <dl className="text-[13px]">
+                      <div className="flex items-center gap-2 border-b border-[#2A1450]/10 py-2">
+                        <Flag className="w-4 h-4 text-[#6D28D9] shrink-0" aria-hidden="true" />
+                        <dt className="font-extrabold">{t('ระยะทาง', 'Distance')}</dt>
+                        <dd className="ml-auto font-black tabular-nums">{activeRouteData.distanceKm} {t('กม.', 'km')}</dd>
+                      </div>
+                      <div className="flex items-center gap-2 border-b border-[#2A1450]/10 py-2">
+                        <Clock className="w-4 h-4 text-[#6D28D9] shrink-0" aria-hidden="true" />
+                        <dt className="font-extrabold">{t('เวลาตัดตัว', 'Cut-off')}</dt>
+                        <dd className="ml-auto font-black text-right leading-tight">{activeRouteData.cutoffTime}</dd>
+                      </div>
+                      <div className="flex items-center gap-2 py-2">
+                        <Droplets className="w-4 h-4 text-[#0369A1] shrink-0" aria-hidden="true" />
+                        <dt className="font-extrabold">{t('จุดน้ำ', 'Water')}</dt>
+                        <dd className="ml-auto font-black tabular-nums">{activeRouteData.waterStationCount} {t('จุด', 'stops')}</dd>
+                      </div>
+                    </dl>
+                    <button
+                      type="button"
+                      onClick={scrollToFullMap}
+                      className="w-full min-h-[44px] rounded-full border-2 border-[#F3CB62] bg-gradient-to-b from-[#4F22A0] to-[#2E1058] text-white text-[13px] font-black inline-flex items-center justify-center gap-1.5 cursor-pointer hover:brightness-110"
+                    >
+                      {t('ดูเส้นทางเต็มจอ', 'Full-screen map')} <ArrowRight className="w-3.5 h-3.5 text-[#FFD35C]" aria-hidden="true" />
+                    </button>
+                  </div>
+                </div>
 
-                {/* Pins for the three after-run activities */}
-                <ActivityMap className="mb-3.5" />
-
-                {/* Active Route Mini Telemetry Strip */}
-                <div className="grid grid-cols-3 gap-2.5 mb-3.5 bg-[#FAF7FF] rounded-2xl p-2.5 border border-purple-100">
-                  <div className="bg-white rounded-xl px-3 py-1.5 border border-purple-100 flex items-center gap-2">
-                    <Flag className="w-4 h-4 text-[#7B3FC6] shrink-0" />
-                    <div>
-                      <div className="text-[11px] font-bold text-[#6B5A85]">ระยะทางจริง</div>
-                      <div className="text-xs sm:text-sm font-black text-[#2A1450] tabular-nums">
-                        {activeRouteData.distanceKm} กม.
-                      </div>
-                    </div>
-                  </div>
-                  <div className="bg-white rounded-xl px-3 py-1.5 border border-purple-100 flex items-center gap-2">
-                    <Clock className="w-4 h-4 text-[#C2410C] shrink-0" />
-                    <div>
-                      <div className="text-[11px] font-bold text-[#6B5A85]">เวลาปล่อยตัว</div>
-                      <div className="text-xs sm:text-sm font-black text-[#2A1450] tabular-nums">
-                        {activeRouteData.startTime}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="bg-white rounded-xl px-3 py-1.5 border border-purple-100 flex items-center gap-2">
-                    <Droplets className="w-4 h-4 text-[#0369A1] shrink-0" />
-                    <div>
-                      <div className="text-[11px] font-bold text-[#6B5A85]">จุดบริการน้ำ</div>
-                      <div className="text-xs sm:text-sm font-black text-[#2A1450] tabular-nums">
-                        {activeRouteData.waterStationCount} จุดตลอดสาย
-                      </div>
-                    </div>
-                  </div>
+                {/* activity map */}
+                <div className="rounded-2xl border-2 border-[#D9C9EF] bg-white p-2.5 sm:p-3.5">
+                  <ActivityMap />
                 </div>
               </div>
             </div>
           </div>
-          </div>
         </div>
-
       </div>
 
       {mapFull && (
