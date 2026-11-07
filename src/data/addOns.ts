@@ -195,7 +195,7 @@ export function addOnSavingPerPerson(s: AddOnSelection): number {
 //   run + all 3 activities             → activities 15% off (instead of the 10% above)
 //   concert (GA or VIP) + all 3        → activities a further 10% off
 // The activity discounts add up, capped at 20%. 1 or 2 activities get no discount (the package prices already
-// make them cheaper than buying separately). The VIP table itself is never discounted.
+// make them cheaper than buying separately). A VIP table bought with a run ticket gets the same 10% off as a GA ticket (CONCERT_BUNDLE_RATE).
 // ---------------------------------------------------------------------------
 export const CONCERT_BUNDLE_RATE = 0.1;
 export const ADDON_TWO_RATE = 0.1;
@@ -253,7 +253,7 @@ export function addOnTotal(s: AddOnSelection, ctx: DiscountContext): number {
   return hasAddOns(s) ? addOnPricePerPerson(s, ctx.earlyBird) * s.people - addOnBonusDiscount(s, ctx) : 0;
 }
 
-/** Baht off ONE concert ticket when it is bought together with a run ticket. */
+/** Baht off ONE concert ticket (GA) or ONE VIP table when it is bought together with a run ticket: pass that item's unit price. */
 export function concertDiscountPerTicket(unitPrice: number, eligible: boolean): number {
   return eligible ? Math.round(unitPrice * CONCERT_BUNDLE_RATE) : 0;
 }

@@ -490,7 +490,9 @@ export function createApp(): express.Express {
     }
 
     const concertUnit = concertPassPrice(earlyBird);
-    const concertDiscount = concertQty * concertDiscountPerTicket(concertUnit, !noRun && !sponsorCode);
+    const concertDiscount =
+      concertQty * concertDiscountPerTicket(concertUnit, !noRun && !sponsorCode) +
+      vipTables * concertDiscountPerTicket(vipTablePrice(earlyBird), !noRun && !sponsorCode);
     const vipTotal = vipTablePrice(earlyBird) * vipTables;
     const ticketTotal = isAddonOnly
       ? 0

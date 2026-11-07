@@ -1288,7 +1288,7 @@ export const formatBaht = (n: number) => `${n.toLocaleString('th-TH')}`;
 /** Concert-only pass (no run): entry to the evening concert; add-on activities can be bought on top. */
 export const CONCERT_PASS_PRICE = 890;
 
-/** VIP table at the concert: one price per table of 6 seats (no bundle discount on it). */
+/** VIP table at the concert: one price per table of 6 seats (10% off with a run ticket, same as GA). */
 export const VIP_TABLE_PRICE = 13990;
 export const VIP_TABLE_SEATS = 6;
 export const MAX_VIP_TABLES = 3;

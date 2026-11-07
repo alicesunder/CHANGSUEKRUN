@@ -49062,7 +49062,7 @@ function createApp() {
       sponsorName = used.sponsorName;
     }
     const concertUnit = concertPassPrice(earlyBird);
-    const concertDiscount = concertQty * concertDiscountPerTicket(concertUnit, !noRun && !sponsorCode);
+    const concertDiscount = concertQty * concertDiscountPerTicket(concertUnit, !noRun && !sponsorCode) + vipTables * concertDiscountPerTicket(vipTablePrice(earlyBird), !noRun && !sponsorCode);
     const vipTotal = vipTablePrice(earlyBird) * vipTables;
     const ticketTotal = isAddonOnly ? 0 : isConcert ? concertUnit * concertQty + vipTotal : sponsorCode ? 0 : calcTicketTotal(routeId, extraPeople, extraDogs, earlyBird) + concertUnit * concertQty - concertDiscount + vipTotal;
     const total = testMode ? 1 : ticketTotal + addOnSum;
