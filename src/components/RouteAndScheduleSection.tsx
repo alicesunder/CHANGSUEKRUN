@@ -273,17 +273,12 @@ export const RouteAndScheduleSection: React.FC<RouteAndScheduleProps> = ({
     <section id="schedule-and-map" className="relative overflow-hidden scroll-mt-20 py-8 sm:py-12" style={{ background: 'linear-gradient(180deg, #EFE6FC 0%, #F5F0FF 100%)' }}>
       <div id="schedule-section" className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div
-          className="relative isolate overflow-hidden rounded-[32px] border border-[#FFC928]/45 text-white shadow-[0_30px_64px_-20px_rgba(45,16,82,0.55)]"
-          style={{ background: 'linear-gradient(180deg, #5A2BB5 0%, #3E1784 20%, #2D1258 52%, #2A1450 100%)' }}
+          className="relative isolate overflow-hidden rounded-[32px] border border-[#E4D6F7] text-[#2A1450] shadow-[0_26px_56px_-24px_rgba(45,16,82,0.35)]"
+          style={{ background: 'linear-gradient(180deg, #FFFFFF 0%, #FAF6FF 60%, #F3EBFF 100%)' }}
         >
-          {/* dusk glow (decoration) */}
-          <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10">
-            <div className="absolute -top-16 right-[6%] w-[420px] h-[260px] rounded-full bg-[#FF9A5A]/40 blur-3xl" />
-            <div className="absolute top-10 left-[30%] w-[460px] h-[220px] rounded-full bg-[#B57BFF]/25 blur-3xl" />
-          </div>
-
           {/* ================== header banner ================== */}
-          <div className="relative px-5 pt-6 pb-5 sm:px-8 sm:pt-8 lg:px-10 text-center">
+          <div className="relative overflow-hidden px-5 pt-6 pb-6 sm:px-8 sm:pt-8 lg:px-10 text-center text-white" style={{ background: 'linear-gradient(180deg, #5E2FBA 0%, #4A1F9B 100%)' }}>
+            <div aria-hidden="true" className="pointer-events-none absolute -top-16 right-[6%] w-[420px] h-[240px] rounded-full bg-[#FF9A5A]/35 blur-3xl" />
             <img
               src="/images/objective/scene.webp"
               alt=""
@@ -321,7 +316,7 @@ export const RouteAndScheduleSection: React.FC<RouteAndScheduleProps> = ({
           {/* ================== the two panels ================== */}
           <div className="px-3 pb-5 sm:px-6 sm:pb-7 lg:px-8 lg:pb-9 grid grid-cols-1 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] gap-4 sm:gap-5 items-start">
             {/* ---------- schedule ---------- */}
-            <div id="schedule" className="rounded-[26px] border-2 border-[#F3CB62]/55 bg-gradient-to-b from-[#43198A]/70 to-[#2A1450]/70 p-3 sm:p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.15)]">
+            <div id="schedule" className="rounded-[26px] border border-[#E4D6F7] bg-white p-3 sm:p-4 shadow-[0_14px_34px_-20px_rgba(42,20,80,0.3)]">
               <div className="flex flex-wrap items-center gap-x-3 gap-y-2 px-1 pb-3">
                 <span className="w-12 h-12 shrink-0 rounded-2xl bg-gradient-to-b from-[#FFD35C] to-[#F5B800] flex items-center justify-center text-[#2A1450] shadow-md">
                   <Calendar className="w-7 h-7" aria-hidden="true" />
@@ -333,7 +328,7 @@ export const RouteAndScheduleSection: React.FC<RouteAndScheduleProps> = ({
                 </div>
               </div>
 
-              <div className="rounded-[20px] bg-gradient-to-b from-[#FFFFFF] to-[#F4ECFF] p-2.5 sm:p-3.5 text-[#2A1450] space-y-1.5">
+              <div className="rounded-[20px] bg-[#FBF8FF] border border-[#EDE3FB] p-2.5 sm:p-3.5 text-[#2A1450] space-y-1.5">
                 {timelineRows.map((row, idx) => {
                   const Icon = row.Icon;
                   const isSelectedRouteRow = row.routeId && row.routeId === selectedRoute;
@@ -342,8 +337,8 @@ export const RouteAndScheduleSection: React.FC<RouteAndScheduleProps> = ({
                   return (
                     <React.Fragment key={row.id}>
                       {newDay && (
-                        <div className={`flex items-center gap-2 rounded-full bg-gradient-to-r from-[#5B21B6] to-[#7C3AED] px-3.5 py-1.5 text-white text-[12.5px] sm:text-sm font-black shadow-md ${idx > 0 ? 'mt-3' : ''}`}>
-                          <Calendar className="w-4 h-4 text-[#FFD35C] shrink-0" aria-hidden="true" /> {dayHeading(day)}
+                        <div className={`flex items-center gap-2 rounded-full bg-[#EFE7FF] border border-[#D9C9EF] px-3.5 py-1.5 text-[#4B1FA8] text-[12.5px] sm:text-sm font-black ${idx > 0 ? 'mt-3' : ''}`}>
+                          <Calendar className="w-4 h-4 text-[#7C3AED] shrink-0" aria-hidden="true" /> {dayHeading(day)}
                         </div>
                       )}
                       <div
@@ -360,7 +355,7 @@ export const RouteAndScheduleSection: React.FC<RouteAndScheduleProps> = ({
                       >
                         <span
                           className={`shrink-0 min-w-[92px] sm:min-w-[108px] rounded-full px-2.5 py-1 text-center font-mono text-[11.5px] sm:text-[13px] font-black tabular-nums ${
-                            row.isGoldDot || isSelectedRouteRow ? 'bg-gradient-to-b from-[#FFD35C] to-[#F5B800] text-[#2A1450]' : 'bg-gradient-to-b from-[#7C3AED] to-[#5B21B6] text-white'
+                            row.isGoldDot || isSelectedRouteRow ? 'bg-gradient-to-b from-[#FFD35C] to-[#F5B800] text-[#2A1450]' : 'bg-[#EFE7FF] text-[#4B1FA8]'
                           }`}
                         >
                           {row.time}
@@ -382,28 +377,28 @@ export const RouteAndScheduleSection: React.FC<RouteAndScheduleProps> = ({
                 <button
                   type="button"
                   onClick={() => setPrintModalOpen(true)}
-                  className="inline-flex items-center gap-2.5 min-h-[52px] rounded-full border-2 border-[#F3CB62] bg-gradient-to-b from-[#4F22A0] to-[#2E1058] px-7 text-[15px] sm:text-base font-black shadow-[0_8px_18px_-8px_rgba(0,0,0,0.6)] hover:brightness-110 cursor-pointer"
+                  className="inline-flex items-center gap-2.5 min-h-[52px] rounded-full border-2 border-[#B8860B] bg-gradient-to-b from-[#FFE27A] to-[#FFC928] px-7 text-[15px] sm:text-base font-black text-[#2A1450] shadow-[0_6px_0_#2A1450] hover:brightness-105 active:translate-y-0.5 cursor-pointer"
                 >
-                  <Printer className="w-5 h-5 text-[#FFD35C]" aria-hidden="true" />
+                  <Printer className="w-5 h-5" aria-hidden="true" />
                   {t('ดูตารางฉบับเต็ม (PDF)', 'Full schedule (PDF)')}
-                  <ArrowRight className="w-4 h-4 text-[#FFD35C]" aria-hidden="true" />
+                  <ArrowRight className="w-4 h-4" aria-hidden="true" />
                 </button>
               </div>
             </div>
 
             {/* ---------- GPS survey ---------- */}
-            <div className="rounded-[26px] border-2 border-[#F3CB62]/55 bg-gradient-to-b from-[#43198A]/70 to-[#2A1450]/70 p-3 sm:p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.15)] space-y-3">
+            <div className="rounded-[26px] border border-[#E4D6F7] bg-white p-3 sm:p-4 shadow-[0_14px_34px_-20px_rgba(42,20,80,0.3)] space-y-3">
               <div className="flex items-center gap-3 px-1">
                 <span className="w-12 h-12 shrink-0 rounded-2xl bg-gradient-to-b from-[#FFD35C] to-[#F5B800] flex items-center justify-center text-[#2A1450] shadow-md">
                   <MapPin className="w-7 h-7" aria-hidden="true" />
                 </span>
                 <div className="min-w-0">
                   <h3 className="text-xl sm:text-3xl font-black leading-tight">{t('เส้นทางวิ่ง (GPS Survey)', 'Running route (GPS Survey)')}</h3>
-                  <p className="text-[11.5px] sm:text-[13px] font-bold text-white/80">{t('เลียบชายหาด – ค่ายนเรศวร (ปล่อยตัวยามเย็น 16.30 - 17.30 น.)', 'Along the beach to the Naresuan camp (evening start 16:30 - 17:30)')}</p>
+                  <p className="text-[11.5px] sm:text-[13px] font-bold text-[#6B5A85]">{t('เลียบชายหาด – ค่ายนเรศวร (ปล่อยตัวยามเย็น 16.30 - 17.30 น.)', 'Along the beach to the Naresuan camp (evening start 16:30 - 17:30)')}</p>
                 </div>
               </div>
 
-              <div className="rounded-[20px] bg-gradient-to-b from-[#FFFFFF] to-[#F4ECFF] p-2.5 sm:p-3.5 text-[#2A1450] space-y-3">
+              <div className="rounded-[20px] bg-[#FBF8FF] border border-[#EDE3FB] p-2.5 sm:p-3.5 text-[#2A1450] space-y-3">
                 {/* distance tabs */}
                 <div role="tablist" aria-label={t('เลือกระยะวิ่ง', 'Choose a distance')} className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   {routeTabs.map((tab) => {
@@ -434,7 +429,7 @@ export const RouteAndScheduleSection: React.FC<RouteAndScheduleProps> = ({
                 <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_212px] gap-3 items-start">
                   <RouteIllustratedMap selectedRoute={selectedRoute} onSelectRoute={onSelectRoute} showLegend={false} />
                   <div className="rounded-2xl border-2 border-[#D9C9EF] bg-white p-2.5 space-y-2">
-                    <div className="rounded-full bg-gradient-to-r from-[#5B21B6] to-[#7C3AED] px-3 py-1.5 text-white text-sm font-black text-center">
+                    <div className="rounded-full bg-[#EFE7FF] px-3 py-1.5 text-[#4B1FA8] text-sm font-black text-center">
                       {t('สรุประยะ', 'Summary')} {activeTab?.big}
                     </div>
                     <dl className="text-[13px]">
@@ -457,9 +452,9 @@ export const RouteAndScheduleSection: React.FC<RouteAndScheduleProps> = ({
                     <button
                       type="button"
                       onClick={scrollToFullMap}
-                      className="w-full min-h-[44px] rounded-full border-2 border-[#F3CB62] bg-gradient-to-b from-[#4F22A0] to-[#2E1058] text-white text-[13px] font-black inline-flex items-center justify-center gap-1.5 cursor-pointer hover:brightness-110"
+                      className="w-full min-h-[44px] rounded-full border-2 border-[#D9C9EF] bg-[#F3ECFF] text-[#4B1FA8] text-[13px] font-black inline-flex items-center justify-center gap-1.5 cursor-pointer hover:bg-[#E9DDFB]"
                     >
-                      {t('ดูเส้นทางเต็มจอ', 'Full-screen map')} <ArrowRight className="w-3.5 h-3.5 text-[#FFD35C]" aria-hidden="true" />
+                      {t('ดูเส้นทางเต็มจอ', 'Full-screen map')} <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
                     </button>
                   </div>
                 </div>
