@@ -27,7 +27,7 @@ const Heart: React.FC<{ className?: string }> = ({ className = '' }) => (
 
 const PillarCard: React.FC<{ icon: string; lead: string; rest: string }> = ({ icon, lead, rest }) => (
   <div className="relative flex items-center gap-3.5 sm:gap-4 rounded-[26px] border-[2.5px] border-[#F3CB62] bg-gradient-to-br from-[#FFFFFF] via-[#F6EEFF] to-[#E9DBFB] px-3.5 py-3.5 sm:px-5 sm:py-4 shadow-[0_18px_34px_-16px_rgba(10,0,40,0.65),inset_0_1px_0_rgba(255,255,255,0.9)]">
-    <img src={icon} alt="" loading="lazy" decoding="async" draggable={false} className="shrink-0 w-[68px] sm:w-[92px] h-auto object-contain" style={{ WebkitMaskImage: 'radial-gradient(ellipse 62% 62% at 50% 50%, #000 74%, transparent 100%)', maskImage: 'radial-gradient(ellipse 62% 62% at 50% 50%, #000 74%, transparent 100%)' }} />
+    <img src={icon} alt="" loading="lazy" decoding="async" draggable={false} className="shrink-0 w-[84px] sm:w-[108px] h-auto object-contain mix-blend-multiply" />
     <span aria-hidden="true" className="self-stretch w-px bg-gradient-to-b from-transparent via-[#C9A24A]/70 to-transparent" />
     <p className="min-w-0 text-[13.5px] sm:text-[15px] leading-[1.55] text-[#4B2D78] font-semibold">
       <strong className="block text-[#2A1450] font-black text-[14.5px] sm:text-[16.5px]">{lead}</strong>
