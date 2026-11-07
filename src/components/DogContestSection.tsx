@@ -148,14 +148,14 @@ export const DogContestSection: React.FC = () => {
             className="pointer-events-none select-none absolute inset-x-0 top-0 h-full w-full object-cover object-center sm:object-bottom"
           />
           <div className="relative">
-            <span className="inline-flex items-center gap-1.5 rounded-full border-2 border-[#4B1FA8]/60 bg-white/95 px-3 py-1 text-[11px] sm:text-sm font-extrabold text-[#4B1FA8] shadow-sm">
-              <PawPrint className="h-4 w-4 text-[#F5B800]" aria-hidden="true" />
+            <span className="inline-flex items-center gap-1.5 rounded-full border-2 border-[#4B1FA8]/60 bg-white/95 px-3.5 py-1.5 text-xs sm:text-lg font-black text-[#4B1FA8] shadow-md">
+              <PawPrint className="h-4 w-4 sm:h-5 sm:w-5 text-[#F5B800]" aria-hidden="true" />
               ประกวดน้องหมา 3 รายการ · วันเสาร์ที่ 9 ม.ค. 2570
             </span>
-            <h2 id="dog-contest-heading" className="squiggle squiggle-center mt-3 font-hero text-[1.5rem] sm:text-4xl lg:text-[2.4rem] font-bold text-[#2A1450] leading-[1.35] [text-shadow:0_2px_0_rgba(255,255,255,0.9)]">
+            <h2 id="dog-contest-heading" className="squiggle squiggle-center mt-3 font-hero text-[2rem] sm:text-5xl lg:text-[3.6rem] font-extrabold text-[#2A1450] leading-[1.3] [-webkit-text-stroke:7px_#fff] [paint-order:stroke_fill] [text-shadow:0_4px_0_rgba(255,255,255,0.9),0_8px_18px_rgba(75,31,168,0.3)]">
               เวทีประกวด <span className="whitespace-nowrap text-[#E0268F]">น้องหมา</span> สุดน่ารัก
             </h2>
-            <p className="mt-1 text-sm sm:text-lg font-extrabold text-[#4B2D78]">ฟรีสำหรับคู่วิ่ง Dog Run · ลงได้ทุกรายการ</p>
+            <p className="mt-2 text-base sm:text-2xl font-black text-[#3B1780] [-webkit-text-stroke:5px_#fff] [paint-order:stroke_fill]">ฟรีสำหรับคู่วิ่ง Dog Run · ลงได้ทุกรายการ</p>
           </div>
         </div>
 
