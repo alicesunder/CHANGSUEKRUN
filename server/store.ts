@@ -956,3 +956,51 @@ export async function visitStats(): Promise<VisitStats> {
     days,
   };
 }
+
+
+// ---------------------------------------------------------------------------
+// Organiser announcements shown in the Runner Center (settings key 'announcements')
+// ---------------------------------------------------------------------------
+export interface Announcement {
+  id: string;
+  title: string;
+  body: string;
+  level: 'info' | 'important';
+  createdAt: string;
+}
+
+const MAX_ANNOUNCEMENTS = 20;
+
+function cleanAnnouncements(raw: unknown): Announcement[] {
+  const list = Array.isArray(raw) ? raw : [];
+  const out: Announcement[] = [];
+  const seen = new Set<string>();
+  for (const x of list.slice(0, MAX_ANNOUNCEMENTS)) {
+    const r = (x && typeof x === 'object' ? x : {}) as Record<string, unknown>;
+    const title = typeof r.title === 'string' ? r.title.replace(/[\u0000-\u001f<>]/g, ' ').trim().slice(0, 120) : '';
+    const body = typeof r.body === 'string' ? r.body.replace(/[\u0000-\u0008\u000b-\u001f<>]/g, ' ').trim().slice(0, 600) : '';
+    if (!title) continue;
+    let id = typeof r.id === 'string' && /^[A-Za-z0-9_-]{4,40}$/.test(r.id) ? r.id : crypto.randomBytes(6).toString('hex');
+    while (seen.has(id)) id = crypto.randomBytes(6).toString('hex');
+    seen.add(id);
+    const created = typeof r.createdAt === 'string' && !Number.isNaN(Date.parse(r.createdAt)) ? r.createdAt : new Date().toISOString();
+    out.push({ id, title, body, level: r.level === 'important' ? 'important' : 'info', createdAt: created });
+  }
+  return out;
+}
+
+export async function getAnnouncements(): Promise<Announcement[]> {
+  const rows = await dbQuery<{ value: unknown }>("select value from csr.settings where key = 'announcements'");
+  if (!rows[0]) return [];
+  return cleanAnnouncements(asObj<unknown>(rows[0].value));
+}
+
+export async function saveAnnouncements(raw: unknown): Promise<Announcement[]> {
+  const list = cleanAnnouncements(raw);
+  await dbQuery(
+    `insert into csr.settings (key, value) values ('announcements', $1::jsonb)
+     on conflict (key) do update set value = excluded.value, updated_at = now()`,
+    [JSON.stringify(list)]
+  );
+  return list;
+}

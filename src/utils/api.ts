@@ -363,6 +363,20 @@ export interface SalesState {
   updatedAt?: string;
 }
 
+/** Organiser announcement shown in the Runner Center. */
+export interface Announcement {
+  id: string;
+  title: string;
+  body: string;
+  level: 'info' | 'important';
+  createdAt: string;
+}
+
+export async function fetchAnnouncements(): Promise<Announcement[]> {
+  const res = await request<{ announcements: Announcement[] }>('/api/announcements');
+  return res.announcements || [];
+}
+
 export interface EarlyBirdState {
   on: boolean;
   manual: boolean;
@@ -428,6 +442,9 @@ export const adminApi = {
     adminFetch<SalesState>('/api/admin/sales', { method: 'PUT', headers: jsonHeaders, body: JSON.stringify({ openAt }) }),
   setSales: (open: boolean) =>
     adminFetch<SalesState>('/api/admin/sales', { method: 'PUT', headers: jsonHeaders, body: JSON.stringify({ open }) }),
+  getAnnouncements: () => adminFetch<{ announcements: Announcement[] }>('/api/admin/announcements'),
+  saveAnnouncements: (announcements: Announcement[]) =>
+    adminFetch<{ announcements: Announcement[] }>('/api/admin/announcements', { method: 'PUT', headers: jsonHeaders, body: JSON.stringify({ announcements }) }),
   getEarlyBird: () => adminFetch<EarlyBirdState>('/api/admin/early-bird'),
   setEarlyBirdSchedule: (autoFrom: string | null, autoUntil: string | null) =>
     adminFetch<EarlyBirdState>('/api/admin/early-bird', { method: 'PUT', headers: jsonHeaders, body: JSON.stringify({ autoFrom, autoUntil }) }),

@@ -65,6 +65,8 @@ import {
   getSalesStatus,
   getEarlyBird,
   setEarlyBird,
+  getAnnouncements,
+  saveAnnouncements,
   setSalesOpen,
   setSalesOpenAt,
   isVisitorId,
@@ -265,6 +267,12 @@ export function createApp(): express.Express {
     // a few seconds at the edge is enough to spare the database on every page view; orders re-check sales / prices on the server
     res.setHeader('Cache-Control', 'public, s-maxage=10, stale-while-revalidate=30');
     res.json(await publicConfig());
+  }));
+
+  // Organiser announcements for the Runner Center (public read, short cache)
+  app.get('/api/announcements', h(async (_req, res) => {
+    res.setHeader('Cache-Control', 'public, s-maxage=30, stale-while-revalidate=60');
+    res.json({ announcements: (await getAnnouncements()).sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt)) });
   }));
 
   // Winners board (public read)
@@ -1208,6 +1216,13 @@ export function createApp(): express.Express {
     if (typeof b.open === 'boolean') state = await setSalesOpen(b.open);
     if (hasAt) state = await setSalesOpenAt(b.openAt as string | null);
     res.json(state);
+  }));
+
+  app.get('/api/admin/announcements', requireAdmin, h(async (_req, res) => {
+    res.json({ announcements: await getAnnouncements() });
+  }));
+  app.put('/api/admin/announcements', requireAdmin, smallJson, h(async (req, res) => {
+    res.json({ announcements: await saveAnnouncements((req.body || {}).announcements) });
   }));
 
   app.get('/api/admin/settings', requireAdmin, h(async (_req, res) => {

@@ -78,6 +78,7 @@ import { formatBaht, ticketById } from '../data/eventData';
 import { RunnerBibCard } from './RunnerBibCard';
 import { SalesSwitchCard } from './SalesSwitchCard';
 import { EarlyBirdCard } from './EarlyBirdCard';
+import { AnnouncementsCard } from './AnnouncementsCard';
 import { VisitStatsCard } from './VisitStatsCard';
 import { PawIcon } from './brand/DogDecor';
 import { EasySlipSettingsCard } from './EasySlipSettingsCard';
@@ -1520,6 +1521,7 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
             <div className="space-y-6">
               <SalesSwitchCard />
               <EarlyBirdCard />
+              <AnnouncementsCard />
               <VisitStatsCard />
 
               {/* Distance Breakdown Table */}

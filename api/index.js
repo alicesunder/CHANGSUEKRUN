@@ -34521,6 +34521,38 @@ async function visitStats() {
     days
   };
 }
+var MAX_ANNOUNCEMENTS = 20;
+function cleanAnnouncements(raw) {
+  const list = Array.isArray(raw) ? raw : [];
+  const out = [];
+  const seen = /* @__PURE__ */ new Set();
+  for (const x of list.slice(0, MAX_ANNOUNCEMENTS)) {
+    const r = x && typeof x === "object" ? x : {};
+    const title = typeof r.title === "string" ? r.title.replace(/[\u0000-\u001f<>]/g, " ").trim().slice(0, 120) : "";
+    const body = typeof r.body === "string" ? r.body.replace(/[\u0000-\u0008\u000b-\u001f<>]/g, " ").trim().slice(0, 600) : "";
+    if (!title) continue;
+    let id = typeof r.id === "string" && /^[A-Za-z0-9_-]{4,40}$/.test(r.id) ? r.id : crypto.randomBytes(6).toString("hex");
+    while (seen.has(id)) id = crypto.randomBytes(6).toString("hex");
+    seen.add(id);
+    const created = typeof r.createdAt === "string" && !Number.isNaN(Date.parse(r.createdAt)) ? r.createdAt : (/* @__PURE__ */ new Date()).toISOString();
+    out.push({ id, title, body, level: r.level === "important" ? "important" : "info", createdAt: created });
+  }
+  return out;
+}
+async function getAnnouncements() {
+  const rows = await dbQuery("select value from csr.settings where key = 'announcements'");
+  if (!rows[0]) return [];
+  return cleanAnnouncements(asObj(rows[0].value));
+}
+async function saveAnnouncements(raw) {
+  const list = cleanAnnouncements(raw);
+  await dbQuery(
+    `insert into csr.settings (key, value) values ('announcements', $1::jsonb)
+     on conflict (key) do update set value = excluded.value, updated_at = now()`,
+    [JSON.stringify(list)]
+  );
+  return list;
+}
 
 // src/utils/promptPay.ts
 function crc16CcittFalse(payload) {
@@ -48872,6 +48904,10 @@ function createApp() {
     res.setHeader("Cache-Control", "public, s-maxage=10, stale-while-revalidate=30");
     res.json(await publicConfig());
   }));
+  app2.get("/api/announcements", h(async (_req, res) => {
+    res.setHeader("Cache-Control", "public, s-maxage=30, stale-while-revalidate=60");
+    res.json({ announcements: (await getAnnouncements()).sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt)) });
+  }));
   app2.get("/api/winners", h(async (_req, res) => {
     res.setHeader("Cache-Control", "public, max-age=60");
     res.json({ winners: await getWinners() });
@@ -49692,6 +49728,12 @@ function createApp() {
     if (typeof b.open === "boolean") state = await setSalesOpen(b.open);
     if (hasAt) state = await setSalesOpenAt(b.openAt);
     res.json(state);
+  }));
+  app2.get("/api/admin/announcements", requireAdmin, h(async (_req, res) => {
+    res.json({ announcements: await getAnnouncements() });
+  }));
+  app2.put("/api/admin/announcements", requireAdmin, smallJson, h(async (req, res) => {
+    res.json({ announcements: await saveAnnouncements((req.body || {}).announcements) });
   }));
   app2.get("/api/admin/settings", requireAdmin, h(async (_req, res) => {
     res.json({ settings: await getSettings(), bibCounters: await getBibCounters() });
