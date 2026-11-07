@@ -172,12 +172,12 @@ export const DogContestSection: React.FC = () => {
                 aria-selected={on}
                 aria-controls="contest-panel"
                 onClick={() => setActive(t.id)}
-                className={`relative shrink-0 min-h-[48px] sm:min-h-[54px] px-2.5 min-[400px]:px-4 sm:px-7 rounded-2xl text-[13.5px] min-[400px]:text-[15px] sm:text-lg font-extrabold cursor-pointer transition-colors ${on ? 'text-white' : 'text-[#2A1450] hover:bg-[#F3EEFB]'}`}
+                className={`relative shrink-0 min-h-[48px] sm:min-h-[60px] px-2.5 min-[400px]:px-4 sm:px-9 rounded-[20px] text-[13.5px] min-[400px]:text-[15px] sm:text-lg font-extrabold cursor-pointer transition-colors ${on ? 'text-white' : 'text-[#2A1450] hover:bg-[#F3EEFB]'}`}
               >
                 {on && (
                   <motion.span
                     layoutId="contest-tab-bg"
-                    className="absolute inset-0 rounded-2xl border-2 border-[#F5B800] shadow-[0_5px_0_#2A1450,inset_0_1px_0_rgba(255,255,255,0.3)]"
+                    className="absolute inset-0 rounded-[20px] border-2 border-[#F5B800] shadow-[0_5px_0_#2A1450,inset_0_1px_0_rgba(255,255,255,0.3)]"
                     style={{ background: 'linear-gradient(180deg,#6D3FD0,#3B1780)' }}
                     transition={{ type: 'spring', stiffness: 420, damping: 32 }}
                   />
@@ -202,45 +202,51 @@ export const DogContestSection: React.FC = () => {
             transition={{ duration: 0.28 }}
             className="relative grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-7 px-4 pb-5 pt-5 sm:px-8 sm:pb-6 items-start"
           >
-            {/* picture side: photo on a stage podium */}
-            <div className="md:col-span-5 relative mx-auto w-full max-w-[420px]">
-              <div className="relative">
-                {c.image ? (
-                  <img
-                    src={c.image.src}
-                    alt={c.image.alt}
-                    loading="lazy"
-                    decoding="async"
-                    className={c.image.tall ? 'relative z-10 block w-full h-[320px] sm:h-[380px] object-contain drop-shadow-[0_10px_14px_rgba(42,20,80,0.28)]' : 'relative z-10 block w-full h-auto drop-shadow-[0_10px_14px_rgba(42,20,80,0.28)]'}
-                  />
-                ) : (
-                  <div className="relative aspect-[4/3] rounded-[20px] border-2 border-dashed border-[#C9B4EE] bg-[#F3ECFF] flex items-center justify-center text-[96px]">🐕</div>
-                )}
+            {/* picture side: gold arch frame with ribbon + paw medal; the photo steps out in front of it */}
+            <div className="md:col-span-5 relative mx-auto w-full max-w-[460px]">
+              <div className="relative aspect-[774/648]">
                 <img
-                  src="/images/contest/stage-podium.webp"
+                  src="/images/contest/dog-frame.webp"
                   alt=""
                   aria-hidden="true"
                   loading="lazy"
-                  className="relative z-0 -mt-9 sm:-mt-12 w-[112%] max-w-none -ml-[6%] mix-blend-multiply pointer-events-none select-none"
+                  className="pointer-events-none select-none absolute inset-0 h-full w-full mix-blend-multiply"
                 />
+                <div className="absolute left-[11%] right-[11%] top-[24%] bottom-[14%] flex items-center justify-center">
+                  {c.image ? (
+                    <img
+                      src={c.image.src}
+                      alt={c.image.alt}
+                      loading="lazy"
+                      decoding="async"
+                      className="relative z-10 max-h-[106%] max-w-[96%] w-auto h-auto object-contain drop-shadow-[0_10px_14px_rgba(42,20,80,0.3)]"
+                    />
+                  ) : (
+                    <div className="text-[96px]">🐕</div>
+                  )}
+                </div>
               </div>
-              <motion.span
-                aria-hidden="true"
-                animate={{ y: [0, -6, 0], rotate: [-8, 8, -8] }}
-                transition={{ duration: 2.6, repeat: Infinity, ease: 'easeInOut' }}
-                className="absolute -top-3 -left-1 sm:-left-3 z-20 rounded-[20px] bg-gradient-to-b from-[#FFE27A] to-[#FFC928] px-4 py-1.5 text-lg sm:text-xl font-black text-[#7A1FA2] shadow-[0_6px_14px_-6px_rgba(42,20,80,0.6)]"
-              >
-                ฟรี!
-              </motion.span>
             </div>
 
             {/* text side */}
             <div className="md:col-span-7 space-y-3.5">
               <div>
-                <h3 className="text-[22px] sm:text-[25px] font-black text-[#2A1450] leading-tight">
-                  {c.emoji} {c.title}
-                </h3>
-                <p className="mt-2 inline-block rounded-full bg-gradient-to-r from-[#FFE3F1] to-[#FFF0F7] px-3.5 py-1 text-[13px] sm:text-[15px] font-extrabold" style={{ color: c.accent === '#EC4899' ? '#C2186E' : c.accent }}>
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <motion.span
+                    aria-hidden="true"
+                    animate={{ rotate: [-6, 4, -6] }}
+                    transition={{ duration: 2.6, repeat: Infinity, ease: 'easeInOut' }}
+                    className="relative flex h-[50px] w-[68px] sm:h-[62px] sm:w-[84px] shrink-0 items-center justify-center"
+                  >
+                    <img src="/images/contest/dog-cloud.webp" alt="" className="absolute inset-0 h-full w-full object-contain mix-blend-multiply [mask-image:radial-gradient(ellipse_50%_50%_at_50%_50%,#000_80%,transparent_100%)]" />
+                    <span className="relative -rotate-6 text-base sm:text-xl font-black text-[#7A1FA2]">ฟรี!</span>
+                  </motion.span>
+                  <img src="/images/contest/dog-hat.webp" alt="" aria-hidden="true" className="h-9 w-auto sm:h-11 mix-blend-multiply [mask-image:radial-gradient(ellipse_50%_50%_at_50%_50%,#000_80%,transparent_100%)]" />
+                  <h3 className="text-[20px] sm:text-[26px] font-black text-[#2A1450] leading-tight">
+                    {c.title}
+                  </h3>
+                </div>
+                <p className="mt-2.5 inline-block rounded-full bg-gradient-to-r from-[#FFE3F1] to-[#FFF0F7] px-3.5 py-1 text-[13px] sm:text-[15px] font-extrabold" style={{ color: c.accent === '#EC4899' ? '#C2186E' : c.accent }}>
                   ✦ {c.tagline}
                 </p>
               </div>
