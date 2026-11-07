@@ -34,9 +34,9 @@ const COASTAL_SUNSET = '/images/hero/sunset-cinematic.webp';
 
 const fadeMask: React.CSSProperties = {
   WebkitMaskImage:
-    'linear-gradient(to right, transparent 0%, #000 30%), linear-gradient(to bottom, transparent 0%, #000 10%)',
+    'linear-gradient(to right, transparent 0%, #000 34%), linear-gradient(to bottom, transparent 0%, #000 6%)',
   maskImage:
-    'linear-gradient(to right, transparent 0%, #000 30%), linear-gradient(to bottom, transparent 0%, #000 10%)',
+    'linear-gradient(to right, transparent 0%, #000 34%), linear-gradient(to bottom, transparent 0%, #000 6%)',
   WebkitMaskComposite: 'source-in',
   maskComposite: 'intersect',
 };
@@ -114,31 +114,11 @@ export const Hero: React.FC<HeroProps> = ({
         <img
           src={BEACH}
           alt="ช้างศึกสีม่วง นักวิ่ง และน้องสุนัขโกลเด้น วิ่งริมชายหาดยามพระอาทิตย์ตก"
-          className="hidden lg:block absolute bottom-0 right-0 w-[82%] max-w-[1340px] h-auto pointer-events-none select-none"
+          className="hidden lg:block absolute inset-y-0 right-0 h-full w-[84%] object-cover object-[68%_60%] pointer-events-none select-none"
           style={fadeMask}
           loading="eager"
           referrerPolicy="no-referrer"
         />
-
-        {/* Desktop Right Script Slogan Overlay ("Run with Your Best Friend") */}
-        <motion.div
-          aria-hidden="true"
-          animate={{ y: [0, -6, 0], rotate: [-6, -4, -6] }}
-          transition={{ duration: 4.5, repeat: Infinity, ease: 'easeInOut' }}
-          className="hidden xl:block absolute right-10 top-28 z-10 text-right pointer-events-none select-none"
-        >
-          <div className="font-display italic font-extrabold text-3xl text-white drop-shadow-[0_4px_10px_rgba(25,55,95,0.45)] leading-none">
-            Run
-          </div>
-          <div className="font-display italic font-bold text-lg text-white/95 drop-shadow-[0_2px_6px_rgba(25,55,95,0.45)] -mt-0.5">
-            — with —
-          </div>
-          <div className="font-display italic font-extrabold text-3xl text-[#FFE885] drop-shadow-[0_4px_10px_rgba(25,55,95,0.5)] leading-tight">
-            Your Best
-            <br />
-            Friend
-          </div>
-        </motion.div>
 
         {/* Desktop Floating Interactive Labrador Mascot Companion */}
         <motion.div
