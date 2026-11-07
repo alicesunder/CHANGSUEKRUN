@@ -38,7 +38,7 @@ export const ConcertSection: React.FC = () => {
       <div className="max-w-[1100px] mx-auto px-4 sm:px-6">
         <div className="ds-frame-dark relative overflow-hidden bg-[#2A1450] text-white">
           {/* ---------- header scene ---------- */}
-          <div className="relative overflow-hidden bg-[#34108C]">
+          <div className="relative overflow-hidden bg-[#2A1450]">
             <img src="/images/concert/conc-header.webp" alt="" aria-hidden="true" decoding="async" className="absolute inset-0 h-full w-full object-cover object-[30%_center] sm:object-center" />
             <span aria-hidden="true" className="absolute inset-0 bg-gradient-to-b from-[#2A1450]/30 via-transparent to-[#2A1450]/40" />
             <div className="relative px-4 pb-8 pt-8 text-center sm:px-8 sm:pb-12 sm:pt-12">
@@ -66,7 +66,7 @@ export const ConcertSection: React.FC = () => {
                 <img src="/images/concert/conc-stage.webp" alt="" aria-hidden="true" decoding="async" className="absolute inset-0 h-full w-full object-cover" />
                 <div className="relative z-[2] flex flex-col gap-2 px-4 pt-5 sm:flex-row sm:items-start sm:justify-between sm:px-7 sm:pt-6">
                   <div>
-                    <span className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#F43F5E] via-[#A855F7] to-[#7C3AED] px-4 py-1.5 text-xs font-black tracking-wider text-white shadow-[0_0_18px_rgba(168,85,247,0.7)] sm:text-sm">
+                    <span className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#7C3AED] to-[#4B1FA8] px-4 py-1.5 text-xs font-black tracking-wider text-[#FFE268] ring-1 ring-[#FFC928]/70 shadow-[0_0_18px_rgba(168,85,247,0.7)] sm:text-sm">
                       ✨ LINE-UP 2027
                     </span>
                     <h3 className="mt-2 font-hero text-[1.75rem] font-black italic leading-[1.2] sm:text-4xl lg:text-5xl">
