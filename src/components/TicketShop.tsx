@@ -32,7 +32,7 @@ import {
 import { getPublicConfig } from '../utils/api';
 import { AddOnPicker } from './AddOnPicker';
 import { SelectBurst } from './SelectBurst';
-import { DealStrip, DiscountCelebration } from './PerkCelebration';
+import { DealStrip, DiscountCelebration, SalesOpenNotice } from './PerkCelebration';
 import { LABRADOR_SVG_PATH } from './brand/LabradorMascot';
 import { PawIcon } from './brand/DogDecor';
 
@@ -559,18 +559,11 @@ export const TicketShop: React.FC<TicketShopProps> = ({
           <DealStrip hasRun={eligible} hasGaConcert={hasConcert} hasConcert={hasConcert} activities={activityCount} />
         </div>
         {salesClosed && (
-          <div role="status" className="mx-auto mt-5 max-w-2xl rounded-2xl border border-[#F5B5BD] bg-[#FFE4E6] px-4 py-3 text-center shadow-sm">
-            <p className="text-base sm:text-lg font-black text-[#9F1239]">
-              {opensAt
-                ? tr('⏳ เปิดขายบัตร ' + formatOpenAt(opensAt, false), '⏳ Tickets go on sale ' + formatOpenAt(opensAt, true))
-                : tr('⏸️ ขณะนี้ปิดการขายบัตรชั่วคราว', '⏸️ Ticket sales are paused for now')}
-            </p>
-            <p className="text-xs sm:text-sm font-bold text-[#4B2D78]">
-              {opensAt
-                ? tr('ดูรายละเอียดบัตรและราคาได้ก่อน · ปุ่มซื้อจะใช้งานได้เมื่อถึงเวลาเปิดขาย', 'Browse tickets and prices now · buying unlocks when sales open')
-                : tr('ดูรายละเอียดบัตรได้ตามปกติ · ติดตามประกาศเปิดขายจากผู้จัดงาน', 'Ticket details stay visible · follow the organiser for the reopening')}
-            </p>
-          </div>
+          <SalesOpenNotice
+            opensAt={opensAt}
+            en={tr('th', 'en') === 'en'}
+            dateText={opensAt ? formatOpenAt(opensAt, tr('th', 'en') === 'en') : ''}
+          />
         )}
 
         <div className="relative grid grid-cols-1 gap-5 lg:gap-7 items-start">

@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import { CalendarDays, Clock, Footprints, Hourglass, Info, Music, Ticket } from 'lucide-react';
 import { ADDON_CONCERT_RATE, ADDON_MAX_RATE, ADDON_THREE_RATE, ADDON_TWO_RATE, CONCERT_BUNDLE_RATE, formatBaht, percentOf } from '../data/addOns';
 import { concertPassPrice } from '../data/eventData';
 import { useEarlyBird } from '../utils/earlyBird';
@@ -137,67 +138,110 @@ interface DealStripProps {
   activities: number;
 }
 
+const ACT_ICONS = ['/images/shop/shoot-v2.webp', '/images/shop/tower-v2.webp', '/images/shop/wind-v2.webp'];
+
+/** Small round icon chip used on the coupons. */
+const Chip: React.FC<{ children: React.ReactNode; tone: 'gold' | 'violet' }> = ({ children, tone }) => (
+  <span
+    aria-hidden="true"
+    className={`inline-flex h-6 w-6 sm:h-9 sm:w-9 items-center justify-center rounded-md sm:rounded-lg border-2 ${
+      tone === 'gold' ? 'border-[#E0A100] bg-white text-[#4B1FA8]' : 'border-[#B79AE8] bg-white text-[#4B1FA8]'
+    }`}
+  >
+    {children}
+  </span>
+);
+
+const ThreeActs: React.FC = () => (
+  <>
+    {ACT_ICONS.map((src) => (
+      <span key={src} aria-hidden="true" className="inline-flex h-6 w-6 sm:h-9 sm:w-9 items-center justify-center rounded-md sm:rounded-lg border-2 border-[#D9C9EF] bg-white">
+        <img src={src} alt="" className="h-[18px] w-[18px] sm:h-6 sm:w-6 object-contain mix-blend-multiply" loading="lazy" />
+      </span>
+    ))}
+  </>
+);
+
 /**
- * The bundle deals as four tear-off coupons. A coupon lights up (and gets a "ได้แล้ว" stamp) as soon
- * as the basket qualifies, and the progress line shows how many deals the basket has unlocked.
+ * The bundle deals as four collectable coupons (perforated edges, big discount pill). A coupon lights up
+ * with a "ได้แล้ว!" stamp as soon as the basket qualifies; the progress pill counts the unlocked deals.
  */
 export const DealStrip: React.FC<DealStripProps> = ({ hasRun, hasGaConcert, hasConcert, activities }) => {
   const concertUnit = concertPassPrice(useEarlyBird());
   const concertNet = concertUnit - Math.round(concertUnit * CONCERT_BUNDLE_RATE);
   const deals = [
-    { key: 'concert', icon: '🏃🎶', label: 'วิ่ง + คอนเสิร์ต GA / VIP', big: `-${percentOf(CONCERT_BUNDLE_RATE)}%`, note: `GA เหลือ ${formatBaht(concertNet)} บาท/ใบ`, how: 'ซื้อตั๋ววิ่ง + ตั๋วคอนเสิร์ต GA หรือ VIP', color: '#EC4899', on: hasRun && hasGaConcert },
-    { key: 'two', icon: '🎯', label: 'ครบ 3 กิจกรรม', big: `-${percentOf(ADDON_TWO_RATE)}%`, note: 'ค่ากิจกรรมเสริม', how: 'เลือกกิจกรรมเสริมให้ครบ 3 อย่าง', color: '#0EA5E9', on: activities >= 3 },
-    { key: 'three', icon: '🏆', label: 'วิ่ง + ครบ 3 กิจกรรม', big: `-${percentOf(ADDON_THREE_RATE)}%`, note: 'แทนส่วนลด 10%', how: 'ตั๋ววิ่ง + ครบ 3 กิจกรรม', color: '#10B981', on: hasRun && activities >= 3 },
-    { key: 'concert-addon', icon: '🎤✨', label: 'คอนเสิร์ต + ครบ 3', big: `+${percentOf(ADDON_CONCERT_RATE)}%`, note: 'ลดเพิ่มค่ากิจกรรม', how: 'มีตั๋วคอนเสิร์ต + ครบ 3 กิจกรรม', color: '#F59E0B', on: hasConcert && activities >= 3 },
+    { key: 'concert', icons: 'run+music', label: 'วิ่ง + คอนเสิร์ต GA/VIP', big: `-${percentOf(CONCERT_BUNDLE_RATE)}%`, note: `GA เหลือ ${formatBaht(concertNet)} บาท/ใบ`, how: 'ซื้อตั๋ววิ่ง + ตั๋วคอนเสิร์ต GA หรือ VIP', tone: 'gold' as const, on: hasRun && hasGaConcert },
+    { key: 'two', icons: 'acts', label: 'ครบ 3 กิจกรรม', big: `-${percentOf(ADDON_TWO_RATE)}%`, note: 'ค่ากิจกรรมเสริม', how: 'เลือกกิจกรรมเสริมให้ครบ 3 อย่าง', tone: 'violet' as const, on: activities >= 3 },
+    { key: 'three', icons: 'run+acts', label: 'วิ่ง + ครบ 3 กิจกรรม', big: `-${percentOf(ADDON_THREE_RATE)}%`, note: 'แทนส่วนลด 10%', how: 'ตั๋ววิ่ง + ครบ 3 กิจกรรม', tone: 'gold' as const, on: hasRun && activities >= 3 },
+    { key: 'concert-addon', icons: 'music+acts', label: 'คอนเสิร์ต + ครบ 3', big: `+${percentOf(ADDON_CONCERT_RATE)}%`, note: 'ลดเพิ่มค่ากิจกรรม', how: 'มีตั๋วคอนเสิร์ต + ครบ 3 กิจกรรม', tone: 'violet' as const, on: hasConcert && activities >= 3 },
   ];
   const unlocked = deals.filter((d) => d.on).length;
 
+  const renderIcons = (kind: string, tone: 'gold' | 'violet') => {
+    const run = <Chip tone={tone}><Footprints className="h-4 w-4 sm:h-5 sm:w-5" strokeWidth={2.2} /></Chip>;
+    const music = <Chip tone={tone}><Music className="h-4 w-4 sm:h-5 sm:w-5" strokeWidth={2.2} /></Chip>;
+    const plus = <span aria-hidden="true" className="text-base font-black text-[#4B1FA8]">+</span>;
+    if (kind === 'run+music') return <>{run}{plus}{music}</>;
+    if (kind === 'acts') return <ThreeActs />;
+    if (kind === 'run+acts') return <>{run}{plus}<ThreeActs /></>;
+    return <>{music}{plus}<ThreeActs /></>;
+  };
+
   return (
-    <div className="relative rounded-[18px] border-2 border-[#2A1450] bg-gradient-to-br from-[#FFF7DA] via-[#FFF0F7] to-[#EFE6FF] p-2.5 sm:p-3 shadow-[0_3px_0_#2A1450] overflow-hidden">
-      <span aria-hidden="true" className="pointer-events-none absolute -right-2 -top-3 text-4xl opacity-20 rotate-12 select-none">🎁</span>
-      <div className="relative flex flex-wrap items-center justify-between gap-2 pb-2">
-        <p className="text-xs sm:text-sm font-black text-[#2A1450] leading-tight">
-          🎁 ยิ่งซื้อคู่ ยิ่งลด!
-          <span className="block sm:inline sm:ml-2 text-[11px] font-bold text-[#6B5A85]">ส่วนลดกิจกรรมรวมสูงสุด {percentOf(ADDON_MAX_RATE)}%</span>
+    <div className="relative rounded-[24px] border border-[#E4D6F7] bg-gradient-to-b from-[#FFFDF6] via-[#FBF7FF] to-[#F3ECFF] p-3 sm:p-4 shadow-[0_14px_30px_-20px_rgba(42,20,80,0.35)]">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2 pb-3">
+        <h3 className="inline-flex items-center gap-2 rounded-full bg-gradient-to-b from-[#6D3FD0] to-[#3B1780] pl-2 pr-4 py-1 text-lg sm:text-2xl font-black leading-tight text-white shadow-[0_6px_14px_-8px_rgba(42,20,80,0.7)]">
+          <span aria-hidden="true" className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-full bg-gradient-to-b from-[#FFE27A] to-[#FFC928] text-[#2A1450]">
+            <Ticket className="h-5 w-5" strokeWidth={2.4} />
+          </span>
+          ยิ่งซื้อคู่ <span className="text-[#FFD35C]">ยิ่งลด!</span>
+        </h3>
+        <p className="rounded-full bg-[#EFE5FF] px-3.5 py-1.5 text-[12.5px] sm:text-sm font-extrabold text-[#2A1450]">
+          ส่วนลดกิจกรรมรวมสูงสุด <span className="text-lg sm:text-xl font-black text-[#4B1FA8]">{percentOf(ADDON_MAX_RATE)}%</span>
         </p>
-        <div className="flex items-center gap-2" aria-label={`ปลดล็อกแล้ว ${unlocked} จาก ${deals.length} ดีล`}>
-          <span className="flex gap-1" aria-hidden="true">
+        <div
+          className="ml-auto inline-flex items-center gap-2 rounded-full border border-[#D9C9EF] bg-white px-3 py-1.5"
+          aria-label={`ปลดล็อกแล้ว ${unlocked} จาก ${deals.length} ดีล`}
+        >
+          <span className="text-[11.5px] sm:text-xs font-extrabold text-[#4B2D78]">ความคืบหน้า</span>
+          <span className="rounded-full bg-[#4B1FA8] px-2.5 py-0.5 text-xs font-black text-white tabular-nums">{unlocked}/{deals.length}</span>
+          <span className="hidden sm:flex items-center gap-1.5" aria-hidden="true">
             {deals.map((d) => (
-              <span key={d.key} className="w-4 h-2 rounded-full border border-[#2A1450]/30 transition-colors duration-300" style={{ background: d.on ? d.color : '#FFFFFF' }} />
+              <span key={d.key} className={`h-3.5 w-3.5 rounded-full border-2 transition-colors duration-300 ${d.on ? 'border-[#B8860B] bg-[#FFC928]' : 'border-[#D9C9EF] bg-[#F3ECFF]'}`} />
             ))}
           </span>
-          <span className="text-xs font-black text-[#2A1450] tabular-nums">{unlocked}/{deals.length}</span>
         </div>
       </div>
-      <ul data-reveal-stagger="pop" className="relative grid grid-cols-2 sm:grid-cols-4 gap-2" aria-label="โปรโมชั่นส่วนลด">
+
+      <ul data-reveal-stagger="pop" className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3" aria-label="โปรโมชั่นส่วนลด">
         {deals.map((d) => (
           <motion.li
             key={d.key}
-            animate={d.on ? { scale: [1, 1.08, 1], rotate: [0, -2, 0] } : { scale: 1, rotate: 0 }}
+            animate={d.on ? { scale: [1, 1.06, 1] } : { scale: 1 }}
             transition={{ duration: 0.5 }}
-            className={`deal-coupon relative flex flex-col rounded-xl border-2 text-center leading-tight overflow-hidden ${d.on ? 'is-on border-[#2A1450] shadow-[0_3px_0_#2A1450]' : 'border-[#2A1450]/15 bg-white'}`}
-            style={{ ['--deal' as string]: d.color }}
+            className={`relative flex flex-col items-center gap-1.5 rounded-2xl border-2 px-2 pb-2.5 pt-3 text-center leading-tight ${
+              d.tone === 'gold' ? 'bg-gradient-to-b from-[#FFF3C4] to-[#FFFBEA]' : 'bg-gradient-to-b from-[#EFE5FF] to-[#FAF6FF]'
+            } ${d.on ? 'border-[#2A1450] shadow-[0_4px_0_#2A1450]' : d.tone === 'gold' ? 'border-[#F2D27A] border-dashed' : 'border-[#D9C9EF] border-dashed'}`}
           >
-            <span className="block px-1.5 pt-1.5 text-[11px] sm:text-[11px] font-extrabold text-[#2A1450]">
-              <span aria-hidden="true" className="mr-1">{d.icon}</span>
-              {d.label}
-            </span>
-            <span className="block px-1.5 pb-1 text-lg sm:text-xl font-black tracking-tight leading-tight" style={{ color: d.on ? '#2A1450' : d.color }}>
+            {/* ticket notches */}
+            <span aria-hidden="true" className="absolute -left-[9px] top-1/2 h-4 w-4 -translate-y-1/2 rounded-full border-2 border-inherit bg-[#F9F5FF] [clip-path:inset(0_0_0_50%)]" />
+            <span aria-hidden="true" className="absolute -right-[9px] top-1/2 h-4 w-4 -translate-y-1/2 rounded-full border-2 border-inherit bg-[#F9F5FF] [clip-path:inset(0_50%_0_0)]" />
+            <span className="flex flex-nowrap items-center justify-center gap-0.5 sm:gap-1">{renderIcons(d.icons, d.tone)}</span>
+            <span className="text-[13px] sm:text-[15px] font-black text-[#2A1450]">{d.label}</span>
+            <span className="rounded-full bg-gradient-to-b from-[#5B2BC0] to-[#3B1780] px-5 py-0.5 text-2xl sm:text-[28px] font-black tracking-tight text-[#FFD35C] shadow-[0_5px_10px_-6px_rgba(42,20,80,0.8)]">
               {d.big}
             </span>
-            <span className="deal-perf mt-auto block border-t-2 border-dashed px-1.5 py-1 text-[11px] font-bold">
-              {d.on ? '✓ ได้ส่วนลดนี้แล้ว!' : d.note}
-            </span>
+            <span className="text-[11.5px] sm:text-xs font-extrabold text-[#5B4878]">{d.on ? '✓ ได้ส่วนลดนี้แล้ว!' : `(${d.note})`}</span>
             <span className="sr-only">{d.on ? 'ได้ส่วนลดนี้แล้ว' : `เงื่อนไข: ${d.how}`}</span>
             <AnimatePresence>
               {d.on && (
                 <motion.span
                   aria-hidden="true"
                   initial={{ scale: 2.4, opacity: 0, rotate: -30 }}
-                  animate={{ scale: 1, opacity: 1, rotate: -14 }}
+                  animate={{ scale: 1, opacity: 1, rotate: -12 }}
                   exit={{ scale: 0.6, opacity: 0 }}
                   transition={{ type: 'spring', stiffness: 380, damping: 16 }}
-                  className="absolute -right-1 top-1 rounded-md border-2 border-[#B91C1C] bg-white/90 px-1 py-px text-[11px] font-black text-[#B91C1C]"
+                  className="absolute -right-1.5 -top-2 rounded-md border-2 border-[#B91C1C] bg-white px-1.5 py-px text-xs font-black text-[#B91C1C]"
                 >
                   ได้แล้ว!
                 </motion.span>
@@ -206,6 +250,89 @@ export const DealStrip: React.FC<DealStripProps> = ({ hasRun, hasGaConcert, hasC
           </motion.li>
         ))}
       </ul>
+    </div>
+  );
+};
+
+const pad2 = (n: number) => String(Math.max(0, n)).padStart(2, '0');
+
+/**
+ * The "tickets go on sale" banner with a live countdown (days / hours / minutes). `opensAt` is an ISO time;
+ * without it the banner just says that sales are paused.
+ */
+export const SalesOpenNotice: React.FC<{ opensAt: string | null; dateText: string; en?: boolean }> = ({ opensAt, dateText, en = false }) => {
+  const target = opensAt ? new Date(opensAt).getTime() : NaN;
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    if (Number.isNaN(target)) return;
+    const id = window.setInterval(() => setNow(Date.now()), 15000);
+    return () => window.clearInterval(id);
+  }, [target]);
+
+  if (Number.isNaN(target)) {
+    return (
+      <div role="status" className="mx-auto mt-5 max-w-2xl rounded-2xl border border-[#D9C9EF] bg-[#F3ECFF] px-4 py-3 text-center">
+        <p className="text-base sm:text-lg font-black text-[#3B1780]">{en ? 'Ticket sales are paused for now' : 'ขณะนี้ปิดการขายบัตรชั่วคราว'}</p>
+        <p className="text-xs sm:text-sm font-bold text-[#4B2D78]">{en ? 'Ticket details stay visible · follow the organiser for the reopening' : 'ดูรายละเอียดบัตรได้ตามปกติ · ติดตามประกาศเปิดขายจากผู้จัดงาน'}</p>
+      </div>
+    );
+  }
+
+  const left = Math.max(0, target - now);
+  const days = Math.floor(left / 86400000);
+  const hours = Math.floor((left % 86400000) / 3600000);
+  const mins = Math.floor((left % 3600000) / 60000);
+  const [datePart, timePart] = dateText.split(en ? ', ' : ' เวลา ');
+  const units: [number, string][] = [
+    [days, en ? 'days' : 'วัน'],
+    [hours, en ? 'hrs' : 'ชม.'],
+    [mins, en ? 'min' : 'นาที'],
+  ];
+
+  return (
+    <div
+      role="status"
+      className="relative mx-auto mt-5 overflow-hidden rounded-[24px] border-2 border-[#E0A100] bg-gradient-to-br from-[#5B2BC0] via-[#4B1FA8] to-[#2A1450] p-4 sm:p-5 text-white shadow-[0_16px_34px_-18px_rgba(42,20,80,0.7)]"
+    >
+      <span aria-hidden="true" className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-[#FFC928]/15 blur-2xl" />
+      <div className="relative grid items-center gap-4 sm:gap-5 md:grid-cols-[minmax(0,1fr)_auto]">
+        <div className="flex items-center gap-3 sm:gap-4 md:border-r md:border-white/20 md:pr-6">
+          <span aria-hidden="true" className="flex h-14 w-14 sm:h-16 sm:w-16 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-b from-[#FFE27A] to-[#FFC928] text-[#2A1450] shadow-md">
+            <CalendarDays className="h-8 w-8 sm:h-9 sm:w-9" strokeWidth={2.2} />
+          </span>
+          <div className="min-w-0 text-left leading-tight">
+            <p className="text-lg sm:text-2xl font-black">{en ? 'Tickets on sale' : 'เปิดขายบัตร'}</p>
+            <p className="text-2xl sm:text-4xl font-black text-[#FFD35C]">{datePart}</p>
+            {timePart && (
+              <p className="mt-1.5 inline-flex items-center gap-1.5 rounded-full border-2 border-[#FFC928] px-3 py-0.5 text-sm sm:text-base font-extrabold text-[#FFD35C]">
+                <Clock className="h-4 w-4" aria-hidden="true" />
+                {en ? timePart : `เวลา ${timePart}`}
+              </p>
+            )}
+          </div>
+        </div>
+        <div className="text-center">
+          <p className="mb-1.5 inline-flex items-center gap-1.5 text-sm font-extrabold text-white/90">
+            <Hourglass className="h-4 w-4 text-[#FFD35C]" aria-hidden="true" />
+            {left > 0 ? (en ? 'Time left' : 'เหลือเวลาอีก') : en ? 'Opening now' : 'ถึงเวลาเปิดขายแล้ว'}
+          </p>
+          <div className="flex items-start justify-center gap-1.5 sm:gap-2" aria-label={`${days} ${units[0][1]} ${hours} ${units[1][1]} ${mins} ${units[2][1]}`}>
+            {units.map(([v, label], i) => (
+              <React.Fragment key={label}>
+                {i > 0 && <span aria-hidden="true" className="pt-2 text-2xl font-black text-white/80">:</span>}
+                <div className="w-[68px] sm:w-[84px] overflow-hidden rounded-xl bg-white text-[#2A1450] shadow-md">
+                  <div className="py-1.5 text-3xl sm:text-4xl font-black tabular-nums leading-none">{pad2(v)}</div>
+                  <div className="bg-gradient-to-b from-[#FFE27A] to-[#FFC928] py-0.5 text-[12px] font-black">{label}</div>
+                </div>
+              </React.Fragment>
+            ))}
+          </div>
+        </div>
+      </div>
+      <p className="relative mt-4 rounded-full bg-white px-4 py-2 text-center text-[12.5px] sm:text-sm font-extrabold text-[#3B1780]">
+        <Info className="mr-1.5 inline h-4 w-4 align-[-3px] text-[#6D28D9]" aria-hidden="true" />
+        {en ? 'Browse tickets and prices now · buying unlocks when sales open' : 'ดูรายละเอียดบัตรและราคาได้ก่อน · ปุ่มซื้อจะใช้งานได้เมื่อถึงเวลาเปิดขาย'}
+      </p>
     </div>
   );
 };
