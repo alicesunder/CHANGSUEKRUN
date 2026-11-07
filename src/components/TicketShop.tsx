@@ -213,6 +213,14 @@ const StationCard: React.FC<{ id: string; k: StationKey; done: boolean; children
   );
 };
 
+/** Each distance keeps the same card but gets its own accent colour, a big number mark and (10K) a premium finish. */
+const TIER: Record<RouteId, { from: string; to: string; ink: string; soft: string; mark: string; premium?: boolean }> = {
+  '1km': { from: '#FFB300', to: '#FF8A3D', ink: '#B45309', soft: '#FFF1CC', mark: '1' },
+  '3km': { from: '#6366F1', to: '#8B5CF6', ink: '#4338CA', soft: '#E8E9FF', mark: '4' },
+  '5km': { from: '#7C3AED', to: '#C026D3', ink: '#6D28D9', soft: '#F3E3FF', mark: '5' },
+  '10km': { from: '#2A1450', to: '#4B1FA8', ink: '#2A1450', soft: '#EFE6FC', mark: '10', premium: true },
+};
+
 /** One run ticket: one calm card style; when picked the whole card turns royal purple with gold. */
 const RunTicket: React.FC<{ id: RouteId; on: boolean; onPick: () => void }> = ({ id, on, onPick }) => {
   const earlyBird = useEarlyBird();
@@ -220,6 +228,8 @@ const RunTicket: React.FC<{ id: RouteId; on: boolean; onPick: () => void }> = ({
   const t = ticketById(id);
   const l = LOOK[id];
   const isDog = isDogCategory(id);
+  const tier = TIER[id];
+  const headDark = on || !!tier.premium;
   const sub = on ? 'text-white/75' : 'text-[#766A85]';
   return (
     <motion.article
@@ -231,7 +241,9 @@ const RunTicket: React.FC<{ id: RouteId; on: boolean; onPick: () => void }> = ({
       style={
         on
           ? { background: 'linear-gradient(165deg, #2A1450 0%, #4B1FA8 60%, #6D28D9 100%)', borderColor: '#FFC928', boxShadow: '0 0 0 3px rgba(255,201,40,0.55), 0 22px 44px -14px rgba(75,31,168,0.65)' }
-          : undefined
+          : tier.premium
+            ? { borderColor: '#FFC928', borderWidth: 2, boxShadow: '0 0 0 1px rgba(255,201,40,0.35), 0 0 26px -2px rgba(255,201,40,0.45), 0 20px 40px -14px rgba(75,31,168,0.6)' }
+            : { borderColor: tier.from + '66' }
       }
     >
       {t.badge && (
@@ -240,15 +252,29 @@ const RunTicket: React.FC<{ id: RouteId; on: boolean; onPick: () => void }> = ({
           {t.badge}
         </span>
       )}
-      <span aria-hidden="true" className="absolute inset-x-0 top-0 h-1.5 rounded-t-[19px] bg-gradient-to-r from-[#4B1FA8] via-[#7C3AED] to-[#FFC928]" />
+      <span aria-hidden="true" className="absolute inset-x-0 top-0 z-20 h-1.5 rounded-t-[19px]" style={{ background: `linear-gradient(90deg, ${tier.from}, ${tier.to})` }} />
+      {tier.premium && !on && (
+        <>
+          <span aria-hidden="true" className="pointer-events-none absolute inset-0 z-20 overflow-hidden rounded-[inherit]">
+            <span className="animate-ticket-shimmer absolute -inset-y-8 left-0 w-16 -skew-x-12 bg-gradient-to-r from-transparent via-white/55 to-transparent" />
+          </span>
+          <span className="absolute right-2.5 top-3.5 z-10 inline-flex items-center gap-1 rounded-full bg-[#FFC928] px-2.5 py-0.5 text-[11px] font-black text-[#2A1450] shadow-sm">
+            🏅 ท้าทายสุด
+          </span>
+        </>
+      )}
 
-      <div className={`rounded-t-[19px] px-4 pt-10 pb-3 text-center ${on ? 'bg-white/5' : 'bg-gradient-to-b from-[#EFE6FC] via-[#F8F4FE] to-white'}`}>
-        <span className={`inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 shadow-sm ${on ? 'bg-[#FFC928] text-[#2A1450]' : 'bg-gradient-to-r from-[#4B1FA8] to-[#7C3AED] text-white'}`}>
-          {isDog ? <PawIcon size={14} color={on ? '#2A1450' : '#FFC928'} /> : <Zap className={`w-3.5 h-3.5 ${on ? 'fill-[#2A1450] text-[#2A1450]' : 'fill-[#FFC928] text-[#FFC928]'}`} />}
+      <div
+          className={`relative isolate overflow-hidden rounded-t-[19px] px-4 pt-10 pb-3 text-center ${on ? 'bg-white/5' : ''}`}
+          style={on ? undefined : { background: tier.premium ? 'linear-gradient(180deg, #3A1A70 0%, #2A1450 100%)' : `linear-gradient(180deg, ${tier.soft} 0%, #ffffff 100%)` }}
+        >
+        <span aria-hidden="true" className="pointer-events-none absolute -right-1 bottom-[-0.35em] -z-10 select-none font-display text-[8.5rem] font-black leading-none" style={{ color: headDark ? '#FFFFFF' : tier.from, opacity: headDark ? 0.09 : 0.12 }}>{tier.mark}</span>
+        <span className={`inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 shadow-sm ${headDark ? 'bg-[#FFC928] text-[#2A1450]' : 'text-white'}`} style={headDark ? undefined : { background: `linear-gradient(90deg, ${tier.from}, ${tier.to})` }}>
+          {isDog ? <PawIcon size={14} color={headDark ? '#2A1450' : '#FFFFFF'} /> : <Zap className={`w-3.5 h-3.5 ${headDark ? 'fill-[#2A1450] text-[#2A1450]' : 'fill-white text-white'}`} />}
           <span className="font-display text-2xl font-black leading-none">{t.distanceLabel}</span>
         </span>
-        <h4 className={`mt-2.5 font-display text-lg font-black leading-tight break-words ${on ? 'text-white' : 'text-[#2A1450]'}`}>{t.name}</h4>
-        <p className={`mt-1 text-xs font-semibold leading-snug ${sub}`}>{l.sub}</p>
+        <h4 className={`mt-2.5 font-display text-lg font-black leading-tight break-words ${headDark ? 'text-white' : 'text-[#2A1450]'}`}>{t.name}</h4>
+        <p className={`mt-1 text-xs font-semibold leading-snug ${headDark ? 'text-white/75' : 'text-[#766A85]'}`}>{l.sub}</p>
       </div>
 
       <div className={`flex flex-col items-center gap-1.5 px-4 pt-1 text-sm font-bold ${on ? 'text-white' : 'text-[#281A3B]'}`}>
@@ -297,7 +323,7 @@ const RunTicket: React.FC<{ id: RouteId; on: boolean; onPick: () => void }> = ({
         <div className="mb-2.5 flex items-end justify-between gap-2">
           <span>
             <span className={`block text-xs font-bold ${sub}`}>{tr('ราคาบัตร', 'Ticket price')} ({t.baseLabel})</span>
-            <span className={`font-display text-3xl font-black tabular-nums leading-none ${on ? 'text-[#FFE268]' : 'text-[#4B1FA8]'}`}>
+            <span className={`font-display text-3xl font-black tabular-nums leading-none ${on ? 'text-[#FFE268]' : ''}`} style={on ? undefined : { color: tier.ink }}>
               <EarlyBirdPrice list={t.basePrice} now={runBasePrice(id, earlyBird)} />
             </span>
             <span className={`ml-1 text-xs font-extrabold ${on ? 'text-white' : 'text-[#281A3B]'}`}>{tr('บาท', 'THB')}</span>
