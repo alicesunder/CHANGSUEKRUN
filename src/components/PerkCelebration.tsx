@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { CalendarDays, Clock, Footprints, Hourglass, Info, Music, Ticket } from 'lucide-react';
+import { Clock, Footprints, Hourglass, Info, Music } from 'lucide-react';
 import { ADDON_CONCERT_RATE, ADDON_MAX_RATE, ADDON_THREE_RATE, ADDON_TWO_RATE, CONCERT_BUNDLE_RATE, formatBaht, percentOf } from '../data/addOns';
 import { concertPassPrice } from '../data/eventData';
 import { useEarlyBird } from '../utils/earlyBird';
@@ -144,7 +144,7 @@ const ACT_ICONS = ['/images/shop/shoot-v2.webp', '/images/shop/tower-v2.webp', '
 const Chip: React.FC<{ children: React.ReactNode; tone: 'gold' | 'violet' }> = ({ children, tone }) => (
   <span
     aria-hidden="true"
-    className={`inline-flex h-6 w-6 sm:h-9 sm:w-9 items-center justify-center rounded-md sm:rounded-lg border-2 ${
+    className={`inline-flex h-7 w-7 sm:h-[38px] sm:w-[38px] items-center justify-center rounded-lg border-2 ${
       tone === 'gold' ? 'border-[#E0A100] bg-white text-[#4B1FA8]' : 'border-[#B79AE8] bg-white text-[#4B1FA8]'
     }`}
   >
@@ -155,8 +155,8 @@ const Chip: React.FC<{ children: React.ReactNode; tone: 'gold' | 'violet' }> = (
 const ThreeActs: React.FC = () => (
   <>
     {ACT_ICONS.map((src) => (
-      <span key={src} aria-hidden="true" className="inline-flex h-6 w-6 sm:h-9 sm:w-9 items-center justify-center rounded-md sm:rounded-lg border-2 border-[#D9C9EF] bg-white">
-        <img src={src} alt="" className="h-[18px] w-[18px] sm:h-6 sm:w-6 object-contain mix-blend-multiply" loading="lazy" />
+      <span key={src} aria-hidden="true" className="inline-flex h-7 w-7 sm:h-[38px] sm:w-[38px] items-center justify-center rounded-lg border-2 border-[#D9C9EF] bg-white">
+        <img src={src} alt="" className="h-5 w-5 sm:h-[26px] sm:w-[26px] object-contain mix-blend-multiply" loading="lazy" />
       </span>
     ))}
   </>
@@ -178,8 +178,8 @@ export const DealStrip: React.FC<DealStripProps> = ({ hasRun, hasGaConcert, hasC
   const unlocked = deals.filter((d) => d.on).length;
 
   const renderIcons = (kind: string, tone: 'gold' | 'violet') => {
-    const run = <Chip tone={tone}><Footprints className="h-4 w-4 sm:h-5 sm:w-5" strokeWidth={2.2} /></Chip>;
-    const music = <Chip tone={tone}><Music className="h-4 w-4 sm:h-5 sm:w-5" strokeWidth={2.2} /></Chip>;
+    const run = <Chip tone={tone}><Footprints className="h-4 w-4 sm:h-6 sm:w-6" strokeWidth={2.2} /></Chip>;
+    const music = <Chip tone={tone}><Music className="h-4 w-4 sm:h-6 sm:w-6" strokeWidth={2.2} /></Chip>;
     const plus = <span aria-hidden="true" className="text-base font-black text-[#4B1FA8]">+</span>;
     if (kind === 'run+music') return <>{run}{plus}{music}</>;
     if (kind === 'acts') return <ThreeActs />;
@@ -188,16 +188,14 @@ export const DealStrip: React.FC<DealStripProps> = ({ hasRun, hasGaConcert, hasC
   };
 
   return (
-    <div className="relative rounded-[24px] border border-[#E4D6F7] bg-gradient-to-b from-[#FFFDF6] via-[#FBF7FF] to-[#F3ECFF] p-3 sm:p-4 shadow-[0_14px_30px_-20px_rgba(42,20,80,0.35)]">
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-2 pb-3">
-        <h3 className="inline-flex items-center gap-2 rounded-full bg-gradient-to-b from-[#6D3FD0] to-[#3B1780] pl-2 pr-4 py-1 text-lg sm:text-2xl font-black leading-tight text-white shadow-[0_6px_14px_-8px_rgba(42,20,80,0.7)]">
-          <span aria-hidden="true" className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-full bg-gradient-to-b from-[#FFE27A] to-[#FFC928] text-[#2A1450]">
-            <Ticket className="h-5 w-5" strokeWidth={2.4} />
-          </span>
-          ยิ่งซื้อคู่ <span className="text-[#FFD35C]">ยิ่งลด!</span>
+    <div className="relative overflow-hidden rounded-[26px] border border-[#E4D6F7] bg-gradient-to-b from-[#FFFDF6] via-[#FBF7FF] to-[#F3ECFF] p-3.5 sm:px-[18px] sm:py-5 shadow-[0_8px_20px_rgba(65,30,120,0.14),inset_0_1px_0_rgba(255,255,255,0.9)]">
+      <div className="relative flex flex-wrap items-center gap-x-3 gap-y-2 pb-3 sm:pb-4">
+        <img src="/images/shop/deals-percent.png" alt="" aria-hidden="true" className="-mr-1 h-14 w-auto sm:h-[72px] -rotate-6 mix-blend-multiply" />
+        <h3 className="relative inline-flex items-center rounded-full bg-gradient-to-b from-[#6D3FD0] to-[#3B1780] py-1.5 sm:py-2 pl-5 sm:pl-7 pr-5 sm:pr-7 text-xl sm:text-[25px] font-black leading-tight text-white shadow-[0_8px_16px_-8px_rgba(42,20,80,0.75),inset_0_1px_0_rgba(255,255,255,0.25)]">
+          ยิ่งซื้อคู่&nbsp;<span className="text-[#FFD35C]">ยิ่งลด!</span>
         </h3>
-        <p className="rounded-full bg-[#EFE5FF] px-3.5 py-1.5 text-[12.5px] sm:text-sm font-extrabold text-[#2A1450]">
-          ส่วนลดกิจกรรมรวมสูงสุด <span className="text-lg sm:text-xl font-black text-[#4B1FA8]">{percentOf(ADDON_MAX_RATE)}%</span>
+        <p className="rounded-full bg-[#EFE5FF] px-4 py-2 text-[13px] sm:text-base font-extrabold text-[#2A1450]">
+          ส่วนลดกิจกรรมรวมสูงสุด <span className="text-xl sm:text-3xl align-middle font-black text-[#4B1FA8]">{percentOf(ADDON_MAX_RATE)}%</span>
         </p>
         <div
           className="ml-auto inline-flex items-center gap-2 rounded-full border border-[#D9C9EF] bg-white px-3 py-1.5"
@@ -205,21 +203,21 @@ export const DealStrip: React.FC<DealStripProps> = ({ hasRun, hasGaConcert, hasC
         >
           <span className="text-[11.5px] sm:text-xs font-extrabold text-[#4B2D78]">ความคืบหน้า</span>
           <span className="rounded-full bg-[#4B1FA8] px-2.5 py-0.5 text-xs font-black text-white tabular-nums">{unlocked}/{deals.length}</span>
-          <span className="hidden sm:flex items-center gap-1.5" aria-hidden="true">
+          <span className="hidden sm:flex items-center gap-1" aria-hidden="true">
             {deals.map((d) => (
-              <span key={d.key} className={`h-3.5 w-3.5 rounded-full border-2 transition-colors duration-300 ${d.on ? 'border-[#B8860B] bg-[#FFC928]' : 'border-[#D9C9EF] bg-[#F3ECFF]'}`} />
+              <span key={d.key} className={`h-2 w-7 rounded-full transition-colors duration-300 ${d.on ? 'bg-gradient-to-b from-[#FFE27A] to-[#FFC928]' : 'bg-[#E4D6F7]'}`} />
             ))}
           </span>
         </div>
       </div>
 
-      <ul data-reveal-stagger="pop" className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3" aria-label="โปรโมชั่นส่วนลด">
+      <ul data-reveal-stagger="pop" className="relative grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3.5" aria-label="โปรโมชั่นส่วนลด">
         {deals.map((d) => (
           <motion.li
             key={d.key}
             animate={d.on ? { scale: [1, 1.06, 1] } : { scale: 1 }}
             transition={{ duration: 0.5 }}
-            className={`relative flex flex-col items-center gap-1.5 rounded-2xl border-2 px-2 pb-2.5 pt-3 text-center leading-tight ${
+            className={`relative flex flex-col items-center justify-center gap-1.5 sm:gap-2.5 rounded-2xl border-2 px-2 pb-3 pt-3.5 lg:min-h-[180px] text-center leading-tight shadow-[0_8px_18px_-10px_rgba(65,30,120,0.35),inset_0_1px_0_rgba(255,255,255,0.9)] ${
               d.tone === 'gold' ? 'bg-gradient-to-b from-[#FFF3C4] to-[#FFFBEA]' : 'bg-gradient-to-b from-[#EFE5FF] to-[#FAF6FF]'
             } ${d.on ? 'border-[#2A1450] shadow-[0_4px_0_#2A1450]' : d.tone === 'gold' ? 'border-[#F2D27A] border-dashed' : 'border-[#D9C9EF] border-dashed'}`}
           >
@@ -227,11 +225,11 @@ export const DealStrip: React.FC<DealStripProps> = ({ hasRun, hasGaConcert, hasC
             <span aria-hidden="true" className="absolute -left-[9px] top-1/2 h-4 w-4 -translate-y-1/2 rounded-full border-2 border-inherit bg-[#F9F5FF] [clip-path:inset(0_0_0_50%)]" />
             <span aria-hidden="true" className="absolute -right-[9px] top-1/2 h-4 w-4 -translate-y-1/2 rounded-full border-2 border-inherit bg-[#F9F5FF] [clip-path:inset(0_50%_0_0)]" />
             <span className="flex flex-nowrap items-center justify-center gap-0.5 sm:gap-1">{renderIcons(d.icons, d.tone)}</span>
-            <span className="text-[13px] sm:text-[15px] font-black text-[#2A1450]">{d.label}</span>
-            <span className="rounded-full bg-gradient-to-b from-[#5B2BC0] to-[#3B1780] px-5 py-0.5 text-2xl sm:text-[28px] font-black tracking-tight text-[#FFD35C] shadow-[0_5px_10px_-6px_rgba(42,20,80,0.8)]">
+            <span className="text-[13px] sm:text-base font-black text-[#2A1450]">{d.label}</span>
+            <span className="rounded-full bg-gradient-to-b from-[#5B2BC0] to-[#3B1780] px-6 py-0.5 sm:py-1 text-2xl sm:text-[34px] font-black tracking-tight text-[#FFD35C] shadow-[0_6px_10px_-5px_rgba(42,20,80,0.85),inset_0_1px_0_rgba(255,255,255,0.3)]">
               {d.big}
             </span>
-            <span className="text-[11.5px] sm:text-xs font-extrabold text-[#5B4878]">{d.on ? '✓ ได้ส่วนลดนี้แล้ว!' : `(${d.note})`}</span>
+            <span className="text-[11.5px] sm:text-[13px] font-extrabold text-[#5B4878]">{d.on ? '✓ ได้ส่วนลดนี้แล้ว!' : `(${d.note})`}</span>
             <span className="sr-only">{d.on ? 'ได้ส่วนลดนี้แล้ว' : `เงื่อนไข: ${d.how}`}</span>
             <AnimatePresence>
               {d.on && (
@@ -292,17 +290,20 @@ export const SalesOpenNotice: React.FC<{ opensAt: string | null; dateText: strin
   return (
     <div
       role="status"
-      className="relative mx-auto mt-5 overflow-hidden rounded-[24px] border-2 border-[#E0A100] bg-gradient-to-br from-[#5B2BC0] via-[#4B1FA8] to-[#2A1450] p-4 sm:p-5 text-white shadow-[0_16px_34px_-18px_rgba(42,20,80,0.7)]"
+      className="relative mx-auto mt-5 overflow-hidden rounded-[24px] border-2 border-[#E0A100] bg-gradient-to-br from-[#5B2BC0] via-[#4B1FA8] to-[#2A1450] p-4 sm:p-6 md:min-h-[220px] text-white shadow-[0_16px_34px_-18px_rgba(42,20,80,0.7)]"
     >
       <span aria-hidden="true" className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-[#FFC928]/15 blur-2xl" />
       <div className="relative grid items-center gap-4 sm:gap-5 md:grid-cols-[minmax(0,1fr)_auto]">
         <div className="flex items-center gap-3 sm:gap-4 md:border-r md:border-white/20 md:pr-6">
-          <span aria-hidden="true" className="flex h-14 w-14 sm:h-16 sm:w-16 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-b from-[#FFE27A] to-[#FFC928] text-[#2A1450] shadow-md">
-            <CalendarDays className="h-8 w-8 sm:h-9 sm:w-9" strokeWidth={2.2} />
+          <span aria-hidden="true" className="hidden sm:flex h-[150px] w-[170px] lg:w-[190px] shrink-0 items-center justify-center rounded-3xl bg-gradient-to-b from-[#FFFDF6] to-[#EFE5FF] shadow-[0_10px_20px_-10px_rgba(0,0,0,0.5)]">
+            <img src="/images/shop/deals-tickets.png" alt="" className="h-[130px] w-auto mix-blend-multiply" />
+          </span>
+          <span aria-hidden="true" className="sm:hidden flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-b from-[#FFFDF6] to-[#EFE5FF]">
+            <img src="/images/shop/deals-tickets.png" alt="" className="h-12 w-auto mix-blend-multiply" />
           </span>
           <div className="min-w-0 text-left leading-tight">
-            <p className="text-lg sm:text-2xl font-black">{en ? 'Tickets on sale' : 'เปิดขายบัตร'}</p>
-            <p className="text-2xl sm:text-4xl font-black text-[#FFD35C]">{datePart}</p>
+            <p className="text-xl sm:text-4xl font-black">{en ? 'Tickets on sale' : 'เปิดขายบัตร'}</p>
+            <p className="text-3xl sm:text-5xl font-black text-[#FFD35C]">{datePart}</p>
             {timePart && (
               <p className="mt-1.5 inline-flex items-center gap-1.5 rounded-full border-2 border-[#FFC928] px-3 py-0.5 text-sm sm:text-base font-extrabold text-[#FFD35C]">
                 <Clock className="h-4 w-4" aria-hidden="true" />
@@ -316,13 +317,13 @@ export const SalesOpenNotice: React.FC<{ opensAt: string | null; dateText: strin
             <Hourglass className="h-4 w-4 text-[#FFD35C]" aria-hidden="true" />
             {left > 0 ? (en ? 'Time left' : 'เหลือเวลาอีก') : en ? 'Opening now' : 'ถึงเวลาเปิดขายแล้ว'}
           </p>
-          <div className="flex items-start justify-center gap-1.5 sm:gap-2" aria-label={`${days} ${units[0][1]} ${hours} ${units[1][1]} ${mins} ${units[2][1]}`}>
+          <div className="flex items-start justify-center gap-1.5 sm:gap-3" aria-label={`${days} ${units[0][1]} ${hours} ${units[1][1]} ${mins} ${units[2][1]}`}>
             {units.map(([v, label], i) => (
               <React.Fragment key={label}>
                 {i > 0 && <span aria-hidden="true" className="pt-2 text-2xl font-black text-white/80">:</span>}
-                <div className="w-[68px] sm:w-[84px] overflow-hidden rounded-xl bg-white text-[#2A1450] shadow-md">
-                  <div className="py-1.5 text-3xl sm:text-4xl font-black tabular-nums leading-none">{pad2(v)}</div>
-                  <div className="bg-gradient-to-b from-[#FFE27A] to-[#FFC928] py-0.5 text-[12px] font-black">{label}</div>
+                <div className="w-[68px] sm:w-[92px] overflow-hidden rounded-xl bg-[#FFFBF0] text-[#2A1450] shadow-[0_8px_14px_-6px_rgba(0,0,0,0.55)]">
+                  <div className="py-1.5 sm:py-3 text-3xl sm:text-5xl font-black tabular-nums leading-none">{pad2(v)}</div>
+                  <div className="bg-gradient-to-b from-[#FFE27A] to-[#FFC928] py-0.5 sm:py-1 text-[12px] sm:text-sm font-black">{label}</div>
                 </div>
               </React.Fragment>
             ))}
