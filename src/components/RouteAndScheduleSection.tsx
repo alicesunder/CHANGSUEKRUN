@@ -297,16 +297,16 @@ export const RouteAndScheduleSection: React.FC<RouteAndScheduleProps> = ({
         >
           {/* ================== header banner (light sunset) ================== */}
           <div
-            className="relative overflow-hidden px-5 pt-7 pb-8 sm:px-8 sm:pt-9 sm:pb-10 lg:px-10 text-center"
+            className="relative overflow-hidden px-5 pt-7 pb-24 sm:px-8 sm:pt-9 sm:pb-28 lg:pb-32 lg:px-10 text-center"
             style={{ background: '#E9DDFB' }}
           >
             <img
-              src="/images/schedule/header-clean.webp"
+              src="/images/schedule/header-route.webp"
               alt=""
               aria-hidden="true"
               decoding="async"
               draggable={false}
-              className="absolute inset-0 w-full h-full object-cover object-center pointer-events-none select-none"
+              className="absolute inset-0 w-full h-full object-cover object-[center_bottom] pointer-events-none select-none"
             />
             <div aria-hidden="true" className="absolute inset-0 pointer-events-none bg-gradient-to-b from-white/45 via-white/25 to-[#F3EBFF]/85 sm:from-white/10 sm:via-transparent sm:to-[#F3EBFF]/80" />
             <div className="relative">
