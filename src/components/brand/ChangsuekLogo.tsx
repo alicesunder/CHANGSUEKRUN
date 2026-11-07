@@ -53,7 +53,7 @@ export const ChangsuekLogo: React.FC<ChangsuekLogoProps> = ({
       src="/images/brand/changsuek-run-logo.webp"
       alt="CHANGSUEK RUN - เห็นช้างวิ่ง วิ่งตามช้าง"
       style={{ height: heightPx, width: 'auto' }}
-      className={`object-contain select-none ${className}`}
+      className={`object-contain select-none logo-glow ${className}`}
       referrerPolicy="no-referrer"
     />
   );

@@ -1214,3 +1214,8 @@ main button:active:not(:disabled), .btn-paw:active { scale: .96; }
 .ds-bg-lavender { background: linear-gradient(180deg, #F6F1FD 0%, var(--ds-lavender) 100%); }
 .ds-bg-warm { background: var(--ds-warm); }
 .ds-bg-dark { background: linear-gradient(180deg, var(--ds-midnight) 0%, var(--ds-deep) 100%); color: #fff; }
+
+/* The logo on the dark purple bars (menu, footer): a soft white glow so its purple parts do not sink into the background */
+.logo-glow {
+  filter: drop-shadow(0 0 1.5px #fff) drop-shadow(0 0 6px rgba(255, 255, 255, 0.85)) drop-shadow(0 2px 8px rgba(255, 255, 255, 0.35));
+}

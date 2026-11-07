@@ -44,7 +44,7 @@ export const Footer: React.FC<FooterProps> = ({
             <img loading="lazy" decoding="async"
               src="/images/brand/changsuek-run-logo.webp"
               alt="CHANGSUEK RUN"
-              className="h-16 w-auto object-contain mb-4 select-none"
+              className="h-16 w-auto object-contain mb-4 select-none logo-glow"
               referrerPolicy="no-referrer"
             />
             

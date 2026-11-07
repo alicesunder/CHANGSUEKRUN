@@ -76,7 +76,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             <img
               src="/images/brand/changsuek-run-logo.webp"
               alt="CHANGSUEK RUN"
-              className="h-10 sm:h-11 w-auto object-contain"
+              className="h-10 sm:h-11 w-auto object-contain logo-glow"
               referrerPolicy="no-referrer"
             />
           </a>
