@@ -73,7 +73,7 @@ export const EventObjectiveSection: React.FC = () => {
           {/* the picture of the elephant, runners and dog on the beach */}
           <img
             src="/images/objective/scene.webp"
-            alt={t('ช้างม่วง นักวิ่ง และน้องหมาวิ่งริมชายหาดยามเย็น', 'The purple elephant, runners and a dog running on the beach at dusk')}
+            alt={t('ช้างห่มผ้าม่วง นักวิ่งเสื้อม่วง และน้องโกลเด้นวิ่งริมชายหาดยามเย็น', 'An elephant in a purple cloth, runners in purple and a golden retriever running on the beach at dusk')}
             loading="lazy"
             decoding="async"
             draggable={false}
@@ -158,7 +158,7 @@ export const EventObjectiveSection: React.FC = () => {
               loading="lazy"
               decoding="async"
               draggable={false}
-              className="lg:hidden mt-4 -mx-5 sm:-mx-8 w-[calc(100%+2.5rem)] sm:w-[calc(100%+4rem)] h-52 sm:h-72 object-cover object-[0%_58%] pointer-events-none select-none"
+              className="lg:hidden mt-4 -mx-5 sm:-mx-8 w-[calc(100%+2.5rem)] sm:w-[calc(100%+4rem)] h-56 sm:h-80 object-cover object-[40%_55%] pointer-events-none select-none"
               style={fadeSceneMask}
             />
           </div>

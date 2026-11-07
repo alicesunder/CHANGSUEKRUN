@@ -276,7 +276,7 @@ export const DogContestSection: React.FC = () => {
 
               <details className="group rounded-[18px] border-2 border-[#D9C9EF] bg-white">
                 <summary className="list-none cursor-pointer min-h-[52px] px-4 py-2.5 flex items-center justify-between gap-3 text-sm sm:text-base font-extrabold text-[#2A1450]">
-                  <span>📋 กติกา{c.title}</span>
+                  <span>📋 กติกา{' '}{c.title}</span>
                   <ChevronDown className="w-5 h-5 transition-transform group-open:rotate-180" style={{ color: c.accent }} aria-hidden="true" />
                 </summary>
                 <ul className="px-4 pb-4 space-y-1.5 text-xs sm:text-sm font-semibold text-[#4B2D78] list-disc pl-8">
@@ -291,12 +291,12 @@ export const DogContestSection: React.FC = () => {
 
         {/* ---------- shared rules ---------- */}
         <div className="mx-3 sm:mx-6 mb-4 sm:mb-6 rounded-[24px] border border-[#F2DFA0] bg-gradient-to-b from-[#FFF9E6] to-[#FFF4D0] p-3.5 sm:p-5">
-          <div className="grid gap-4 md:grid-cols-[auto_minmax(0,1fr)_auto] md:items-center">
+          <div className="grid gap-4 lg:grid-cols-[auto_minmax(0,1fr)_auto] lg:items-center">
             <h3 className="inline-flex w-fit items-center gap-2 rounded-full bg-gradient-to-b from-[#6D3FD0] to-[#3B1780] py-2 pl-3 pr-5 text-base sm:text-lg font-black text-white shadow-[0_6px_14px_-8px_rgba(42,20,80,0.7)]">
               <PawPrint className="h-5 w-5 text-[#FFD35C]" aria-hidden="true" />
               กติการ่วมของทุกรายการ
             </h3>
-            <ul className="space-y-1.5 md:border-x md:border-dashed md:border-[#E3C45A] md:px-5">
+            <ul className="space-y-1.5 lg:border-x lg:border-dashed lg:border-[#E3C45A] lg:px-5">
               {SHARED_SHORT.map((r, i) => {
                 const Icon = SHARED_ICONS[i];
                 return (

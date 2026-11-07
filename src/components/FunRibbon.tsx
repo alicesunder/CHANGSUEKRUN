@@ -13,7 +13,7 @@ const WORDS = [
   '🏅 เหรียญสวยทุกระยะ',
 ];
 
-/** Two crossed, slightly tilted marquee ribbons: a cheerful seam between the hero and the shop. */
+/** One slightly tilted marquee ribbon: a cheerful seam between the hero and the shop. */
 export const FunRibbon: React.FC = () => {
   const line = (words: string[], key: string) =>
     [0, 1].map((copy) =>
@@ -26,12 +26,8 @@ export const FunRibbon: React.FC = () => {
     );
 
   return (
-    <div className="fun-ribbon relative h-[110px] sm:h-[120px] overflow-hidden bg-[#FAF7FF]" aria-hidden="true">
-      {/* Both ribbons share a centre line and tilt opposite ways, so they cross like an X */}
-      <div className="absolute inset-x-[-6%] top-1/2 -translate-y-1/2 -rotate-[5deg] sm:-rotate-2 bg-[#7B3FC6] text-white border-y-[3px] border-[#2A1450] py-2 shadow-[0_6px_0_rgba(42,20,80,0.25)]">
-        <div className="fun-ribbon-track reverse font-display text-sm sm:text-base font-bold">{line([...WORDS].reverse(), 'b')}</div>
-      </div>
-      <div className="absolute inset-x-[-6%] top-1/2 -translate-y-1/2 rotate-[4deg] sm:rotate-[1.6deg] bg-[#FFC928] text-[#2A1450] border-y-[3px] border-[#2A1450] py-2 shadow-[0_6px_0_rgba(42,20,80,0.25)]">
+    <div className="fun-ribbon relative h-[64px] sm:h-[72px] overflow-hidden bg-[#FAF7FF]" aria-hidden="true">
+      <div className="absolute inset-x-[-6%] top-1/2 -translate-y-1/2 -rotate-[1.5deg] sm:-rotate-1 bg-[#FFC928] text-[#2A1450] border-y-[3px] border-[#2A1450] py-2 shadow-[0_6px_0_rgba(42,20,80,0.25)]">
         <div className="fun-ribbon-track font-display text-sm sm:text-base font-bold">{line(WORDS, 'a')}</div>
       </div>
     </div>

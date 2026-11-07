@@ -68,6 +68,9 @@ export const PeekingPup: React.FC = () => {
   const [bubble, setBubble] = useState(false);
   useEffect(() => {
     if (!show) return;
+    // Section lines pop up only on very wide screens, where the corner is empty margin; on
+    // smaller screens the bubble would sit on top of the cards, so it only answers a pat.
+    if (!happy && window.innerWidth < 1500) return;
     setBubble(true);
     const t = window.setTimeout(() => setBubble(false), 4500);
     return () => window.clearTimeout(t);
@@ -91,7 +94,7 @@ export const PeekingPup: React.FC = () => {
         type="button"
         onClick={pet}
         aria-label="ลูบหัวน้องหมา"
-        className="relative w-[54px] h-[60px] sm:w-[76px] sm:h-[84px] cursor-pointer select-none"
+        className="relative w-[54px] h-[60px] sm:w-[60px] sm:h-[66px] min-[1500px]:w-[76px] min-[1500px]:h-[84px] cursor-pointer select-none"
         style={{ minHeight: 0 }}
       >
         <img

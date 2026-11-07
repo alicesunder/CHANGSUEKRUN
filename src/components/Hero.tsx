@@ -424,7 +424,7 @@ export const Hero: React.FC<HeroProps> = ({
             <div className="inline-block -rotate-1 sm:-rotate-2">
               <p className="font-display text-xl sm:text-4xl font-bold text-white drop-shadow-[0_3px_8px_rgba(0,0,0,0.45)] leading-snug">
                 “ {t('มากกว่างานวิ่ง คือ', 'More than a run, it is')}{' '}
-                <span className="text-[#FFE28A] block sm:inline">{t('การวิ่งไปด้วยกัน', 'running together')} ”</span>
+                <span className="text-[#FFE28A] block sm:inline whitespace-nowrap">{t('การวิ่งไปด้วยกัน', 'running together')} ”</span>
               </p>
               <p className="mt-1 text-[11px] sm:text-xs font-mono font-extrabold tracking-[0.24em] text-[#FFC928] uppercase drop-shadow">
                 MORE THAN A RUN · A BIGGER FAMILY

@@ -35,7 +35,7 @@ export const ConcertSection: React.FC = () => {
   const earlyBird = useEarlyBird();
   return (
     <section id="concert" aria-labelledby="concert-heading" className="py-10 sm:py-14 scroll-mt-20">
-      <div className="max-w-[1100px] mx-auto px-4 sm:px-6">
+      <div className="max-w-[1360px] mx-auto px-4 sm:px-8">
         <div className="ds-frame-dark relative overflow-hidden bg-[#2A1450] text-white">
           {/* ---------- header scene ---------- */}
           <div className="relative overflow-hidden bg-[#2A1450]">

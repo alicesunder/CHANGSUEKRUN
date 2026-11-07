@@ -35,7 +35,6 @@ const getHotelImage = (hotel: Hotel): string => {
     'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=600&auto=format&fit=crop&q=80',
     'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=600&auto=format&fit=crop&q=80',
     'https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=600&auto=format&fit=crop&q=80',
-    'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=600&auto=format&fit=crop&q=80',
     'https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=600&auto=format&fit=crop&q=80',
     'https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?w=600&auto=format&fit=crop&q=80',
     'https://images.unsplash.com/photo-1578683010236-d716f9a3f461?w=600&auto=format&fit=crop&q=80',
@@ -73,7 +72,7 @@ const FEATURED_MOCKUP_HOTELS = [
     priceStart: '฿4,608',
     distanceText: 'ห่างจากงาน 2.28 กม.',
     image:
-      'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=700&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=700&auto=format&fit=crop&q=80',
     matchKeyword: 'VALA',
   },
   {
@@ -214,12 +213,12 @@ export const HotelExplorer: React.FC<HotelExplorerProps> = () => {
           {/* Header Bar */}
           <div className="relative z-10 flex flex-wrap items-center justify-between gap-4 mb-6 sm:mb-7 pb-5 border-b-2 border-dashed border-[#2A1450]/15">
             <div className="flex items-center gap-3.5">
-              <span className="w-12 h-12 rounded-2xl bg-[#FFC928] border-2 border-[#2A1450] flex items-center justify-center text-[#2A1450] shadow-[2px_3px_0_#2A1450] shrink-0">
+              <span className="hidden sm:flex w-12 h-12 rounded-2xl bg-[#FFC928] border-2 border-[#2A1450] items-center justify-center text-[#2A1450] shadow-[2px_3px_0_#2A1450] shrink-0">
                 <PawIcon className="w-6 h-6" />
               </span>
               <div>
                 <h2 className="squiggle text-xl sm:text-2xl lg:text-3xl font-extrabold text-[#2A1450] leading-tight">
-                  ที่พักใกล้สนาม วิ่งสบาย พักสบาย
+                  <span className="whitespace-nowrap">ที่พักใกล้สนาม</span> <span className="whitespace-nowrap">วิ่งสบาย พักสบาย</span>
                 </h2>
                 <p className="text-xs sm:text-sm text-[#6B5A85] font-bold mt-0.5">
                   แนะนำที่พักยอดนิยม ใกล้ค่ายนเรศวร • ต้อนรับนักวิ่งและสัตว์เลี้ยง

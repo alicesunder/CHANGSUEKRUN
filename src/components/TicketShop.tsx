@@ -183,7 +183,7 @@ const StationCard: React.FC<{ id: string; k: StationKey; done: boolean; children
       aria-labelledby={`${id}-title`}
       className="relative scroll-mt-24 ds-card"
     >
-      <header className="relative overflow-hidden flex items-center gap-3 px-4 sm:px-5 py-3 rounded-t-[27px] text-white" style={{ background: s.grad }}>
+      <header className="relative overflow-hidden flex flex-wrap sm:flex-nowrap items-center gap-x-3 gap-y-2 px-4 sm:px-5 py-3 rounded-t-[27px] text-white" style={{ background: s.grad }}>
         <span aria-hidden="true" className="pointer-events-none absolute -top-10 -right-6 w-36 h-36 rounded-full bg-white/25 blur-2xl" />
         <span aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-px bg-white/70" />
         <motion.span
@@ -206,7 +206,7 @@ const StationCard: React.FC<{ id: string; k: StationKey; done: boolean; children
           </h3>
           <p className="text-xs sm:text-sm font-bold text-white/90 leading-snug">{tr(s.hint, s.hintEn)}</p>
         </div>
-        {aside && <div className="relative">{aside}</div>}
+        {aside && <div className="relative w-full sm:w-auto pl-14 sm:pl-0">{aside}</div>}
       </header>
       <div className="p-3.5 sm:p-5">{children}</div>
     </section>
@@ -634,11 +634,11 @@ export const TicketShop: React.FC<TicketShopProps> = ({
               <span id="concert-pass" className="block h-0 scroll-mt-28" aria-hidden="true" />
               <div className="relative lg:grid lg:grid-cols-2 lg:gap-4">
               <DiscountCelebration active={concertDeal} burstKey={`concert-${hasConcert}`} kicker="วิ่ง + คอนเสิร์ต 🎶🏃" headline={`ลดทันที ${percentOf(CONCERT_BUNDLE_RATE)}%!!!`} discount={concertOff + vipOff} pieces={60} />
-              <div className="relative overflow-hidden ds-frame-dark bg-gradient-to-br from-[#241047] via-[#341866] to-[#4A1F8F] text-white p-4 sm:p-5">
+              <div className="relative overflow-hidden ds-frame-dark bg-gradient-to-br from-[#241047] via-[#341866] to-[#4A1F8F] text-white p-4 sm:p-5 lg:flex lg:flex-col">
                 <span aria-hidden="true" className="pointer-events-none absolute -top-14 -left-10 w-48 h-48 rounded-full bg-[#FFC928]/30 blur-3xl" />
                 <span aria-hidden="true" className="pointer-events-none absolute -bottom-16 -right-10 w-56 h-56 rounded-full bg-[#EC4899]/35 blur-3xl" />
-                <div className="relative flex flex-col sm:flex-row sm:items-center gap-4">
-                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                <div className="relative flex flex-col sm:flex-row sm:items-center lg:flex-col lg:items-stretch lg:justify-between lg:flex-1 gap-4">
+                  <div className="flex items-center gap-3 min-w-0 flex-1 lg:flex-none">
                     <span className="w-24 h-24 shrink-0 flex items-center justify-center">
                       <img src="/images/shop/concert.webp" alt="" loading="lazy" className="h-full w-full object-contain drop-shadow-[0_8px_14px_rgba(0,0,0,0.45)]" />
                     </span>
@@ -661,8 +661,8 @@ export const TicketShop: React.FC<TicketShopProps> = ({
                       )}
                     </div>
                   </div>
-                  <div className="flex items-center justify-between sm:justify-end gap-3">
-                    <span className="text-xs font-extrabold text-white/80 sm:hidden">จำนวนตั๋ว</span>
+                  <div className="flex items-center justify-between sm:justify-end gap-3 lg:border-t lg:border-white/15 lg:pt-3">
+                    <span className="text-xs font-extrabold text-white/80 sm:hidden lg:inline">จำนวนตั๋ว</span>
                     <QtyStepper value={concertQty} onChange={onConcertQtyChange} label="ตั๋วคอนเสิร์ต GA" />
                   </div>
                 </div>
@@ -671,7 +671,7 @@ export const TicketShop: React.FC<TicketShopProps> = ({
               {/* VIP table */}
               <div className="relative mt-3 lg:mt-0 overflow-hidden ds-frame-dark bg-gradient-to-br from-[#1A0B33] via-[#2A1450] to-[#5B2A0E] text-white p-4 sm:p-5">
                 <span aria-hidden="true" className="pointer-events-none absolute -top-14 -right-10 w-48 h-48 rounded-full bg-[#FFC928]/25 blur-3xl" />
-                <div className="relative flex flex-col sm:flex-row sm:items-start gap-4">
+                <div className="relative flex flex-col sm:flex-row sm:items-start lg:flex-col lg:items-stretch gap-4">
                   <div className="flex items-start gap-3 min-w-0 flex-1">
                     <span className="w-16 h-16 shrink-0 rounded-2xl bg-[#FFC928] border-2 border-[var(--ink)] flex items-center justify-center text-[var(--ink)]" aria-hidden="true">
                       <Crown className="w-8 h-8" />
@@ -692,7 +692,7 @@ export const TicketShop: React.FC<TicketShopProps> = ({
                           </span>
                         )}
                       </p>
-                      <ul className="mt-2.5 grid grid-cols-1 xl:grid-cols-2 gap-x-4 gap-y-1 text-xs sm:text-sm font-semibold text-white/90">
+                      <ul className="mt-2.5 grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1.5 text-[13px] sm:text-sm font-semibold leading-snug text-white">
                         {VIP_TABLE_PERKS.map((p) => (
                           <li key={p} className="flex items-start gap-1.5">
                             <Check className="w-4 h-4 shrink-0 mt-0.5 text-[#FFC928] stroke-[3]" aria-hidden="true" />
@@ -702,8 +702,8 @@ export const TicketShop: React.FC<TicketShopProps> = ({
                       </ul>
                     </div>
                   </div>
-                  <div className="flex items-center justify-between sm:justify-end gap-3 sm:self-center">
-                    <span className="text-xs font-extrabold text-white/80 sm:hidden">จำนวนโต๊ะ</span>
+                  <div className="flex items-center justify-between sm:justify-end gap-3 sm:self-center lg:self-stretch lg:border-t lg:border-white/15 lg:pt-3">
+                    <span className="text-xs font-extrabold text-white/80 sm:hidden lg:inline">จำนวนโต๊ะ</span>
                     <QtyStepper value={vipTables} onChange={onVipTablesChange} label="โต๊ะ VIP" max={MAX_VIP_TABLES} />
                   </div>
                 </div>

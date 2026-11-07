@@ -90,7 +90,7 @@ export const SponsorsSection: React.FC = () => {
       aria-labelledby="sponsors-heading"
       className="py-14 sm:py-20 relative overflow-hidden"
     >
-      <div className="max-w-[1180px] mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+      <div className="max-w-[1360px] mx-auto px-4 sm:px-8 relative z-10">
         <div className="mb-8 sm:mb-10 text-center">
           <h2 id="sponsors-heading" className="squiggle squiggle-center text-4xl sm:text-5xl font-bold text-[#2A1450]">
             ผู้สนับสนุนงาน

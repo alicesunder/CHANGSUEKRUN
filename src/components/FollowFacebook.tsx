@@ -5,7 +5,7 @@ import { eventInfo } from '../data/eventData';
 /** Bright banner that sends people to the official Facebook page for news. */
 export const FollowFacebook: React.FC = () => (
   <section aria-labelledby="follow-fb-heading" className="py-6 sm:py-8">
-    <div className="max-w-[1100px] mx-auto px-4 sm:px-6">
+    <div className="max-w-[1360px] mx-auto px-4 sm:px-8">
       <div
         data-reveal="pop"
         className="relative overflow-hidden ds-frame-dark bg-gradient-to-r from-[#1B4FB8] via-[#4B1FA8] to-[#7C3AED] text-white px-5 sm:px-8 py-5 sm:py-6 flex flex-col sm:flex-row items-center gap-4 sm:gap-6"

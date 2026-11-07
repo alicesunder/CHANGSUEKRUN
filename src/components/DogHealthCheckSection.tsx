@@ -22,13 +22,12 @@ export const DogHealthCheckSection: React.FC = () => (
       {/* ---------- banner: dusk beach scene, text on the left, characters on the right ---------- */}
       <div className="relative overflow-hidden bg-gradient-to-b from-[#7C3AED] via-[#4B1FA8] to-[#2A1450] md:bg-none">
         <img
-          src="/images/contest/vet-banner.webp"
-          alt=""
-          aria-hidden="true"
+          src="/images/contest/vet-scene.webp"
+          alt="สัตวแพทย์ใช้หูฟังตรวจน้องชิบะที่เต็นท์ริมชายหาดยามเย็น ผู้ช่วยในหมวกม่วงกอดน้องไว้ น้องโกลเด้นและน้องบีเกิ้ลนั่งรอตรวจ"
           decoding="async"
-          className="absolute inset-0 hidden h-full w-full object-cover md:block"
+          className="absolute inset-0 hidden h-full w-full object-cover object-[center_45%] md:block"
         />
-        <span aria-hidden="true" className="absolute inset-0 hidden bg-gradient-to-r from-[#2A1450]/55 via-[#2A1450]/10 to-transparent md:block" />
+        <span aria-hidden="true" className="absolute inset-0 hidden bg-gradient-to-r from-[#2A1450]/70 via-[#2A1450]/25 to-transparent md:block" />
         <span aria-hidden="true" className="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-b from-transparent to-[#EFE6FC] md:h-20" />
 
         <div className="relative grid grid-cols-1 items-end gap-0 px-4 pt-6 sm:px-8 sm:pt-8 md:grid-cols-12 lg:px-10">
@@ -59,15 +58,10 @@ export const DogHealthCheckSection: React.FC = () => (
           >
             {/* phones: the beach scene sits only behind the characters, the text below stays on plain purple */}
             <span aria-hidden="true" className="pointer-events-none absolute inset-y-0 -inset-x-4 overflow-hidden sm:-inset-x-8 md:hidden">
-              <img src="/images/contest/vet-banner.webp" alt="" decoding="async" className="h-full w-full object-cover object-[80%_center] [mask-image:linear-gradient(to_bottom,black_72%,transparent)]" />
+              <img src="/images/contest/vet-scene.webp" alt="" decoding="async" className="h-full w-full object-cover object-[78%_center] [mask-image:linear-gradient(to_bottom,black_78%,transparent)]" />
             </span>
-            <img
-              src="/images/contest/vet-group.webp"
-              alt="สัตวแพทย์ใช้หูฟังตรวจหัวใจน้องชิบะ ผู้ช่วยในหมวกม่วงกอดน้องชิบะ น้องโกลเด้นและน้องบีเกิ้ลนั่งรอตรวจ มีโล่เครื่องหมายกากบาทสีเขียวและคลิปบอร์ดรายการตรวจ"
-              loading="lazy"
-              decoding="async"
-              className="mx-auto block h-auto w-full drop-shadow-[0_14px_18px_rgba(10,4,26,0.45)]"
-            />
+            {/* keeps the banner height on wide screens and the picture area on phones (the scene is behind) */}
+            <span aria-hidden="true" className="block h-56 sm:h-72 md:h-[340px] lg:h-[400px]" />
             {/* speech bubble */}
             <motion.span
               aria-hidden="true"

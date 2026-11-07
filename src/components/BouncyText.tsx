@@ -20,30 +20,45 @@ export const BouncyText: React.FC<{ text: string; className?: string; delayMs?: 
   }, [text]);
   const n = parts.length;
 
+  // Letters are grouped per word (each word never breaks), so a long English line wraps between
+  // words instead of in the middle of "four-legged".
+  const words: { ch: string; i: number }[][] = [[]];
+  parts.forEach((ch, i) => {
+    if (ch === ' ') words.push([]);
+    else words[words.length - 1].push({ ch, i });
+  });
+
+  const letter = ({ ch, i }: { ch: string; i: number }) => (
+    <span
+      key={i}
+      aria-hidden="true"
+      className="bouncy-char"
+      style={{
+        ['--d' as string]: `${delayMs + i * stepMs}ms`,
+        ['--i' as string]: i,
+        ...(gradient
+          ? {
+              backgroundImage: gradient,
+              backgroundSize: `${n * 100}% 100%`,
+              backgroundPosition: `${n > 1 ? (i / (n - 1)) * 100 : 0}% 0`,
+              WebkitBackgroundClip: 'text',
+              backgroundClip: 'text',
+              color: 'transparent',
+            }
+          : {}),
+      }}
+    >
+      {ch}
+    </span>
+  );
+
   return (
     <span className={`bouncy-text ${className}`} aria-label={text} role="text">
-      {parts.map((ch, i) => (
-        <span
-          key={i}
-          aria-hidden="true"
-          className="bouncy-char"
-          style={{
-            ['--d' as string]: `${delayMs + i * stepMs}ms`,
-            ['--i' as string]: i,
-            ...(gradient
-              ? {
-                  backgroundImage: gradient,
-                  backgroundSize: `${n * 100}% 100%`,
-                  backgroundPosition: `${n > 1 ? (i / (n - 1)) * 100 : 0}% 0`,
-                  WebkitBackgroundClip: 'text',
-                  backgroundClip: 'text',
-                  color: 'transparent',
-                }
-              : {}),
-          }}
-        >
-          {ch}
-        </span>
+      {words.map((w, wi) => (
+        <React.Fragment key={wi}>
+          {wi > 0 && ' '}
+          <span className="inline-block whitespace-nowrap">{w.map(letter)}</span>
+        </React.Fragment>
       ))}
     </span>
   );

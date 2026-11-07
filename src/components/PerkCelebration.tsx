@@ -294,8 +294,8 @@ export const SalesOpenNotice: React.FC<{ opensAt: string | null; dateText: strin
       className="relative mx-auto mt-5 overflow-hidden rounded-[24px] border-2 border-[#E0A100] bg-gradient-to-br from-[#5B2BC0] via-[#4B1FA8] to-[#2A1450] p-4 sm:p-6 md:min-h-[220px] text-white shadow-[0_16px_34px_-18px_rgba(42,20,80,0.7)]"
     >
       <img src="/images/shop/deals-bg.png" alt="" aria-hidden="true" className="pointer-events-none absolute inset-0 hidden h-full w-full object-cover object-left min-[1100px]:block" />
-      <div className="relative grid items-center gap-4 sm:gap-5 md:grid-cols-[minmax(0,1fr)_auto]">
-        <div className="flex items-center gap-3 sm:gap-4 md:border-r md:border-white/20 md:pr-6 min-[1100px]:pl-[330px] whitespace-nowrap">
+      <div className="relative grid items-center gap-4 sm:gap-5 lg:grid-cols-[minmax(0,1fr)_auto]">
+        <div className="flex items-center gap-3 sm:gap-4 lg:border-r lg:border-white/20 lg:pr-6 min-[1100px]:pl-[330px] min-[1100px]:whitespace-nowrap">
           <span aria-hidden="true" className="hidden sm:flex min-[1100px]:!hidden h-[150px] w-[170px] shrink-0 items-center justify-center rounded-3xl bg-gradient-to-b from-[#FFFDF6] to-[#EFE5FF] shadow-[0_10px_20px_-10px_rgba(0,0,0,0.5)]">
             <img src="/images/shop/deals-tickets.png" alt="" className="h-[130px] w-auto mix-blend-multiply" />
           </span>
