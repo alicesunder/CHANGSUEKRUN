@@ -72,7 +72,7 @@ export const EventObjectiveSection: React.FC = () => {
 
           {/* the picture of the elephant, runners and dog on the beach */}
           <img
-            src="/images/objective/scene.webp"
+            src="/images/objective/scene-v2.webp"
             alt={t('ช้างห่มผ้าม่วง นักวิ่งเสื้อม่วง และน้องโกลเด้นวิ่งริมชายหาดยามเย็น', 'An elephant in a purple cloth, runners in purple and a golden retriever running on the beach at dusk')}
             loading="lazy"
             decoding="async"
@@ -152,7 +152,7 @@ export const EventObjectiveSection: React.FC = () => {
 
             {/* phones: the same picture as a strip under the cards */}
             <img
-              src="/images/objective/scene.webp"
+              src="/images/objective/scene-v2.webp"
               alt=""
               aria-hidden="true"
               loading="lazy"
