@@ -95,7 +95,7 @@ const Card: React.FC<{
           <motion.span
             animate={active ? { y: [0, -14, 0], rotate: [0, -10, 8, 0], scale: [1, 1.25, 1] } : { y: 0, rotate: 0, scale: 1 }}
             transition={{ duration: 0.7, type: 'spring', stiffness: 260, damping: 11 }}
-            className="shrink-0 w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-b from-[#F1EAFD] to-[#FFF4D1] flex items-center justify-center p-1.5"
+            className="shrink-0 w-[76px] h-[76px] sm:w-24 sm:h-24 rounded-2xl bg-gradient-to-b from-[#F1EAFD] to-[#FFF4D1] flex items-center justify-center p-1"
           >
             {icon}
           </motion.span>
@@ -209,7 +209,7 @@ export const AddOnPicker: React.FC<AddOnPickerProps> = ({ value, onChange, windT
       {/* three columns only when the box itself is wide enough (the box is narrow inside the booking window) */}
       <div className={layout === 'rows' ? 'grid grid-cols-1 gap-3' : 'grid grid-cols-1 @[620px]:grid-cols-3 gap-3 sm:gap-4'}>
         <div className="flex flex-col gap-1">
-          <Card theme="tower" title={tr('หอสูง', 'High tower')} tagline={tr('มีครูฝึกดูแลตลอดกิจกรรม', 'An instructor looks after you throughout')} perks={[tr('🧑‍🏫 ครูฝึกดูแล', '🧑‍🏫 Instructor'), tr('📜 ได้ใบประกาศ / ปีก', '📜 Certificate / wings')]} active={value.tower} icon={<img src="/images/shop/tower.webp" alt="" loading="lazy" className="w-full h-full object-contain" />}>
+          <Card theme="tower" title={tr('หอสูง', 'High tower')} tagline={tr('มีครูฝึกดูแลตลอดกิจกรรม', 'An instructor looks after you throughout')} perks={[tr('🧑‍🏫 ครูฝึกดูแล', '🧑‍🏫 Instructor'), tr('📜 ได้ใบประกาศ / ปีก', '📜 Certificate / wings')]} active={value.tower} icon={<img src="/images/shop/tower-v2.webp" alt="" loading="lazy" className="w-full h-full object-contain mix-blend-multiply" />}>
             <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
             <PriceTag price={350 - off} listPrice={off ? 350 : undefined} ink={ADD_ON_THEMES.tower.ink} />
             <PickButton
@@ -234,7 +234,7 @@ export const AddOnPicker: React.FC<AddOnPickerProps> = ({ value, onChange, windT
             tagline={tr('ครูฝึกส่วนตัวดูแลใกล้ชิด', 'A personal instructor by your side')}
             perks={[tr('🎯 ยิง 10 นัด', '🎯 10 rounds'), tr('🧑‍🏫 ครูฝึกส่วนตัว', '🧑‍🏫 Personal instructor')]}
             active={gunOn}
-            icon={<img src="/images/shop/target.webp" alt="" loading="lazy" className="w-full h-full object-contain" />}
+            icon={<img src="/images/shop/shoot-v2.webp" alt="" loading="lazy" className="w-full h-full object-contain mix-blend-multiply" />}
           >
             <div role="radiogroup" aria-label={tr('ยิงปืน', 'Shooting')} className="grid grid-cols-1 gap-2">
               {GUN_SEGMENTS.map((o) => {
@@ -283,7 +283,7 @@ export const AddOnPicker: React.FC<AddOnPickerProps> = ({ value, onChange, windT
             perks={[tr('🌪️ ลอยตัวในอุโมงค์ลม', '🌪️ Fly in the wind tunnel')]}
             active={value.windTunnel && !windFull}
             disabled={windFull}
-            icon={<img src="/images/shop/wind.webp" alt="" loading="lazy" className="w-full h-full object-contain" />}
+            icon={<img src="/images/shop/wind-v2.webp" alt="" loading="lazy" className="w-full h-full object-contain mix-blend-multiply" />}
             badge={
               <span
                 className={`self-start inline-block px-3 py-1 rounded-full text-xs font-black shadow-[0_4px_10px_-4px_rgba(0,0,0,0.35)] ${
