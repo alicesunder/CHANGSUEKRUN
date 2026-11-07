@@ -314,7 +314,7 @@ export const RouteAndScheduleSection: React.FC<RouteAndScheduleProps> = ({
           </div>
 
           {/* ================== the two panels ================== */}
-          <div className="px-3 pb-5 sm:px-6 sm:pb-7 lg:px-8 lg:pb-9 grid grid-cols-1 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] gap-4 sm:gap-5 items-start">
+          <div className="px-3 pb-5 sm:px-6 sm:pb-7 lg:px-8 lg:pb-9 grid grid-cols-1 lg:grid-cols-[minmax(0,4fr)_minmax(0,8fr)] gap-4 sm:gap-5 items-start">
             {/* ---------- schedule ---------- */}
             <div id="schedule" className="rounded-[26px] border border-[#E4D6F7] bg-white p-3 sm:p-4 shadow-[0_14px_34px_-20px_rgba(42,20,80,0.3)]">
               <div className="flex flex-wrap items-center gap-x-3 gap-y-2 px-1 pb-3">
@@ -425,34 +425,35 @@ export const RouteAndScheduleSection: React.FC<RouteAndScheduleProps> = ({
                   })}
                 </div>
 
-                {/* map + summary */}
-                <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_212px] gap-3 items-start">
+                {/* the map takes the whole width; the summary sits under it */}
+                <div className="space-y-3">
                   <RouteIllustratedMap selectedRoute={selectedRoute} onSelectRoute={onSelectRoute} showLegend={false} />
-                  <div className="rounded-2xl border-2 border-[#D9C9EF] bg-white p-2.5 space-y-2">
-                    <div className="rounded-full bg-[#EFE7FF] px-3 py-1.5 text-[#4B1FA8] text-sm font-black text-center">
-                      {t('สรุประยะ', 'Summary')} {activeTab?.big}
+                  <div className="rounded-2xl border border-[#E4D6F7] bg-white p-2.5 sm:p-3 grid grid-cols-2 lg:grid-cols-4 gap-2">
+                    <div className="flex items-center gap-2.5 rounded-xl bg-[#F6F0FF] px-3 py-2">
+                      <Flag className="w-5 h-5 text-[#6D28D9] shrink-0" aria-hidden="true" />
+                      <div className="leading-tight">
+                        <div className="text-[11px] font-extrabold text-[#6B5A85]">{t('ระยะทาง', 'Distance')} {activeTab?.big}</div>
+                        <div className="text-base font-black tabular-nums">{activeRouteData.distanceKm} {t('กม.', 'km')}</div>
+                      </div>
                     </div>
-                    <dl className="text-[13px]">
-                      <div className="flex items-center gap-2 border-b border-[#2A1450]/10 py-2">
-                        <Flag className="w-4 h-4 text-[#6D28D9] shrink-0" aria-hidden="true" />
-                        <dt className="font-extrabold">{t('ระยะทาง', 'Distance')}</dt>
-                        <dd className="ml-auto font-black tabular-nums">{activeRouteData.distanceKm} {t('กม.', 'km')}</dd>
+                    <div className="flex items-center gap-2.5 rounded-xl bg-[#F6F0FF] px-3 py-2">
+                      <Clock className="w-5 h-5 text-[#6D28D9] shrink-0" aria-hidden="true" />
+                      <div className="leading-tight">
+                        <div className="text-[11px] font-extrabold text-[#6B5A85]">{t('เวลาตัดตัว', 'Cut-off')}</div>
+                        <div className="text-[13px] font-black">{activeRouteData.cutoffTime}</div>
                       </div>
-                      <div className="flex items-center gap-2 border-b border-[#2A1450]/10 py-2">
-                        <Clock className="w-4 h-4 text-[#6D28D9] shrink-0" aria-hidden="true" />
-                        <dt className="font-extrabold">{t('เวลาตัดตัว', 'Cut-off')}</dt>
-                        <dd className="ml-auto font-black text-right leading-tight">{activeRouteData.cutoffTime}</dd>
+                    </div>
+                    <div className="flex items-center gap-2.5 rounded-xl bg-[#F6F0FF] px-3 py-2">
+                      <Droplets className="w-5 h-5 text-[#0369A1] shrink-0" aria-hidden="true" />
+                      <div className="leading-tight">
+                        <div className="text-[11px] font-extrabold text-[#6B5A85]">{t('จุดน้ำ', 'Water stops')}</div>
+                        <div className="text-base font-black tabular-nums">{activeRouteData.waterStationCount} {t('จุด', 'stops')}</div>
                       </div>
-                      <div className="flex items-center gap-2 py-2">
-                        <Droplets className="w-4 h-4 text-[#0369A1] shrink-0" aria-hidden="true" />
-                        <dt className="font-extrabold">{t('จุดน้ำ', 'Water')}</dt>
-                        <dd className="ml-auto font-black tabular-nums">{activeRouteData.waterStationCount} {t('จุด', 'stops')}</dd>
-                      </div>
-                    </dl>
+                    </div>
                     <button
                       type="button"
                       onClick={scrollToFullMap}
-                      className="w-full min-h-[44px] rounded-full border-2 border-[#D9C9EF] bg-[#F3ECFF] text-[#4B1FA8] text-[13px] font-black inline-flex items-center justify-center gap-1.5 cursor-pointer hover:bg-[#E9DDFB]"
+                      className="col-span-2 lg:col-span-1 min-h-[48px] rounded-xl border-2 border-[#D9C9EF] bg-[#F3ECFF] text-[#4B1FA8] text-[13px] font-black inline-flex items-center justify-center gap-1.5 cursor-pointer hover:bg-[#E9DDFB]"
                     >
                       {t('ดูเส้นทางเต็มจอ', 'Full-screen map')} <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
                     </button>
