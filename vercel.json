@@ -82,7 +82,7 @@
       ]
     },
     {
-      "source": "/(favicon-32.png|favicon-48.png|apple-touch-icon.png|icon-512.png|og-image.jpg)",
+      "source": "/(favicon-32.png|favicon-48.png|apple-touch-icon.png|icon-512.png|og-image.jpg|og-image-v2.jpg)",
       "headers": [
         {
           "key": "Cache-Control",
