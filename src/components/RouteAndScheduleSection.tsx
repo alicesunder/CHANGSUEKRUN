@@ -301,15 +301,15 @@ export const RouteAndScheduleSection: React.FC<RouteAndScheduleProps> = ({
             style={{ background: '#E9DDFB' }}
           >
             <img
-              src="/images/schedule/header.webp"
+              src="/images/schedule/header-clean.webp"
               alt=""
               aria-hidden="true"
               decoding="async"
               draggable={false}
-              className="absolute inset-0 w-full h-full object-cover object-[18%_center] sm:object-center pointer-events-none select-none"
+              className="absolute inset-0 w-full h-full object-cover object-center pointer-events-none select-none"
             />
             <div aria-hidden="true" className="absolute inset-0 pointer-events-none bg-gradient-to-b from-white/45 via-white/25 to-[#F3EBFF]/85 sm:from-white/10 sm:via-transparent sm:to-[#F3EBFF]/80" />
-            <div className="relative lg:pl-[22%]">
+            <div className="relative">
               <h2 className="font-hero font-bold leading-[1.2] text-[#3B1780] text-[1.7rem] sm:text-[2.5rem] lg:text-[3rem] [text-shadow:0_2px_0_rgba(255,255,255,0.85),0_0_18px_rgba(255,255,255,0.8)]">
                 <span className="flex items-center justify-center gap-2.5 sm:gap-3">
                   <Calendar className="hidden sm:block w-9 h-9 text-[#F5B800] shrink-0" aria-hidden="true" />
