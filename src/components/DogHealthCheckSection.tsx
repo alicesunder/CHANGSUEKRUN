@@ -20,16 +20,16 @@ export const DogHealthCheckSection: React.FC = () => (
   <section id="dog-health-check" aria-labelledby="dog-health-heading" className="mt-10 sm:mt-14 scroll-mt-24">
     <div className="relative overflow-hidden ds-card rounded-[28px]! bg-[#EFE6FC]">
       {/* ---------- banner: dusk beach scene, text on the left, characters on the right ---------- */}
-      <div className="relative overflow-hidden">
+      <div className="relative overflow-hidden bg-gradient-to-b from-[#7C3AED] via-[#4B1FA8] to-[#2A1450] md:bg-none">
         <img
           src="/images/contest/vet-banner.webp"
           alt=""
           aria-hidden="true"
           decoding="async"
-          className="absolute inset-0 h-full w-full object-cover object-[78%_center] md:object-[center_center]"
+          className="absolute inset-0 hidden h-full w-full object-cover md:block"
         />
-        <span aria-hidden="true" className="absolute inset-0 bg-gradient-to-r from-[#2A1450]/55 via-[#2A1450]/10 to-transparent" />
-        <span aria-hidden="true" className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-b from-transparent to-[#EFE6FC]" />
+        <span aria-hidden="true" className="absolute inset-0 hidden bg-gradient-to-r from-[#2A1450]/55 via-[#2A1450]/10 to-transparent md:block" />
+        <span aria-hidden="true" className="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-b from-transparent to-[#EFE6FC] md:h-20" />
 
         <div className="relative grid grid-cols-1 items-end gap-0 px-4 pt-6 sm:px-8 sm:pt-8 md:grid-cols-12 lg:px-10">
           <div className="order-2 pb-14 md:order-1 md:col-span-6 md:pb-16 lg:col-span-6">
@@ -51,12 +51,16 @@ export const DogHealthCheckSection: React.FC = () => (
           </div>
 
           <motion.div
-            className="relative order-1 mx-auto w-full max-w-[470px] md:order-2 md:col-span-6 md:max-w-none md:translate-y-8 lg:translate-y-10"
+            className="relative order-1 mx-auto w-full max-w-[470px] max-md:pt-4 md:order-2 md:col-span-6 md:max-w-none md:translate-y-8 lg:translate-y-10"
             initial={{ opacity: 0, y: 14 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, amount: 0.2 }}
             transition={{ type: 'spring', stiffness: 140, damping: 16 }}
           >
+            {/* phones: the beach scene sits only behind the characters, the text below stays on plain purple */}
+            <span aria-hidden="true" className="pointer-events-none absolute inset-y-0 -inset-x-4 overflow-hidden sm:-inset-x-8 md:hidden">
+              <img src="/images/contest/vet-banner.webp" alt="" decoding="async" className="h-full w-full object-cover object-[80%_center] [mask-image:linear-gradient(to_bottom,black_72%,transparent)]" />
+            </span>
             <img
               src="/images/contest/vet-group.webp"
               alt="สัตวแพทย์ใช้หูฟังตรวจหัวใจน้องชิบะ ผู้ช่วยในหมวกม่วงกอดน้องชิบะ น้องโกลเด้นและน้องบีเกิ้ลนั่งรอตรวจ มีโล่เครื่องหมายกากบาทสีเขียวและคลิปบอร์ดรายการตรวจ"
