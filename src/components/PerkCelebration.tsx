@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Clock, Footprints, Hourglass, Info, Music } from 'lucide-react';
+import { Clock, Hourglass, Info } from 'lucide-react';
 import { ADDON_CONCERT_RATE, ADDON_MAX_RATE, ADDON_THREE_RATE, ADDON_TWO_RATE, CONCERT_BUNDLE_RATE, formatBaht, percentOf } from '../data/addOns';
 import { concertPassPrice } from '../data/eventData';
 import { useEarlyBird } from '../utils/earlyBird';
@@ -138,7 +138,8 @@ interface DealStripProps {
   activities: number;
 }
 
-const ACT_ICONS = ['/images/shop/shoot-v2.webp', '/images/shop/tower-v2.webp', '/images/shop/wind-v2.webp'];
+const ACT_ICONS = ['/images/shop/deals-ic-target.png', '/images/shop/deals-ic-tower.png', '/images/shop/deals-ic-fan.png'];
+const ICON_CLS = 'h-5 w-5 sm:h-[30px] sm:w-[30px] object-contain mix-blend-multiply';
 
 /** Small round icon chip used on the coupons. */
 const Chip: React.FC<{ children: React.ReactNode; tone: 'gold' | 'violet' }> = ({ children, tone }) => (
@@ -156,7 +157,7 @@ const ThreeActs: React.FC = () => (
   <>
     {ACT_ICONS.map((src) => (
       <span key={src} aria-hidden="true" className="inline-flex h-7 w-7 sm:h-[38px] sm:w-[38px] items-center justify-center rounded-lg border-2 border-[#D9C9EF] bg-white">
-        <img src={src} alt="" className="h-5 w-5 sm:h-[26px] sm:w-[26px] object-contain mix-blend-multiply" loading="lazy" />
+        <img src={src} alt="" className={ICON_CLS} loading="lazy" />
       </span>
     ))}
   </>
@@ -178,8 +179,8 @@ export const DealStrip: React.FC<DealStripProps> = ({ hasRun, hasGaConcert, hasC
   const unlocked = deals.filter((d) => d.on).length;
 
   const renderIcons = (kind: string, tone: 'gold' | 'violet') => {
-    const run = <Chip tone={tone}><Footprints className="h-4 w-4 sm:h-6 sm:w-6" strokeWidth={2.2} /></Chip>;
-    const music = <Chip tone={tone}><Music className="h-4 w-4 sm:h-6 sm:w-6" strokeWidth={2.2} /></Chip>;
+    const run = <Chip tone={tone}><img src="/images/shop/deals-ic-run.png" alt="" className={ICON_CLS} loading="lazy" /></Chip>;
+    const music = <Chip tone={tone}><img src="/images/shop/deals-ic-music.png" alt="" className={ICON_CLS} loading="lazy" /></Chip>;
     const plus = <span aria-hidden="true" className="text-base font-black text-[#4B1FA8]">+</span>;
     if (kind === 'run+music') return <>{run}{plus}{music}</>;
     if (kind === 'acts') return <ThreeActs />;
@@ -222,8 +223,8 @@ export const DealStrip: React.FC<DealStripProps> = ({ hasRun, hasGaConcert, hasC
             } ${d.on ? 'border-[#2A1450] shadow-[0_4px_0_#2A1450]' : d.tone === 'gold' ? 'border-[#F2D27A] border-dashed' : 'border-[#D9C9EF] border-dashed'}`}
           >
             {/* ticket notches */}
-            <span aria-hidden="true" className="absolute -left-[9px] top-1/2 h-4 w-4 -translate-y-1/2 rounded-full border-2 border-inherit bg-[#F9F5FF] [clip-path:inset(0_0_0_50%)]" />
-            <span aria-hidden="true" className="absolute -right-[9px] top-1/2 h-4 w-4 -translate-y-1/2 rounded-full border-2 border-inherit bg-[#F9F5FF] [clip-path:inset(0_50%_0_0)]" />
+            <span aria-hidden="true" className="absolute -left-[11px] top-1/2 h-5 w-5 -translate-y-1/2 rounded-full border-2 border-inherit bg-[#F9F5FF] [clip-path:inset(0_0_0_50%)]" />
+            <span aria-hidden="true" className="absolute -right-[11px] top-1/2 h-5 w-5 -translate-y-1/2 rounded-full border-2 border-inherit bg-[#F9F5FF] [clip-path:inset(0_50%_0_0)]" />
             <span className="flex flex-nowrap items-center justify-center gap-0.5 sm:gap-1">{renderIcons(d.icons, d.tone)}</span>
             <span className="text-[13px] sm:text-base font-black text-[#2A1450]">{d.label}</span>
             <span className="rounded-full bg-gradient-to-b from-[#5B2BC0] to-[#3B1780] px-6 py-0.5 sm:py-1 text-2xl sm:text-[34px] font-black tracking-tight text-[#FFD35C] shadow-[0_6px_10px_-5px_rgba(42,20,80,0.85),inset_0_1px_0_rgba(255,255,255,0.3)]">
@@ -292,10 +293,10 @@ export const SalesOpenNotice: React.FC<{ opensAt: string | null; dateText: strin
       role="status"
       className="relative mx-auto mt-5 overflow-hidden rounded-[24px] border-2 border-[#E0A100] bg-gradient-to-br from-[#5B2BC0] via-[#4B1FA8] to-[#2A1450] p-4 sm:p-6 md:min-h-[220px] text-white shadow-[0_16px_34px_-18px_rgba(42,20,80,0.7)]"
     >
-      <span aria-hidden="true" className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-[#FFC928]/15 blur-2xl" />
+      <img src="/images/shop/deals-bg.png" alt="" aria-hidden="true" className="pointer-events-none absolute inset-0 hidden h-full w-full object-cover object-left min-[1100px]:block" />
       <div className="relative grid items-center gap-4 sm:gap-5 md:grid-cols-[minmax(0,1fr)_auto]">
-        <div className="flex items-center gap-3 sm:gap-4 md:border-r md:border-white/20 md:pr-6">
-          <span aria-hidden="true" className="hidden sm:flex h-[150px] w-[170px] lg:w-[190px] shrink-0 items-center justify-center rounded-3xl bg-gradient-to-b from-[#FFFDF6] to-[#EFE5FF] shadow-[0_10px_20px_-10px_rgba(0,0,0,0.5)]">
+        <div className="flex items-center gap-3 sm:gap-4 md:border-r md:border-white/20 md:pr-6 min-[1100px]:pl-[330px] whitespace-nowrap">
+          <span aria-hidden="true" className="hidden sm:flex min-[1100px]:!hidden h-[150px] w-[170px] shrink-0 items-center justify-center rounded-3xl bg-gradient-to-b from-[#FFFDF6] to-[#EFE5FF] shadow-[0_10px_20px_-10px_rgba(0,0,0,0.5)]">
             <img src="/images/shop/deals-tickets.png" alt="" className="h-[130px] w-auto mix-blend-multiply" />
           </span>
           <span aria-hidden="true" className="sm:hidden flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-b from-[#FFFDF6] to-[#EFE5FF]">
@@ -303,7 +304,7 @@ export const SalesOpenNotice: React.FC<{ opensAt: string | null; dateText: strin
           </span>
           <div className="min-w-0 text-left leading-tight">
             <p className="text-xl sm:text-4xl font-black">{en ? 'Tickets on sale' : 'เปิดขายบัตร'}</p>
-            <p className="text-3xl sm:text-5xl font-black text-[#FFD35C]">{datePart}</p>
+            <p className="text-3xl sm:text-4xl xl:text-5xl font-black text-[#FFD35C]">{datePart}</p>
             {timePart && (
               <p className="mt-1.5 inline-flex items-center gap-1.5 rounded-full border-2 border-[#FFC928] px-3 py-0.5 text-sm sm:text-base font-extrabold text-[#FFD35C]">
                 <Clock className="h-4 w-4" aria-hidden="true" />
