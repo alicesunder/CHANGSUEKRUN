@@ -218,7 +218,7 @@ const TIER: Record<RouteId, { from: string; to: string; ink: string; soft: strin
   '1km': { from: '#FFB300', to: '#FF8A3D', ink: '#B45309', soft: '#FFF1CC', mark: '1' },
   '3km': { from: '#6366F1', to: '#8B5CF6', ink: '#4338CA', soft: '#E8E9FF', mark: '4' },
   '5km': { from: '#7C3AED', to: '#C026D3', ink: '#6D28D9', soft: '#F3E3FF', mark: '5' },
-  '10km': { from: '#2A1450', to: '#4B1FA8', ink: '#2A1450', soft: '#EFE6FC', mark: '10', premium: true },
+  '10km': { from: '#4B1FA8', to: '#FFC928', ink: '#2A1450', soft: '#EFE6FC', mark: '10', premium: true },
 };
 
 /** One run ticket: one calm card style; when picked the whole card turns royal purple with gold. */
@@ -229,7 +229,7 @@ const RunTicket: React.FC<{ id: RouteId; on: boolean; onPick: () => void }> = ({
   const l = LOOK[id];
   const isDog = isDogCategory(id);
   const tier = TIER[id];
-  const headDark = on || !!tier.premium;
+  const headDark = on;
   const sub = on ? 'text-white/75' : 'text-[#766A85]';
   return (
     <motion.article
@@ -242,7 +242,7 @@ const RunTicket: React.FC<{ id: RouteId; on: boolean; onPick: () => void }> = ({
         on
           ? { background: 'linear-gradient(165deg, #2A1450 0%, #4B1FA8 60%, #6D28D9 100%)', borderColor: '#FFC928', boxShadow: '0 0 0 3px rgba(255,201,40,0.55), 0 22px 44px -14px rgba(75,31,168,0.65)' }
           : tier.premium
-            ? { borderColor: '#FFC928', borderWidth: 2, boxShadow: '0 0 0 1px rgba(255,201,40,0.35), 0 0 26px -2px rgba(255,201,40,0.45), 0 20px 40px -14px rgba(75,31,168,0.6)' }
+            ? { borderColor: '#FFC928', borderWidth: 2, boxShadow: '0 0 0 1px rgba(255,201,40,0.4), 0 16px 32px -14px rgba(255,179,0,0.55)' }
             : { borderColor: tier.from + '66' }
       }
     >
@@ -255,9 +255,6 @@ const RunTicket: React.FC<{ id: RouteId; on: boolean; onPick: () => void }> = ({
       <span aria-hidden="true" className="absolute inset-x-0 top-0 z-20 h-1.5 rounded-t-[19px]" style={{ background: `linear-gradient(90deg, ${tier.from}, ${tier.to})` }} />
       {tier.premium && !on && (
         <>
-          <span aria-hidden="true" className="pointer-events-none absolute inset-0 z-20 overflow-hidden rounded-[inherit]">
-            <span className="animate-ticket-shimmer absolute -inset-y-8 left-0 w-16 -skew-x-12 bg-gradient-to-r from-transparent via-white/55 to-transparent" />
-          </span>
           <span className="absolute right-2.5 top-3.5 z-10 inline-flex items-center gap-1 rounded-full bg-[#FFC928] px-2.5 py-0.5 text-[11px] font-black text-[#2A1450] shadow-sm">
             🏅 ท้าทายสุด
           </span>
@@ -266,11 +263,11 @@ const RunTicket: React.FC<{ id: RouteId; on: boolean; onPick: () => void }> = ({
 
       <div
           className={`relative isolate overflow-hidden rounded-t-[19px] px-4 pt-10 pb-3 text-center ${on ? 'bg-white/5' : ''}`}
-          style={on ? undefined : { background: tier.premium ? 'linear-gradient(180deg, #3A1A70 0%, #2A1450 100%)' : `linear-gradient(180deg, ${tier.soft} 0%, #ffffff 100%)` }}
+          style={on ? undefined : { background: tier.premium ? 'linear-gradient(180deg, #EBDDFB 0%, #FFF2C9 100%)' : `linear-gradient(180deg, ${tier.soft} 0%, #ffffff 100%)` }}
         >
-        <span aria-hidden="true" className="pointer-events-none absolute -right-1 bottom-[-0.35em] -z-10 select-none font-display text-[8.5rem] font-black leading-none" style={{ color: headDark ? '#FFFFFF' : tier.from, opacity: headDark ? 0.09 : 0.12 }}>{tier.mark}</span>
-        <span className={`inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 shadow-sm ${headDark ? 'bg-[#FFC928] text-[#2A1450]' : 'text-white'}`} style={headDark ? undefined : { background: `linear-gradient(90deg, ${tier.from}, ${tier.to})` }}>
-          {isDog ? <PawIcon size={14} color={headDark ? '#2A1450' : '#FFFFFF'} /> : <Zap className={`w-3.5 h-3.5 ${headDark ? 'fill-[#2A1450] text-[#2A1450]' : 'fill-white text-white'}`} />}
+        <span aria-hidden="true" className={`pointer-events-none absolute -right-1 bottom-[-0.35em] -z-10 select-none font-display font-black leading-none ${tier.mark.length > 1 ? 'text-[6.5rem]' : 'text-[8.5rem]'}`} style={{ color: headDark ? '#FFFFFF' : tier.from, opacity: headDark ? 0.09 : 0.12 }}>{tier.mark}</span>
+        <span className={`inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 shadow-sm ${headDark ? 'bg-[#FFC928] text-[#2A1450]' : tier.premium ? 'text-[#FFC928]' : 'text-white'}`} style={headDark ? undefined : { background: tier.premium ? 'linear-gradient(90deg, #2A1450, #4B1FA8)' : `linear-gradient(90deg, ${tier.from}, ${tier.to})` }}>
+          {isDog ? <PawIcon size={14} color={headDark ? '#2A1450' : '#FFFFFF'} /> : <Zap className={`w-3.5 h-3.5 ${headDark ? 'fill-[#2A1450] text-[#2A1450]' : tier.premium ? 'fill-[#FFC928] text-[#FFC928]' : 'fill-white text-white'}`} />}
           <span className="font-display text-2xl font-black leading-none">{t.distanceLabel}</span>
         </span>
         <h4 className={`mt-2.5 font-display text-lg font-black leading-tight break-words ${headDark ? 'text-white' : 'text-[#2A1450]'}`}>{t.name}</h4>
