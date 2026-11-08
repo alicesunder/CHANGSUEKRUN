@@ -79,7 +79,7 @@ import {
   setEarlyBirdSchedule,
 } from './store';
 import { billerIdFromQr, isValidQrPayload } from '../src/utils/promptPay';
-import { WIND_TUNNEL_LIMIT, addOnLabel, addOnPricePerPerson, hasAddOns, normalizeAddOns, priceBasket } from '../src/data/addOns';
+import { WIND_TUNNEL_LIMIT, addOnCounts, addOnLabel, hasAddOns, normalizeAddOns, priceBasket, waiverPeopleCount } from '../src/data/addOns';
 import { needsInsurance, parseInsurance, type InsuranceInfo } from '../src/data/insurance';
 import { parseShooting, type ShootingInfo } from '../src/data/shooting';
 import { parseActivityWaiver, waiversFor, type ActivityWaiverInfo } from '../src/data/activityWaivers';
@@ -453,7 +453,8 @@ export function createApp(): express.Express {
     let shooting: ShootingInfo | undefined;
     let shootingError = '';
     if (addOns.gun !== 'none') {
-      const p = parseShooting(b.shooters, addOns.people, b.shootingAck === true);
+      const gunCounts = addOnCounts(addOns);
+      const p = parseShooting(b.shooters, gunCounts.gunShort + gunCounts.gunLong, b.shootingAck === true);
       if (p.ok) shooting = p.value;
       else shootingError = p.error;
     }
@@ -462,7 +463,7 @@ export function createApp(): express.Express {
     let waiverError = '';
     const waiverActivities = waiversFor(addOns);
     if (waiverActivities.length) {
-      const p = parseActivityWaiver(b.activityWaiver, addOns.people, waiverActivities);
+      const p = parseActivityWaiver(b.activityWaiver, waiverPeopleCount(addOns), waiverActivities);
       if (p.ok) activityWaiver = p.value;
       else waiverError = p.error;
     }
@@ -559,7 +560,7 @@ export function createApp(): express.Express {
       sponsorCode: sponsorCode || undefined,
       sponsorName: sponsorName || undefined,
       addOns: hasAddOns(addOns)
-        ? { ...addOns, pricePerPerson: addOnPricePerPerson(addOns, earlyBird), total: addOnSum, discount: basket.addOff, label: addOnLabel(addOns) }
+        ? (() => { const c = addOnCounts(addOns); return { ...addOns, towerCount: c.tower, gunCount: c.gunShort + c.gunLong, windCount: c.wind, pricePerPerson: Math.round(basket.addGross / Math.max(1, c.people)), total: addOnSum, discount: basket.addOff, label: addOnLabel(addOns) }; })()
         : undefined,
       paymentStatus: 'PENDING',
       paymentRef: '',

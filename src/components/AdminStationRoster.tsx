@@ -1,7 +1,7 @@
 import React, { useMemo, useRef, useState } from 'react';
 import { Download, Search } from 'lucide-react';
 import type { ServerOrder } from '../utils/api';
-import { WIND_TUNNEL_LIMIT, formatBaht } from '../data/addOns';
+import { WIND_TUNNEL_LIMIT, addOnCounts, formatBaht } from '../data/addOns';
 import { formatThaiId } from '../data/shooting';
 import { maskEmailAddress, maskPhoneNumber } from '../utils/securityShield';
 import { WAIVER_LABEL, WIND_HEALTH_QUESTIONS, ageOn, thaiDate } from '../data/activityWaivers';
@@ -30,10 +30,10 @@ const STATIONS: Station[] = [
   { id: '1km', emoji: '🐕', name: 'Dog Run 1 km', day: '9 ม.ค.', color: '#EC4899', qty: (o) => (isRunOrder(o) && o.routeId === '1km' ? o.peopleCount || 1 : 0), unit: 'คน' },
   { id: 'concert', emoji: '🎶', name: 'คอนเสิร์ต GA', day: '9 ม.ค.', color: '#DB2777', qty: (o) => o.concertQty || 0, unit: 'ใบ' },
   { id: 'vip', emoji: '⭐', name: 'VIP TABLE', day: '9 ม.ค.', color: '#B45309', qty: (o) => o.vipTables || 0, unit: 'โต๊ะ' },
-  { id: 'tower', emoji: '🪂', name: 'หอสูง', day: '10 ม.ค.', color: '#4F46E5', qty: (o) => (o.addOns?.tower ? o.addOns.people : 0), unit: 'คน' },
-  { id: 'gun-standard', emoji: '🎯', name: 'ยิงปืนสั้น', day: '10 ม.ค.', color: '#0369A1', qty: (o) => (o.addOns?.gun === 'standard' ? o.addOns.people : 0), unit: 'คน' },
-  { id: 'gun-premium', emoji: '🎯', name: 'ยิงปืนยาว', day: '10 ม.ค.', color: '#1E3A8A', qty: (o) => (o.addOns?.gun === 'premium' ? o.addOns.people : 0), unit: 'คน' },
-  { id: 'wind', emoji: '🌪️', name: 'อุโมงค์ลม', day: '10 ม.ค.', color: '#0F766E', qty: (o) => (o.addOns?.windTunnel ? o.addOns.people : 0), unit: 'คน', limit: WIND_TUNNEL_LIMIT },
+  { id: 'tower', emoji: '🪂', name: 'หอสูง', day: '10 ม.ค.', color: '#4F46E5', qty: (o) => (o.addOns ? addOnCounts(o.addOns).tower : 0), unit: 'คน' },
+  { id: 'gun-standard', emoji: '🎯', name: 'ยิงปืนสั้น', day: '10 ม.ค.', color: '#0369A1', qty: (o) => (o.addOns ? addOnCounts(o.addOns).gunShort : 0), unit: 'คน' },
+  { id: 'gun-premium', emoji: '🎯', name: 'ยิงปืนยาว', day: '10 ม.ค.', color: '#1E3A8A', qty: (o) => (o.addOns ? addOnCounts(o.addOns).gunLong : 0), unit: 'คน' },
+  { id: 'wind', emoji: '🌪️', name: 'อุโมงค์ลม', day: '10 ม.ค.', color: '#0F766E', qty: (o) => (o.addOns ? addOnCounts(o.addOns).wind : 0), unit: 'คน', limit: WIND_TUNNEL_LIMIT },
 ];
 
 /** A pending order still counts until its payment window closes. */

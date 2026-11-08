@@ -71,7 +71,7 @@ export interface StoredOrder {
   /** Tower / wind tunnel: participants filled into the legal waivers, and when each was accepted */
   activityWaiver?: ActivityWaiverInfo;
   /** Optional after-run activities bought with the ticket */
-  addOns?: { tower: boolean; gun: 'none' | 'standard' | 'premium'; windTunnel: boolean; people: number; pricePerPerson: number; total: number; discount?: number; label: string };
+  addOns?: { tower: boolean; gun: 'none' | 'standard' | 'premium'; windTunnel: boolean; people: number; persons?: { tower: boolean; gun: 'none' | 'standard' | 'premium'; windTunnel: boolean }[]; towerCount?: number; gunCount?: number; windCount?: number; pricePerPerson: number; total: number; discount?: number; label: string };
   paymentStatus: 'PAID' | 'PENDING';
   paymentRef: string;
   senderBank: string;
@@ -359,7 +359,7 @@ export async function insertOrder(o: StoredOrder): Promise<void> {
 }
 
 // Wind-tunnel seats are limited. An order holds seats while it is paid, or unpaid but still within its payment window.
-const WIND_TUNNEL_USED_SQL = `select coalesce(sum((data->'addOns'->>'people')::int), 0)::text as n from csr.orders
+const WIND_TUNNEL_USED_SQL = `select coalesce(sum(coalesce((data->'addOns'->>'windCount')::int, (data->'addOns'->>'people')::int)), 0)::text as n from csr.orders
   where data->'addOns'->>'windTunnel' = 'true'
     and not (data ? 'cancelledAt')
     and not (data ? 'isTest')
@@ -380,7 +380,7 @@ export async function restoreOrderChecked(orderId: string, windTunnelLimit: numb
     const holdsSeat = o.paymentStatus === 'PAID' || new Date(o.expiresAt).getTime() > Date.now();
     if (o.cancelledAt && o.addOns?.windTunnel && holdsSeat) {
       const used = Number((await q<{ n: string }>(WIND_TUNNEL_USED_SQL))[0]?.n ?? 0);
-      if (used + o.addOns.people > windTunnelLimit) return { ok: false as const, error: `อุโมงค์ลมเหลือไม่พอ (เหลือ ${Math.max(0, windTunnelLimit - used)} ที่)` };
+      if (used + (o.addOns.windCount ?? o.addOns.people) > windTunnelLimit) return { ok: false as const, error: `อุโมงค์ลมเหลือไม่พอ (เหลือ ${Math.max(0, windTunnelLimit - used)} ที่)` };
     }
     delete o.cancelledAt;
     delete o.cancelledBy;
@@ -391,10 +391,10 @@ export async function restoreOrderChecked(orderId: string, windTunnelLimit: numb
 }
 
 /** Inserts the order; if it takes wind-tunnel seats, checks the limit under a lock so two buyers can't both take the last seat. */
-const TOWER_USED_SQL = `select coalesce(sum((data->'addOns'->>'people')::int), 0)::text as n from csr.orders
+const TOWER_USED_SQL = `select coalesce(sum(coalesce((data->'addOns'->>'towerCount')::int, (data->'addOns'->>'people')::int)), 0)::text as n from csr.orders
   where data->'addOns'->>'tower' = 'true' and not (data ? 'cancelledAt') and not (data ? 'isTest')
     and (payment_status = 'PAID' or (data->>'expiresAt')::timestamptz > now())`;
-const GUN_USED_SQL = `select coalesce(sum((data->'addOns'->>'people')::int), 0)::text as n from csr.orders
+const GUN_USED_SQL = `select coalesce(sum(coalesce((data->'addOns'->>'gunCount')::int, (data->'addOns'->>'people')::int)), 0)::text as n from csr.orders
   where data->'addOns'->>'gun' in ('standard', 'premium') and not (data ? 'cancelledAt') and not (data ? 'isTest')
     and (payment_status = 'PAID' or (data->>'expiresAt')::timestamptz > now())`;
 
@@ -451,18 +451,18 @@ export async function insertOrderChecked(
       await q('select pg_advisory_xact_lock(727002)');
       if (wantsTower) {
         const used = Number((await q<{ n: string }>(TOWER_USED_SQL))[0]?.n ?? 0);
-        if (used + o.addOns!.people > ACTIVITY_LIMITS.tower) return { ok: false as const, remaining: Math.max(0, ACTIVITY_LIMITS.tower - used), activity: 'tower' as const };
+        if (used + (o.addOns!.towerCount ?? o.addOns!.people) > ACTIVITY_LIMITS.tower) return { ok: false as const, remaining: Math.max(0, ACTIVITY_LIMITS.tower - used), activity: 'tower' as const };
       }
       if (wantsGun) {
         const used = Number((await q<{ n: string }>(GUN_USED_SQL))[0]?.n ?? 0);
-        if (used + o.addOns!.people > ACTIVITY_LIMITS.gun) return { ok: false as const, remaining: Math.max(0, ACTIVITY_LIMITS.gun - used), activity: 'gun' as const };
+        if (used + (o.addOns!.gunCount ?? o.addOns!.people) > ACTIVITY_LIMITS.gun) return { ok: false as const, remaining: Math.max(0, ACTIVITY_LIMITS.gun - used), activity: 'gun' as const };
       }
     }
     if (o.addOns?.windTunnel && !o.isTest) {
       await q('select pg_advisory_xact_lock(727001)');
       const rows = await q<{ n: string }>(WIND_TUNNEL_USED_SQL);
       const used = Number(rows[0]?.n ?? 0);
-      if (used + o.addOns.people > windTunnelLimit) return { ok: false as const, remaining: Math.max(0, windTunnelLimit - used), activity: 'wind' as const };
+      if (used + (o.addOns.windCount ?? o.addOns.people) > windTunnelLimit) return { ok: false as const, remaining: Math.max(0, windTunnelLimit - used), activity: 'wind' as const };
     }
     await q(INSERT_ORDER_SQL, orderParams(o));
     return { ok: true as const };
@@ -837,7 +837,7 @@ export function toStaffView(o: StoredOrder) {
     vipTables: o.vipTables,
     parkingPlates: o.parkingPlates,
     shooting: o.shooting ? { shooters: o.shooting.shooters.map((s) => ({ fullName: s.fullName })) } : undefined,
-    addOns: o.addOns ? { label: o.addOns.label, people: o.addOns.people, total: 0, tower: o.addOns.tower, gun: o.addOns.gun, windTunnel: o.addOns.windTunnel } : undefined,
+    addOns: o.addOns ? { label: o.addOns.label, people: o.addOns.people, persons: o.addOns.persons, towerCount: o.addOns.towerCount, gunCount: o.addOns.gunCount, windCount: o.addOns.windCount, total: 0, tower: o.addOns.tower, gun: o.addOns.gun, windTunnel: o.addOns.windTunnel } : undefined,
     paymentStatus: o.paymentStatus,
     verificationStatus: o.verificationStatus,
     kitStatus: o.kitStatus,

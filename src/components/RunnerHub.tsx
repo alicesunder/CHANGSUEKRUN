@@ -39,7 +39,7 @@ import { SHIRT_SIZES } from '../data/shirts';
 import { BLOOD_TYPES, GENDERS, RELATIONSHIPS } from '../data/insurance';
 import { VIP_PARKING_PER_TABLE } from '../data/vipParking';
 import { eventInfo, formatBaht } from '../data/eventData';
-import type { AddOnSelection } from '../data/addOns';
+import { addOnCounts, type AddOnSelection } from '../data/addOns';
 
 type HubOrder = ServerOrder & { docsUrl?: string };
 type Tab = 'overview' | 'tickets' | 'activities' | 'guide' | 'profile' | 'buy';
@@ -576,8 +576,8 @@ export const RunnerHub: React.FC<{
       {activityOrders.map((o) => {
         const st = statusOf(o);
         const picks = [
-          o.addOns!.tower && { id: 'tower' as const, emoji: '🪂', th: 'หอสูง', en: 'High tower', time: '09.00–12.00' },
-          o.addOns!.gun !== 'none' && { id: 'gun' as const, emoji: '🎯', th: `ยิง${o.addOns!.gun === 'premium' ? 'ปืนยาว' : 'ปืนสั้น'}`, en: `Shooting (${o.addOns!.gun === 'premium' ? 'long gun' : 'short gun'})`, time: '09.00–12.00' },
+          addOnCounts(o.addOns!).tower > 0 && { id: 'tower' as const, emoji: '🪂', th: 'หอสูง', en: 'High tower', time: '09.00–12.00' },
+          o.addOns!.gun !== 'none' && { id: 'gun' as const, emoji: '🎯', th: `ยิง${addOnCounts(o.addOns!).gunLong > 0 && addOnCounts(o.addOns!).gunShort > 0 ? 'ปืนสั้น+ยาว' : o.addOns!.gun === 'premium' ? 'ปืนยาว' : 'ปืนสั้น'}`, en: `Shooting (${addOnCounts(o.addOns!).gunLong > 0 && addOnCounts(o.addOns!).gunShort > 0 ? 'short + long gun' : o.addOns!.gun === 'premium' ? 'long gun' : 'short gun'})`, time: '09.00–12.00' },
           o.addOns!.windTunnel && { id: 'wind' as const, emoji: '🌪️', th: 'อุโมงค์ลม', en: 'Wind tunnel', time: '13.00–15.00' },
         ].filter(Boolean) as { id: 'tower' | 'gun' | 'wind'; emoji: string; th: string; en: string; time: string }[];
         return (

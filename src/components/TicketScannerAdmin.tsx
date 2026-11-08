@@ -2,13 +2,14 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import jsQR from 'jsqr';
 import { Camera, CameraOff, Check, Search, X } from 'lucide-react';
 import { adminApi, type ServerOrder } from '../utils/api';
+import { addOnCounts } from '../data/addOns';
 
 type ScanOrder = ServerOrder & {
   routeName?: string;
   shirtSize?: string;
   dogName?: string;
   concertQty?: number;
-  addOns?: { label: string; people: number; total: number; tower?: boolean; gun?: 'none' | 'standard' | 'premium'; windTunnel?: boolean };
+  addOns?: { label: string; people: number; total: number; tower: boolean; gun: 'none' | 'standard' | 'premium'; windTunnel: boolean; persons?: { tower: boolean; gun: 'none' | 'standard' | 'premium'; windTunnel: boolean }[] };
   vipTables?: number;
   parkingPlates?: { plate: string; province: string }[];
   shooting?: { shooters: { fullName: string; idCard?: string }[] };
@@ -57,16 +58,30 @@ function beep(ok: boolean) {
 /** Run ticket name without the VIP table tail (that has its own card). */
 const runName = (o: ScanOrder) => (o.routeName || '').replace(/\s*\+\s*VIP TABLE.*$/, '');
 
-/** One row per bought activity (older orders without the flags fall back to the one-line label). */
+/** One row per bought activity with how many people take it (older orders without the flags fall back to the one-line label). */
 function activityRows(o: ScanOrder) {
   const a = o.addOns;
   if (!a) return [];
-  const rows: { key: string; icon: string; title: string; bg: string }[] = [];
-  if (a.tower) rows.push({ key: 'tower', icon: '🗼', title: 'หอสูง', bg: 'bg-violet-100' });
-  if (a.gun && a.gun !== 'none') rows.push({ key: 'gun', icon: '🔫', title: a.gun === 'premium' ? 'ยิงปืนยาว' : 'ยิงปืนสั้น', bg: 'bg-amber-100' });
-  if (a.windTunnel) rows.push({ key: 'wind', icon: '🌪️', title: 'อุโมงค์ลม', bg: 'bg-sky-100' });
-  if (!rows.length) rows.push({ key: 'other', icon: '⭐', title: a.label, bg: 'bg-violet-100' });
+  const c = addOnCounts(a);
+  const rows: { key: string; icon: string; title: string; bg: string; n: number }[] = [];
+  if (c.tower) rows.push({ key: 'tower', icon: '🗼', title: 'หอสูง', bg: 'bg-violet-100', n: c.tower });
+  if (c.gunShort) rows.push({ key: 'gun', icon: '🔫', title: 'ยิงปืนสั้น', bg: 'bg-amber-100', n: c.gunShort });
+  if (c.gunLong) rows.push({ key: 'gun', icon: '🔫', title: 'ยิงปืนยาว', bg: 'bg-amber-100', n: c.gunLong });
+  if (c.wind) rows.push({ key: 'wind', icon: '🌪️', title: 'อุโมงค์ลม', bg: 'bg-sky-100', n: c.wind });
+  if (!rows.length) rows.push({ key: 'other', icon: '⭐', title: a.label, bg: 'bg-violet-100', n: a.people });
   return rows;
+}
+
+/** "คนที่ 2: หอสูง + ยิงปืนสั้น" for each runner who takes something (only when the order has several people). */
+function personLines(o: ScanOrder): string[] {
+  const ps = o.addOns?.persons;
+  if (!ps || ps.length < 2) return [];
+  return ps
+    .map((p, i) => {
+      const parts = [p.tower && 'หอสูง', p.gun === 'standard' && 'ยิงปืนสั้น', p.gun === 'premium' && 'ยิงปืนยาว', p.windTunnel && 'อุโมงค์ลม'].filter(Boolean);
+      return parts.length ? `คนที่ ${i + 1}: ${parts.join(' + ')}` : '';
+    })
+    .filter(Boolean);
 }
 
 const TONES = {
@@ -338,7 +353,7 @@ export const TicketScannerAdmin: React.FC<{ api?: ScannerApi; canUndo?: boolean 
                   <div key={r.key} className="flex items-center gap-3 rounded-2xl bg-white border-2 border-[#2A1450]/15 p-2.5">
                     <span aria-hidden="true" className={`w-11 h-11 shrink-0 rounded-xl flex items-center justify-center text-2xl ${r.bg}`}>{r.icon}</span>
                     <div className="min-w-0 flex-1">
-                      <p className="font-black text-[#2A1450] leading-tight">{r.title} × {order.addOns!.people}</p>
+                      <p className="font-black text-[#2A1450] leading-tight">{r.title} × {r.n}</p>
                       {r.key === 'gun' && order.shooting && order.shooting.shooters.length > 0 && (
                         <p className="text-xs font-bold text-[#4B2D78] break-words">🎯 ผู้ยิง: {order.shooting.shooters.map((s) => s.fullName).join(', ')}</p>
                       )}
@@ -348,6 +363,13 @@ export const TicketScannerAdmin: React.FC<{ api?: ScannerApi; canUndo?: boolean 
                     </span>
                   </div>
                 ))}
+                {personLines(order).length > 0 && (
+                  <ul className="rounded-2xl bg-[#F5F0FF] border-2 border-[#C4B5FD] p-2.5 text-xs font-extrabold text-[#2A1450] space-y-0.5">
+                    {personLines(order).map((l) => (
+                      <li key={l}>👤 {l}</li>
+                    ))}
+                  </ul>
+                )}
               </div>
             </>
           )}

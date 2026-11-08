@@ -87,12 +87,59 @@ export const LONG_GUNS: string[] = [
 // ---------------------------------------------------------------------------
 export type GunLevel = 'none' | 'standard' | 'premium';
 
-export interface AddOnSelection {
+/** What ONE person does (a Dog Run ticket can have extra runners and each picks for themself). */
+export interface AddOnPerson {
   tower: boolean;
   gun: GunLevel;
   windTunnel: boolean;
-  /** how many people join the add-on activities (price is per person) */
+}
+
+export interface AddOnSelection {
+  /** tower / gun / windTunnel below are the union over everybody: "somebody does it" (gun = 'premium' when anyone takes the long gun) */
+  tower: boolean;
+  gun: GunLevel;
+  windTunnel: boolean;
+  /** how many people take part in at least one activity */
   people: number;
+  /** one entry per runner (index = runner number, an empty entry = that runner takes no activity). Missing = everybody does the same set. */
+  persons?: AddOnPerson[];
+}
+
+export const EMPTY_PERSON: AddOnPerson = { tower: false, gun: 'none', windTunnel: false };
+export const personHasAny = (p: AddOnPerson): boolean => p.tower || p.gun !== 'none' || p.windTunnel;
+
+/** The per-person view of a selection (old orders without `persons`: `people` persons, all with the same set). */
+export function personsOf(s: AddOnSelection): AddOnPerson[] {
+  if (s.persons && s.persons.length) return s.persons;
+  return Array.from({ length: Math.max(1, s.people) }, () => ({ tower: s.tower, gun: s.gun, windTunnel: s.windTunnel }));
+}
+
+/** People who need a tower or wind-tunnel waiver (the shooters sign the shooting rules instead). */
+export const waiverPeopleCount = (s: AddOnSelection): number => personsOf(s).filter((p) => p.tower || p.windTunnel).length;
+
+/** Union selection from the per-person list. */
+export function fromPersons(persons: AddOnPerson[]): AddOnSelection {
+  const taking = persons.filter(personHasAny);
+  const gun: GunLevel = taking.some((p) => p.gun === 'premium') ? 'premium' : taking.some((p) => p.gun === 'standard') ? 'standard' : 'none';
+  return {
+    tower: taking.some((p) => p.tower),
+    gun,
+    windTunnel: taking.some((p) => p.windTunnel),
+    people: Math.max(1, taking.length),
+    persons,
+  };
+}
+
+/** How many people take each activity. */
+export function addOnCounts(s: AddOnSelection): { tower: number; gunShort: number; gunLong: number; wind: number; people: number } {
+  const ps = personsOf(s);
+  return {
+    tower: ps.filter((p) => p.tower).length,
+    gunShort: ps.filter((p) => p.gun === 'standard').length,
+    gunLong: ps.filter((p) => p.gun === 'premium').length,
+    wind: ps.filter((p) => p.windTunnel).length,
+    people: ps.filter(personHasAny).length,
+  };
 }
 
 export const EMPTY_ADD_ONS: AddOnSelection = { tower: false, gun: 'none', windTunnel: false, people: 1 };
@@ -109,12 +156,17 @@ export const EARLY_BIRD_ACTIVITY_OFF = 0;
 export const hasAddOns = (s: AddOnSelection): boolean => s.tower || s.gun !== 'none' || s.windTunnel;
 
 /** Per-person price: the activities simply add up (the discount comes from the basket, see priceBasket). */
-export function addOnPricePerPerson(s: AddOnSelection, _earlyBird = false): number {
+export function addOnPricePerPerson(s: AddOnPerson | AddOnSelection, _earlyBird = false): number {
   return (
     (s.tower ? SINGLE_PRICES.tower : 0) +
     (s.gun === 'standard' ? SINGLE_PRICES.standard : s.gun === 'premium' ? SINGLE_PRICES.premium : 0) +
     (s.windTunnel ? SINGLE_PRICES.windTunnel : 0)
   );
+}
+
+/** Total before any discount: every person's own activities added up. */
+export function addOnGross(s: AddOnSelection): number {
+  return hasAddOns(s) ? personsOf(s).reduce((t, p) => t + addOnPricePerPerson(p), 0) : 0;
 }
 
 // ---------------------------------------------------------------------------
@@ -180,7 +232,7 @@ export function priceBasket(i: BasketInput): BasketPrice {
   const off = (n: number) => Math.round(n * rate);
   const gaGross = i.gaUnit * i.gaQty;
   const vipGross = i.vipUnit * i.vipTables;
-  const addGross = hasAddOns(i.addOns) ? addOnPricePerPerson(i.addOns) * i.addOns.people : 0;
+  const addGross = addOnGross(i.addOns);
   const runOff = off(i.runGross);
   const gaOff = off(gaGross);
   const vipOff = off(vipGross);
@@ -201,6 +253,15 @@ export function addOnLabel(s: AddOnSelection): string {
 /** Cleans whatever the browser sent into a valid selection (never trusts it). */
 export function normalizeAddOns(raw: unknown): AddOnSelection {
   const r = (raw && typeof raw === 'object' ? raw : {}) as Record<string, unknown>;
+  const cleanPerson = (x: unknown): AddOnPerson => {
+    const o = (x && typeof x === 'object' ? x : {}) as Record<string, unknown>;
+    return { tower: o.tower === true, gun: o.gun === 'standard' || o.gun === 'premium' ? o.gun : 'none', windTunnel: o.windTunnel === true };
+  };
+  if (Array.isArray(r.persons) && r.persons.length) {
+    const persons = r.persons.slice(0, MAX_ADD_ON_PEOPLE).map(cleanPerson);
+    const sel = fromPersons(persons);
+    return personHasAnyList(persons) ? sel : { ...EMPTY_ADD_ONS };
+  }
   const gun: GunLevel = r.gun === 'standard' || r.gun === 'premium' ? r.gun : 'none';
   const sel: AddOnSelection = {
     tower: r.tower === true,
@@ -210,5 +271,7 @@ export function normalizeAddOns(raw: unknown): AddOnSelection {
   };
   return hasAddOns(sel) ? sel : { ...EMPTY_ADD_ONS };
 }
+
+const personHasAnyList = (ps: AddOnPerson[]): boolean => ps.some(personHasAny);
 
 export const formatBaht = (n: number): string => n.toLocaleString('th-TH');

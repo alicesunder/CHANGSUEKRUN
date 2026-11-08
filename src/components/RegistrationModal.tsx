@@ -103,7 +103,7 @@ import { TEST_PRICE_BAHT, useTestMode } from '../utils/testMode';
 import { ActivityWaiverForm, mergeParticipant } from './ActivityWaiverForm';
 import { ParkingPasses } from './ParkingPass';
 import { ProvinceSelect } from './ProvinceSelect';
-import { EMPTY_ADD_ONS, addOnLabel, hasAddOns, percentOf, priceBasket, type AddOnSelection } from '../data/addOns';
+import { EMPTY_ADD_ONS, addOnCounts, addOnLabel, fromPersons, hasAddOns, percentOf, personsOf, priceBasket, type AddOnSelection } from '../data/addOns';
 
 interface RegistrationModalProps {
   isOpen: boolean;
@@ -333,6 +333,15 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
   // Concert / add-on orders carry routeId 'concert' / 'addon', which have no run theme.
   const theme = ROUTE_THEME[selectedRoute] ?? ROUTE_THEME['5km'];
   const isDog = !noRun && isDogCategory(selectedRoute);
+  // a Dog Run ticket can have extra runners, each picks the activities for themself (the list follows the number of runners)
+  useEffect(() => {
+    const want = 1 + (isDog ? extraPeople : 0);
+    setAddOns((cur) => {
+      if (!cur.persons || cur.persons.length <= want) return cur;
+      const next = cur.persons.slice(0, want);
+      return next.some((p) => p.tower || p.gun !== 'none' || p.windTunnel) ? fromPersons(next) : { ...EMPTY_ADD_ONS };
+    });
+  }, [extraPeople, isDog]);
   const insured = !noRun && needsInsurance(selectedRoute);
   // Runner 2+ start with runner 1's last name (family / same group); changing runner 1's last name carries over
   // to the others until they type their own.
@@ -375,21 +384,27 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
   const buyerName = noRun ? fullName.trim() : runnerName(runners[0]);
   // Names typed once in the runner cards fill the shooting list and the waivers (each can still be edited there).
   const autoName = (i: number) => (i === 0 ? buyerName : runnerName(runners[i]));
-  const shooterList: Shooter[] = Array.from({ length: hasGun ? addOns.people : 0 }, (_, i) => ({
-    fullName: shooters[i]?.fullName ?? autoName(i),
+  // which runner (by number) takes which activity: the lists below follow that order
+  const personList = personsOf(addOns);
+  const gunRunners = personList.map((p, i) => (p.gun !== 'none' ? i : -1)).filter((i) => i >= 0);
+  const waiverRunners = personList.map((p, i) => (p.tower || p.windTunnel ? i : -1)).filter((i) => i >= 0);
+  const shooterList: Shooter[] = Array.from({ length: hasGun ? gunRunners.length : 0 }, (_, k) => ({
+    fullName: shooters[k]?.fullName ?? autoName(gunRunners[k]),
   }));
-  const waiverPeople: WaiverParticipant[] = Array.from({ length: waiverActivities.length ? addOns.people : 0 }, (_, i) =>
-    mergeParticipant(
+  const waiverPeople: WaiverParticipant[] = Array.from({ length: waiverActivities.length ? waiverRunners.length : 0 }, (_, k) => {
+    const r = waiverRunners[k];
+    const sh = gunRunners.indexOf(r);
+    return mergeParticipant(
       {
-        fullName: shooterList[i]?.fullName || autoName(i),
-        phone: i === 0 ? digitsOnly(phone) : '',
-        birthDate: runners[i]?.birthDate || '',
-        idCard: runners[i]?.foreigner ? '' : runners[i]?.idCard || '',
-        ...(runners[i]?.foreigner ? { foreigner: true, passportNo: runners[i]?.passportNo || '' } : {}),
+        fullName: (sh >= 0 ? shooterList[sh]?.fullName : '') || autoName(r),
+        phone: r === 0 ? digitsOnly(phone) : '',
+        birthDate: runners[r]?.birthDate || '',
+        idCard: runners[r]?.foreigner ? '' : runners[r]?.idCard || '',
+        ...(runners[r]?.foreigner ? { foreigner: true, passportNo: runners[r]?.passportNo || '' } : {}),
       },
-      waiverEdits[i]
-    )
-  );
+      waiverEdits[k]
+    );
+  });
   const waiverKey = JSON.stringify(waiverPeople);
   const waiversDone = waiverActivities.every((a) => waiverAccepted[a] === waiverKey);
   const testMode = useTestMode();
@@ -1136,6 +1151,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                     value={addOns}
                     onChange={setAddOns}
                     windTunnelRemaining={typeof publicCfg?.windTunnelRemaining === 'number' ? publicCfg.windTunnelRemaining : null}
+                    runnerNames={isDog && wantRun ? Array.from({ length: 1 + extraPeople }, (_, i) => runnerName(runners[i]) || `คนที่ ${i + 1}`) : undefined}
                   />
                 </div>
                 </div>
@@ -1238,7 +1254,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                       {hasAddOns(addOns) && (
                         <div className="flex justify-between gap-3">
                           <span>
-                            กิจกรรมเสริม: {addOnLabel(addOns)} × {addOns.people} คน
+                            กิจกรรมเสริม: {addOnLabel(addOns)} ({addOns.people} คน)
                           </span>
                           <span className="font-extrabold text-[#261247] tabular-nums shrink-0">+{formatBaht(basket.addGross)} บาท</span>
                         </div>
@@ -1475,7 +1491,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                             <div className="flex items-center gap-2.5">
                               <span className="w-10 h-10 rounded-2xl bg-white border-2 border-[#2A1450] flex items-center justify-center text-lg shrink-0" aria-hidden="true">🎯</span>
                               <div>
-                                <h3 className="text-base font-black text-[#2A1450] leading-tight">{tr('ข้อมูลผู้ยิงปืน', 'Shooter details')} ({addOns.people})</h3>
+                                <h3 className="text-base font-black text-[#2A1450] leading-tight">{tr('ข้อมูลผู้ยิงปืน', 'Shooter details')} ({shooterList.length})</h3>
                                 <p className="text-xs font-bold text-[#6B5A85]">ใช้ลงทะเบียนกับสนามยิงปืน · อ่านกฎความปลอดภัยด้านล่างแล้วกดรับทราบก่อนชำระเงิน</p>
                               </div>
                             </div>

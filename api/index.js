@@ -34126,7 +34126,7 @@ async function writeOrder(q, o) {
 var INSERT_ORDER_SQL = `insert into csr.orders (order_id, token_hash, route_id, payment_status, verification_status, bib_number, omise_charge_id, created_at, data)
      values ($1, $2, $3, $4, $5, $6, $7, $8, $9::jsonb)`;
 var orderParams = (o) => [o.orderId, o.accessTokenHash, o.routeId, o.paymentStatus, o.verificationStatus, o.bibNumber || "", o.omiseChargeId || null, o.createdAt, JSON.stringify(o)];
-var WIND_TUNNEL_USED_SQL = `select coalesce(sum((data->'addOns'->>'people')::int), 0)::text as n from csr.orders
+var WIND_TUNNEL_USED_SQL = `select coalesce(sum(coalesce((data->'addOns'->>'windCount')::int, (data->'addOns'->>'people')::int)), 0)::text as n from csr.orders
   where data->'addOns'->>'windTunnel' = 'true'
     and not (data ? 'cancelledAt')
     and not (data ? 'isTest')
@@ -34144,7 +34144,7 @@ async function restoreOrderChecked(orderId, windTunnelLimit) {
     const holdsSeat = o.paymentStatus === "PAID" || new Date(o.expiresAt).getTime() > Date.now();
     if (o.cancelledAt && o.addOns?.windTunnel && holdsSeat) {
       const used = Number((await q(WIND_TUNNEL_USED_SQL))[0]?.n ?? 0);
-      if (used + o.addOns.people > windTunnelLimit) return { ok: false, error: `\u0E2D\u0E38\u0E42\u0E21\u0E07\u0E04\u0E4C\u0E25\u0E21\u0E40\u0E2B\u0E25\u0E37\u0E2D\u0E44\u0E21\u0E48\u0E1E\u0E2D (\u0E40\u0E2B\u0E25\u0E37\u0E2D ${Math.max(0, windTunnelLimit - used)} \u0E17\u0E35\u0E48)` };
+      if (used + (o.addOns.windCount ?? o.addOns.people) > windTunnelLimit) return { ok: false, error: `\u0E2D\u0E38\u0E42\u0E21\u0E07\u0E04\u0E4C\u0E25\u0E21\u0E40\u0E2B\u0E25\u0E37\u0E2D\u0E44\u0E21\u0E48\u0E1E\u0E2D (\u0E40\u0E2B\u0E25\u0E37\u0E2D ${Math.max(0, windTunnelLimit - used)} \u0E17\u0E35\u0E48)` };
     }
     delete o.cancelledAt;
     delete o.cancelledBy;
@@ -34153,10 +34153,10 @@ async function restoreOrderChecked(orderId, windTunnelLimit) {
     return { ok: true, order: o };
   });
 }
-var TOWER_USED_SQL = `select coalesce(sum((data->'addOns'->>'people')::int), 0)::text as n from csr.orders
+var TOWER_USED_SQL = `select coalesce(sum(coalesce((data->'addOns'->>'towerCount')::int, (data->'addOns'->>'people')::int)), 0)::text as n from csr.orders
   where data->'addOns'->>'tower' = 'true' and not (data ? 'cancelledAt') and not (data ? 'isTest')
     and (payment_status = 'PAID' or (data->>'expiresAt')::timestamptz > now())`;
-var GUN_USED_SQL = `select coalesce(sum((data->'addOns'->>'people')::int), 0)::text as n from csr.orders
+var GUN_USED_SQL = `select coalesce(sum(coalesce((data->'addOns'->>'gunCount')::int, (data->'addOns'->>'people')::int)), 0)::text as n from csr.orders
   where data->'addOns'->>'gun' in ('standard', 'premium') and not (data ? 'cancelledAt') and not (data ? 'isTest')
     and (payment_status = 'PAID' or (data->>'expiresAt')::timestamptz > now())`;
 var ENV_LIMITS = {
@@ -34202,18 +34202,18 @@ async function insertOrderChecked(o, windTunnelLimit) {
       await q("select pg_advisory_xact_lock(727002)");
       if (wantsTower) {
         const used = Number((await q(TOWER_USED_SQL))[0]?.n ?? 0);
-        if (used + o.addOns.people > ACTIVITY_LIMITS.tower) return { ok: false, remaining: Math.max(0, ACTIVITY_LIMITS.tower - used), activity: "tower" };
+        if (used + (o.addOns.towerCount ?? o.addOns.people) > ACTIVITY_LIMITS.tower) return { ok: false, remaining: Math.max(0, ACTIVITY_LIMITS.tower - used), activity: "tower" };
       }
       if (wantsGun) {
         const used = Number((await q(GUN_USED_SQL))[0]?.n ?? 0);
-        if (used + o.addOns.people > ACTIVITY_LIMITS.gun) return { ok: false, remaining: Math.max(0, ACTIVITY_LIMITS.gun - used), activity: "gun" };
+        if (used + (o.addOns.gunCount ?? o.addOns.people) > ACTIVITY_LIMITS.gun) return { ok: false, remaining: Math.max(0, ACTIVITY_LIMITS.gun - used), activity: "gun" };
       }
     }
     if (o.addOns?.windTunnel && !o.isTest) {
       await q("select pg_advisory_xact_lock(727001)");
       const rows = await q(WIND_TUNNEL_USED_SQL);
       const used = Number(rows[0]?.n ?? 0);
-      if (used + o.addOns.people > windTunnelLimit) return { ok: false, remaining: Math.max(0, windTunnelLimit - used), activity: "wind" };
+      if (used + (o.addOns.windCount ?? o.addOns.people) > windTunnelLimit) return { ok: false, remaining: Math.max(0, windTunnelLimit - used), activity: "wind" };
     }
     await q(INSERT_ORDER_SQL, orderParams(o));
     return { ok: true };
@@ -34479,7 +34479,7 @@ function toStaffView(o) {
     vipTables: o.vipTables,
     parkingPlates: o.parkingPlates,
     shooting: o.shooting ? { shooters: o.shooting.shooters.map((s) => ({ fullName: s.fullName })) } : void 0,
-    addOns: o.addOns ? { label: o.addOns.label, people: o.addOns.people, total: 0, tower: o.addOns.tower, gun: o.addOns.gun, windTunnel: o.addOns.windTunnel } : void 0,
+    addOns: o.addOns ? { label: o.addOns.label, people: o.addOns.people, persons: o.addOns.persons, towerCount: o.addOns.towerCount, gunCount: o.addOns.gunCount, windCount: o.addOns.windCount, total: 0, tower: o.addOns.tower, gun: o.addOns.gun, windTunnel: o.addOns.windTunnel } : void 0,
     paymentStatus: o.paymentStatus,
     verificationStatus: o.verificationStatus,
     kitStatus: o.kitStatus,
@@ -34640,6 +34640,33 @@ function billerIdFromQr(payload) {
 
 // src/data/addOns.ts
 var TOWER_GUN_HOURS = "09.00\u201312.00 \u0E19.";
+var personHasAny = (p) => p.tower || p.gun !== "none" || p.windTunnel;
+function personsOf(s) {
+  if (s.persons && s.persons.length) return s.persons;
+  return Array.from({ length: Math.max(1, s.people) }, () => ({ tower: s.tower, gun: s.gun, windTunnel: s.windTunnel }));
+}
+var waiverPeopleCount = (s) => personsOf(s).filter((p) => p.tower || p.windTunnel).length;
+function fromPersons(persons) {
+  const taking = persons.filter(personHasAny);
+  const gun = taking.some((p) => p.gun === "premium") ? "premium" : taking.some((p) => p.gun === "standard") ? "standard" : "none";
+  return {
+    tower: taking.some((p) => p.tower),
+    gun,
+    windTunnel: taking.some((p) => p.windTunnel),
+    people: Math.max(1, taking.length),
+    persons
+  };
+}
+function addOnCounts(s) {
+  const ps = personsOf(s);
+  return {
+    tower: ps.filter((p) => p.tower).length,
+    gunShort: ps.filter((p) => p.gun === "standard").length,
+    gunLong: ps.filter((p) => p.gun === "premium").length,
+    wind: ps.filter((p) => p.windTunnel).length,
+    people: ps.filter(personHasAny).length
+  };
+}
 var EMPTY_ADD_ONS = { tower: false, gun: "none", windTunnel: false, people: 1 };
 var MAX_ADD_ON_PEOPLE = 9;
 var WIND_TUNNEL_LIMIT = 60;
@@ -34649,6 +34676,9 @@ var SINGLE_PRICES = { tower: 350, standard: SHORT_GUN_PRICE, premium: LONG_GUN_P
 var hasAddOns = (s) => s.tower || s.gun !== "none" || s.windTunnel;
 function addOnPricePerPerson(s, _earlyBird = false) {
   return (s.tower ? SINGLE_PRICES.tower : 0) + (s.gun === "standard" ? SINGLE_PRICES.standard : s.gun === "premium" ? SINGLE_PRICES.premium : 0) + (s.windTunnel ? SINGLE_PRICES.windTunnel : 0);
+}
+function addOnGross(s) {
+  return hasAddOns(s) ? personsOf(s).reduce((t, p) => t + addOnPricePerPerson(p), 0) : 0;
 }
 var BASKET_TIERS = [
   { items: 2, rate: 0.1 },
@@ -34670,7 +34700,7 @@ function priceBasket(i) {
   const off = (n) => Math.round(n * rate);
   const gaGross = i.gaUnit * i.gaQty;
   const vipGross = i.vipUnit * i.vipTables;
-  const addGross = hasAddOns(i.addOns) ? addOnPricePerPerson(i.addOns) * i.addOns.people : 0;
+  const addGross = addOnGross(i.addOns);
   const runOff = off(i.runGross);
   const gaOff = off(gaGross);
   const vipOff = off(vipGross);
@@ -34688,6 +34718,15 @@ function addOnLabel(s) {
 }
 function normalizeAddOns(raw) {
   const r = raw && typeof raw === "object" ? raw : {};
+  const cleanPerson = (x) => {
+    const o = x && typeof x === "object" ? x : {};
+    return { tower: o.tower === true, gun: o.gun === "standard" || o.gun === "premium" ? o.gun : "none", windTunnel: o.windTunnel === true };
+  };
+  if (Array.isArray(r.persons) && r.persons.length) {
+    const persons = r.persons.slice(0, MAX_ADD_ON_PEOPLE).map(cleanPerson);
+    const sel2 = fromPersons(persons);
+    return personHasAnyList(persons) ? sel2 : { ...EMPTY_ADD_ONS };
+  }
   const gun = r.gun === "standard" || r.gun === "premium" ? r.gun : "none";
   const sel = {
     tower: r.tower === true,
@@ -34697,6 +34736,7 @@ function normalizeAddOns(raw) {
   };
   return hasAddOns(sel) ? sel : { ...EMPTY_ADD_ONS };
 }
+var personHasAnyList = (ps) => ps.some(personHasAny);
 
 // src/data/activityWaivers.ts
 var WAIVER_VERSION = "2026-11-02";
@@ -35645,15 +35685,17 @@ function ticketEntitlements(o) {
     });
   }
   if (o.addOns) {
+    const c = addOnCounts(o.addOns);
     const acts = [
-      o.addOns.tower ? { key: "tower", icon: "\u{1F5FC}", bg: "#DDD6FE", title: "\u0E2B\u0E2D\u0E2A\u0E39\u0E07", sub: "\u0E01\u0E34\u0E08\u0E01\u0E23\u0E23\u0E21\u0E42\u0E14\u0E14\u0E2B\u0E2D\u0E2A\u0E39\u0E07 34 \u0E1F\u0E38\u0E15", time: TOWER_GUN_HOURS } : null,
-      o.addOns.gun && o.addOns.gun !== "none" ? { key: "gun", icon: "\u{1F52B}", bg: "#FDE68A", title: o.addOns.gun === "premium" ? "\u0E22\u0E34\u0E07\u0E1B\u0E37\u0E19\u0E22\u0E32\u0E27" : "\u0E22\u0E34\u0E07\u0E1B\u0E37\u0E19\u0E2A\u0E31\u0E49\u0E19", sub: "\u0E1B\u0E37\u0E19 + \u0E01\u0E23\u0E30\u0E2A\u0E38\u0E19 10 \u0E19\u0E31\u0E14 \u0E17\u0E35\u0E48\u0E2A\u0E19\u0E32\u0E21\u0E22\u0E34\u0E07\u0E1B\u0E37\u0E19", time: TOWER_GUN_HOURS } : null,
-      o.addOns.windTunnel ? { key: "wind", icon: "\u{1F32A}\uFE0F", bg: "#BAE6FD", title: "\u0E2D\u0E38\u0E42\u0E21\u0E07\u0E04\u0E4C\u0E25\u0E21", sub: "\u0E2D\u0E38\u0E42\u0E21\u0E07\u0E04\u0E4C\u0E25\u0E21\u0E0A\u0E31\u0E22\u0E08\u0E34\u0E19\u0E14\u0E32 (Wind Tunnel)" } : null
+      c.tower ? { key: "tower", icon: "\u{1F5FC}", bg: "#DDD6FE", title: "\u0E2B\u0E2D\u0E2A\u0E39\u0E07", sub: "\u0E01\u0E34\u0E08\u0E01\u0E23\u0E23\u0E21\u0E42\u0E14\u0E14\u0E2B\u0E2D\u0E2A\u0E39\u0E07 34 \u0E1F\u0E38\u0E15", time: TOWER_GUN_HOURS, n: c.tower } : null,
+      c.gunShort ? { key: "gun", icon: "\u{1F52B}", bg: "#FDE68A", title: "\u0E22\u0E34\u0E07\u0E1B\u0E37\u0E19\u0E2A\u0E31\u0E49\u0E19", sub: "\u0E1B\u0E37\u0E19\u0E2A\u0E31\u0E49\u0E19 + \u0E01\u0E23\u0E30\u0E2A\u0E38\u0E19 10 \u0E19\u0E31\u0E14 \u0E17\u0E35\u0E48\u0E2A\u0E19\u0E32\u0E21\u0E22\u0E34\u0E07\u0E1B\u0E37\u0E19", time: TOWER_GUN_HOURS, n: c.gunShort } : null,
+      c.gunLong ? { key: "gun", icon: "\u{1F52B}", bg: "#FDE68A", title: "\u0E22\u0E34\u0E07\u0E1B\u0E37\u0E19\u0E22\u0E32\u0E27", sub: "\u0E1B\u0E37\u0E19\u0E22\u0E32\u0E27 + \u0E01\u0E23\u0E30\u0E2A\u0E38\u0E19 10 \u0E19\u0E31\u0E14 \u0E17\u0E35\u0E48\u0E2A\u0E19\u0E32\u0E21\u0E22\u0E34\u0E07\u0E1B\u0E37\u0E19", time: TOWER_GUN_HOURS, n: c.gunLong } : null,
+      c.wind ? { key: "wind", icon: "\u{1F32A}\uFE0F", bg: "#BAE6FD", title: "\u0E2D\u0E38\u0E42\u0E21\u0E07\u0E04\u0E4C\u0E25\u0E21", sub: "\u0E2D\u0E38\u0E42\u0E21\u0E07\u0E04\u0E4C\u0E25\u0E21\u0E0A\u0E31\u0E22\u0E08\u0E34\u0E19\u0E14\u0E32 (Wind Tunnel)", n: c.wind } : null
     ].filter(Boolean);
-    if (!acts.length) acts.push({ key: "tower", icon: "\u2B50", bg: "#DDD6FE", title: o.addOns.label, sub: "" });
+    if (!acts.length) acts.push({ key: "tower", icon: "\u2B50", bg: "#DDD6FE", title: o.addOns.label, sub: "", n: o.addOns.people });
     for (const a of acts) {
       const loc = ACTIVITY_LOCATIONS.find((l) => l.id === a.key);
-      out.push({ icon: a.icon, bg: a.bg, title: a.title, sub: a.sub, qty: [`${o.addOns.people} \u0E04\u0E19`], date: ACT_DAY, time: a.time, place: loc ? locationTitle(loc) : eventInfo.venueShort });
+      out.push({ icon: a.icon, bg: a.bg, title: a.title, sub: a.sub, qty: [`${a.n} \u0E04\u0E19`], date: ACT_DAY, time: a.time, place: loc ? locationTitle(loc) : eventInfo.venueShort });
     }
   }
   return out;
@@ -35666,7 +35708,7 @@ function priceLines(o) {
   if (o.concertQty) lines.push({ name: `\u0E15\u0E31\u0E4B\u0E27\u0E04\u0E2D\u0E19\u0E40\u0E2A\u0E34\u0E23\u0E4C\u0E15 GA \xD7 ${o.concertQty}`, amount: concertPassPrice(earlyBird) * o.concertQty });
   if (o.vipTables) lines.push({ name: `VIP TABLE \xD7 ${o.vipTables} \u0E42\u0E15\u0E4A\u0E30 (${o.vipTables * VIP_TABLE_SEATS} \u0E17\u0E48\u0E32\u0E19)`, amount: vipTablePrice(earlyBird) * o.vipTables });
   const off = (o.concertDiscount || 0) + (o.runDiscount || 0) + (o.addOns?.discount || 0);
-  if (o.addOns) lines.push({ name: `\u0E01\u0E34\u0E08\u0E01\u0E23\u0E23\u0E21\u0E40\u0E2A\u0E23\u0E34\u0E21: ${o.addOns.label} \xD7 ${o.addOns.people} \u0E04\u0E19`, amount: o.addOns.total + (o.addOns.discount || 0) });
+  if (o.addOns) lines.push({ name: `\u0E01\u0E34\u0E08\u0E01\u0E23\u0E23\u0E21\u0E40\u0E2A\u0E23\u0E34\u0E21: ${o.addOns.label} (${o.addOns.people} \u0E04\u0E19)`, amount: o.addOns.total + (o.addOns.discount || 0) });
   if (off > 0) lines.push({ name: `\u0E2A\u0E48\u0E27\u0E19\u0E25\u0E14\u0E0B\u0E37\u0E49\u0E2D\u0E2B\u0E25\u0E32\u0E22\u0E2D\u0E22\u0E48\u0E32\u0E07${o.discountRate ? ` ${Math.round(o.discountRate * 100)}%` : ""}`, amount: -off });
   const sum = lines.reduce((t, l) => t + l.amount, 0);
   return o.paymentMethod !== "SPONSOR_CODE" && !o.isTest && lines.length > 0 && sum === o.totalPrice ? lines : null;
@@ -49430,7 +49472,8 @@ function createApp() {
     let shooting;
     let shootingError = "";
     if (addOns.gun !== "none") {
-      const p = parseShooting(b.shooters, addOns.people, b.shootingAck === true);
+      const gunCounts = addOnCounts(addOns);
+      const p = parseShooting(b.shooters, gunCounts.gunShort + gunCounts.gunLong, b.shootingAck === true);
       if (p.ok) shooting = p.value;
       else shootingError = p.error;
     }
@@ -49438,7 +49481,7 @@ function createApp() {
     let waiverError = "";
     const waiverActivities = waiversFor(addOns);
     if (waiverActivities.length) {
-      const p = parseActivityWaiver(b.activityWaiver, addOns.people, waiverActivities);
+      const p = parseActivityWaiver(b.activityWaiver, waiverPeopleCount(addOns), waiverActivities);
       if (p.ok) activityWaiver = p.value;
       else waiverError = p.error;
     }
@@ -49526,7 +49569,10 @@ function createApp() {
       paymentMethod: sponsorCode ? "SPONSOR_CODE" : "PROMPTPAY_QR",
       sponsorCode: sponsorCode || void 0,
       sponsorName: sponsorName || void 0,
-      addOns: hasAddOns(addOns) ? { ...addOns, pricePerPerson: addOnPricePerPerson(addOns, earlyBird), total: addOnSum, discount: basket.addOff, label: addOnLabel(addOns) } : void 0,
+      addOns: hasAddOns(addOns) ? (() => {
+        const c = addOnCounts(addOns);
+        return { ...addOns, towerCount: c.tower, gunCount: c.gunShort + c.gunLong, windCount: c.wind, pricePerPerson: Math.round(basket.addGross / Math.max(1, c.people)), total: addOnSum, discount: basket.addOff, label: addOnLabel(addOns) };
+      })() : void 0,
       paymentStatus: "PENDING",
       paymentRef: "",
       senderBank: "",

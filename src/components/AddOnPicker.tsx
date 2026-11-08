@@ -5,8 +5,15 @@ import { showActivitySticker } from './ActivitySticker';
 import { motion } from 'motion/react';
 import { SelectBurst } from './SelectBurst';
 import {
+  AddOnPerson,
   AddOnSelection,
+  EMPTY_ADD_ONS,
   GunLevel,
+  addOnCounts,
+  addOnGross,
+  fromPersons,
+  personHasAny,
+  personsOf,
   WIND_TUNNEL_LIMIT,
   addOnLabel,
   addOnPricePerPerson,
@@ -28,9 +35,12 @@ interface AddOnPickerProps {
   showResult?: boolean;
   /** 'rows' stacks the three activities full width (for narrow columns) */
   layout?: 'grid' | 'rows';
+  /** the runners of the order (more than one = every runner picks their own activities) */
+  runnerNames?: string[];
 }
 
 const baht = (n: number) => `${formatBaht(n)} บาท`;
+const EMPTY_PERSON_LOCAL: AddOnPerson = { tower: false, gun: 'none', windTunnel: false };
 
 /** One strong colour per activity: the sticker panel, the badge and the selected state all share it. */
 const ADD_ON_PALETTE = {
@@ -184,36 +194,75 @@ const PinLink: React.FC<{ id: ActivityLocation['id'] }> = ({ id }) => {
   );
 };
 
-export const AddOnPicker: React.FC<AddOnPickerProps> = ({ value, onChange, windTunnelRemaining = null, showResult = true, layout = 'grid' }) => {
+export const AddOnPicker: React.FC<AddOnPickerProps> = ({ value, onChange, windTunnelRemaining = null, showResult = true, layout = 'grid', runnerNames }) => {
   const { t: tr } = useLang();
-  // activities are per person and one person per order (the stepper was removed), so the count stays 1
-  const set = (patch: Partial<AddOnSelection>) => onChange({ ...value, ...patch, people: 1 });
+  const n = runnerNames && runnerNames.length > 1 ? runnerNames.length : 1;
+  const multi = n > 1;
+  const [activeRaw, setActive] = React.useState(0);
+  const active = Math.min(activeRaw, n - 1);
+  // one entry per runner; an order picked before the extra runners were added only has the first
+  const ps: AddOnPerson[] = Array.from({ length: n }, (_, i) => personsOf(value)[i] ?? { ...EMPTY_PERSON_LOCAL });
+  const cur: AddOnPerson = multi ? ps[active] : { tower: value.tower, gun: value.gun, windTunnel: value.windTunnel };
+  // activities are per person; with one runner the count stays 1
+  const set = (patch: Partial<AddOnPerson>) => {
+    if (!multi) {
+      onChange({ ...value, ...patch, people: 1, persons: undefined });
+      return;
+    }
+    const next = ps.map((p, i) => (i === active ? { ...p, ...patch } : p));
+    onChange(next.some(personHasAny) ? fromPersons(next) : { ...EMPTY_ADD_ONS });
+  };
   const picked = hasAddOns(value);
   const off = 0;
-  const perPerson = addOnPricePerPerson(value);
-  const total = perPerson * value.people;
+  const perPerson = addOnPricePerPerson(cur);
+  const total = addOnGross(value);
+  const counts = addOnCounts(value);
   const isFull = value.tower && value.gun !== 'none' && value.windTunnel;
-  const gunOn = value.gun !== 'none';
+  const gunOn = cur.gun !== 'none';
 
   const windFull = windTunnelRemaining !== null && windTunnelRemaining <= 0;
-  const windShort = windTunnelRemaining !== null && value.windTunnel && value.people > windTunnelRemaining && !windFull;
+  const windShort = windTunnelRemaining !== null && counts.wind > windTunnelRemaining && !windFull;
   const windLow = windTunnelRemaining !== null && windTunnelRemaining > 0 && windTunnelRemaining <= 10;
 
   return (
     <div className="space-y-3 @container">
+      {multi && (
+        <div className="rounded-2xl border-2 border-[#C9B4EE] bg-[#FAF6FF] p-2.5">
+          <p className="mb-2 text-xs font-black text-[#2A1450]">{tr('เลือกกิจกรรมแยกรายคน · แตะชื่อเพื่อเลือกให้คนนั้น', 'Pick activities for each runner · tap a name')}</p>
+          <div role="tablist" aria-label={tr('ผู้วิ่งแต่ละคน', 'Each runner')} className="flex flex-wrap gap-2">
+            {ps.map((p, i) => {
+              const on = i === active;
+              const chosen = (p.tower ? 1 : 0) + (p.gun !== 'none' ? 1 : 0) + (p.windTunnel ? 1 : 0);
+              return (
+                <button
+                  key={i}
+                  type="button"
+                  role="tab"
+                  aria-selected={on}
+                  onClick={() => setActive(i)}
+                  className={`min-h-[44px] max-w-full rounded-full border-2 px-3.5 text-sm font-black cursor-pointer ${on ? 'border-[#2A1450] bg-[#FFC928] text-[#2A1450] shadow-[0_3px_0_#2A1450]' : 'border-[#C9B4EE] bg-white text-[#4B2D78]'}`}
+                >
+                  <span className="truncate">👤 {runnerNames![i] || `${tr('คนที่', 'Runner')} ${i + 1}`}</span>
+                  <span className={`ml-2 rounded-full px-2 py-0.5 text-[11px] ${chosen ? 'bg-emerald-600 text-white' : 'bg-[#EFE5FF] text-[#6B5A85]'}`}>{chosen ? `${chosen} ${tr('อย่าง', 'item(s)')}` : tr('ไม่เล่น', 'none')}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
       {/* three columns only when the box itself is wide enough (the box is narrow inside the booking window) */}
       <div className={layout === 'rows' ? 'grid grid-cols-1 gap-3' : 'grid grid-cols-1 @[620px]:grid-cols-3 gap-3 sm:gap-4'}>
         <div className="flex flex-col gap-1">
-          <Card theme="tower" title={tr('หอสูง', 'High tower')} tagline={tr('มีครูฝึกดูแลตลอดกิจกรรม', 'An instructor looks after you throughout')} perks={[tr('🧑‍🏫 ครูฝึกดูแล', '🧑‍🏫 Instructor'), tr('📜 ได้ใบประกาศ / ปีก', '📜 Certificate / wings'), tr('🕘 ' + TOWER_GUN_HOURS, '🕘 09.00–12.00')]} active={value.tower} icon={<img src="/images/shop/tower-v2.webp" alt="" loading="lazy" className="w-full h-full object-contain mix-blend-multiply" />}>
+          <Card theme="tower" title={tr('หอสูง', 'High tower')} tagline={tr('มีครูฝึกดูแลตลอดกิจกรรม', 'An instructor looks after you throughout')} perks={[tr('🧑‍🏫 ครูฝึกดูแล', '🧑‍🏫 Instructor'), tr('📜 ได้ใบประกาศ / ปีก', '📜 Certificate / wings'), tr('🕘 ' + TOWER_GUN_HOURS, '🕘 09.00–12.00')]} active={cur.tower} icon={<img src="/images/shop/tower-v2.webp" alt="" loading="lazy" className="w-full h-full object-contain mix-blend-multiply" />}>
             <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
             <PriceTag price={350 - off} listPrice={off ? 350 : undefined} ink={ADD_ON_THEMES.tower.ink} />
             <PickButton
               theme="tower"
               label={tr('หอสูง', 'High tower')}
-              active={value.tower}
+              active={cur.tower}
               onClick={() => {
-                if (!value.tower) showActivitySticker('tower');
-                set({ tower: !value.tower });
+                if (!cur.tower) showActivitySticker('tower');
+                set({ tower: !cur.tower });
               }}
             />
             </div>
@@ -233,7 +282,7 @@ export const AddOnPicker: React.FC<AddOnPickerProps> = ({ value, onChange, windT
           >
             <div role="radiogroup" aria-label={tr('ยิงปืน', 'Shooting')} className="grid grid-cols-1 gap-2">
               {GUN_SEGMENTS.map((o) => {
-                const on = value.gun === o.id;
+                const on = cur.gun === o.id;
                 const g = ADD_ON_THEMES.gun;
                 return (
                   <button
@@ -275,7 +324,7 @@ export const AddOnPicker: React.FC<AddOnPickerProps> = ({ value, onChange, windT
             title={tr('อุโมงค์ลม', 'Wind tunnel')}
             tagline={tr('ลอยตัวกลางอุโมงค์ลม · เปิดรับสมัครล่วงหน้า', 'Float in the wind tunnel · early registration')}
             perks={[tr('🌪️ ลอยตัวในอุโมงค์ลม', '🌪️ Fly in the wind tunnel')]}
-            active={value.windTunnel && !windFull}
+            active={cur.windTunnel && !windFull}
             disabled={windFull}
             icon={<img src="/images/shop/wind-v2.webp" alt="" loading="lazy" className="w-full h-full object-contain mix-blend-multiply" />}
             badge={
@@ -293,11 +342,11 @@ export const AddOnPicker: React.FC<AddOnPickerProps> = ({ value, onChange, windT
             <PickButton
               theme="wind"
               label={tr('อุโมงค์ลม', 'Wind tunnel')}
-              active={value.windTunnel && !windFull}
+              active={cur.windTunnel && !windFull}
               disabled={windFull}
               onClick={() => {
-                if (!value.windTunnel) showActivitySticker('wind');
-                set({ windTunnel: !value.windTunnel });
+                if (!cur.windTunnel) showActivitySticker('wind');
+                set({ windTunnel: !cur.windTunnel });
               }}
             />
             </div>
@@ -339,7 +388,7 @@ export const AddOnPicker: React.FC<AddOnPickerProps> = ({ value, onChange, windT
                   {isFull && <Star className="w-4 h-4 fill-current" aria-hidden="true" />}
                   {addOnLabel(value)}
                 </p>
-                <p className={`text-xs font-bold ${isFull ? 'text-white/85' : 'text-[#7C3F00]'}`}>{tr('ราคาต่อคน', 'Price per person')} {baht(perPerson)}</p>
+                <p className={`text-xs font-bold ${isFull ? 'text-white/85' : 'text-[#7C3F00]'}`}>{multi ? `${tr('รวม', 'Total for')} ${counts.people} ${tr('คน', 'people')}` : `${tr('ราคาต่อคน', 'Price per person')} ${baht(perPerson)}`}</p>
               </div>
               <div className="flex items-center justify-between sm:justify-end gap-4">
                                 <span className="text-right">
