@@ -2003,7 +2003,7 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
                   )}
                   {inspectingOrder.insurance && (
                     <p className="mt-1 text-xs font-bold text-sky-800 bg-sky-50 border border-sky-200 rounded-lg px-2.5 py-1.5">
-                      🛡️ ประกัน: {inspectingOrder.insurance.prefix}{inspectingOrder.insurance.firstName} {inspectingOrder.insurance.lastName} · {inspectingOrder.insurance.gender} · อายุ {inspectingOrder.insurance.age} ปี (เกิด {inspectingOrder.insurance.birthDate}) · เลือด {inspectingOrder.insurance.bloodType} · โรคประจำตัว: {inspectingOrder.insurance.medicalConditions} · ติดต่อฉุกเฉิน: {inspectingOrder.insurance.emergencyName} ({inspectingOrder.insurance.relationship}) {inspectingOrder.emergencyPhone}
+                      🛡️ ประกัน: {inspectingOrder.insurance.prefix}{inspectingOrder.insurance.firstName} {inspectingOrder.insurance.lastName} · {inspectingOrder.insurance.gender} · อายุ {inspectingOrder.insurance.age} ปี (เกิด {inspectingOrder.insurance.birthDate}) · เลือด {inspectingOrder.insurance.bloodType} · โรคประจำตัว: {inspectingOrder.insurance.medicalConditions} · {inspectingOrder.insurance.foreigner ? `พาสปอร์ต ${inspectingOrder.insurance.passportNo || '-'} (${inspectingOrder.insurance.nationality || '-'}) · ` : ''}ผู้รับผลประโยชน์: {inspectingOrder.insurance.beneficiaryName ? `${inspectingOrder.insurance.beneficiaryName} (${inspectingOrder.insurance.beneficiaryRelationship || '-'})` : 'ตามผู้ติดต่อฉุกเฉิน'} · ติดต่อฉุกเฉิน: {inspectingOrder.insurance.emergencyName} ({inspectingOrder.insurance.relationship}) {inspectingOrder.emergencyPhone}
                     </p>
                   )}
                   {(inspectingOrder as ServerOrder).dogProfile && (() => {

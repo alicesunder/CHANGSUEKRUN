@@ -181,6 +181,14 @@ export const authApi = {
   async resendVerification(): Promise<void> {
     await call('/api/me/verify/resend', { method: 'POST', body: '{}' });
   },
+  /** Registers more cars on my paid VIP order (the rest of the 2 car passes per table). Resolves with the full list. */
+  async addParkingPlates(orderId: string, plates: { plate: string; province: string }[]): Promise<{ plate: string; province: string }[]> {
+    const r = await call<{ order: { parkingPlates?: { plate: string; province: string }[] } }>(`/api/me/orders/${encodeURIComponent(orderId)}/parking-plates`, {
+      method: 'POST',
+      body: JSON.stringify({ plates }),
+    });
+    return r.order.parkingPlates || [];
+  },
   /** E-mails the ticket of one of my paid orders again; resolves with the masked address it went to. */
   async resendTicket(orderId: string): Promise<string> {
     return (await call<{ to: string }>(`/api/me/orders/${encodeURIComponent(orderId)}/resend-ticket`, { method: 'POST', body: '{}' })).to;

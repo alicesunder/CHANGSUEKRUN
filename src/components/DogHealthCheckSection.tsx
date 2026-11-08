@@ -62,18 +62,6 @@ export const DogHealthCheckSection: React.FC = () => (
             </span>
             {/* keeps the banner height on wide screens and the picture area on phones (the scene is behind) */}
             <span aria-hidden="true" className="block h-56 sm:h-72 md:h-[340px] lg:h-[400px]" />
-            {/* speech bubble */}
-            <motion.span
-              aria-hidden="true"
-              animate={{ y: [0, -6, 0], rotate: [-6, -1, -6] }}
-              transition={{ duration: 2.6, repeat: Infinity, ease: 'easeInOut' }}
-              className="absolute -top-2 right-0 sm:right-2"
-            >
-              <span className="relative block rounded-[28px] bg-gradient-to-b from-[#FFE268] to-[#FFB300] px-6 py-2 font-hero text-3xl font-black text-[#2A1450] shadow-[0_12px_22px_-8px_rgba(255,179,0,0.85)] ring-4 ring-white/70 sm:px-8 sm:text-5xl">
-                ฟรี!
-                <span className="absolute -bottom-2 left-6 h-5 w-5 rotate-45 bg-[#FFB300] ring-white/70" />
-              </span>
-            </motion.span>
           </motion.div>
         </div>
       </div>

@@ -10,6 +10,7 @@ import {
   type WaiverParticipant,
 } from '../data/activityWaivers';
 import { formatThaiId, maskThaiId } from '../data/shooting';
+import { maskPassport } from '../data/insurance';
 
 /*
  * One filled-in waiver for one participant. Inline styles only, so the same markup can be copied
@@ -76,8 +77,8 @@ export const WaiverDocument: React.FC<{
 
       <p style={S.p}>
         ข้าพเจ้า <Fill v={p.fullName} w={200} /> วัน เดือน ปี เกิด <Fill v={thaiDate(p.birthDate)} w={130} /> อายุ <Fill v={age !== null ? String(age) : ''} w={36} /> ปี
-        วันเดือนปีที่ใช้บริการ <Fill v={thaiDate(WAIVER_ACTIVITY_DATE)} w={130} /> เบอร์โทรศัพท์มือถือ <Fill v={p.phone} w={110} /> เลขบัตรประชาชน{' '}
-        <Fill v={maskId ? maskThaiId(p.idCard) : formatThaiId(p.idCard)} w={150} /> ยอมรับเงื่อนไขดังต่อไปนี้
+        วันเดือนปีที่ใช้บริการ <Fill v={thaiDate(WAIVER_ACTIVITY_DATE)} w={130} /> เบอร์โทรศัพท์มือถือ <Fill v={p.phone} w={110} /> {p.foreigner ? 'เลขที่หนังสือเดินทาง' : 'เลขบัตรประชาชน'}{' '}
+        <Fill v={p.foreigner ? (maskId ? maskPassport(p.passportNo || '') : p.passportNo || '') : maskId ? maskThaiId(p.idCard) : formatThaiId(p.idCard)} w={150} /> ยอมรับเงื่อนไขดังต่อไปนี้
       </p>
 
       {doc.body.map((b, i) => (

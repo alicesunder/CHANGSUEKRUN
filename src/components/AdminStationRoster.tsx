@@ -334,11 +334,14 @@ export const OrderFullDetails: React.FC<{ order: ServerOrder }> = ({ order: o })
       items: o.insurance
         ? [
             ['ผู้เอาประกัน', `${o.insurance.prefix}${o.insurance.firstName} ${o.insurance.lastName}`],
-            ['เลขบัตรประชาชน', o.insurance.idCard || '-'],
+            o.insurance.foreigner
+              ? ['พาสปอร์ต', `${o.insurance.passportNo || '-'} (${o.insurance.nationality || '-'}) · หมดอายุ ${o.insurance.passportExpiry || '-'}`]
+              : ['เลขบัตรประชาชน', o.insurance.idCard || '-'],
             ['เพศ / อายุ', `${o.insurance.gender} · ${o.insurance.age} ปี (เกิด ${o.insurance.birthDate})`],
             ['กรุ๊ปเลือด', o.insurance.bloodType],
             ['โรคประจำตัว', o.insurance.medicalConditions],
-            ['ติดต่อฉุกเฉิน', `${o.insurance.emergencyName} (${o.insurance.relationship}) ${o.emergencyPhone}`],
+            ['ติดต่อฉุกเฉิน', `${o.insurance.emergencyName} (${o.insurance.relationship}) ${o.insurance.emergencyPhone || o.emergencyPhone}`],
+            ['ผู้รับผลประโยชน์', o.insurance.beneficiaryName ? `${o.insurance.beneficiaryName} (${o.insurance.beneficiaryRelationship || '-'})` : 'ตามผู้ติดต่อฉุกเฉิน'],
           ]
         : [['ข้อมูลประกัน', 'ไม่มี']],
     },

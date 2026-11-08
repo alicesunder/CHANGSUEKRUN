@@ -8,7 +8,7 @@ type ScanOrder = ServerOrder & {
   shirtSize?: string;
   dogName?: string;
   concertQty?: number;
-  addOns?: { label: string; people: number; total: number };
+  addOns?: { label: string; people: number; total: number; tower?: boolean; gun?: 'none' | 'standard' | 'premium'; windTunnel?: boolean };
   vipTables?: number;
   parkingPlates?: { plate: string; province: string }[];
   shooting?: { shooters: { fullName: string; idCard?: string }[] };
@@ -53,6 +53,48 @@ function beep(ok: boolean) {
     /* sound is optional */
   }
 }
+
+/** Run ticket name without the VIP table tail (that has its own card). */
+const runName = (o: ScanOrder) => (o.routeName || '').replace(/\s*\+\s*VIP TABLE.*$/, '');
+
+/** One row per bought activity (older orders without the flags fall back to the one-line label). */
+function activityRows(o: ScanOrder) {
+  const a = o.addOns;
+  if (!a) return [];
+  const rows: { key: string; icon: string; title: string; bg: string }[] = [];
+  if (a.tower) rows.push({ key: 'tower', icon: '🗼', title: 'หอสูง', bg: 'bg-violet-100' });
+  if (a.gun && a.gun !== 'none') rows.push({ key: 'gun', icon: '🔫', title: a.gun === 'premium' ? 'ยิงปืน Premium' : 'ยิงปืน', bg: 'bg-amber-100' });
+  if (a.windTunnel) rows.push({ key: 'wind', icon: '🌪️', title: 'อุโมงค์ลม', bg: 'bg-sky-100' });
+  if (!rows.length) rows.push({ key: 'other', icon: '⭐', title: a.label, bg: 'bg-violet-100' });
+  return rows;
+}
+
+const TONES = {
+  gold: 'border-[#FFC928] bg-[#FFFBEA]',
+  violet: 'border-[#C4B5FD] bg-[#F5F0FF]',
+  vip: 'border-[#7C3AED] bg-[#F5F0FF]',
+} as const;
+
+/** A purchased entitlement: coloured card, icon tile, title, chips and a tick. */
+const Entitlement: React.FC<{ tone: keyof typeof TONES; icon: string; title: string; chips: string[]; children?: React.ReactNode }> = ({ tone, icon, title, chips, children }) => (
+  <div className={`rounded-2xl border-2 p-3 ${TONES[tone]}`}>
+    <div className="flex items-start gap-3">
+      <span aria-hidden="true" className={`w-12 h-12 shrink-0 rounded-xl flex items-center justify-center text-3xl ${tone === 'gold' ? 'bg-[#FFE9A6]' : tone === 'vip' ? 'bg-[#2A1450]' : 'bg-violet-100'}`}>{icon}</span>
+      <div className="min-w-0 flex-1">
+        <p className="font-black text-[#2A1450] text-base leading-tight break-words">{title}</p>
+        {chips.length > 0 && (
+          <div className="mt-1.5 flex flex-wrap gap-1.5">
+            {chips.map((c) => (
+              <span key={c} className="rounded-full border border-[#2A1450]/20 bg-white/80 px-2.5 py-1 text-xs font-extrabold text-[#2A1450]">{c}</span>
+            ))}
+          </div>
+        )}
+      </div>
+      <span aria-label="ลงทะเบียนแล้ว" className="shrink-0 w-7 h-7 rounded-full bg-emerald-600 text-white flex items-center justify-center"><Check className="w-4 h-4" /></span>
+    </div>
+    {children}
+  </div>
+);
 
 type ScannerApi = {
   lookup: (q: string) => Promise<{ order: ServerOrder }>;
@@ -235,73 +277,80 @@ export const TicketScannerAdmin: React.FC<{ api?: ScannerApi; canUndo?: boolean 
             </span>
             <span className="font-mono text-xs font-bold text-[#6F6878]">{order.orderId}</span>
           </div>
-          <div>
-            <p className="text-2xl font-black text-[#2A1450] break-words">{order.fullName}</p>
-            <p className="text-sm font-bold text-[#4B2D78]">{order.phone}</p>
-          </div>
-          <div className="grid grid-cols-2 gap-2 text-sm">
-            <div className="rounded-2xl bg-white border-2 border-[#2A1450]/15 p-3">
+          {/* header: BIB + who */}
+          <div className="grid grid-cols-[auto_1fr] gap-3 rounded-2xl bg-white border-2 border-[#2A1450]/15 p-3">
+            <div className="pr-3 border-r-2 border-dashed border-[#2A1450]/20">
               <span className="block text-[11px] font-extrabold text-[#6F6878]">{isConcertPass ? 'เลขบัตรคอนเสิร์ต' : 'เลข BIB'}</span>
-              <span className="block font-mono text-2xl font-black text-[#54239A]">{order.bibNumber || '—'}</span>
+              <span className="block font-mono text-2xl font-black text-[#54239A] break-all max-w-[9rem] leading-tight">{order.bibNumber || '—'}</span>
             </div>
-            <div className="rounded-2xl bg-white border-2 border-[#2A1450]/15 p-3">
-              <span className="block text-[11px] font-extrabold text-[#6F6878]">ประเภทตั๋ว</span>
-              <span className="block font-extrabold text-[#2A1450] break-words">
-                {isConcertPass ? (order.concertQty ? `ตั๋วคอนเสิร์ต GA × ${order.concertQty}` : '') : order.routeName}
-                {!isConcertPass && order.concertQty ? ` + ตั๋วคอนเสิร์ต GA × ${order.concertQty}` : ''}
-                {isConcertPass && order.vipTables ? `${order.concertQty ? ' + ' : ''}VIP TABLE × ${order.vipTables} โต๊ะ` : ''}
-              </span>
+            <div className="min-w-0 self-center">
+              <p className="text-base font-black text-[#2A1450] break-words leading-snug">{order.fullName}</p>
+              {order.phone && <p className="text-sm font-bold text-[#4B2D78]">📞 {order.phone}</p>}
             </div>
-            {!isConcertPass && order.shirtSize && (
-              <div className="rounded-2xl bg-white border-2 border-[#2A1450]/15 p-3">
-                <span className="block text-[11px] font-extrabold text-[#6F6878]">ไซส์เสื้อ</span>
-                <span className="block font-extrabold text-[#2A1450]">{order.shirtSize}</span>
-              </div>
-            )}
-            {order.dogName && (
-              <div className="rounded-2xl bg-white border-2 border-[#2A1450]/15 p-3">
-                <span className="block text-[11px] font-extrabold text-[#6F6878]">น้องสุนัข</span>
-                <span className="block font-extrabold text-[#2A1450] break-words">{order.dogName}</span>
-              </div>
-            )}
-            {scannedPlate && (
-              <div className="col-span-2 rounded-2xl bg-[#FFC928] border-2 border-[#2A1450] p-3">
-                <span className="block text-[11px] font-extrabold text-[#2A1450]">🚗 สแกนบัตรจอดรถ VIP</span>
-                <span className="block text-xl font-black text-[#2A1450]">{scannedPlate}</span>
-                <span className="block text-xs font-bold text-[#2A1450]">
-                  {order.parkingPlates?.some((p) => `${p.plate} ${p.province}`.trim() === scannedPlate)
-                    ? '✓ ทะเบียนนี้ลงทะเบียนไว้กับคำสั่งซื้อนี้'
-                    : '✕ ไม่พบทะเบียนนี้ในคำสั่งซื้อ — ตรวจสอบกับเจ้าของรถ'}
-                </span>
-              </div>
-            )}
-            {order.parkingPlates && order.parkingPlates.length > 0 && (
-              <div className="col-span-2 rounded-2xl bg-white border-2 border-[#2A1450]/15 p-3">
-                <span className="block text-[11px] font-extrabold text-[#6F6878]">ทะเบียนรถ VIP ({order.parkingPlates.length} คัน)</span>
-                <span className="block font-extrabold text-[#2A1450] break-words">
-                  {order.parkingPlates.map((p) => `${p.plate} ${p.province}`).join(' · ')}
-                </span>
-              </div>
-            )}
-            {order.shooting && (
-              <div className="col-span-2 rounded-2xl bg-white border-2 border-[#2A1450]/15 p-3">
-                <span className="block text-[11px] font-extrabold text-[#6F6878]">ผู้ยิงปืน</span>
-                <ul className="mt-0.5 space-y-0.5">
-                  {order.shooting.shooters.map((s, i) => (
-                    <li key={i} className="font-extrabold text-[#2A1450] break-words">
-                      {i + 1}. {s.fullName}{s.idCard ? <span className="ml-1.5 font-mono text-xs text-[#6F6878]">{s.idCard}</span> : null}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-            {order.addOns && (
-              <div className="col-span-2 rounded-2xl bg-white border-2 border-[#2A1450]/15 p-3">
-                <span className="block text-[11px] font-extrabold text-[#6F6878]">กิจกรรมเสริม</span>
-                <span className="block font-extrabold text-[#2A1450] break-words">{order.addOns.label} × {order.addOns.people} คน</span>
-              </div>
-            )}
           </div>
+
+          <p className="flex items-center gap-1.5 text-sm font-black text-[#2A1450]">🎫 สิทธิ์ที่ซื้อ (ติ๊กถูก = ลงทะเบียนแล้ว)</p>
+          <div className="space-y-2 text-sm">
+            {!isConcertPass && (
+              <Entitlement tone="gold" icon="🏃" title={runName(order)} chips={[order.dogName ? `🐾 น้องหมา: ${order.dogName}` : '', order.shirtSize ? `👕 ไซส์เสื้อ: ${order.shirtSize}` : '', order.peopleCount && order.peopleCount > 1 ? `👥 ${order.peopleCount} คน` : ''].filter(Boolean)}>
+                {order.extraRunnerNames && <p className="mt-1 text-xs font-bold text-[#6F6878] break-words">นักวิ่งเพิ่ม: {order.extraRunnerNames}</p>}
+              </Entitlement>
+            )}
+            {order.concertQty ? <Entitlement tone="violet" icon="🎤" title="ตั๋วคอนเสิร์ต (GA)" chips={[`🎟️ จำนวน: ${order.concertQty} ใบ`]} /> : null}
+            {order.vipTables ? (
+              <Entitlement tone="vip" icon="👑" title="VIP TABLE" chips={[`🪑 จำนวน: ${order.vipTables} โต๊ะ`, `👥 รวม ${order.vipTables * 6} ท่าน`]}>
+                {scannedPlate && (
+                  <div className="mt-2 rounded-xl bg-[#FFC928] border-2 border-[#2A1450] p-2.5">
+                    <span className="block text-[11px] font-extrabold text-[#2A1450]">🚗 สแกนบัตรจอดรถ VIP</span>
+                    <span className="block text-lg font-black text-[#2A1450]">{scannedPlate}</span>
+                    <span className="block text-xs font-bold text-[#2A1450]">
+                      {order.parkingPlates?.some((p) => `${p.plate} ${p.province}`.trim() === scannedPlate)
+                        ? '✓ ทะเบียนนี้ลงทะเบียนไว้กับคำสั่งซื้อนี้'
+                        : '✕ ไม่พบทะเบียนนี้ในคำสั่งซื้อ — ตรวจสอบกับเจ้าของรถ'}
+                    </span>
+                  </div>
+                )}
+                <div className="mt-2 rounded-xl bg-[#FFF3CC] p-2.5">
+                  <span className="block text-xs font-black text-[#2A1450]">
+                    🚗 ทะเบียนรถ VIP ({order.parkingPlates?.length || 0}/{order.vipTables * 2} คัน)
+                  </span>
+                  {order.parkingPlates && order.parkingPlates.length > 0 ? (
+                    <div className="mt-1.5 flex flex-wrap gap-1.5">
+                      {order.parkingPlates.map((p, i) => (
+                        <span key={i} className="rounded-full border-2 border-[#2A1450]/40 bg-white px-3 py-1 text-sm font-black text-[#2A1450]">
+                          {p.plate} {p.province}
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <span className="block text-xs font-bold text-[#6F6878]">ยังไม่ได้ลงทะเบียนรถ</span>
+                  )}
+                </div>
+              </Entitlement>
+            ) : null}
+          </div>
+
+          {order.addOns && (
+            <>
+              <p className="flex items-center gap-1.5 text-sm font-black text-[#2A1450]">⭐ กิจกรรมเสริม ({order.addOns.people} คน)</p>
+              <div className="space-y-2 text-sm">
+                {activityRows(order).map((r) => (
+                  <div key={r.key} className="flex items-center gap-3 rounded-2xl bg-white border-2 border-[#2A1450]/15 p-2.5">
+                    <span aria-hidden="true" className={`w-11 h-11 shrink-0 rounded-xl flex items-center justify-center text-2xl ${r.bg}`}>{r.icon}</span>
+                    <div className="min-w-0 flex-1">
+                      <p className="font-black text-[#2A1450] leading-tight">{r.title} × {order.addOns!.people}</p>
+                      {r.key === 'gun' && order.shooting && order.shooting.shooters.length > 0 && (
+                        <p className="text-xs font-bold text-[#4B2D78] break-words">🎯 ผู้ยิง: {order.shooting.shooters.map((s) => s.fullName).join(', ')}</p>
+                      )}
+                    </div>
+                    <span className="shrink-0 inline-flex items-center gap-1 rounded-full bg-emerald-600 px-2.5 py-1 text-xs font-black text-white">
+                      <Check className="w-3.5 h-3.5" /> สมัครแล้ว
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
           {paid && checkedIn && (
             <div className={`rounded-2xl border-2 p-3 text-center ${already ? 'border-rose-500 bg-rose-50' : 'border-emerald-500 bg-emerald-50'}`}>
               <p className={`text-base font-black ${already ? 'text-rose-800' : 'text-emerald-800'}`}>

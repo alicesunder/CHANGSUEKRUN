@@ -2,6 +2,7 @@
 // Every participant's details are filled into the document automatically; the buyer reads the filled
 // document and accepts it before paying. Shared by the form and the server (the server checks it).
 import { digitsOnly, isValidThaiId } from './shooting';
+import { isValidPassport, normalizePassport } from './insurance';
 
 export type WaiverActivity = 'tower' | 'wind';
 
@@ -33,8 +34,11 @@ export interface WaiverParticipant {
   /** YYYY-MM-DD (Gregorian) */
   birthDate: string;
   phone: string;
-  /** 13 digits, no dashes */
+  /** 13 digits, no dashes (empty for a foreign participant, who gives a passport number instead) */
   idCard: string;
+  /** foreign participant: passport number instead of the Thai ID */
+  foreigner?: boolean;
+  passportNo?: string;
   /** required when the participant is under 15 on the activity day */
   guardianName?: string;
   /** wind tunnel only: one answer per WIND_HEALTH_QUESTIONS id */
@@ -171,7 +175,9 @@ export function participantProblems(p: WaiverParticipant, i: number, activities:
   const age = ageOn(p.birthDate);
   if (age === null) errs.push(`กรุณากรอกวันเกิด${n}`);
   if (p.phone.length < 9) errs.push(`เบอร์โทรศัพท์${n}ไม่ถูกต้อง`);
-  if (!isValidThaiId(p.idCard)) errs.push(`เลขบัตรประชาชน${n}ไม่ถูกต้อง`);
+  if (p.foreigner) {
+    if (!isValidPassport(normalizePassport(p.passportNo))) errs.push(`เลขที่หนังสือเดินทาง (Passport)${n}ไม่ถูกต้อง`);
+  } else if (!isValidThaiId(p.idCard)) errs.push(`เลขบัตรประชาชน${n}ไม่ถูกต้อง`);
   if (age !== null && age < WAIVER_GUARDIAN_AGE && (p.guardianName || '').length < 3) errs.push(`${n} อายุต่ำกว่า ${WAIVER_GUARDIAN_AGE} ปี กรุณากรอกชื่อผู้ปกครอง`);
   if (activities.includes('wind')) {
     const missing = WIND_HEALTH_QUESTIONS.some((q) => p.windHealth?.[q.id] !== 'ok' && p.windHealth?.[q.id] !== 'risk');
@@ -202,7 +208,8 @@ export function parseActivityWaiver(
       fullName: clip(x.fullName, 120),
       birthDate: /^\d{4}-\d{2}-\d{2}$/.test(String(x.birthDate || '')) ? String(x.birthDate) : '',
       phone: digitsOnly(x.phone).slice(0, 15),
-      idCard: digitsOnly(x.idCard).slice(0, 13),
+      idCard: x.foreigner === true ? '' : digitsOnly(x.idCard).slice(0, 13),
+      ...(x.foreigner === true ? { foreigner: true, passportNo: normalizePassport(x.passportNo) } : {}),
     };
     const age = ageOn(p.birthDate);
     if (age !== null && age < WAIVER_GUARDIAN_AGE) p.guardianName = clip(x.guardianName, 120);
@@ -213,8 +220,8 @@ export function parseActivityWaiver(
     errors.push(...participantProblems(p, i, activities));
     participants.push(p);
   }
-  const ids = participants.map((p) => p.idCard).filter(Boolean);
-  if (new Set(ids).size !== ids.length) errors.push('เลขบัตรประชาชนผู้ร่วมกิจกรรมซ้ำกัน');
+  const ids = participants.map((p) => (p.foreigner ? `P${p.passportNo}` : p.idCard)).filter(Boolean);
+  if (new Set(ids).size !== ids.length) errors.push('เลขบัตรประชาชน/หนังสือเดินทางของผู้ร่วมกิจกรรมซ้ำกัน');
   const now = new Date().toISOString();
   const acceptedAt: Partial<Record<WaiverActivity, string>> = {};
   for (const a of activities) {

@@ -32800,6 +32800,17 @@ var PREFIXES = ["\u0E19\u0E32\u0E22", "\u0E19\u0E32\u0E07", "\u0E19\u0E32\u0E07\
 var GENDERS = ["\u0E0A\u0E32\u0E22", "\u0E2B\u0E0D\u0E34\u0E07", "\u0E44\u0E21\u0E48\u0E23\u0E30\u0E1A\u0E38"];
 var BLOOD_TYPES = ["A", "B", "AB", "O", "\u0E44\u0E21\u0E48\u0E17\u0E23\u0E32\u0E1A"];
 var RELATIONSHIPS = ["\u0E1A\u0E34\u0E14\u0E32", "\u0E21\u0E32\u0E23\u0E14\u0E32", "\u0E04\u0E39\u0E48\u0E2A\u0E21\u0E23\u0E2A", "\u0E1A\u0E38\u0E15\u0E23", "\u0E1E\u0E35\u0E48/\u0E19\u0E49\u0E2D\u0E07", "\u0E0D\u0E32\u0E15\u0E34", "\u0E40\u0E1E\u0E37\u0E48\u0E2D\u0E19", "\u0E2D\u0E37\u0E48\u0E19\u0E46"];
+var normalizePassport = (v) => typeof v === "string" ? v.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 20) : "";
+var isValidPassport = (v) => /^[A-Z0-9]{6,20}$/.test(v);
+var maskPassport = (v) => v.length <= 3 ? v : `${"X".repeat(v.length - 3)}${v.slice(-3)}`;
+function isFutureIsoDate(v, today = /* @__PURE__ */ new Date()) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(v);
+  if (!m) return false;
+  const dt = new Date(Date.UTC(+m[1], +m[2] - 1, +m[3]));
+  if (dt.getUTCFullYear() !== +m[1] || dt.getUTCMonth() !== +m[2] - 1 || dt.getUTCDate() !== +m[3]) return false;
+  const t0 = Date.UTC(today.getFullYear(), today.getMonth(), today.getDate());
+  return dt.getTime() >= t0 && +m[1] < 2100;
+}
 function ageFromBirthDate(birthDate, today = /* @__PURE__ */ new Date()) {
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(birthDate);
   if (!m) return null;
@@ -32819,7 +32830,11 @@ function parseInsurance(raw, consent) {
   const prefix = oneOf2(r.prefix, PREFIXES);
   const firstName = clip3(r.firstName, 60);
   const lastName = clip3(r.lastName, 60);
-  const idCard = digitsOnly(r.idCard).slice(0, 13);
+  const foreigner = r.foreigner === true;
+  const idCard = foreigner ? "" : digitsOnly(r.idCard).slice(0, 13);
+  const nationality = foreigner ? clip3(r.nationality, 60) : "";
+  const passportNo = foreigner ? normalizePassport(r.passportNo) : "";
+  const passportExpiry = foreigner && typeof r.passportExpiry === "string" ? r.passportExpiry : "";
   const gender = oneOf2(r.gender, GENDERS);
   const birthDate = typeof r.birthDate === "string" ? r.birthDate : "";
   const age = ageFromBirthDate(birthDate);
@@ -32827,21 +32842,47 @@ function parseInsurance(raw, consent) {
   const medicalConditions = clip3(r.medicalConditions, 200) || "\u0E44\u0E21\u0E48\u0E21\u0E35";
   const emergencyName = clip3(r.emergencyName, 80);
   const relationship = oneOf2(r.relationship, RELATIONSHIPS);
+  const emergencyPhone = digitsOnly(r.emergencyPhone).slice(0, 15);
+  const beneficiaryName = clip3(r.beneficiaryName, 80);
+  const beneficiaryRelationship = oneOf2(r.beneficiaryRelationship, RELATIONSHIPS);
   const errors2 = [];
   if (!prefix) errors2.push("\u0E01\u0E23\u0E38\u0E13\u0E32\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E04\u0E33\u0E19\u0E33\u0E2B\u0E19\u0E49\u0E32");
   if (firstName.length < 1) errors2.push("\u0E01\u0E23\u0E38\u0E13\u0E32\u0E01\u0E23\u0E2D\u0E01\u0E0A\u0E37\u0E48\u0E2D");
   if (lastName.length < 1) errors2.push("\u0E01\u0E23\u0E38\u0E13\u0E32\u0E01\u0E23\u0E2D\u0E01\u0E19\u0E32\u0E21\u0E2A\u0E01\u0E38\u0E25");
-  if (!isValidThaiId(idCard)) errors2.push("\u0E40\u0E25\u0E02\u0E1A\u0E31\u0E15\u0E23\u0E1B\u0E23\u0E30\u0E0A\u0E32\u0E0A\u0E19\u0E1C\u0E39\u0E49\u0E40\u0E2D\u0E32\u0E1B\u0E23\u0E30\u0E01\u0E31\u0E19\u0E44\u0E21\u0E48\u0E16\u0E39\u0E01\u0E15\u0E49\u0E2D\u0E07 (13 \u0E2B\u0E25\u0E31\u0E01)");
+  if (foreigner) {
+    if (!nationality) errors2.push("\u0E01\u0E23\u0E38\u0E13\u0E32\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E2A\u0E31\u0E0D\u0E0A\u0E32\u0E15\u0E34");
+    if (!isValidPassport(passportNo)) errors2.push("\u0E40\u0E25\u0E02\u0E1E\u0E32\u0E2A\u0E1B\u0E2D\u0E23\u0E4C\u0E15\u0E44\u0E21\u0E48\u0E16\u0E39\u0E01\u0E15\u0E49\u0E2D\u0E07 (\u0E15\u0E31\u0E27\u0E2D\u0E31\u0E01\u0E29\u0E23/\u0E15\u0E31\u0E27\u0E40\u0E25\u0E02 6-20 \u0E15\u0E31\u0E27)");
+    if (!isFutureIsoDate(passportExpiry)) errors2.push("\u0E27\u0E31\u0E19\u0E2B\u0E21\u0E14\u0E2D\u0E32\u0E22\u0E38\u0E1E\u0E32\u0E2A\u0E1B\u0E2D\u0E23\u0E4C\u0E15\u0E44\u0E21\u0E48\u0E16\u0E39\u0E01\u0E15\u0E49\u0E2D\u0E07 \u0E2B\u0E23\u0E37\u0E2D\u0E2B\u0E21\u0E14\u0E2D\u0E32\u0E22\u0E38\u0E41\u0E25\u0E49\u0E27");
+  } else if (!isValidThaiId(idCard)) errors2.push("\u0E40\u0E25\u0E02\u0E1A\u0E31\u0E15\u0E23\u0E1B\u0E23\u0E30\u0E0A\u0E32\u0E0A\u0E19\u0E1C\u0E39\u0E49\u0E40\u0E2D\u0E32\u0E1B\u0E23\u0E30\u0E01\u0E31\u0E19\u0E44\u0E21\u0E48\u0E16\u0E39\u0E01\u0E15\u0E49\u0E2D\u0E07 (13 \u0E2B\u0E25\u0E31\u0E01)");
   if (!gender) errors2.push("\u0E01\u0E23\u0E38\u0E13\u0E32\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E40\u0E1E\u0E28");
   if (age === null || age < 0 || age > 110) errors2.push("\u0E27\u0E31\u0E19/\u0E40\u0E14\u0E37\u0E2D\u0E19/\u0E1B\u0E35\u0E40\u0E01\u0E34\u0E14 (\u0E04.\u0E28.) \u0E44\u0E21\u0E48\u0E16\u0E39\u0E01\u0E15\u0E49\u0E2D\u0E07");
   if (!bloodType) errors2.push("\u0E01\u0E23\u0E38\u0E13\u0E32\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E01\u0E23\u0E38\u0E4A\u0E1B\u0E40\u0E25\u0E37\u0E2D\u0E14");
   if (emergencyName.length < 2) errors2.push("\u0E01\u0E23\u0E38\u0E13\u0E32\u0E01\u0E23\u0E2D\u0E01\u0E0A\u0E37\u0E48\u0E2D\u0E1C\u0E39\u0E49\u0E15\u0E34\u0E14\u0E15\u0E48\u0E2D\u0E09\u0E38\u0E01\u0E40\u0E09\u0E34\u0E19");
   if (!relationship) errors2.push("\u0E01\u0E23\u0E38\u0E13\u0E32\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E04\u0E27\u0E32\u0E21\u0E2A\u0E31\u0E21\u0E1E\u0E31\u0E19\u0E18\u0E4C\u0E01\u0E31\u0E1A\u0E1C\u0E39\u0E49\u0E15\u0E34\u0E14\u0E15\u0E48\u0E2D\u0E09\u0E38\u0E01\u0E40\u0E09\u0E34\u0E19");
+  if (emergencyPhone.length < 9) errors2.push("\u0E40\u0E1A\u0E2D\u0E23\u0E4C\u0E42\u0E17\u0E23\u0E1C\u0E39\u0E49\u0E15\u0E34\u0E14\u0E15\u0E48\u0E2D\u0E09\u0E38\u0E01\u0E40\u0E09\u0E34\u0E19\u0E44\u0E21\u0E48\u0E16\u0E39\u0E01\u0E15\u0E49\u0E2D\u0E07");
+  if (beneficiaryName.length < 2) errors2.push("\u0E01\u0E23\u0E38\u0E13\u0E32\u0E01\u0E23\u0E2D\u0E01\u0E0A\u0E37\u0E48\u0E2D\u0E1C\u0E39\u0E49\u0E23\u0E31\u0E1A\u0E1C\u0E25\u0E1B\u0E23\u0E30\u0E42\u0E22\u0E0A\u0E19\u0E4C");
+  if (!beneficiaryRelationship) errors2.push("\u0E01\u0E23\u0E38\u0E13\u0E32\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E04\u0E27\u0E32\u0E21\u0E2A\u0E31\u0E21\u0E1E\u0E31\u0E19\u0E18\u0E4C\u0E01\u0E31\u0E1A\u0E1C\u0E39\u0E49\u0E23\u0E31\u0E1A\u0E1C\u0E25\u0E1B\u0E23\u0E30\u0E42\u0E22\u0E0A\u0E19\u0E4C");
   if (consent !== true) errors2.push("\u0E01\u0E23\u0E38\u0E13\u0E32\u0E22\u0E34\u0E19\u0E22\u0E2D\u0E21\u0E43\u0E2B\u0E49\u0E2A\u0E48\u0E07\u0E02\u0E49\u0E2D\u0E21\u0E39\u0E25\u0E2A\u0E38\u0E02\u0E20\u0E32\u0E1E/\u0E1B\u0E23\u0E30\u0E01\u0E31\u0E19\u0E43\u0E2B\u0E49\u0E1A\u0E23\u0E34\u0E29\u0E31\u0E17\u0E1B\u0E23\u0E30\u0E01\u0E31\u0E19");
   if (errors2.length) return { ok: false, error: errors2.join(" \xB7 ") };
   return {
     ok: true,
-    value: { prefix, firstName, lastName, idCard, gender, birthDate, age, bloodType, medicalConditions, emergencyName, relationship }
+    value: {
+      prefix,
+      firstName,
+      lastName,
+      idCard,
+      gender,
+      birthDate,
+      age,
+      bloodType,
+      medicalConditions,
+      emergencyName,
+      relationship,
+      emergencyPhone,
+      beneficiaryName,
+      beneficiaryRelationship,
+      ...foreigner ? { foreigner: true, nationality, passportNo, passportExpiry } : {}
+    }
   };
 }
 
@@ -34409,7 +34450,7 @@ function toRunnerView(o) {
   const { accessTokenHash, slipFile, slipHash, aiReview, omisePastChargeIds, omiseQrImageUrl, shooting, activityWaiver, ...rest } = o;
   void omiseQrImageUrl;
   const shootingView = shooting ? { ...shooting, shooters: shooting.shooters.map((s) => ({ fullName: s.fullName, idCard: maskThaiId(s.idCard) })) } : void 0;
-  const waiverView = activityWaiver ? { ...activityWaiver, participants: activityWaiver.participants.map((p) => ({ ...p, idCard: maskThaiId(p.idCard) })) } : void 0;
+  const waiverView = activityWaiver ? { ...activityWaiver, participants: activityWaiver.participants.map((p) => ({ ...p, idCard: maskThaiId(p.idCard), ...p.passportNo ? { passportNo: maskPassport(p.passportNo) } : {} })) } : void 0;
   return { ...rest, shooting: shootingView, activityWaiver: waiverView, hasSlip: Boolean(slipFile) };
 }
 async function listOrdersByRunner(runnerId) {
@@ -34438,7 +34479,7 @@ function toStaffView(o) {
     vipTables: o.vipTables,
     parkingPlates: o.parkingPlates,
     shooting: o.shooting ? { shooters: o.shooting.shooters.map((s) => ({ fullName: s.fullName })) } : void 0,
-    addOns: o.addOns ? { label: o.addOns.label, people: o.addOns.people, total: 0 } : void 0,
+    addOns: o.addOns ? { label: o.addOns.label, people: o.addOns.people, total: 0, tower: o.addOns.tower, gun: o.addOns.gun, windTunnel: o.addOns.windTunnel } : void 0,
     paymentStatus: o.paymentStatus,
     verificationStatus: o.verificationStatus,
     kitStatus: o.kitStatus,
@@ -34458,11 +34499,12 @@ function toAdminView(o, opts = {}) {
   const insurance = o.insurance ? {
     ...o.insurance,
     idCard: o.insurance.idCard ? maskThaiId(o.insurance.idCard) : o.insurance.idCard,
+    passportNo: o.insurance.passportNo ? maskPassport(o.insurance.passportNo) : o.insurance.passportNo,
     bloodType: o.insurance.bloodType ? hidden : o.insurance.bloodType,
     medicalConditions: o.insurance.medicalConditions ? hidden : o.insurance.medicalConditions
   } : void 0;
   const shooting = o.shooting ? { ...o.shooting, shooters: o.shooting.shooters.map((x) => ({ ...x, idCard: maskThaiId(x.idCard) })) } : void 0;
-  const activityWaiver = o.activityWaiver ? { ...o.activityWaiver, participants: o.activityWaiver.participants.map((x) => ({ ...x, idCard: maskThaiId(x.idCard) })) } : void 0;
+  const activityWaiver = o.activityWaiver ? { ...o.activityWaiver, participants: o.activityWaiver.participants.map((x) => ({ ...x, idCard: maskThaiId(x.idCard), ...x.passportNo ? { passportNo: maskPassport(x.passportNo) } : {} })) } : void 0;
   return { ...rest, insurance, shooting, activityWaiver, masked: true, hasSlip: Boolean(slipFile) };
 }
 async function getWinners() {
@@ -34627,6 +34669,7 @@ var ADDON_TWO_RATE = 0.1;
 var ADDON_THREE_RATE = 0.15;
 var ADDON_CONCERT_RATE = 0.1;
 var ADDON_MAX_RATE = 0.2;
+var VIP_ADDON_RATE = 0.15;
 function activityCount(s) {
   return (s.tower ? 1 : 0) + (s.gun !== "none" ? 1 : 0) + (s.windTunnel ? 1 : 0);
 }
@@ -34655,6 +34698,12 @@ function addOnTotal(s, ctx) {
 }
 function concertDiscountPerTicket(unitPrice, eligible) {
   return eligible ? Math.round(unitPrice * CONCERT_BUNDLE_RATE) : 0;
+}
+function vipTableRate(runEligible, allThree) {
+  return allThree ? VIP_ADDON_RATE : runEligible ? CONCERT_BUNDLE_RATE : 0;
+}
+function vipDiscountPerTable(unitPrice, runEligible, allThree) {
+  return Math.round(unitPrice * vipTableRate(runEligible, allThree));
 }
 function addOnLabel(s) {
   const parts = [];
@@ -34715,7 +34764,9 @@ function participantProblems(p, i, activities) {
   const age = ageOn(p.birthDate);
   if (age === null) errs.push(`\u0E01\u0E23\u0E38\u0E13\u0E32\u0E01\u0E23\u0E2D\u0E01\u0E27\u0E31\u0E19\u0E40\u0E01\u0E34\u0E14${n}`);
   if (p.phone.length < 9) errs.push(`\u0E40\u0E1A\u0E2D\u0E23\u0E4C\u0E42\u0E17\u0E23\u0E28\u0E31\u0E1E\u0E17\u0E4C${n}\u0E44\u0E21\u0E48\u0E16\u0E39\u0E01\u0E15\u0E49\u0E2D\u0E07`);
-  if (!isValidThaiId(p.idCard)) errs.push(`\u0E40\u0E25\u0E02\u0E1A\u0E31\u0E15\u0E23\u0E1B\u0E23\u0E30\u0E0A\u0E32\u0E0A\u0E19${n}\u0E44\u0E21\u0E48\u0E16\u0E39\u0E01\u0E15\u0E49\u0E2D\u0E07`);
+  if (p.foreigner) {
+    if (!isValidPassport(normalizePassport(p.passportNo))) errs.push(`\u0E40\u0E25\u0E02\u0E17\u0E35\u0E48\u0E2B\u0E19\u0E31\u0E07\u0E2A\u0E37\u0E2D\u0E40\u0E14\u0E34\u0E19\u0E17\u0E32\u0E07 (Passport)${n}\u0E44\u0E21\u0E48\u0E16\u0E39\u0E01\u0E15\u0E49\u0E2D\u0E07`);
+  } else if (!isValidThaiId(p.idCard)) errs.push(`\u0E40\u0E25\u0E02\u0E1A\u0E31\u0E15\u0E23\u0E1B\u0E23\u0E30\u0E0A\u0E32\u0E0A\u0E19${n}\u0E44\u0E21\u0E48\u0E16\u0E39\u0E01\u0E15\u0E49\u0E2D\u0E07`);
   if (age !== null && age < WAIVER_GUARDIAN_AGE && (p.guardianName || "").length < 3) errs.push(`${n} \u0E2D\u0E32\u0E22\u0E38\u0E15\u0E48\u0E33\u0E01\u0E27\u0E48\u0E32 ${WAIVER_GUARDIAN_AGE} \u0E1B\u0E35 \u0E01\u0E23\u0E38\u0E13\u0E32\u0E01\u0E23\u0E2D\u0E01\u0E0A\u0E37\u0E48\u0E2D\u0E1C\u0E39\u0E49\u0E1B\u0E01\u0E04\u0E23\u0E2D\u0E07`);
   if (activities.includes("wind")) {
     const missing = WIND_HEALTH_QUESTIONS.some((q) => p.windHealth?.[q.id] !== "ok" && p.windHealth?.[q.id] !== "risk");
@@ -34740,7 +34791,8 @@ function parseActivityWaiver(raw, people, activities) {
       fullName: clip5(x.fullName, 120),
       birthDate: /^\d{4}-\d{2}-\d{2}$/.test(String(x.birthDate || "")) ? String(x.birthDate) : "",
       phone: digitsOnly(x.phone).slice(0, 15),
-      idCard: digitsOnly(x.idCard).slice(0, 13)
+      idCard: x.foreigner === true ? "" : digitsOnly(x.idCard).slice(0, 13),
+      ...x.foreigner === true ? { foreigner: true, passportNo: normalizePassport(x.passportNo) } : {}
     };
     const age = ageOn(p.birthDate);
     if (age !== null && age < WAIVER_GUARDIAN_AGE) p.guardianName = clip5(x.guardianName, 120);
@@ -34751,8 +34803,8 @@ function parseActivityWaiver(raw, people, activities) {
     errors2.push(...participantProblems(p, i, activities));
     participants.push(p);
   }
-  const ids = participants.map((p) => p.idCard).filter(Boolean);
-  if (new Set(ids).size !== ids.length) errors2.push("\u0E40\u0E25\u0E02\u0E1A\u0E31\u0E15\u0E23\u0E1B\u0E23\u0E30\u0E0A\u0E32\u0E0A\u0E19\u0E1C\u0E39\u0E49\u0E23\u0E48\u0E27\u0E21\u0E01\u0E34\u0E08\u0E01\u0E23\u0E23\u0E21\u0E0B\u0E49\u0E33\u0E01\u0E31\u0E19");
+  const ids = participants.map((p) => p.foreigner ? `P${p.passportNo}` : p.idCard).filter(Boolean);
+  if (new Set(ids).size !== ids.length) errors2.push("\u0E40\u0E25\u0E02\u0E1A\u0E31\u0E15\u0E23\u0E1B\u0E23\u0E30\u0E0A\u0E32\u0E0A\u0E19/\u0E2B\u0E19\u0E31\u0E07\u0E2A\u0E37\u0E2D\u0E40\u0E14\u0E34\u0E19\u0E17\u0E32\u0E07\u0E02\u0E2D\u0E07\u0E1C\u0E39\u0E49\u0E23\u0E48\u0E27\u0E21\u0E01\u0E34\u0E08\u0E01\u0E23\u0E23\u0E21\u0E0B\u0E49\u0E33\u0E01\u0E31\u0E19");
   const now = (/* @__PURE__ */ new Date()).toISOString();
   const acceptedAt = {};
   for (const a of activities) {
@@ -34762,6 +34814,88 @@ function parseActivityWaiver(raw, people, activities) {
   if (errors2.length) return { ok: false, error: errors2.join(" \xB7 ") };
   return { ok: true, value: { activities, participants, acceptedAt, version: WAIVER_VERSION } };
 }
+
+// src/data/provinces.ts
+var THAI_PROVINCES = [
+  "\u0E01\u0E23\u0E30\u0E1A\u0E35\u0E48",
+  "\u0E01\u0E23\u0E38\u0E07\u0E40\u0E17\u0E1E\u0E21\u0E2B\u0E32\u0E19\u0E04\u0E23",
+  "\u0E01\u0E32\u0E0D\u0E08\u0E19\u0E1A\u0E38\u0E23\u0E35",
+  "\u0E01\u0E32\u0E2C\u0E2A\u0E34\u0E19\u0E18\u0E38\u0E4C",
+  "\u0E01\u0E33\u0E41\u0E1E\u0E07\u0E40\u0E1E\u0E0A\u0E23",
+  "\u0E02\u0E2D\u0E19\u0E41\u0E01\u0E48\u0E19",
+  "\u0E08\u0E31\u0E19\u0E17\u0E1A\u0E38\u0E23\u0E35",
+  "\u0E09\u0E30\u0E40\u0E0A\u0E34\u0E07\u0E40\u0E17\u0E23\u0E32",
+  "\u0E0A\u0E25\u0E1A\u0E38\u0E23\u0E35",
+  "\u0E0A\u0E31\u0E22\u0E19\u0E32\u0E17",
+  "\u0E0A\u0E31\u0E22\u0E20\u0E39\u0E21\u0E34",
+  "\u0E0A\u0E38\u0E21\u0E1E\u0E23",
+  "\u0E40\u0E0A\u0E35\u0E22\u0E07\u0E23\u0E32\u0E22",
+  "\u0E40\u0E0A\u0E35\u0E22\u0E07\u0E43\u0E2B\u0E21\u0E48",
+  "\u0E15\u0E23\u0E31\u0E07",
+  "\u0E15\u0E23\u0E32\u0E14",
+  "\u0E15\u0E32\u0E01",
+  "\u0E19\u0E04\u0E23\u0E19\u0E32\u0E22\u0E01",
+  "\u0E19\u0E04\u0E23\u0E1B\u0E10\u0E21",
+  "\u0E19\u0E04\u0E23\u0E1E\u0E19\u0E21",
+  "\u0E19\u0E04\u0E23\u0E23\u0E32\u0E0A\u0E2A\u0E35\u0E21\u0E32",
+  "\u0E19\u0E04\u0E23\u0E28\u0E23\u0E35\u0E18\u0E23\u0E23\u0E21\u0E23\u0E32\u0E0A",
+  "\u0E19\u0E04\u0E23\u0E2A\u0E27\u0E23\u0E23\u0E04\u0E4C",
+  "\u0E19\u0E19\u0E17\u0E1A\u0E38\u0E23\u0E35",
+  "\u0E19\u0E23\u0E32\u0E18\u0E34\u0E27\u0E32\u0E2A",
+  "\u0E19\u0E48\u0E32\u0E19",
+  "\u0E1A\u0E36\u0E07\u0E01\u0E32\u0E2C",
+  "\u0E1A\u0E38\u0E23\u0E35\u0E23\u0E31\u0E21\u0E22\u0E4C",
+  "\u0E1B\u0E17\u0E38\u0E21\u0E18\u0E32\u0E19\u0E35",
+  "\u0E1B\u0E23\u0E30\u0E08\u0E27\u0E1A\u0E04\u0E35\u0E23\u0E35\u0E02\u0E31\u0E19\u0E18\u0E4C",
+  "\u0E1B\u0E23\u0E32\u0E08\u0E35\u0E19\u0E1A\u0E38\u0E23\u0E35",
+  "\u0E1B\u0E31\u0E15\u0E15\u0E32\u0E19\u0E35",
+  "\u0E1E\u0E23\u0E30\u0E19\u0E04\u0E23\u0E28\u0E23\u0E35\u0E2D\u0E22\u0E38\u0E18\u0E22\u0E32",
+  "\u0E1E\u0E30\u0E40\u0E22\u0E32",
+  "\u0E1E\u0E31\u0E07\u0E07\u0E32",
+  "\u0E1E\u0E31\u0E17\u0E25\u0E38\u0E07",
+  "\u0E1E\u0E34\u0E08\u0E34\u0E15\u0E23",
+  "\u0E1E\u0E34\u0E29\u0E13\u0E38\u0E42\u0E25\u0E01",
+  "\u0E40\u0E1E\u0E0A\u0E23\u0E1A\u0E38\u0E23\u0E35",
+  "\u0E40\u0E1E\u0E0A\u0E23\u0E1A\u0E39\u0E23\u0E13\u0E4C",
+  "\u0E41\u0E1E\u0E23\u0E48",
+  "\u0E20\u0E39\u0E40\u0E01\u0E47\u0E15",
+  "\u0E21\u0E2B\u0E32\u0E2A\u0E32\u0E23\u0E04\u0E32\u0E21",
+  "\u0E21\u0E38\u0E01\u0E14\u0E32\u0E2B\u0E32\u0E23",
+  "\u0E41\u0E21\u0E48\u0E2E\u0E48\u0E2D\u0E07\u0E2A\u0E2D\u0E19",
+  "\u0E22\u0E42\u0E2A\u0E18\u0E23",
+  "\u0E22\u0E30\u0E25\u0E32",
+  "\u0E23\u0E49\u0E2D\u0E22\u0E40\u0E2D\u0E47\u0E14",
+  "\u0E23\u0E30\u0E19\u0E2D\u0E07",
+  "\u0E23\u0E30\u0E22\u0E2D\u0E07",
+  "\u0E23\u0E32\u0E0A\u0E1A\u0E38\u0E23\u0E35",
+  "\u0E25\u0E1E\u0E1A\u0E38\u0E23\u0E35",
+  "\u0E25\u0E33\u0E1B\u0E32\u0E07",
+  "\u0E25\u0E33\u0E1E\u0E39\u0E19",
+  "\u0E40\u0E25\u0E22",
+  "\u0E28\u0E23\u0E35\u0E2A\u0E30\u0E40\u0E01\u0E29",
+  "\u0E2A\u0E01\u0E25\u0E19\u0E04\u0E23",
+  "\u0E2A\u0E07\u0E02\u0E25\u0E32",
+  "\u0E2A\u0E15\u0E39\u0E25",
+  "\u0E2A\u0E21\u0E38\u0E17\u0E23\u0E1B\u0E23\u0E32\u0E01\u0E32\u0E23",
+  "\u0E2A\u0E21\u0E38\u0E17\u0E23\u0E2A\u0E07\u0E04\u0E23\u0E32\u0E21",
+  "\u0E2A\u0E21\u0E38\u0E17\u0E23\u0E2A\u0E32\u0E04\u0E23",
+  "\u0E2A\u0E23\u0E30\u0E41\u0E01\u0E49\u0E27",
+  "\u0E2A\u0E23\u0E30\u0E1A\u0E38\u0E23\u0E35",
+  "\u0E2A\u0E34\u0E07\u0E2B\u0E4C\u0E1A\u0E38\u0E23\u0E35",
+  "\u0E2A\u0E38\u0E42\u0E02\u0E17\u0E31\u0E22",
+  "\u0E2A\u0E38\u0E1E\u0E23\u0E23\u0E13\u0E1A\u0E38\u0E23\u0E35",
+  "\u0E2A\u0E38\u0E23\u0E32\u0E29\u0E0E\u0E23\u0E4C\u0E18\u0E32\u0E19\u0E35",
+  "\u0E2A\u0E38\u0E23\u0E34\u0E19\u0E17\u0E23\u0E4C",
+  "\u0E2B\u0E19\u0E2D\u0E07\u0E04\u0E32\u0E22",
+  "\u0E2B\u0E19\u0E2D\u0E07\u0E1A\u0E31\u0E27\u0E25\u0E33\u0E20\u0E39",
+  "\u0E2D\u0E48\u0E32\u0E07\u0E17\u0E2D\u0E07",
+  "\u0E2D\u0E33\u0E19\u0E32\u0E08\u0E40\u0E08\u0E23\u0E34\u0E0D",
+  "\u0E2D\u0E38\u0E14\u0E23\u0E18\u0E32\u0E19\u0E35",
+  "\u0E2D\u0E38\u0E15\u0E23\u0E14\u0E34\u0E15\u0E16\u0E4C",
+  "\u0E2D\u0E38\u0E17\u0E31\u0E22\u0E18\u0E32\u0E19\u0E35",
+  "\u0E2D\u0E38\u0E1A\u0E25\u0E23\u0E32\u0E0A\u0E18\u0E32\u0E19\u0E35"
+];
+var isThaiProvince = (v) => THAI_PROVINCES.includes(v.replace(/\s+/g, ""));
 
 // src/data/vipParking.ts
 var VIP_PARKING_PER_TABLE = 2;
@@ -34776,6 +34910,7 @@ function parseParkingPlates(raw, vipTables) {
     const province = clip6(r.province, 40);
     if (!plate && !province) continue;
     if (plate.length < 2 || province.length < 2) return { ok: false, error: "\u0E01\u0E23\u0E38\u0E13\u0E32\u0E01\u0E23\u0E2D\u0E01\u0E17\u0E30\u0E40\u0E1A\u0E35\u0E22\u0E19\u0E23\u0E16\u0E41\u0E25\u0E30\u0E08\u0E31\u0E07\u0E2B\u0E27\u0E31\u0E14\u0E43\u0E2B\u0E49\u0E04\u0E23\u0E1A\u0E17\u0E38\u0E01\u0E04\u0E31\u0E19\u0E17\u0E35\u0E48\u0E25\u0E07\u0E17\u0E30\u0E40\u0E1A\u0E35\u0E22\u0E19" };
+    if (!isThaiProvince(province)) return { ok: false, error: "\u0E01\u0E23\u0E38\u0E13\u0E32\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E08\u0E31\u0E07\u0E2B\u0E27\u0E31\u0E14\u0E02\u0E2D\u0E07\u0E17\u0E30\u0E40\u0E1A\u0E35\u0E22\u0E19\u0E23\u0E16\u0E08\u0E32\u0E01\u0E23\u0E32\u0E22\u0E01\u0E32\u0E23" };
     plates.push({ plate, province });
   }
   if (!plates.length) return { ok: false, error: "\u0E01\u0E23\u0E38\u0E13\u0E32\u0E01\u0E23\u0E2D\u0E01\u0E17\u0E30\u0E40\u0E1A\u0E35\u0E22\u0E19\u0E23\u0E16\u0E2D\u0E22\u0E48\u0E32\u0E07\u0E19\u0E49\u0E2D\u0E22 1 \u0E04\u0E31\u0E19 \u0E2A\u0E33\u0E2B\u0E23\u0E31\u0E1A\u0E1A\u0E31\u0E15\u0E23\u0E08\u0E2D\u0E14\u0E23\u0E16 VIP" };
@@ -34785,6 +34920,28 @@ function parseParkingPlates(raw, vipTables) {
 }
 function parkingQrPayload(orderId, p) {
   return JSON.stringify({ orderId, type: "VIP_PARKING", plate: `${p.plate} ${p.province}`.trim() });
+}
+function addParkingPlates(existing, raw, vipTables) {
+  const max = vipTables * VIP_PARKING_PER_TABLE;
+  const room = max - existing.length;
+  if (room <= 0) return { ok: false, error: "\u0E25\u0E07\u0E17\u0E30\u0E40\u0E1A\u0E35\u0E22\u0E19\u0E23\u0E16\u0E04\u0E23\u0E1A\u0E15\u0E32\u0E21\u0E2A\u0E34\u0E17\u0E18\u0E34\u0E4C\u0E41\u0E25\u0E49\u0E27" };
+  if (Array.isArray(raw) && raw.filter((x) => x && typeof x === "object" && (x.plate || x.province)).length > room) return { ok: false, error: `\u0E25\u0E07\u0E17\u0E30\u0E40\u0E1A\u0E35\u0E22\u0E19\u0E40\u0E1E\u0E34\u0E48\u0E21\u0E44\u0E14\u0E49\u0E2D\u0E35\u0E01 ${room} \u0E04\u0E31\u0E19\u0E40\u0E17\u0E48\u0E32\u0E19\u0E31\u0E49\u0E19` };
+  const list = Array.isArray(raw) ? raw.slice(0, room) : [];
+  const added = [];
+  for (const item of list) {
+    const r = item && typeof item === "object" ? item : {};
+    const plate = clip6(r.plate, 16);
+    const province = clip6(r.province, 40);
+    if (!plate && !province) continue;
+    if (plate.length < 2 || province.length < 2) return { ok: false, error: "\u0E01\u0E23\u0E38\u0E13\u0E32\u0E01\u0E23\u0E2D\u0E01\u0E17\u0E30\u0E40\u0E1A\u0E35\u0E22\u0E19\u0E23\u0E16\u0E41\u0E25\u0E30\u0E08\u0E31\u0E07\u0E2B\u0E27\u0E31\u0E14\u0E43\u0E2B\u0E49\u0E04\u0E23\u0E1A\u0E17\u0E38\u0E01\u0E04\u0E31\u0E19" };
+    if (!isThaiProvince(province)) return { ok: false, error: "\u0E01\u0E23\u0E38\u0E13\u0E32\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E08\u0E31\u0E07\u0E2B\u0E27\u0E31\u0E14\u0E02\u0E2D\u0E07\u0E17\u0E30\u0E40\u0E1A\u0E35\u0E22\u0E19\u0E23\u0E16\u0E08\u0E32\u0E01\u0E23\u0E32\u0E22\u0E01\u0E32\u0E23" };
+    added.push({ plate, province });
+  }
+  if (!added.length) return { ok: false, error: "\u0E01\u0E23\u0E38\u0E13\u0E32\u0E01\u0E23\u0E2D\u0E01\u0E17\u0E30\u0E40\u0E1A\u0E35\u0E22\u0E19\u0E23\u0E16\u0E2D\u0E22\u0E48\u0E32\u0E07\u0E19\u0E49\u0E2D\u0E22 1 \u0E04\u0E31\u0E19" };
+  const key = (p) => `${p.plate}|${p.province}`.replace(/\s/g, "");
+  const all = [...existing, ...added];
+  if (new Set(all.map(key)).size !== all.length) return { ok: false, error: "\u0E17\u0E30\u0E40\u0E1A\u0E35\u0E22\u0E19\u0E23\u0E16\u0E0B\u0E49\u0E33\u0E01\u0E31\u0E19" };
+  return { ok: true, value: all, added };
 }
 
 // server/auth.ts
@@ -35428,6 +35585,119 @@ function adminPolicy(req, res, next) {
 // server/documents.tsx
 var import_qrcode = __toESM(require_lib5(), 1);
 
+// src/data/activityLocations.ts
+var ACTIVITY_LOCATIONS = [
+  {
+    id: "gun",
+    station: 1,
+    name: "\u0E2A\u0E19\u0E32\u0E21\u0E22\u0E34\u0E07\u0E1B\u0E37\u0E19",
+    plusCode: "MXP3+672",
+    lat: 12.68551,
+    lng: 99.95314,
+    color: "#0369A1",
+    mapsUrl: "https://maps.app.goo.gl/t8Uv3veHAo6QttMj9"
+  },
+  {
+    id: "tower",
+    station: 2,
+    name: "\u0E2B\u0E2D\u0E2A\u0E39\u0E07",
+    plusCode: "MXX5+8XW",
+    lat: 12.69836,
+    lng: 99.95995,
+    color: "#4F46E5",
+    mapsUrl: "https://maps.app.goo.gl/egFzX3SCKBZW7GFM9"
+  },
+  {
+    id: "wind",
+    station: 3,
+    name: "\u0E2D\u0E38\u0E42\u0E21\u0E07\u0E04\u0E4C\u0E25\u0E21",
+    plusCode: "MXH5+559",
+    lat: 12.67791,
+    lng: 99.95798,
+    color: "#0F766E",
+    mapsUrl: "https://maps.app.goo.gl/1q9d2EVSFzD4HTYv5"
+  },
+  {
+    id: "resort",
+    name: "Sea Sand Sun Hua Hin Resort",
+    lat: 12.68923,
+    lng: 99.962504,
+    color: "#E11D48",
+    mapsUrl: "https://www.google.com/maps/search/?api=1&query=Sea+Sand+Sun+Hua+Hin+Resort"
+  }
+];
+var locationTitle = (a) => a.station ? `\u0E2A\u0E16\u0E32\u0E19\u0E35\u0E17\u0E35\u0E48 ${a.station} \xB7 ${a.name}` : a.name;
+
+// server/entitlements.ts
+var RACE_DAY = "9 \u0E21.\u0E04. 2570";
+var ACT_DAY = "10 \u0E21.\u0E04. 2570";
+var RUN_ROUTES = /* @__PURE__ */ new Set(["10km", "5km", "3km", "1km"]);
+function isRunOrder(o) {
+  return o.ticketType !== "CONCERT" && o.ticketType !== "ADDON" && RUN_ROUTES.has(o.routeId);
+}
+function ticketEntitlements(o) {
+  const isRun = isRunOrder(o);
+  const start = isRun ? routesData[o.routeId]?.startTime || "" : "";
+  const dog = isRun && o.runningWithDog ? o.dogName || "" : "";
+  const shirts = (isRun ? [o.shirtSize, ...(o.extraRunners || []).map((r) => r.shirtSize)] : []).filter(Boolean);
+  const out = [];
+  if (isRun) {
+    const people = o.peopleCount || 1;
+    out.push({
+      icon: dog ? "\u{1F436}" : "\u{1F3C3}",
+      bg: "#FFE9A6",
+      title: `\u0E27\u0E34\u0E48\u0E07 ${ticketById(o.routeId).name}`,
+      sub: `${people} \u0E04\u0E19${o.runningWithDog ? ` + \u0E19\u0E49\u0E2D\u0E07\u0E2B\u0E21\u0E32 ${o.dogCount || 1} \u0E15\u0E31\u0E27` : ""}${shirts.length ? ` \xB7 \u0E44\u0E0B\u0E2A\u0E4C\u0E40\u0E2A\u0E37\u0E49\u0E2D ${shirts.join(", ")}` : ""}`,
+      qty: [`${people} \u0E04\u0E19`, ...o.runningWithDog ? [`+ \u0E19\u0E49\u0E2D\u0E07\u0E2B\u0E21\u0E32 ${o.dogCount || 1} \u0E15\u0E31\u0E27`] : []],
+      date: RACE_DAY,
+      time: start ? `\u0E1B\u0E25\u0E48\u0E2D\u0E22\u0E15\u0E31\u0E27 ${start}` : void 0,
+      place: eventInfo.venueShort
+    });
+  }
+  if (o.concertQty) {
+    out.push({ icon: "\u{1F3A4}", bg: "#E9D5FF", title: "\u0E15\u0E31\u0E4B\u0E27\u0E04\u0E2D\u0E19\u0E40\u0E2A\u0E34\u0E23\u0E4C\u0E15 (GA)", sub: "\u0E22\u0E37\u0E19\u0E0A\u0E21\u0E04\u0E2D\u0E19\u0E40\u0E2A\u0E34\u0E23\u0E4C\u0E15", qty: [`${o.concertQty} \u0E43\u0E1A`], date: RACE_DAY, time: "18.00\u201324.00 \u0E19.", place: eventInfo.venueShort });
+  }
+  if (o.vipTables) {
+    const passes = o.vipTables * VIP_PARKING_PER_TABLE;
+    const placed = (o.parkingPlates || []).length;
+    out.push({
+      icon: "\u{1F451}",
+      bg: "#2A1450",
+      title: "VIP TABLE",
+      sub: `\u0E42\u0E15\u0E4A\u0E30\u0E27\u0E35\u0E44\u0E2D\u0E1E\u0E35\u0E0A\u0E21\u0E04\u0E2D\u0E19\u0E40\u0E2A\u0E34\u0E23\u0E4C\u0E15 \xB7 \u0E1A\u0E31\u0E15\u0E23\u0E08\u0E2D\u0E14\u0E23\u0E16 VIP ${passes} \u0E43\u0E1A (\u0E25\u0E07\u0E17\u0E30\u0E40\u0E1A\u0E35\u0E22\u0E19\u0E23\u0E16\u0E41\u0E25\u0E49\u0E27 ${placed})`,
+      qty: [`${o.vipTables} \u0E42\u0E15\u0E4A\u0E30`, `(${o.vipTables * VIP_TABLE_SEATS} \u0E17\u0E48\u0E32\u0E19)`],
+      date: RACE_DAY,
+      time: "18.00\u201324.00 \u0E19.",
+      place: eventInfo.venueShort
+    });
+  }
+  if (o.addOns) {
+    const acts = [
+      o.addOns.tower ? { key: "tower", icon: "\u{1F5FC}", bg: "#DDD6FE", title: "\u0E2B\u0E2D\u0E2A\u0E39\u0E07", sub: "\u0E01\u0E34\u0E08\u0E01\u0E23\u0E23\u0E21\u0E42\u0E14\u0E14\u0E2B\u0E2D\u0E2A\u0E39\u0E07 34 \u0E1F\u0E38\u0E15" } : null,
+      o.addOns.gun && o.addOns.gun !== "none" ? { key: "gun", icon: "\u{1F52B}", bg: "#FDE68A", title: o.addOns.gun === "premium" ? "\u0E22\u0E34\u0E07\u0E1B\u0E37\u0E19 Premium" : "\u0E22\u0E34\u0E07\u0E1B\u0E37\u0E19", sub: "\u0E01\u0E34\u0E08\u0E01\u0E23\u0E23\u0E21\u0E22\u0E34\u0E07\u0E1B\u0E37\u0E19\u0E17\u0E35\u0E48\u0E2A\u0E19\u0E32\u0E21\u0E22\u0E34\u0E07\u0E1B\u0E37\u0E19" } : null,
+      o.addOns.windTunnel ? { key: "wind", icon: "\u{1F32A}\uFE0F", bg: "#BAE6FD", title: "\u0E2D\u0E38\u0E42\u0E21\u0E07\u0E04\u0E4C\u0E25\u0E21", sub: "\u0E2D\u0E38\u0E42\u0E21\u0E07\u0E04\u0E4C\u0E25\u0E21\u0E0A\u0E31\u0E22\u0E08\u0E34\u0E19\u0E14\u0E32 (Wind Tunnel)" } : null
+    ].filter(Boolean);
+    if (!acts.length) acts.push({ key: "tower", icon: "\u2B50", bg: "#DDD6FE", title: o.addOns.label, sub: "" });
+    for (const a of acts) {
+      const loc = ACTIVITY_LOCATIONS.find((l) => l.id === a.key);
+      out.push({ icon: a.icon, bg: a.bg, title: a.title, sub: a.sub, qty: [`${o.addOns.people} \u0E04\u0E19`], date: ACT_DAY, place: loc ? locationTitle(loc) : eventInfo.venueShort });
+    }
+  }
+  return out;
+}
+function priceLines(o) {
+  const isRun = isRunOrder(o);
+  const earlyBird = Boolean(o.earlyBird);
+  const lines = [];
+  if (isRun) lines.push({ name: `\u0E04\u0E48\u0E32\u0E2A\u0E21\u0E31\u0E04\u0E23\u0E27\u0E34\u0E48\u0E07 ${ticketById(o.routeId).name}${o.runningWithDog ? ` (\u0E19\u0E49\u0E2D\u0E07\u0E2B\u0E21\u0E32 ${o.dogCount || 1} \u0E15\u0E31\u0E27)` : ""}`, amount: calcTicketTotal(o.routeId, o.extraPeople || 0, o.extraDogs || 0, earlyBird) });
+  if (o.concertQty) lines.push({ name: `\u0E15\u0E31\u0E4B\u0E27\u0E04\u0E2D\u0E19\u0E40\u0E2A\u0E34\u0E23\u0E4C\u0E15 GA \xD7 ${o.concertQty}`, amount: concertPassPrice(earlyBird) * o.concertQty });
+  if (o.vipTables) lines.push({ name: `VIP TABLE \xD7 ${o.vipTables} \u0E42\u0E15\u0E4A\u0E30 (${o.vipTables * VIP_TABLE_SEATS} \u0E17\u0E48\u0E32\u0E19)`, amount: vipTablePrice(earlyBird) * o.vipTables });
+  if (o.concertDiscount) lines.push({ name: "\u0E2A\u0E48\u0E27\u0E19\u0E25\u0E14\u0E1A\u0E31\u0E15\u0E23\u0E04\u0E2D\u0E19\u0E40\u0E2A\u0E34\u0E23\u0E4C\u0E15 / VIP (\u0E42\u0E1B\u0E23\u0E42\u0E21\u0E0A\u0E31\u0E48\u0E19)", amount: -o.concertDiscount });
+  if (o.addOns) lines.push({ name: `\u0E01\u0E34\u0E08\u0E01\u0E23\u0E23\u0E21\u0E40\u0E2A\u0E23\u0E34\u0E21: ${o.addOns.label} \xD7 ${o.addOns.people} \u0E04\u0E19${o.addOns.discount ? ` (\u0E25\u0E14\u0E41\u0E25\u0E49\u0E27 ${formatBaht(o.addOns.discount)} \u0E1A\u0E32\u0E17)` : ""}`, amount: o.addOns.total });
+  const sum = lines.reduce((t, l) => t + l.amount, 0);
+  return o.paymentMethod !== "SPONSOR_CODE" && !o.isTest && lines.length > 0 && sum === o.totalPrice ? lines : null;
+}
+
 // src/data/bibStrip.ts
 var BIB_SPONSOR_LOGOS = [
   "bpp",
@@ -35479,8 +35749,13 @@ var esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<"
 var qr = (text, dark = "#1E0B3D") => import_qrcode.default.toDataURL(text, { margin: 1, width: 360, errorCorrectionLevel: "M", color: { dark, light: "#FFFFFF" } });
 var runnerBib = (bib, i) => i === 0 ? bib : `${bib}-${i + 1}`;
 var thaiDateTime = (iso) => iso ? new Date(iso).toLocaleString("th-TH", { timeZone: "Asia/Bangkok", dateStyle: "medium", timeStyle: "short" }) : "";
+var DOC_IMAGES = ["/images/brand/changsuek-run-logo.webp", "/images/bib/bib-base.webp", ...BIB_SPONSOR_LOGOS];
 async function buildDocumentsHtml(o, opts = {}) {
   const A = opts.assetBase || "";
+  const inl = opts.inline;
+  const picVar = (path4) => `--pic-${DOC_IMAGES.indexOf(path4)}`;
+  const pic = (path4, cls) => inl && inl[path4] ? `<span class="${cls} pic" style="background-image:var(${picVar(path4)})" role="img" aria-hidden="true"></span>` : `<img src="${A}${path4}" alt="" class="${cls}" />`;
+  const inlineVars = inl ? `:root{${DOC_IMAGES.filter((p) => inl[p]).map((p) => `${picVar(p)}:url(${inl[p]})`).join(";")}}` : "";
   const isRun = o.ticketType !== "CONCERT" && o.ticketType !== "ADDON" && Boolean(DIST[o.routeId]);
   const start = isRun ? routesData[o.routeId]?.startTime || "" : "";
   const phones = eventInfo.contactPhones;
@@ -35488,7 +35763,7 @@ async function buildDocumentsHtml(o, opts = {}) {
   const dog = isRun && o.runningWithDog ? o.dogName || "" : "";
   const head = (kicker, title, color) => `
     <header class="band" style="--c:${color}">
-      <img src="${A}/images/brand/changsuek-run-logo.webp" alt="CHANGSUEK RUN" class="logo" />
+      ${pic("/images/brand/changsuek-run-logo.webp", "logo")}
       <div><p class="kicker">${kicker}</p><h1>${title}</h1></div>
       <div class="band-id"><small>\u0E40\u0E25\u0E02\u0E04\u0E33\u0E2A\u0E31\u0E48\u0E07\u0E0B\u0E37\u0E49\u0E2D</small><b>${esc(o.orderId)}</b></div>
     </header>`;
@@ -35507,7 +35782,7 @@ async function buildDocumentsHtml(o, opts = {}) {
         const code = await qr(JSON.stringify({ orderId: o.orderId, bib }));
         return `
         <div class="bib">
-          <img class="bib-bg" src="${A}/images/bib/bib-base.webp" alt="" />
+          ${pic("/images/bib/bib-base.webp", "bib-bg")}
           <div class="bib-dist"><b>${d.label}</b><span>${d.sub}</span></div>
           <div class="bib-age">
             <div class="bib-age-box"><b>${letter}</b><i></i><b>${decade ?? "\u2022"}</b></div>
@@ -35518,7 +35793,7 @@ async function buildDocumentsHtml(o, opts = {}) {
           <div class="bib-name">${esc(r.name)}${dog ? `<span style="color:#0F766E;font-size:.8em"> \xB7 \u{1F436} ${esc(dog)}</span>` : ""}</div>
           <div class="bib-qr"><img src="${code}" alt="QR" /><small>CHECK-IN \xB7 RACE RESULT</small></div>
           <div class="bib-strip">
-            <div class="bib-logos">${BIB_SPONSOR_LOGOS.map((s) => `<img src="${A}${s}" alt="" />`).join("")}</div>
+            <div class="bib-logos">${BIB_SPONSOR_LOGOS.map((s) => pic(s, "bib-logo")).join("")}</div>
             <div class="bib-perks">
               ${BIB_PERKS.map((p) => `<div class="bib-perk"><span class="bib-perk-ic">${p.icon}</span><small>${p.label}</small></div>`).join("")}
               <div class="bib-perk"><span class="bib-perk-size">${esc(r.shirt || "")}</span><small>${BIB_SIZE_LABEL}</small></div>
@@ -35540,42 +35815,61 @@ async function buildDocumentsHtml(o, opts = {}) {
 </section>`);
     }
   }
-  const items = [];
-  if (isRun) items.push({ name: `\u0E1A\u0E31\u0E15\u0E23\u0E27\u0E34\u0E48\u0E07 ${ticketById(o.routeId).name}${o.runningWithDog ? ` (\u0E19\u0E49\u0E2D\u0E07\u0E2B\u0E21\u0E32 ${o.dogCount || 1} \u0E15\u0E31\u0E27)` : ""}`, qty: `${o.peopleCount || 1} \u0E04\u0E19` });
-  if (o.concertQty) items.push({ name: "\u0E15\u0E31\u0E4B\u0E27\u0E04\u0E2D\u0E19\u0E40\u0E2A\u0E34\u0E23\u0E4C\u0E15 GA", qty: `${o.concertQty} \u0E43\u0E1A` });
-  if (o.vipTables) items.push({ name: "VIP TABLE \u0E04\u0E2D\u0E19\u0E40\u0E2A\u0E34\u0E23\u0E4C\u0E15 (6 \u0E17\u0E48\u0E32\u0E19/\u0E42\u0E15\u0E4A\u0E30)", qty: `${o.vipTables} \u0E42\u0E15\u0E4A\u0E30` });
-  if (o.addOns) items.push({ name: `\u0E01\u0E34\u0E08\u0E01\u0E23\u0E23\u0E21\u0E40\u0E2A\u0E23\u0E34\u0E21: ${o.addOns.label}`, qty: `${o.addOns.people} \u0E04\u0E19`, amount: `${formatBaht(o.addOns.total)} \u0E1A\u0E32\u0E17` });
   const ticketQr = await qr(JSON.stringify({ orderId: o.orderId, bib: o.bibNumber }));
+  const mapQr = await qr(eventInfo.googleMapsUrl);
   const pickup = scheduleData[0];
   const pickupItem = pickup?.items[0];
   const names = runners.length ? runners.map((r) => esc(r.name)).join(" \xB7 ") : esc(o.fullName);
+  const ents = ticketEntitlements(o);
+  const lines = priceLines(o);
+  const showLines = lines !== null;
+  const entHtml = ents.map(
+    (e, i) => `<div class="ent">
+        <div class="n">${i + 1}</div>
+        <div class="ic" style="background:${e.bg}">${e.icon}</div>
+        <div class="t"><b>${esc(e.title)}</b><small>${esc(e.sub)}</small></div>
+        <div class="q"><small>\u0E08\u0E33\u0E19\u0E27\u0E19</small><b>${e.qty.map(esc).join("<br/>")}</b></div>
+        <div class="w"><span>\u{1F4C5} ${esc(e.date)}</span>${e.time ? `<span>\u23F0 ${esc(e.time)}</span>` : ""}<span>\u{1F4CD} ${esc(e.place)}</span></div>
+        <div class="ck">\u2713</div>
+      </div>`
+  ).join("");
+  const hasRaceDay = isRun || o.concertQty || o.vipTables;
+  const dayLines = [
+    hasRaceDay ? `<b>\u{1F4C5} ${RACE_DAY} (\u0E40\u0E2A\u0E32\u0E23\u0E4C)</b> ${isRun ? `\u0E27\u0E34\u0E48\u0E07${start ? ` \u0E1B\u0E25\u0E48\u0E2D\u0E22\u0E15\u0E31\u0E27 ${esc(start)}` : ""}` : ""}${isRun && (o.concertQty || o.vipTables) ? " \xB7 " : ""}${o.concertQty || o.vipTables ? "\u0E04\u0E2D\u0E19\u0E40\u0E2A\u0E34\u0E23\u0E4C\u0E15 18.00\u201324.00 \u0E19." : ""}` : "",
+    o.addOns ? `<b>\u{1F4C5} ${ACT_DAY} (\u0E2D\u0E32\u0E17\u0E34\u0E15\u0E22\u0E4C)</b> \u0E01\u0E34\u0E08\u0E01\u0E23\u0E23\u0E21\u0E40\u0E2A\u0E23\u0E34\u0E21 \xB7 \u0E14\u0E39\u0E40\u0E27\u0E25\u0E32\u0E41\u0E15\u0E48\u0E25\u0E30\u0E2A\u0E16\u0E32\u0E19\u0E35\u0E1A\u0E19\u0E40\u0E27\u0E47\u0E1A\u0E44\u0E0B\u0E15\u0E4C` : ""
+  ].filter(Boolean);
+  const dayCards = `<div class="day">${dayLines.map((l) => `<small>${l}</small>`).join("")}</div>`;
   pages.push(`<section class="page">
   ${head("E-TICKET \xB7 RACE KIT PASS", "\u0E1A\u0E31\u0E15\u0E23\u0E40\u0E02\u0E49\u0E32\u0E07\u0E32\u0E19 & \u0E43\u0E1A\u0E22\u0E37\u0E19\u0E22\u0E31\u0E19\u0E01\u0E32\u0E23\u0E0A\u0E33\u0E23\u0E30\u0E40\u0E07\u0E34\u0E19", "#7C3AED")}
   <div class="body">
     <div class="hero-ticket">
       <div class="l">
         <span class="tag">\u0E0A\u0E33\u0E23\u0E30\u0E40\u0E07\u0E34\u0E19\u0E41\u0E25\u0E49\u0E27 \u2713</span>
-        <div class="big">${esc(o.routeName)}</div>
-        <div class="who">${names}${dog ? ` \xB7 \u{1F436} ${esc(dog)}` : ""}</div>
-        <div class="facts">
-          <div class="fact"><small>\u0E27\u0E31\u0E19\u0E27\u0E34\u0E48\u0E07 & \u0E04\u0E2D\u0E19\u0E40\u0E2A\u0E34\u0E23\u0E4C\u0E15</small><b>9 \u0E21.\u0E04. 2570</b></div>
-          ${isRun ? `<div class="fact"><small>\u0E1B\u0E25\u0E48\u0E2D\u0E22\u0E15\u0E31\u0E27</small><b>${esc(start)}</b></div>` : ""}
-          <div class="fact"><small>${isRun ? "BIB" : "\u0E40\u0E25\u0E02\u0E1A\u0E31\u0E15\u0E23"}</small><b>#${esc(o.bibNumber)}</b></div>
-          ${o.addOns ? `<div class="fact"><small>\u0E01\u0E34\u0E08\u0E01\u0E23\u0E23\u0E21\u0E40\u0E2A\u0E23\u0E34\u0E21</small><b>10 \u0E21.\u0E04. 2570</b></div>` : ""}
-          ${o.concertQty || o.vipTables || isRun ? `<div class="fact"><small>\u0E04\u0E2D\u0E19\u0E40\u0E2A\u0E34\u0E23\u0E4C\u0E15 (\u0E19.)</small><b>18.00\u201324.00</b></div>` : ""}
-          <div class="fact"><small>\u0E0A\u0E33\u0E23\u0E30\u0E40\u0E21\u0E37\u0E48\u0E2D</small><b class="sm">${esc(thaiDateTime(o.paidAt || o.verifiedAt))}</b></div>
-        </div>
+        <div class="who2"><small>\u0E0A\u0E37\u0E48\u0E2D\u0E1C\u0E39\u0E49\u0E2A\u0E21\u0E31\u0E04\u0E23</small><b>${names}</b></div>
+        ${dog ? `<div class="who2"><small>\u0E0A\u0E37\u0E48\u0E2D\u0E19\u0E49\u0E2D\u0E07\u0E2B\u0E21\u0E32</small><b>\u{1F436} ${esc(dog)}</b></div>` : ""}
+        <div class="bibbox"><small>${isRun ? "\u0E40\u0E25\u0E02 BIB" : "\u0E40\u0E25\u0E02\u0E1A\u0E31\u0E15\u0E23"}</small><b>${esc(o.bibNumber)}</b></div>
+        <div class="paid">\u0E0A\u0E33\u0E23\u0E30\u0E40\u0E21\u0E37\u0E48\u0E2D ${esc(thaiDateTime(o.paidAt || o.verifiedAt))}</div>
       </div>
-      <div class="r"><img src="${ticketQr}" alt="QR \u0E40\u0E0A\u0E47\u0E01\u0E2D\u0E34\u0E19" /><div class="r-t">QR \u0E40\u0E0A\u0E47\u0E01\u0E2D\u0E34\u0E19 / \u0E23\u0E31\u0E1A\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C</div><div class="r-s">\u0E41\u0E2A\u0E14\u0E07\u0E17\u0E35\u0E48\u0E08\u0E38\u0E14\u0E23\u0E31\u0E1A\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C</div></div>
+      <div class="r"><img src="${ticketQr}" alt="QR \u0E40\u0E0A\u0E47\u0E01\u0E2D\u0E34\u0E19" /><div class="r-t">QR \u0E40\u0E0A\u0E47\u0E01\u0E2D\u0E34\u0E19\u0E2B\u0E19\u0E49\u0E32\u0E07\u0E32\u0E19</div><div class="r-s">\u0E41\u0E2A\u0E14\u0E07\u0E15\u0E48\u0E2D\u0E40\u0E08\u0E49\u0E32\u0E2B\u0E19\u0E49\u0E32\u0E17\u0E35\u0E48</div></div>
     </div>
-    <h2 class="sec" style="margin-top:16px">\u{1F9FE} \u0E23\u0E32\u0E22\u0E01\u0E32\u0E23\u0E17\u0E35\u0E48\u0E0B\u0E37\u0E49\u0E2D</h2>
-    <table class="items">${items.map((it) => `<tr><td>${esc(it.name)}</td><td class="q">${esc(it.qty)}</td><td>${it.amount ? esc(it.amount) : "\u2713"}</td></tr>`).join("")}</table>
-    <div class="total"><span>${o.paymentMethod === "SPONSOR_CODE" ? `\u0E22\u0E2D\u0E14\u0E0A\u0E33\u0E23\u0E30 (\u0E2A\u0E34\u0E17\u0E18\u0E34\u0E4C\u0E2A\u0E1B\u0E2D\u0E19\u0E40\u0E0B\u0E2D\u0E23\u0E4C${o.sponsorName ? ` ${esc(o.sponsorName)}` : ""})` : "\u0E22\u0E2D\u0E14\u0E0A\u0E33\u0E23\u0E30\u0E2A\u0E38\u0E17\u0E18\u0E34"}</span><b>${formatBaht(o.totalPrice)} \u0E1A\u0E32\u0E17</b></div>
-    <h2 class="sec" style="margin-top:16px">\u{1F4CD} \u0E27\u0E31\u0E19\u0E07\u0E32\u0E19\u0E15\u0E49\u0E2D\u0E07\u0E17\u0E33\u0E2D\u0E30\u0E44\u0E23\u0E1A\u0E49\u0E32\u0E07</h2>
-    <div class="cards3">
-      ${isRun && pickupItem ? `<div class="card" style="border-color:#C4B5FD;background:#F5F0FF"><b>1. \u0E23\u0E31\u0E1A\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C (Race Kit)</b>\u0E27\u0E31\u0E19\u0E40\u0E2A\u0E32\u0E23\u0E4C\u0E17\u0E35\u0E48 9 \u0E21.\u0E04. 2570 \u0E15\u0E31\u0E49\u0E07\u0E41\u0E15\u0E48 09.00 \u0E19.<br />${esc(pickup.description.replace(/^ณ\s*/, ""))}<br />\u0E41\u0E2A\u0E14\u0E07 QR \u0E19\u0E35\u0E49 + \u0E1A\u0E31\u0E15\u0E23\u0E1B\u0E23\u0E30\u0E0A\u0E32\u0E0A\u0E19</div>` : ""}
-      <div class="card" style="border-color:#7DD3FC;background:#E0F2FE"><b>${isRun ? "2. \u0E27\u0E31\u0E19\u0E41\u0E02\u0E48\u0E07" : "\u0E27\u0E31\u0E19\u0E07\u0E32\u0E19"}</b>${esc(eventInfo.dateNotice)}${isRun ? ` \xB7 \u0E1B\u0E25\u0E48\u0E2D\u0E22\u0E15\u0E31\u0E27 ${esc(start)}` : ""}<br />${esc(eventInfo.venueShort)}<br />\u0E40\u0E1C\u0E37\u0E48\u0E2D\u0E40\u0E27\u0E25\u0E32\u0E40\u0E14\u0E34\u0E19\u0E17\u0E32\u0E07\u0E21\u0E32\u0E16\u0E36\u0E07\u0E01\u0E48\u0E2D\u0E19\u0E40\u0E27\u0E25\u0E32</div>
-      ${dog ? `<div class="card" style="border-color:#86EFAC;background:#ECFDF5"><b>3. \u0E19\u0E49\u0E2D\u0E07\u0E2B\u0E21\u0E32</b>\u0E19\u0E33\u0E2A\u0E21\u0E38\u0E14\u0E27\u0E31\u0E04\u0E0B\u0E35\u0E19 (\u0E1E\u0E34\u0E29\u0E2A\u0E38\u0E19\u0E31\u0E02\u0E1A\u0E49\u0E32 + \u0E27\u0E31\u0E04\u0E0B\u0E35\u0E19\u0E23\u0E27\u0E21) \u0E2A\u0E32\u0E22\u0E08\u0E39\u0E07 \u0E41\u0E25\u0E30\u0E16\u0E38\u0E07\u0E40\u0E01\u0E47\u0E1A\u0E21\u0E39\u0E25</div>` : o.addOns ? `<div class="card" style="border-color:#FDE68A;background:#FFF7DB"><b>\u0E01\u0E34\u0E08\u0E01\u0E23\u0E23\u0E21\u0E40\u0E2A\u0E23\u0E34\u0E21</b>${esc(eventInfo.activityDateNotice)}<br />\u0E14\u0E39\u0E40\u0E27\u0E25\u0E32\u0E41\u0E25\u0E30\u0E08\u0E38\u0E14\u0E02\u0E2D\u0E07\u0E41\u0E15\u0E48\u0E25\u0E30\u0E2A\u0E16\u0E32\u0E19\u0E35\u0E1A\u0E19\u0E40\u0E27\u0E47\u0E1A\u0E44\u0E0B\u0E15\u0E4C</div>` : ""}
+
+    <h2 class="sec" style="margin-top:16px">\u{1F3AB} \u0E2A\u0E34\u0E17\u0E18\u0E34\u0E4C\u0E17\u0E35\u0E48\u0E04\u0E38\u0E13\u0E44\u0E14\u0E49\u0E23\u0E31\u0E1A</h2>
+    <div class="ents">${entHtml}</div>
+
+    <div class="sum">
+      ${lines ? `<ul>${lines.map((l) => `<li><span>${esc(l.name)}</span><b>${l.amount < 0 ? "\u2212 " : ""}${formatBaht(Math.abs(l.amount))} \u0E1A\u0E32\u0E17</b></li>`).join("")}</ul>` : "<div></div>"}
+      <div class="total"><span>${o.paymentMethod === "SPONSOR_CODE" ? `\u0E22\u0E2D\u0E14\u0E0A\u0E33\u0E23\u0E30 (\u0E2A\u0E34\u0E17\u0E18\u0E34\u0E4C\u0E2A\u0E1B\u0E2D\u0E19\u0E40\u0E0B\u0E2D\u0E23\u0E4C${o.sponsorName ? ` ${esc(o.sponsorName)}` : ""})` : "\u0E22\u0E2D\u0E14\u0E0A\u0E33\u0E23\u0E30\u0E2A\u0E38\u0E17\u0E18\u0E34"}</span><b>${formatBaht(o.totalPrice)} \u0E1A\u0E32\u0E17</b></div>
+    </div>
+
+    <h2 class="sec" style="margin-top:14px">\u{1F4CD} \u0E23\u0E32\u0E22\u0E25\u0E30\u0E40\u0E2D\u0E35\u0E22\u0E14\u0E07\u0E32\u0E19</h2>
+    <div class="detail">
+      <div class="dcol">${dayCards}
+        ${isRun && pickupItem ? `<div class="day" style="background:#F5F0FF;border-color:#C4B5FD"><b>\u{1F3BD} \u0E23\u0E31\u0E1A\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C Race Kit</b><small>\u0E27\u0E31\u0E19\u0E40\u0E2A\u0E32\u0E23\u0E4C\u0E17\u0E35\u0E48 ${RACE_DAY} \u0E15\u0E31\u0E49\u0E07\u0E41\u0E15\u0E48 09.00 \u0E19.<br />${esc(pickup.description.replace(/^กิจกรรมทั้งหมด\s*/, "").replace(/^ณ\s*/, "\u0E13 "))}<br />\u0E2A\u0E34\u0E48\u0E07\u0E17\u0E35\u0E48\u0E15\u0E49\u0E2D\u0E07\u0E43\u0E0A\u0E49: QR \u0E1A\u0E31\u0E15\u0E23\u0E19\u0E35\u0E49 + \u0E1A\u0E31\u0E15\u0E23\u0E1B\u0E23\u0E30\u0E0A\u0E32\u0E0A\u0E19 (\u0E0A\u0E32\u0E27\u0E15\u0E48\u0E32\u0E07\u0E0A\u0E32\u0E15\u0E34: \u0E2B\u0E19\u0E31\u0E07\u0E2A\u0E37\u0E2D\u0E40\u0E14\u0E34\u0E19\u0E17\u0E32\u0E07)</small></div>` : ""}
+      </div>
+      <div class="dcol">
+        <div class="day" style="background:#ECFDF5;border-color:#86EFAC"><b>\u{1F4CD} \u0E2A\u0E16\u0E32\u0E19\u0E17\u0E35\u0E48\u0E08\u0E31\u0E14\u0E07\u0E32\u0E19</b><small>${esc(eventInfo.venue)}<br />${esc(eventInfo.locationProvince)}</small></div>
+        <div class="day map"><img src="${mapQr}" alt="QR \u0E41\u0E1C\u0E19\u0E17\u0E35\u0E48" /><div><b>\u{1F5FA}\uFE0F \u0E41\u0E1C\u0E19\u0E17\u0E35\u0E48</b><small>\u0E2A\u0E41\u0E01\u0E19\u0E40\u0E1E\u0E37\u0E48\u0E2D\u0E40\u0E1B\u0E34\u0E14 Google Maps \xB7 \u0E40\u0E1C\u0E37\u0E48\u0E2D\u0E40\u0E27\u0E25\u0E32\u0E40\u0E14\u0E34\u0E19\u0E17\u0E32\u0E07\u0E21\u0E32\u0E16\u0E36\u0E07\u0E01\u0E48\u0E2D\u0E19\u0E40\u0E27\u0E25\u0E32</small></div></div>
+      </div>
     </div>
   </div>
   ${foot}
@@ -35615,11 +35909,12 @@ async function buildDocumentsHtml(o, opts = {}) {
       const n = r.ins;
       const c = colors[r.i % colors.length];
       return `<div class="ins" style="border-color:${c}">
-      <header style="background:linear-gradient(90deg,${c},#1E0B3D)"><span>\u{1F6E1}\uFE0F \u0E1C\u0E39\u0E49\u0E40\u0E2D\u0E32\u0E1B\u0E23\u0E30\u0E01\u0E31\u0E19\u0E04\u0E19\u0E17\u0E35\u0E48 ${r.i + 1}: ${esc(n.prefix)}${esc(n.firstName)} ${esc(n.lastName)}</span><span>BIB #${esc(runnerBib(o.bibNumber, r.i))}</span></header>
+      <header style="background:linear-gradient(90deg,${c},#1E0B3D)"><span>\u{1F6E1}\uFE0F \u0E1C\u0E39\u0E49\u0E40\u0E2D\u0E32\u0E1B\u0E23\u0E30\u0E01\u0E31\u0E19\u0E04\u0E19\u0E17\u0E35\u0E48 ${r.i + 1}: ${esc(n.prefix)}${/^[A-Za-z]/.test(n.firstName) ? " " : ""}${esc(n.firstName)} ${esc(n.lastName)}</span><span>BIB #${esc(runnerBib(o.bibNumber, r.i))}</span></header>
       <div class="grid">
-        <div class="s2"><small>\u0E40\u0E25\u0E02\u0E1A\u0E31\u0E15\u0E23\u0E1B\u0E23\u0E30\u0E0A\u0E32\u0E0A\u0E19</small><b>${esc(n.idCard ? maskThaiId(n.idCard) : "-")}</b></div><div><small>\u0E40\u0E1E\u0E28</small><b>${esc(n.gender)}</b></div><div><small>\u0E27\u0E31\u0E19\u0E40\u0E01\u0E34\u0E14 (\u0E04.\u0E28.)</small><b>${esc(n.birthDate)}</b></div><div><small>\u0E2D\u0E32\u0E22\u0E38</small><b>${n.age} \u0E1B\u0E35</b></div><div><small>\u0E01\u0E23\u0E38\u0E4A\u0E1B\u0E40\u0E25\u0E37\u0E2D\u0E14</small><b>${esc(n.bloodType)}</b></div>
+        ${n.foreigner ? `<div class="s2"><small>\u0E1E\u0E32\u0E2A\u0E1B\u0E2D\u0E23\u0E4C\u0E15 (${esc(n.nationality || "")})</small><b>${esc(maskPassport(n.passportNo || ""))} \xB7 \u0E2B\u0E21\u0E14\u0E2D\u0E32\u0E22\u0E38 ${esc(n.passportExpiry || "-")}</b></div>` : `<div class="s2"><small>\u0E40\u0E25\u0E02\u0E1A\u0E31\u0E15\u0E23\u0E1B\u0E23\u0E30\u0E0A\u0E32\u0E0A\u0E19</small><b>${esc(n.idCard ? maskThaiId(n.idCard) : "-")}</b></div>`}<div><small>\u0E40\u0E1E\u0E28</small><b>${esc(n.gender)}</b></div><div><small>\u0E27\u0E31\u0E19\u0E40\u0E01\u0E34\u0E14 (\u0E04.\u0E28.)</small><b>${esc(n.birthDate)}</b></div><div><small>\u0E2D\u0E32\u0E22\u0E38</small><b>${n.age} \u0E1B\u0E35</b></div><div><small>\u0E01\u0E23\u0E38\u0E4A\u0E1B\u0E40\u0E25\u0E37\u0E2D\u0E14</small><b>${esc(n.bloodType)}</b></div>
         <div class="s2"><small>\u0E42\u0E23\u0E04\u0E1B\u0E23\u0E30\u0E08\u0E33\u0E15\u0E31\u0E27 / \u0E41\u0E1E\u0E49\u0E22\u0E32</small><b>${esc(n.medicalConditions)}</b></div><div><small>\u0E23\u0E30\u0E22\u0E30\u0E27\u0E34\u0E48\u0E07</small><b>${esc(ticketById(o.routeId).name)}</b></div><div><small>\u0E44\u0E0B\u0E2A\u0E4C\u0E40\u0E2A\u0E37\u0E49\u0E2D</small><b>${esc(r.shirt)}</b></div>
-        <div class="s2"><small>\u0E1C\u0E39\u0E49\u0E15\u0E34\u0E14\u0E15\u0E48\u0E2D\u0E09\u0E38\u0E01\u0E40\u0E09\u0E34\u0E19</small><b>${esc(n.emergencyName)} (${esc(n.relationship)})</b></div><div class="s2"><small>\u0E40\u0E1A\u0E2D\u0E23\u0E4C\u0E1C\u0E39\u0E49\u0E15\u0E34\u0E14\u0E15\u0E48\u0E2D\u0E09\u0E38\u0E01\u0E40\u0E09\u0E34\u0E19</small><b>${esc(o.emergencyPhone)}</b></div>
+        <div class="s2"><small>\u0E1C\u0E39\u0E49\u0E15\u0E34\u0E14\u0E15\u0E48\u0E2D\u0E09\u0E38\u0E01\u0E40\u0E09\u0E34\u0E19</small><b>${esc(n.emergencyName)} (${esc(n.relationship)})</b></div><div class="s2"><small>\u0E40\u0E1A\u0E2D\u0E23\u0E4C\u0E1C\u0E39\u0E49\u0E15\u0E34\u0E14\u0E15\u0E48\u0E2D\u0E09\u0E38\u0E01\u0E40\u0E09\u0E34\u0E19</small><b>${esc(n.emergencyPhone || o.emergencyPhone)}</b></div>
+        <div class="s4"><small>\u0E1C\u0E39\u0E49\u0E23\u0E31\u0E1A\u0E1C\u0E25\u0E1B\u0E23\u0E30\u0E42\u0E22\u0E0A\u0E19\u0E4C (\u0E1B\u0E23\u0E30\u0E01\u0E31\u0E19)</small><b>${esc(n.beneficiaryName ? `${n.beneficiaryName} (${n.beneficiaryRelationship || ""})` : `${n.emergencyName} (${n.relationship}) \xB7 \u0E15\u0E32\u0E21\u0E1C\u0E39\u0E49\u0E15\u0E34\u0E14\u0E15\u0E48\u0E2D\u0E09\u0E38\u0E01\u0E40\u0E09\u0E34\u0E19`)}</b></div>
       </div></div>`;
     });
     const dogCard = dog ? `<div class="ins" style="border-color:#10B981">
@@ -35644,7 +35939,7 @@ async function buildDocumentsHtml(o, opts = {}) {
 <title>\u0E40\u0E2D\u0E01\u0E2A\u0E32\u0E23 A4 \xB7 ${esc(o.orderId)} \xB7 CHANGSUEK RUN 2027</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" /><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Mitr:wght@400;500;600;700&family=Sarabun:wght@400;600;700;800&family=Montserrat:wght@700;800;900&display=swap" rel="stylesheet" />
-<style>${CSS}</style></head><body>
+<style>${inlineVars}${CSS}</style></head><body>
 <div class="bar"><div><b>\u0E40\u0E2D\u0E01\u0E2A\u0E32\u0E23 A4 \u0E02\u0E2D\u0E07\u0E04\u0E33\u0E2A\u0E31\u0E48\u0E07\u0E0B\u0E37\u0E49\u0E2D ${esc(o.orderId)}</b><span>${pages.length} \u0E2B\u0E19\u0E49\u0E32 \xB7 \u0E1E\u0E34\u0E21\u0E1E\u0E4C\u0E41\u0E19\u0E27\u0E15\u0E31\u0E49\u0E07 \u0E2B\u0E23\u0E37\u0E2D\u0E1A\u0E31\u0E19\u0E17\u0E36\u0E01\u0E40\u0E1B\u0E47\u0E19 PDF</span></div><button type="button" onclick="window.print()">\u{1F5A8}\uFE0F \u0E1E\u0E34\u0E21\u0E1E\u0E4C / \u0E1A\u0E31\u0E19\u0E17\u0E36\u0E01 PDF</button></div>
 <div class="pages">${pages.join("\n")}</div>
 <script>(function(){function f(){document.documentElement.style.setProperty('--z',String(Math.min(1,(window.innerWidth-16)/794)))}f();window.addEventListener('resize',f)})()</script>
@@ -35658,14 +35953,14 @@ var CSS = `
   .bar b { display:block; font-weight:600; font-size:15px } .bar span { font-size:12px; opacity:.8 }
   .bar button { min-height:44px; padding:0 18px; border-radius:12px; border:2px solid #fff; background:#FFC928; color:#1E0B3D; font:700 15px 'Mitr',Tahoma,sans-serif; cursor:pointer; }
   .pages { padding:8px 0 24px; }
-  .page { zoom:var(--z); width:210mm; min-height:297mm; margin:16px auto; background:#fff; position:relative; overflow:hidden; box-shadow:0 10px 40px rgba(30,11,61,.18); padding:0 0 18mm; }
+  .page { zoom:var(--z); width:210mm; min-height:297mm; margin:16px auto; background:#fff; position:relative; overflow:hidden; box-shadow:0 10px 40px rgba(30,11,61,.18); padding:0 0 14mm; }
   .band { display:flex; align-items:center; gap:14px; padding:14px 18mm; color:#fff; background:linear-gradient(115deg, var(--ink), var(--c) 70%, var(--pink)); position:relative; }
   .band::after { content:''; position:absolute; left:0; right:0; bottom:-6px; height:6px; background:repeating-linear-gradient(135deg, var(--gold) 0 12px, var(--ink) 12px 24px); }
   .band .logo { width:64px; height:64px; object-fit:contain; background:#fff; border-radius:16px; padding:4px; border:3px solid var(--gold); }
   .band h1 { margin:0; font:700 24px/1.2 'Mitr',sans-serif; }
   .band .kicker { margin:0; font:800 11px/1 'Montserrat',sans-serif; letter-spacing:.2em; color:var(--gold); }
   .band-id { margin-left:auto; text-align:right; } .band-id small { display:block; font-size:11px; opacity:.8 } .band-id b { font:800 15px 'Montserrat',sans-serif; }
-  .body { padding:12mm 18mm 0; }
+  .body { padding:9mm 18mm 0; }
   .foot { position:absolute; left:0; right:0; bottom:0; padding:8px 18mm; font-size:11px; font-weight:700; color:#5B4A7A; background:#F5F0FF; border-top:2px solid #E4D9FB; }
   h2.sec { font:600 17px 'Mitr',sans-serif; margin:0 0 8px; display:flex; align-items:center; gap:8px; }
   h2.sec::after { content:''; flex:1; height:3px; border-radius:3px; background:linear-gradient(90deg, var(--gold), transparent); }
@@ -35689,8 +35984,11 @@ var CSS = `
   .bib-sos { position:absolute; left:84.8%; top:64.2%; width:13.4%; text-align:center; border-top:.3cqw solid var(--gold); padding-top:.5cqw; }
   .bib-strip { position:absolute; left:2.73%; top:81.84%; width:94.4%; height:12.6%; background:#fff; border-radius:1cqw; display:flex; align-items:stretch; }
   .bib-logos { flex:0 0 57%; min-height:0; overflow:hidden; display:grid; grid-template-columns:repeat(18,minmax(0,1fr)); grid-template-rows:repeat(2,minmax(0,1fr)); gap:.2cqw .45cqw; padding:.7cqw 1cqw; box-sizing:border-box; }
+  .pic { display:block; background-repeat:no-repeat; background-position:center; background-size:contain; -webkit-print-color-adjust:exact; print-color-adjust:exact }
+  .bib-bg.pic { background-size:100% 100% }
+  .bib-logos .bib-logo { grid-column:span 2; width:100%; height:100%; min-height:0; object-fit:contain }
   .bib-logos img { grid-column:span 2; width:100%; height:100%; min-height:0; object-fit:contain; }
-  .bib-logos img:nth-child(10) { grid-column:2 / span 2; }
+  .bib-logos .bib-logo:nth-child(10), .bib-logos img:nth-child(10) { grid-column:2 / span 2; }
   .bib-perks { flex:1; display:flex; border-left:.25cqw solid #E4DAF5; margin:.8cqw 0; }
   .bib-perk { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:.35cqw; }
   .bib-perk-ic { width:4.2cqw; height:4.2cqw; border-radius:50%; border:.3cqw dashed #3B1883; display:flex; align-items:center; justify-content:center; padding:.55cqw; box-sizing:border-box; }
@@ -35699,14 +35997,33 @@ var CSS = `
   .bib-perk small { font:700 1.2cqw 'Mitr',sans-serif; color:#2A1450; white-space:nowrap; }
   .bib-sos small { display:block; font:800 .9cqw 'Montserrat',sans-serif; color:#2A1450; } .bib-sos b { display:block; font:800 1.45cqw/1.3 'Montserrat',sans-serif; color:#160A2E; }
   .hero-ticket { display:grid; grid-template-columns:1fr 54mm; border-radius:18px; overflow:hidden; border:3px solid var(--ink); box-shadow:0 6px 0 var(--ink); }
-  .hero-ticket .l { padding:16px 18px; background:linear-gradient(135deg,#F5F0FF,#FFF7DB 60%,#FCE7F3); }
-  .hero-ticket .r { padding:14px; background:var(--ink); color:#fff; text-align:center; border-left:3px dashed var(--gold); }
+  .hero-ticket .l { padding:12px 16px; background:linear-gradient(135deg,#F5F0FF,#FFF7DB 60%,#FCE7F3); }
+  .hero-ticket .r { padding:10px; background:var(--ink); color:#fff; text-align:center; border-left:3px dashed var(--gold); }
   .hero-ticket .r img, .park .r img { width:100%; border-radius:12px; background:#fff; padding:6px; }
   .r-t { margin-top:6px; font:600 13px 'Mitr',sans-serif } .r-s { font-size:11px; opacity:.75 }
   .tag { display:inline-block; padding:3px 12px; border-radius:99px; font:700 12px 'Mitr',sans-serif; color:#fff; background:var(--pink); }
   .big { font:700 28px/1.15 'Mitr',sans-serif; margin:6px 0 2px; } .who { font-weight:700; color:#5B4A7A }
   .facts { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:12px; }
   .fact { background:#fff; border:2px solid #E4D9FB; border-radius:12px; padding:7px 10px; } .fact small { display:block; font-size:11px; color:#6B5A85; font-weight:700 } .fact b { font:600 15px 'Mitr',sans-serif } .fact b.sm { font-size:12.5px }
+  .hero-ticket .l { display:grid; grid-template-columns:1fr 1fr; gap:6px 14px; align-content:start; }
+  .hero-ticket .tag { grid-column:1 / -1; justify-self:start; background:#16A34A; }
+  .who2 { background:#fff; border:2px solid #E4D9FB; border-radius:12px; padding:6px 10px; } .who2 small { display:block; font-size:11px; color:#6B5A85; font-weight:700 } .who2 b { font:600 15px 'Mitr',sans-serif; color:var(--ink); word-break:break-word }
+  .bibbox { grid-column:1 / -1; border-radius:12px; padding:3px 14px; background:linear-gradient(135deg,#FFE9A6,#FFC928); border:2px solid var(--ink); } .bibbox small { font:800 11px 'Montserrat',sans-serif; letter-spacing:.15em } .bibbox b { display:block; font:900 28px/1.1 'Montserrat',sans-serif; color:var(--ink); letter-spacing:-.02em; word-break:break-all }
+  .paid { grid-column:1 / -1; font-size:11.5px; font-weight:700; color:#5B4A7A }
+  .ents { display:flex; flex-direction:column; gap:4px; }
+  .ent { display:grid; grid-template-columns:24px 34px minmax(0,1fr) 74px 168px 22px; gap:8px; align-items:center; padding:4px 8px; border-radius:12px; border:2px solid #E4D9FB; background:#FBF9FF; }
+  .ent .n { width:22px; height:22px; border-radius:50%; background:var(--ink); color:#fff; font:700 12px/22px 'Montserrat',sans-serif; text-align:center }
+  .ent .ic { width:34px; height:34px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:22px; }
+  .ent .t b { display:block; font:600 14.5px/1.2 'Mitr',sans-serif; color:var(--ink) } .ent .t small { display:block; font-size:11px; color:#6B5A85; font-weight:600; line-height:1.35 }
+  .ent .q { text-align:center; background:#EDE6FB; border-radius:10px; padding:3px 4px } .ent .q small { display:block; font-size:10px; color:#6B5A85; font-weight:700 } .ent .q b { font:600 12px/1.25 'Mitr',sans-serif; color:var(--ink) }
+  .ent .w { display:flex; flex-direction:column; gap:1px; font-size:11px; font-weight:700; color:#3F3358; line-height:1.3 }
+  .ent .ck { width:22px; height:22px; border-radius:6px; background:#16A34A; color:#fff; font-weight:900; text-align:center; line-height:22px; font-size:14px }
+  .sum { display:grid; grid-template-columns:1fr 62mm; gap:12px; margin-top:10px; align-items:end }
+  .sum ul { list-style:none; margin:0; padding:0; font-size:12.5px } .sum li { display:flex; justify-content:space-between; gap:10px; padding:2px 0; border-bottom:1px dashed #E4D9FB } .sum li b { white-space:nowrap }
+  .sum .total { margin-top:0; flex-direction:column; align-items:flex-start; gap:2px; } .sum .total span { font-size:13px }
+  .detail { display:grid; grid-template-columns:1fr 1fr; gap:10px } .dcol { display:flex; flex-direction:column; gap:8px }
+  .day { border:2px solid #FDE68A; background:#FFF7DB; border-radius:14px; padding:8px 12px; } .day b { display:block; font:600 14px 'Mitr',sans-serif; color:var(--ink) } .day small { display:block; font-size:11.5px; line-height:1.45; font-weight:600; color:#3F3358 } .day small b { display:inline; font:700 12px 'Mitr',sans-serif }
+  .day.map { display:flex; gap:10px; align-items:center; background:#EFF6FF; border-color:#93C5FD } .day.map img { width:74px; height:74px; border-radius:8px; background:#fff; padding:3px }
   table.items { width:100%; border-collapse:separate; border-spacing:0 6px; font-size:14px; } .items td { padding:8px 10px; background:#FAF7FF; } .items td.q { text-align:center; width:80px } .items td:first-child { border-radius:10px 0 0 10px } .items td:last-child { border-radius:0 10px 10px 0; text-align:right; font-weight:800 }
   .total { display:flex; justify-content:space-between; align-items:center; margin-top:4px; padding:12px 16px; border-radius:14px; color:#fff; background:linear-gradient(90deg,var(--ink),var(--purple)); font:600 17px 'Mitr',sans-serif; } .total b { color:var(--gold); font:800 24px 'Montserrat',sans-serif }
   .cards3 { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; } .card { border-radius:14px; padding:10px 12px; border:2px solid; font-size:13px; line-height:1.55; } .card b { font:600 15px 'Mitr',sans-serif; display:block; margin-bottom:2px }
@@ -35722,7 +36039,7 @@ var CSS = `
   .ins .grid .s2 { grid-column:span 2 } .ins .grid .s4 { grid-column:span 4 }
   .doc { padding:14mm 18mm 18mm; } .doc-tag { display:inline-block; margin-bottom:8px; padding:4px 12px; border-radius:99px; background:#F0FDFA; border:2px solid #0F766E; font:600 12px 'Mitr',sans-serif; color:#0F766E; }
   @page { size:A4; margin:0 }
-  @media print { body { background:#fff } .bar { display:none } .pages { padding:0 } .page { zoom:1; margin:0; box-shadow:none; page-break-after:always } }
+  @media print { .page { overflow:visible } body { background:#fff } .bar { display:none } .pages { padding:0 } .page { zoom:1; margin:0; box-shadow:none; page-break-after:always } }
 `;
 
 // server/payments.ts
@@ -48228,7 +48545,23 @@ function maskEmail(email) {
   return `${u.slice(0, 2)}${"*".repeat(Math.max(1, Math.min(6, u.length - 2)))}@${d}`;
 }
 var row = (label, value) => `<tr><td style="padding:9px 12px;color:#6B5A85;font-size:13px;width:40%;vertical-align:top;border-bottom:1px solid #EEE7F8">${esc2(label)}</td><td style="padding:9px 12px;color:#2A1450;font-size:14px;font-weight:700;border-bottom:1px solid #EEE7F8">${value}</td></tr>`;
-var chip = (icon, text) => `<td style="padding:4px;vertical-align:top"><div style="background:#F4EEFF;border:2px solid #E2D5F8;border-radius:12px;padding:8px 10px;font-size:12px;font-weight:700;color:#2A1450;text-align:center">${icon}<br/>${text}</div></td>`;
+var inlineCache = null;
+async function documentImages() {
+  if (inlineCache) return inlineCache;
+  const out = {};
+  await Promise.all(
+    DOC_IMAGES.map(async (path4) => {
+      try {
+        const r = await fetch(`${SITE}${path4}`, { signal: AbortSignal.timeout(6e3) });
+        if (!r.ok) return;
+        out[path4] = `data:${r.headers.get("content-type") || "image/webp"};base64,${Buffer.from(await r.arrayBuffer()).toString("base64")}`;
+      } catch {
+      }
+    })
+  );
+  if (Object.keys(out).length === DOC_IMAGES.length) inlineCache = out;
+  return Object.keys(out).length ? out : void 0;
+}
 async function buildTicketEmail(o) {
   const isRun = o.ticketType !== "CONCERT" && o.ticketType !== "ADDON";
   const start = isRun ? routesData[o.routeId]?.startTime : "";
@@ -48247,28 +48580,39 @@ async function buildTicketEmail(o) {
     const buf = await import_qrcode2.default.toBuffer(parkingQrPayload(o.orderId, parking[i]), qrOpts);
     attachments.push({ filename: `VIP_PARKING_${o.orderId}_${i + 1}.png`, content: buf.toString("base64"), content_id: `parking-${i + 1}` });
   }
-  const rows = [
-    row("\u0E04\u0E33\u0E2A\u0E31\u0E48\u0E07\u0E0B\u0E37\u0E49\u0E2D", `<span style="font-family:Consolas,monospace">${esc2(o.orderId)}</span>`),
-    row("\u0E0A\u0E37\u0E48\u0E2D", esc2(o.fullName)),
-    row("\u0E23\u0E32\u0E22\u0E01\u0E32\u0E23", esc2(o.routeName))
-  ];
-  if (isRun) {
-    rows.push(row("\u0E27\u0E31\u0E19\u0E27\u0E34\u0E48\u0E07", `${esc2(eventInfo.dateNotice)}${start ? ` \xB7 \u0E1B\u0E25\u0E48\u0E2D\u0E22\u0E15\u0E31\u0E27 ${esc2(start)}` : ""}`));
-    if (o.shirtSize) rows.push(row("\u0E44\u0E0B\u0E2A\u0E4C\u0E40\u0E2A\u0E37\u0E49\u0E2D", esc2(o.shirtSize)));
-    if (o.runningWithDog) rows.push(row("\u0E19\u0E49\u0E2D\u0E07\u0E2A\u0E38\u0E19\u0E31\u0E02", `\u{1F436} ${esc2(o.dogName || "-")}`));
-  }
-  if (o.concertQty) rows.push(row("\u0E15\u0E31\u0E4B\u0E27\u0E04\u0E2D\u0E19\u0E40\u0E2A\u0E34\u0E23\u0E4C\u0E15 GA", `\u{1F3B6} ${o.concertQty} \u0E43\u0E1A \xB7 ${esc2(eventInfo.dateNotice)} Door Open 17.30 \u0E19. \xB7 \u0E40\u0E23\u0E34\u0E48\u0E21 18.00 \u0E19.`));
-  if (o.vipTables) rows.push(row("VIP TABLE", `\u2B50 ${o.vipTables} \u0E42\u0E15\u0E4A\u0E30`));
-  if (o.addOns)
-    rows.push(
-      row("\u0E01\u0E34\u0E08\u0E01\u0E23\u0E23\u0E21\u0E40\u0E2A\u0E23\u0E34\u0E21", `${esc2(o.addOns.label)} \xD7 ${o.addOns.people} \u0E04\u0E19<br/><span style="color:#6B5A85;font-weight:600">${esc2(eventInfo.activityDateNotice)}</span>`)
-    );
-  rows.push(row("\u0E22\u0E2D\u0E14\u0E0A\u0E33\u0E23\u0E30", `<span style="color:#15803D">${formatBaht(o.totalPrice)} \u0E1A\u0E32\u0E17 \u2713</span>`));
-  const chips = [
-    chip("\u{1F4C5}", esc2(mainDate)),
-    isRun && start ? chip("\u23F1\uFE0F", `\u0E1B\u0E25\u0E48\u0E2D\u0E22\u0E15\u0E31\u0E27 ${esc2(start)}`) : "",
-    chip("\u{1F4CD}", esc2(eventInfo.venueShort))
-  ].join("");
+  const rows = [row("\u0E04\u0E33\u0E2A\u0E31\u0E48\u0E07\u0E0B\u0E37\u0E49\u0E2D", `<span style="font-family:Consolas,monospace">${esc2(o.orderId)}</span>`), row("\u0E0A\u0E37\u0E48\u0E2D", esc2(o.fullName))];
+  const lines = priceLines(o);
+  if (lines) for (const l of lines) rows.push(row(l.name, `${l.amount < 0 ? "\u2212 " : ""}${formatBaht(Math.abs(l.amount))} \u0E1A\u0E32\u0E17`));
+  rows.push(row("\u0E22\u0E2D\u0E14\u0E0A\u0E33\u0E23\u0E30\u0E2A\u0E38\u0E17\u0E18\u0E34", `<span style="color:#15803D;font-size:16px">${formatBaht(o.totalPrice)} \u0E1A\u0E32\u0E17 \u2713</span>`));
+  const ents = ticketEntitlements(o);
+  const entHtml = ents.map(
+    (e, i) => `
+      <tr><td style="padding:10px 0;border-bottom:1px solid #EEE7F8">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
+          <td width="30" valign="top" style="padding-right:8px"><div style="width:24px;height:24px;border-radius:12px;background:#2A1450;color:#fff;font-weight:900;font-size:13px;line-height:24px;text-align:center">${i + 1}</div></td>
+          <td width="44" valign="top"><div style="width:40px;height:40px;border-radius:12px;background:${e.bg};font-size:22px;line-height:40px;text-align:center">${e.icon}</div></td>
+          <td valign="top" style="padding-left:10px">
+            <div style="font-size:15px;font-weight:900;color:#2A1450">${esc2(e.title)} <span style="font-weight:800;color:#7C3AED;font-size:13px">\xB7 ${e.qty.map(esc2).join(" ")}</span></div>
+            ${e.sub ? `<div style="font-size:12px;color:#6B5A85;margin-top:1px">${esc2(e.sub)}</div>` : ""}
+            <div style="font-size:12px;color:#3F3358;font-weight:700;margin-top:3px">\u{1F4C5} ${esc2(e.date)}${e.time ? ` \xB7 \u23F0 ${esc2(e.time)}` : ""} \xB7 \u{1F4CD} ${esc2(e.place)}</div>
+          </td>
+          <td width="26" valign="top" align="right"><div style="width:22px;height:22px;border-radius:6px;background:#16A34A;color:#fff;font-weight:900;font-size:14px;line-height:22px;text-align:center">\u2713</div></td>
+        </tr></table>
+      </td></tr>`
+  ).join("");
+  const hasRaceDay = isRun || Boolean(o.concertQty) || Boolean(o.vipTables);
+  const detailHtml = `
+      <div style="margin-top:16px;font-size:13px;font-weight:900;color:#2A1450">\u{1F4CD} \u0E23\u0E32\u0E22\u0E25\u0E30\u0E40\u0E2D\u0E35\u0E22\u0E14\u0E07\u0E32\u0E19</div>
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:6px;border-collapse:separate;border:2px solid #FDE68A;border-radius:14px;background:#FFF7DB">
+        <tr><td style="padding:12px 14px;font-size:13px;line-height:1.75;color:#2A1450">
+          ${hasRaceDay ? `<b>\u{1F4C5} ${esc2(RACE_DAY)} (\u0E27\u0E31\u0E19\u0E40\u0E2A\u0E32\u0E23\u0E4C)</b> ${isRun ? `\u0E27\u0E34\u0E48\u0E07${start ? ` \xB7 \u0E1B\u0E25\u0E48\u0E2D\u0E22\u0E15\u0E31\u0E27 ${esc2(start)}` : ""}` : ""}${isRun && (o.concertQty || o.vipTables) ? " + " : ""}${o.concertQty || o.vipTables ? "\u0E04\u0E2D\u0E19\u0E40\u0E2A\u0E34\u0E23\u0E4C\u0E15 18.00\u201324.00 \u0E19." : ""}<br/>` : ""}
+          ${o.addOns ? `<b>\u{1F4C5} ${esc2(ACT_DAY)} (\u0E27\u0E31\u0E19\u0E2D\u0E32\u0E17\u0E34\u0E15\u0E22\u0E4C)</b> \u0E01\u0E34\u0E08\u0E01\u0E23\u0E23\u0E21\u0E40\u0E2A\u0E23\u0E34\u0E21 \xB7 \u0E14\u0E39\u0E40\u0E27\u0E25\u0E32\u0E41\u0E15\u0E48\u0E25\u0E30\u0E2A\u0E16\u0E32\u0E19\u0E35\u0E1A\u0E19\u0E40\u0E27\u0E47\u0E1A\u0E44\u0E0B\u0E15\u0E4C<br/>` : ""}
+          ${isRun ? `<b>\u{1F3BD} \u0E23\u0E31\u0E1A\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C Race Kit</b> \u0E27\u0E31\u0E19\u0E40\u0E2A\u0E32\u0E23\u0E4C\u0E17\u0E35\u0E48 ${esc2(RACE_DAY)} \u0E15\u0E31\u0E49\u0E07\u0E41\u0E15\u0E48 09.00 \u0E19. \u0E17\u0E35\u0E48 Sea Sand Sun Hua Hin Resort \xB7 \u0E41\u0E2A\u0E14\u0E07 QR \u0E43\u0E19\u0E2D\u0E35\u0E40\u0E21\u0E25\u0E19\u0E35\u0E49 + \u0E1A\u0E31\u0E15\u0E23\u0E1B\u0E23\u0E30\u0E0A\u0E32\u0E0A\u0E19 (\u0E0A\u0E32\u0E27\u0E15\u0E48\u0E32\u0E07\u0E0A\u0E32\u0E15\u0E34: \u0E2B\u0E19\u0E31\u0E07\u0E2A\u0E37\u0E2D\u0E40\u0E14\u0E34\u0E19\u0E17\u0E32\u0E07)<br/>` : ""}
+          <b>\u{1F4CD} \u0E2A\u0E16\u0E32\u0E19\u0E17\u0E35\u0E48</b> ${esc2(eventInfo.venue)}<br/>
+          <a href="${esc2(eventInfo.googleMapsUrl)}" style="display:inline-block;margin-top:6px;background:#2563EB;color:#ffffff;text-decoration:none;font-weight:900;font-size:13px;border-radius:10px;padding:8px 14px">\u{1F5FA}\uFE0F \u0E40\u0E1B\u0E34\u0E14\u0E41\u0E1C\u0E19\u0E17\u0E35\u0E48 Google Maps</a>
+        </td></tr>
+      </table>`;
+  const parkingLeft = o.vipTables ? Math.max(0, o.vipTables * VIP_PARKING_PER_TABLE - (o.parkingPlates || []).length) : 0;
   const parkingHtml = parking.map(
     (p, i) => `
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:14px 0 0;border-collapse:separate;border:3px solid #2A1450;border-radius:18px;background:#FFF6D6">
@@ -48292,7 +48636,7 @@ async function buildTicketEmail(o) {
     parking.length ? "\u0E1A\u0E31\u0E15\u0E23\u0E08\u0E2D\u0E14\u0E23\u0E16 VIP" : "",
     o.insurance ? o.runningWithDog ? "\u0E02\u0E49\u0E2D\u0E21\u0E39\u0E25\u0E1B\u0E23\u0E30\u0E01\u0E31\u0E19\u0E19\u0E31\u0E01\u0E27\u0E34\u0E48\u0E07\u0E41\u0E25\u0E30\u0E19\u0E49\u0E2D\u0E07\u0E2A\u0E38\u0E19\u0E31\u0E02" : "\u0E02\u0E49\u0E2D\u0E21\u0E39\u0E25\u0E1B\u0E23\u0E30\u0E01\u0E31\u0E19" : ""
   ].filter(Boolean).join(" \xB7 ");
-  const docsHtml = await buildDocumentsHtml(o, { assetBase: SITE });
+  const docsHtml = await buildDocumentsHtml(o, { assetBase: SITE, inline: await documentImages() });
   attachments.push({ filename: `CHANGSUEK_RUN_A4_${o.orderId}.html`, content: Buffer.from(docsHtml, "utf8").toString("base64") });
   const html = `<!doctype html><html lang="th"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><meta name="color-scheme" content="light"/></head>
 <body style="margin:0;padding:0;background:#EFE7FF;font-family:Tahoma,'Leelawadee UI','Noto Sans Thai',sans-serif">
@@ -48328,12 +48672,16 @@ async function buildTicketEmail(o) {
         </tr>
       </table>
 
-      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:12px"><tr>${chips}</tr></table>
+      <div style="margin-top:16px;font-size:13px;font-weight:900;color:#2A1450">\u{1F3AB} \u0E2A\u0E34\u0E17\u0E18\u0E34\u0E4C\u0E17\u0E35\u0E48\u0E04\u0E38\u0E13\u0E44\u0E14\u0E49\u0E23\u0E31\u0E1A</div>
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:4px">${entHtml}</table>
 
-      <div style="margin-top:16px;font-size:13px;font-weight:900;color:#2A1450">\u{1F9FE} \u0E23\u0E32\u0E22\u0E25\u0E30\u0E40\u0E2D\u0E35\u0E22\u0E14\u0E04\u0E33\u0E2A\u0E31\u0E48\u0E07\u0E0B\u0E37\u0E49\u0E2D</div>
+      <div style="margin-top:16px;font-size:13px;font-weight:900;color:#2A1450">\u{1F9FE} \u0E2A\u0E23\u0E38\u0E1B\u0E04\u0E33\u0E2A\u0E31\u0E48\u0E07\u0E0B\u0E37\u0E49\u0E2D</div>
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:6px;border-collapse:collapse;background:#ffffff;border:2px solid #EEE7F8">${rows.join("")}</table>
 
       ${parkingHtml}
+      ${parkingLeft > 0 ? `<div style="margin-top:10px;padding:10px 12px;border-radius:12px;background:#FFF3CC;border:2px dashed #FFC928;font-size:12.5px;color:#2A1450;line-height:1.6">\u{1F697} \u0E22\u0E31\u0E07\u0E25\u0E07\u0E17\u0E30\u0E40\u0E1A\u0E35\u0E22\u0E19\u0E23\u0E16 VIP \u0E44\u0E14\u0E49\u0E2D\u0E35\u0E01 <b>${parkingLeft} \u0E04\u0E31\u0E19</b> \u2014 \u0E40\u0E02\u0E49\u0E32\u0E2A\u0E39\u0E48\u0E23\u0E30\u0E1A\u0E1A\u0E17\u0E35\u0E48 <a href="https://www.changsuekrun.com" style="color:#7C3AED;font-weight:800">changsuekrun.com</a> \u0E44\u0E1B\u0E17\u0E35\u0E48 Runner Center \u0E44\u0E14\u0E49\u0E08\u0E19\u0E16\u0E36\u0E07\u0E27\u0E31\u0E19\u0E07\u0E32\u0E19</div>` : ""}
+
+      ${detailHtml}
 
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:16px;border-collapse:separate;border:3px solid #2A1450;border-radius:18px;background:#FFF7DB">
         <tr><td style="padding:14px 16px;text-align:center">
@@ -48743,6 +49091,29 @@ function registerRunnerRoutes(app2, h2, clientIp2) {
       }))
     });
   }));
+  app2.post("/api/me/orders/:orderId/parking-plates", requireRunner, json2, h2(async (req, res) => {
+    const s = req.runner;
+    const id = String(req.params.orderId).slice(0, 40);
+    if (await rateLimited(`plates-me:${s.sub}`, 20, 60 * 60 * 1e3)) {
+      res.status(429).json({ error: "\u0E25\u0E2D\u0E07\u0E1A\u0E48\u0E2D\u0E22\u0E40\u0E01\u0E34\u0E19\u0E44\u0E1B \u0E01\u0E23\u0E38\u0E13\u0E32\u0E23\u0E2D\u0E2A\u0E31\u0E01\u0E04\u0E23\u0E39\u0E48" });
+      return;
+    }
+    const order = await getOrder(id);
+    if (!order || order.runnerId !== s.sub || order.paymentStatus !== "PAID" || order.cancelledAt || !order.vipTables) {
+      res.status(404).json({ error: "\u0E44\u0E21\u0E48\u0E1E\u0E1A\u0E04\u0E33\u0E2A\u0E31\u0E48\u0E07\u0E0B\u0E37\u0E49\u0E2D VIP \u0E17\u0E35\u0E48\u0E0A\u0E33\u0E23\u0E30\u0E41\u0E25\u0E49\u0E27\u0E02\u0E2D\u0E07\u0E04\u0E38\u0E13" });
+      return;
+    }
+    const r = addParkingPlates(order.parkingPlates || [], req.body?.plates, order.vipTables);
+    if (!r.ok) {
+      res.status(400).json({ error: r.error });
+      return;
+    }
+    const updated = await updateOrder(order.orderId, (o) => {
+      const again = addParkingPlates(o.parkingPlates || [], req.body?.plates, o.vipTables || 0);
+      if (again.ok) o.parkingPlates = again.value;
+    });
+    res.json({ ok: true, order: toRunnerView(updated || order) });
+  }));
   app2.post("/api/me/claim", requireRunner, json2, h2(async (req, res) => {
     const s = req.runner;
     if (await rateLimited(`claim:${clientIp2(req)}`, 10, 60 * 60 * 1e3)) {
@@ -49047,7 +49418,7 @@ function createApp() {
     const fullName = insurance ? `${insurance.firstName} ${insurance.lastName}`.slice(0, 120) : clean(b.fullName, 120);
     const phone = clean(b.phone, 30);
     const email = clean(b.email, 120);
-    const emergencyPhone = clean(b.emergencyPhone, 30);
+    const emergencyPhone = clean(insurance?.emergencyPhone || b.emergencyPhone, 30);
     const shirtSize = noRun ? "" : SHIRT_SIZES2.includes(b.shirtSize) ? b.shirtSize : "";
     let parkingPlates;
     let parkingError = "";
@@ -49081,7 +49452,7 @@ function createApp() {
     if (!insuranceError && fullName.length < 2) errors2.push("\u0E01\u0E23\u0E38\u0E13\u0E32\u0E01\u0E23\u0E2D\u0E01\u0E0A\u0E37\u0E48\u0E2D-\u0E19\u0E32\u0E21\u0E2A\u0E01\u0E38\u0E25");
     if (phone.replace(/\D/g, "").length < 9) errors2.push("\u0E40\u0E1A\u0E2D\u0E23\u0E4C\u0E42\u0E17\u0E23\u0E28\u0E31\u0E1E\u0E17\u0E4C\u0E44\u0E21\u0E48\u0E16\u0E39\u0E01\u0E15\u0E49\u0E2D\u0E07");
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errors2.push("\u0E2D\u0E35\u0E40\u0E21\u0E25\u0E44\u0E21\u0E48\u0E16\u0E39\u0E01\u0E15\u0E49\u0E2D\u0E07");
-    if (emergencyPhone.replace(/\D/g, "").length < 9) errors2.push("\u0E40\u0E1A\u0E2D\u0E23\u0E4C\u0E15\u0E34\u0E14\u0E15\u0E48\u0E2D\u0E09\u0E38\u0E01\u0E40\u0E09\u0E34\u0E19\u0E44\u0E21\u0E48\u0E16\u0E39\u0E01\u0E15\u0E49\u0E2D\u0E07");
+    if (!insuranceError && emergencyPhone.replace(/\D/g, "").length < 9) errors2.push("\u0E40\u0E1A\u0E2D\u0E23\u0E4C\u0E15\u0E34\u0E14\u0E15\u0E48\u0E2D\u0E09\u0E38\u0E01\u0E40\u0E09\u0E34\u0E19\u0E44\u0E21\u0E48\u0E16\u0E39\u0E01\u0E15\u0E49\u0E2D\u0E07");
     if (!noRun && !shirtSize) errors2.push("\u0E01\u0E23\u0E38\u0E13\u0E32\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E44\u0E0B\u0E0B\u0E4C\u0E40\u0E2A\u0E37\u0E49\u0E2D");
     if (b.privacyConsent !== true) errors2.push("\u0E01\u0E23\u0E38\u0E13\u0E32\u0E22\u0E2D\u0E21\u0E23\u0E31\u0E1A\u0E02\u0E49\u0E2D\u0E01\u0E33\u0E2B\u0E19\u0E14\u0E41\u0E25\u0E30\u0E40\u0E07\u0E37\u0E48\u0E2D\u0E19\u0E44\u0E02\u0E41\u0E25\u0E30\u0E1B\u0E23\u0E30\u0E01\u0E32\u0E28\u0E04\u0E27\u0E32\u0E21\u0E40\u0E1B\u0E47\u0E19\u0E2A\u0E48\u0E27\u0E19\u0E15\u0E31\u0E27");
     if (errors2.length) {
@@ -49098,9 +49469,9 @@ function createApp() {
       sponsorName = used.sponsorName;
     }
     const concertUnit = concertPassPrice(earlyBird);
-    const concertDiscount = concertQty * concertDiscountPerTicket(concertUnit, !noRun && !sponsorCode) + vipTables * concertDiscountPerTicket(vipTablePrice(earlyBird), !noRun && !sponsorCode);
+    const concertDiscount = concertQty * concertDiscountPerTicket(concertUnit, !noRun && !sponsorCode) + vipTables * vipDiscountPerTable(vipTablePrice(earlyBird), !noRun && !sponsorCode, !sponsorCode && hasAllThree(addOns));
     const vipTotal = vipTablePrice(earlyBird) * vipTables;
-    const ticketTotal = isAddonOnly ? 0 : isConcert ? concertUnit * concertQty + vipTotal : sponsorCode ? 0 : calcTicketTotal(routeId, extraPeople, extraDogs, earlyBird) + concertUnit * concertQty - concertDiscount + vipTotal;
+    const ticketTotal = isAddonOnly ? 0 : isConcert ? concertUnit * concertQty - concertDiscount + vipTotal : sponsorCode ? 0 : calcTicketTotal(routeId, extraPeople, extraDogs, earlyBird) + concertUnit * concertQty - concertDiscount + vipTotal;
     const total = testMode ? 1 : ticketTotal + addOnSum;
     const token = crypto12.randomBytes(24).toString("base64url");
     const now = /* @__PURE__ */ new Date();

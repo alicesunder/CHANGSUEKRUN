@@ -6,6 +6,26 @@
 
 /** Exact text (after trimming) -> English. */
 export const EN_EXACT: Record<string, string> = {
+  // ---- Nov 2026: foreigner / beneficiary / basket / VIP parking / VIP deal
+  [`สัญชาติ *`]: `Nationality *`,
+  [`คนไทย`]: `Thai`,
+  [`ชาวต่างชาติ (Foreigner)`]: `Foreigner`,
+  [`เลือกสัญชาติ`]: `Select nationality`,
+  [`เลือกความสัมพันธ์`]: `Select relationship`,
+  [`ผู้รับผลประโยชน์ (ประกันอุบัติเหตุ)`]: `Beneficiary (accident insurance)`,
+  [`เป็นคนเดียวกับผู้ติดต่อฉุกเฉิน`]: `Same person as the emergency contact`,
+  [`ชื่อ-นามสกุล *`]: `Full name *`,
+  [`ล้างตะกร้า`]: `Clear basket`,
+  [`แน่ใจไหม? กดอีกครั้ง`]: `Sure? Tap again`,
+  [`ผู้ที่จะได้รับสิทธิประโยชน์จากกรมธรรม์ประกันอุบัติเหตุตามเงื่อนไขของกิจกรรม`]: `The person who receives the benefits of the accident insurance policy under the event terms`,
+  [`จังหวัดบนป้ายทะเบียน (เลือก)`]: `Plate province (select)`,
+  [`บันทึกทะเบียน`]: `Save plates`,
+  [`กำลังบันทึก…`]: `Saving…`,
+  [`กรอกทะเบียนแล้วได้บัตรจอดรถ + QR ทันที ไม่ต้องติดต่อผู้จัดงาน`]: `Enter the plate to get the parking pass + QR instantly, no need to contact the organiser`,
+  [`บัตรจอดรถ VIP`]: `VIP parking pass`,
+  [`VIP TABLE + ครบ 3`]: `VIP TABLE + all 3`,
+  [`ลดค่าโต๊ะ VIP`]: `off the VIP table`,
+  [`(ลดค่าโต๊ะ VIP)`]: `(off the VIP table)`,
   // ---- general / countdown / ribbon
   [`ขอบคุณทุกคนนะครับ 💛`]: `Thank you everyone 💛`,
   [`ข้ามไปเนื้อหาหลัก`]: `Skip to main content`,

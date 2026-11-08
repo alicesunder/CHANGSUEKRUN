@@ -14,7 +14,7 @@ export type VerificationStatus =
   | 'ADMIN_APPROVED'
   | 'REJECTED';
 
-import type { InsuranceInfo } from '../src/data/insurance';
+import { maskPassport, type InsuranceInfo } from '../src/data/insurance';
 import type { DogProfile } from '../src/data/dogProfile';
 import { maskThaiId, type ShootingInfo } from '../src/data/shooting';
 import type { ActivityWaiverInfo } from '../src/data/activityWaivers';
@@ -797,7 +797,7 @@ export function toRunnerView(o: StoredOrder) {
     ? { ...shooting, shooters: shooting.shooters.map((s) => ({ fullName: s.fullName, idCard: maskThaiId(s.idCard) })) }
     : undefined;
   const waiverView = activityWaiver
-    ? { ...activityWaiver, participants: activityWaiver.participants.map((p) => ({ ...p, idCard: maskThaiId(p.idCard) })) }
+    ? { ...activityWaiver, participants: activityWaiver.participants.map((p) => ({ ...p, idCard: maskThaiId(p.idCard), ...(p.passportNo ? { passportNo: maskPassport(p.passportNo) } : {}) })) }
     : undefined;
   return { ...rest, shooting: shootingView, activityWaiver: waiverView, hasSlip: Boolean(slipFile) };
 }
@@ -834,7 +834,7 @@ export function toStaffView(o: StoredOrder) {
     vipTables: o.vipTables,
     parkingPlates: o.parkingPlates,
     shooting: o.shooting ? { shooters: o.shooting.shooters.map((s) => ({ fullName: s.fullName })) } : undefined,
-    addOns: o.addOns ? { label: o.addOns.label, people: o.addOns.people, total: 0 } : undefined,
+    addOns: o.addOns ? { label: o.addOns.label, people: o.addOns.people, total: 0, tower: o.addOns.tower, gun: o.addOns.gun, windTunnel: o.addOns.windTunnel } : undefined,
     paymentStatus: o.paymentStatus,
     verificationStatus: o.verificationStatus,
     kitStatus: o.kitStatus,
@@ -859,13 +859,14 @@ export function toAdminView(o: StoredOrder, opts: { full?: boolean } = {}) {
     ? {
         ...o.insurance,
         idCard: o.insurance.idCard ? maskThaiId(o.insurance.idCard) : o.insurance.idCard,
+        passportNo: o.insurance.passportNo ? maskPassport(o.insurance.passportNo) : o.insurance.passportNo,
         bloodType: o.insurance.bloodType ? hidden : o.insurance.bloodType,
         medicalConditions: o.insurance.medicalConditions ? hidden : o.insurance.medicalConditions,
       }
     : undefined;
   const shooting = o.shooting ? { ...o.shooting, shooters: o.shooting.shooters.map((x) => ({ ...x, idCard: maskThaiId(x.idCard) })) } : undefined;
   const activityWaiver = o.activityWaiver
-    ? { ...o.activityWaiver, participants: o.activityWaiver.participants.map((x) => ({ ...x, idCard: maskThaiId(x.idCard) })) }
+    ? { ...o.activityWaiver, participants: o.activityWaiver.participants.map((x) => ({ ...x, idCard: maskThaiId(x.idCard), ...(x.passportNo ? { passportNo: maskPassport(x.passportNo) } : {}) })) }
     : undefined;
   return { ...rest, insurance, shooting, activityWaiver, masked: true, hasSlip: Boolean(slipFile) };
 }

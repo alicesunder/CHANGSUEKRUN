@@ -102,7 +102,8 @@ import { waiversFor, type WaiverActivity, type WaiverParticipant } from '../data
 import { TEST_PRICE_BAHT, useTestMode } from '../utils/testMode';
 import { ActivityWaiverForm, mergeParticipant } from './ActivityWaiverForm';
 import { ParkingPasses } from './ParkingPass';
-import { EMPTY_ADD_ONS, addOnBonusDiscount, addOnConcertRate, addOnCountRate, addOnDiscountRate, addOnLabel, addOnTotal, concertDiscountPerTicket, hasAddOns, percentOf, type AddOnSelection } from '../data/addOns';
+import { ProvinceSelect } from './ProvinceSelect';
+import { EMPTY_ADD_ONS, addOnBonusDiscount, addOnConcertRate, addOnCountRate, addOnDiscountRate, addOnLabel, addOnTotal, concertDiscountPerTicket, hasAddOns, hasAllThree, percentOf, vipDiscountPerTable, type AddOnSelection } from '../data/addOns';
 
 interface RegistrationModalProps {
   isOpen: boolean;
@@ -356,7 +357,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
   const discountCtx = { hasRun: wantRun, hasConcert: gaQty > 0 || vipTables > 0, sponsor: sponsorOn, earlyBird };
   const concertUnit = concertPassPrice(earlyBird);
   const vipUnit = vipTablePrice(earlyBird);
-  const concertDiscount = gaQty * concertDiscountPerTicket(concertUnit, wantRun && !sponsorOn) + vipTables * concertDiscountPerTicket(vipUnit, wantRun && !sponsorOn);
+  const concertDiscount = gaQty * concertDiscountPerTicket(concertUnit, wantRun && !sponsorOn) + vipTables * vipDiscountPerTable(vipUnit, wantRun && !sponsorOn, !sponsorOn && hasAllThree(addOns));
   const vipTotal = vipUnit * vipTables;
   const ticketTotal = (wantRun ? calcTicketTotal(selectedRoute, extraPeople, extraDogs, earlyBird) : 0) + (wantConcert ? concertUnit * gaQty - concertDiscount + vipTotal : 0);
   const addOnSum = addOnTotal(addOns, discountCtx);
@@ -376,7 +377,8 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
         fullName: shooterList[i]?.fullName || autoName(i),
         phone: i === 0 ? digitsOnly(phone) : '',
         birthDate: runners[i]?.birthDate || '',
-        idCard: runners[i]?.idCard || '',
+        idCard: runners[i]?.foreigner ? '' : runners[i]?.idCard || '',
+        ...(runners[i]?.foreigner ? { foreigner: true, passportNo: runners[i]?.passportNo || '' } : {}),
       },
       waiverEdits[i]
     )
@@ -472,6 +474,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
           shirtSize: (SHIRT_SIZES as readonly string[]).includes(p.shirtSize || '') ? (p.shirtSize as (typeof SHIRT_SIZES)[number]) : 'L',
           emergencyName: p.emergencyName || '',
           relationship: p.relationship || '',
+          emergencyPhone: p.emergencyPhone || '',
         },
       ]);
     }
@@ -659,7 +662,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
           : undefined,
         phone: phone.trim(),
         email: email.trim(),
-        emergencyPhone: emergencyPhone.trim(),
+        emergencyPhone: (insured ? runners[0]?.emergencyPhone || '' : emergencyPhone).trim(),
         shirtSize: noRun ? '' : shirtSize,
         dogName: isDog ? dogName.trim() : undefined,
         dogBreed: isDog ? dogBreed.trim() : undefined,
@@ -688,7 +691,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                   birthDate: r0.birthDate,
                   bloodType: r0.bloodType,
                   emergencyName: r0.emergencyName.trim(),
-                  emergencyPhone: emergencyPhone.trim(),
+                  emergencyPhone: (insured ? r0.emergencyPhone : emergencyPhone).trim(),
                   relationship: r0.relationship,
                 }
               : { emergencyPhone: emergencyPhone.trim() },
@@ -1387,6 +1390,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                           <input id="buyer-phone" type="tel" required value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="08x-xxx-xxxx" autoComplete="tel" className={inputCls} />
                         </div>
                       </div>
+                      {!insured && (
                       <div>
                         <label className={labelCls} htmlFor="buyer-emphone">เบอร์โทรผู้ติดต่อฉุกเฉิน *</label>
                         <div className="relative">
@@ -1394,6 +1398,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                           <input id="buyer-emphone" type="tel" required value={emergencyPhone} onChange={(e) => setEmergencyPhone(e.target.value)} placeholder="08x-xxx-xxxx (ญาติ/คนใกล้ชิด)" className={inputCls} />
                         </div>
                       </div>
+                      )}
                       <div className="sm:col-span-2">
                         <label className={labelCls} htmlFor="buyer-email">อีเมลรับบัตรและใบเสร็จ *</label>
                         <div className="relative">
@@ -1457,20 +1462,16 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                                     placeholder="ทะเบียน เช่น กก 1111"
                                     className="w-full min-h-[48px] px-3 rounded-xl border-2 border-[#2A1450]/20 bg-white text-sm font-semibold text-[#2A1450]"
                                   />
-                                  <input
-                                    type="text"
+                                  <ProvinceSelect
                                     required={i === 0 || Boolean(plates[i]?.plate?.trim())}
                                     value={plates[i]?.province || ''}
-                                    maxLength={40}
-                                    onChange={(e) =>
+                                    onChange={(v) =>
                                       setPlates((ps) => {
                                         const next = [...ps];
-                                        next[i] = { plate: ps[i]?.plate || '', province: e.target.value };
+                                        next[i] = { plate: ps[i]?.plate || '', province: v };
                                         return next;
                                       })
                                     }
-                                    placeholder="จังหวัด เช่น กรุงเทพมหานคร"
-                                    className="w-full min-h-[48px] px-3 rounded-xl border-2 border-[#2A1450]/20 bg-white text-sm font-semibold text-[#2A1450]"
                                   />
                                 </div>
                               ))}

@@ -2,7 +2,9 @@ import React, { useEffect, useState } from 'react';
 import QRCode from 'qrcode';
 import { Car, Download } from 'lucide-react';
 
-import { parkingQrPayload, type ParkingPlate } from '../data/vipParking';
+import { VIP_PARKING_PER_TABLE, parkingQrPayload, type ParkingPlate } from '../data/vipParking';
+import { authApi } from '../utils/runnerAuth';
+import { ProvinceSelect } from './ProvinceSelect';
 
 
 /** Draws a pass as a PNG (same layout as the card) so it can be saved to the phone's photos. */
@@ -133,24 +135,88 @@ const PassCard: React.FC<{ orderId: string; plate: ParkingPlate; n: number }> = 
   );
 };
 
+/** Form to register the cars that are still left (a VIP table has 2 car passes; the buyer may have filled in fewer). */
+const AddCars: React.FC<{ orderId: string; room: number; onAdded: (plates: ParkingPlate[]) => void }> = ({ orderId, room, onAdded }) => {
+  const [rows, setRows] = React.useState<ParkingPlate[]>(() => Array.from({ length: room }, () => ({ plate: '', province: '' })));
+  const [busy, setBusy] = React.useState(false);
+  const [err, setErr] = React.useState('');
+  const set = (i: number, patch: Partial<ParkingPlate>) => setRows((rs) => rs.map((r, k) => (k === i ? { ...r, ...patch } : r)));
+  const filled = rows.filter((r) => r.plate.trim() || r.province.trim());
+  const submit = async () => {
+    setErr('');
+    setBusy(true);
+    try {
+      onAdded(await authApi.addParkingPlates(orderId, filled.map((r) => ({ plate: r.plate.trim(), province: r.province.trim() }))));
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : 'บันทึกไม่สำเร็จ ลองใหม่อีกครั้ง');
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <div className="rounded-3xl border-2 border-dashed border-[#C9B4EE] bg-[#FAF6FF] p-4 space-y-3">
+      <div className="flex items-center gap-2.5">
+        <span className="w-10 h-10 rounded-2xl bg-[#FFC928] border-2 border-[#2A1450] flex items-center justify-center shrink-0"><Car className="w-5 h-5 text-[#2A1450]" /></span>
+        <div>
+          <p className="text-sm sm:text-base font-black text-[#2A1450] leading-tight">ยังลงทะเบียนรถได้อีก {room} คัน</p>
+          <p className="text-xs font-bold text-[#6B5A85]">กรอกทะเบียนแล้วได้บัตรจอดรถ + QR ทันที ไม่ต้องติดต่อผู้จัดงาน</p>
+        </div>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        {rows.map((r, i) => (
+          <div key={i} className="rounded-2xl bg-white border-2 border-[#2A1450]/15 p-3 space-y-2">
+            <input
+              type="text"
+              value={r.plate}
+              maxLength={16}
+              onChange={(e) => set(i, { plate: e.target.value })}
+              placeholder="ทะเบียน เช่น กก 1111"
+              aria-label={`ทะเบียนรถคันที่ ${i + 1}`}
+              className="w-full min-h-[48px] px-3 rounded-xl border-2 border-[#2A1450]/20 bg-white text-sm font-semibold text-[#2A1450]"
+            />
+            <ProvinceSelect value={r.province} onChange={(v) => set(i, { province: v })} />
+          </div>
+        ))}
+      </div>
+      {err && <p role="alert" className="rounded-xl bg-rose-50 border-2 border-rose-300 px-3 py-2 text-xs font-extrabold text-rose-700">{err}</p>}
+      <button
+        type="button"
+        disabled={busy || filled.length === 0}
+        onClick={submit}
+        className="w-full sm:w-auto min-h-[48px] rounded-full bg-gradient-to-b from-[#FFE268] to-[#FFC928] border-2 border-[#2A1450] px-6 text-sm font-black text-[#2A1450] shadow-[0_4px_0_#2A1450] disabled:opacity-50 cursor-pointer"
+      >
+        {busy ? 'กำลังบันทึก…' : `บันทึกทะเบียน (${filled.length} คัน)`}
+      </button>
+    </div>
+  );
+};
+
 /** VIP table orders come with parking passes, one per registered car. Renders nothing otherwise. */
-export const ParkingPasses: React.FC<{ orderId: string; vipTables?: number; plates?: ParkingPlate[]; paid: boolean }> = ({
+export const ParkingPasses: React.FC<{ orderId: string; vipTables?: number; plates?: ParkingPlate[]; paid: boolean; canAdd?: boolean }> = ({
   orderId,
   vipTables,
   plates,
   paid,
+  canAdd,
 }) => {
-  if (!vipTables || !plates?.length || !paid) return null;
+  const [list, setList] = React.useState<ParkingPlate[]>(plates || []);
+  React.useEffect(() => setList(plates || []), [plates]);
+  if (!vipTables || !paid) return null;
+  if (!list.length && !canAdd) return null;
+  const room = Math.max(0, vipTables * VIP_PARKING_PER_TABLE - list.length);
   return (
     <section aria-label="บัตรจอดรถ VIP" className="space-y-3">
       <h3 className="flex items-center gap-2 text-base sm:text-lg font-black text-[#2A1450]">
-        <Car className="w-5 h-5 text-[#7C3AED]" /> บัตรจอดรถ VIP ({plates.length} คัน)
+        <Car className="w-5 h-5 text-[#7C3AED]" /> บัตรจอดรถ VIP ({list.length}/{vipTables * VIP_PARKING_PER_TABLE} คัน)
       </h3>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {plates.map((p, i) => (
-          <PassCard key={`${p.plate}-${i}`} orderId={orderId} plate={p} n={i + 1} />
-        ))}
-      </div>
+      {list.length > 0 && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {list.map((p, i) => (
+            <PassCard key={`${p.plate}-${i}`} orderId={orderId} plate={p} n={i + 1} />
+          ))}
+        </div>
+      )}
+      {canAdd && room > 0 && <AddCars key={list.length} orderId={orderId} room={room} onAdded={setList} />}
     </section>
   );
 };

@@ -368,7 +368,7 @@ export const RunnerHub: React.FC<{
                   ))}
                 </div>
               )}
-              {isPaidLive(o) && !!o.vipTables && <ParkingPasses orderId={o.orderId} vipTables={o.vipTables} plates={o.parkingPlates} paid />}
+              {isPaidLive(o) && !!o.vipTables && <ParkingPasses orderId={o.orderId} vipTables={o.vipTables} plates={o.parkingPlates} paid canAdd />}
               {st.key === 'pending' && (
                 <p className="rounded-xl bg-amber-50 px-3 py-2 text-sm font-bold text-amber-900">
                   {t('ยังไม่ได้ชำระเงิน — ชำระภายใน', 'Not paid yet — pay before')} {new Date(o.expiresAt).toLocaleString(lang === 'en' ? 'en-GB' : 'th-TH', { dateStyle: 'medium', timeStyle: 'short' })}
@@ -626,7 +626,7 @@ export const RunnerHub: React.FC<{
           <div className="mt-2 flex flex-wrap gap-2">
             <GoldButton onClick={() => setQrOrder(o)}><QrCode className="h-4 w-4" /> {t('เปิด QR เต็มจอ', 'Open full-screen QR')}</GoldButton>
           </div>
-          {!!o.vipTables && !o.cancelledAt && <div className="mt-3"><ParkingPasses orderId={o.orderId} vipTables={o.vipTables} plates={o.parkingPlates} paid /></div>}
+          {!!o.vipTables && !o.cancelledAt && <div className="mt-3"><ParkingPasses orderId={o.orderId} vipTables={o.vipTables} plates={o.parkingPlates} paid canAdd /></div>}
         </Box>
       ))}
 

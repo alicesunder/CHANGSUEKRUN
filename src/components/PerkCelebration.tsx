@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Clock, Hourglass, Info } from 'lucide-react';
-import { ADDON_CONCERT_RATE, ADDON_MAX_RATE, ADDON_THREE_RATE, ADDON_TWO_RATE, CONCERT_BUNDLE_RATE, formatBaht, percentOf } from '../data/addOns';
+import { Clock, Crown, Hourglass, Info } from 'lucide-react';
+import { ADDON_CONCERT_RATE, ADDON_MAX_RATE, ADDON_THREE_RATE, ADDON_TWO_RATE, CONCERT_BUNDLE_RATE, VIP_ADDON_RATE, formatBaht, percentOf } from '../data/addOns';
 import { concertPassPrice } from '../data/eventData';
 import { useEarlyBird } from '../utils/earlyBird';
 
@@ -135,6 +135,8 @@ interface DealStripProps {
   hasGaConcert: boolean;
   /** GA or VIP concert in the basket */
   hasConcert: boolean;
+  /** a VIP table in the basket */
+  hasVip?: boolean;
   activities: number;
 }
 
@@ -167,7 +169,7 @@ const ThreeActs: React.FC = () => (
  * The bundle deals as four collectable coupons (perforated edges, big discount pill). A coupon lights up
  * with a "ได้แล้ว!" stamp as soon as the basket qualifies; the progress pill counts the unlocked deals.
  */
-export const DealStrip: React.FC<DealStripProps> = ({ hasRun, hasGaConcert, hasConcert, activities }) => {
+export const DealStrip: React.FC<DealStripProps> = ({ hasRun, hasGaConcert, hasConcert, hasVip = false, activities }) => {
   const concertUnit = concertPassPrice(useEarlyBird());
   const concertNet = concertUnit - Math.round(concertUnit * CONCERT_BUNDLE_RATE);
   const deals = [
@@ -175,6 +177,7 @@ export const DealStrip: React.FC<DealStripProps> = ({ hasRun, hasGaConcert, hasC
     { key: 'two', icons: 'acts', label: 'ครบ 3 กิจกรรม', big: `-${percentOf(ADDON_TWO_RATE)}%`, note: 'ค่ากิจกรรมเสริม', how: 'เลือกกิจกรรมเสริมให้ครบ 3 อย่าง', tone: 'violet' as const, on: activities >= 3 },
     { key: 'three', icons: 'run+acts', label: 'วิ่ง + ครบ 3 กิจกรรม', big: `-${percentOf(ADDON_THREE_RATE)}%`, note: 'แทนส่วนลด 10%', how: 'ตั๋ววิ่ง + ครบ 3 กิจกรรม', tone: 'gold' as const, on: hasRun && activities >= 3 },
     { key: 'concert-addon', icons: 'music+acts', label: 'คอนเสิร์ต + ครบ 3', big: `+${percentOf(ADDON_CONCERT_RATE)}%`, note: 'ลดเพิ่มค่ากิจกรรม', how: 'มีตั๋วคอนเสิร์ต + ครบ 3 กิจกรรม', tone: 'violet' as const, on: hasConcert && activities >= 3 },
+    { key: 'vip', icons: 'vip+acts', label: 'VIP TABLE + ครบ 3', big: `-${percentOf(VIP_ADDON_RATE)}%`, note: 'ลดค่าโต๊ะ VIP', how: 'VIP TABLE + ครบ 3 กิจกรรม', tone: 'gold' as const, on: hasVip && activities >= 3 },
   ];
   const unlocked = deals.filter((d) => d.on).length;
 
@@ -185,6 +188,7 @@ export const DealStrip: React.FC<DealStripProps> = ({ hasRun, hasGaConcert, hasC
     if (kind === 'run+music') return <>{run}{plus}{music}</>;
     if (kind === 'acts') return <ThreeActs />;
     if (kind === 'run+acts') return <>{run}{plus}<ThreeActs /></>;
+    if (kind === 'vip+acts') return <><Chip tone={tone}><Crown className="h-4 w-4 sm:h-6 sm:w-6 text-[#B45309]" strokeWidth={2.4} /></Chip>{plus}<ThreeActs /></>;
     return <>{music}{plus}<ThreeActs /></>;
   };
 
@@ -212,13 +216,13 @@ export const DealStrip: React.FC<DealStripProps> = ({ hasRun, hasGaConcert, hasC
         </div>
       </div>
 
-      <ul data-reveal-stagger="pop" className="relative grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3.5" aria-label="โปรโมชั่นส่วนลด">
+      <ul data-reveal-stagger="pop" className="relative grid grid-cols-2 lg:grid-cols-5 gap-2.5 sm:gap-3.5" aria-label="โปรโมชั่นส่วนลด">
         {deals.map((d) => (
           <motion.li
             key={d.key}
             animate={d.on ? { scale: [1, 1.06, 1] } : { scale: 1 }}
             transition={{ duration: 0.5 }}
-            className={`relative flex flex-col items-center justify-center gap-1.5 sm:gap-2.5 rounded-2xl border-2 px-2 pb-3 pt-3.5 lg:min-h-[180px] text-center leading-tight shadow-[0_8px_18px_-10px_rgba(65,30,120,0.35),inset_0_1px_0_rgba(255,255,255,0.9)] ${
+            className={`${d.key === 'vip' ? 'col-span-2 lg:col-span-1 ' : ''}relative flex flex-col items-center justify-center gap-1.5 sm:gap-2.5 rounded-2xl border-2 px-2 pb-3 pt-3.5 lg:min-h-[180px] text-center leading-tight shadow-[0_8px_18px_-10px_rgba(65,30,120,0.35),inset_0_1px_0_rgba(255,255,255,0.9)] ${
               d.tone === 'gold' ? 'bg-gradient-to-b from-[#FFF3C4] to-[#FFFBEA]' : 'bg-gradient-to-b from-[#EFE5FF] to-[#FAF6FF]'
             } ${d.on ? 'border-[#2A1450] shadow-[0_4px_0_#2A1450]' : d.tone === 'gold' ? 'border-[#F2D27A] border-dashed' : 'border-[#D9C9EF] border-dashed'}`}
           >

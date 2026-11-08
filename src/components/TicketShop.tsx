@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
-import { ArrowRight, Check, ChevronDown, Clock, Crown, Droplets, Flame, Medal, Minus, Plus, Shirt, ShoppingBasket, Sparkles, Ticket, Zap } from 'lucide-react';
+import { ArrowRight, Check, ChevronDown, Clock, Crown, Droplets, Flame, Medal, Minus, Plus, Shirt, ShoppingBasket, Sparkles, Ticket, Trash2, Zap } from 'lucide-react';
 import type { RouteId } from '../types';
 import { EarlyBirdPrice } from './EarlyBirdPrice';
 import { useEarlyBird, formatOpenAt } from '../utils/earlyBird';
@@ -16,6 +16,7 @@ import {
   ADDON_THREE_RATE,
   ADDON_TWO_RATE,
   CONCERT_BUNDLE_RATE,
+  VIP_ADDON_RATE,
   activityCount as countActivities,
   addOnBonusDiscount,
   addOnConcertRate,
@@ -27,7 +28,10 @@ import {
   concertDiscountPerTicket,
   formatBaht,
   hasAddOns,
+  hasAllThree,
   percentOf,
+  vipDiscountPerTable,
+  vipTableRate,
 } from '../data/addOns';
 import { getPublicConfig } from '../utils/api';
 import { AddOnPicker } from './AddOnPicker';
@@ -285,12 +289,12 @@ const RunTicket: React.FC<{ id: RouteId; on: boolean; onPick: () => void }> = ({
           {perks(isDog).slice(0, 2).map(({ title }, i) => (
             <div key={title} className="flex flex-col items-center gap-1 px-1.5 text-center">
               <motion.img
-                src={i === 0 ? '/images/shop/shirt.webp' : '/images/shop/medal.webp'}
+                src={i === 0 ? '/images/shop/shirt-real.webp' : '/images/shop/medal-real.webp'}
                 alt=""
                 loading="lazy"
                 animate={on ? { y: [0, -16, 0], rotate: [0, i ? 14 : -14, 0], scale: [1, 1.35, 1.12] } : { y: 0, rotate: 0, scale: 1 }}
                 transition={{ duration: 0.7, delay: 0.12 + i * 0.1, type: 'spring', stiffness: 260, damping: 11 }}
-                className="h-12 w-12 object-contain drop-shadow-[0_4px_6px_rgba(42,20,80,0.25)]"
+                className={`h-14 w-14 object-contain ${on ? "rounded-xl bg-white" : "mix-blend-multiply"}`}
               />
               <span className={`text-[11px] font-extrabold leading-tight ${on ? 'text-white' : 'text-[#281A3B]'}`}>{title}</span>
             </div>
@@ -438,6 +442,13 @@ export const TicketShop: React.FC<TicketShopProps> = ({
   const [windRemaining, setWindRemaining] = useState<number | null>(null);
   // the admin's open / close switch (see SalesSwitchCard)
   const [salesClosed, setSalesClosed] = useState(false);
+  // "clear the basket" asks twice: the first tap arms it for a few seconds, the second one empties everything
+  const [clearArmed, setClearArmed] = useState(false);
+  useEffect(() => {
+    if (!clearArmed) return;
+    const id = window.setTimeout(() => setClearArmed(false), 4000);
+    return () => window.clearTimeout(id);
+  }, [clearArmed]);
   const [opensAt, setOpensAt] = useState<string | null>(null);
   const earlyBird = useEarlyBird();
   const { t: tr } = useLang();
@@ -471,7 +482,8 @@ export const TicketShop: React.FC<TicketShopProps> = ({
   const concertUnitOff = concertDiscountPerTicket(concertUnit, eligible);
   const concertOff = concertUnitOff * concertQty;
   const concertPrice = concertUnit * concertQty - concertOff;
-  const vipUnitOff = concertDiscountPerTicket(vipUnit, eligible);
+  const vipRate = vipTableRate(eligible, hasAllThree(addOns));
+  const vipUnitOff = vipDiscountPerTable(vipUnit, eligible, hasAllThree(addOns));
   const vipOff = vipUnitOff * vipTables;
   const vipPrice = vipUnit * vipTables - vipOff;
   const bonus = addOnBonusDiscount(addOns, discountCtx);
@@ -509,7 +521,7 @@ export const TicketShop: React.FC<TicketShopProps> = ({
     lines.push({ key: 'concert', emoji: '🎶', tint: '#FEF3C7', label: `คอนเสิร์ต GA × ${concertQty}`, sub: concertOff > 0 ? `ลด ${percentOf(CONCERT_BUNDLE_RATE)}% เหลือ ${formatBaht(concertUnit - concertUnitOff)} บาท/ใบ (−${formatBaht(concertOff)})` : `${formatBaht(concertUnit)} บาท/ใบ${earlyBird ? ` (Early Bird · ปกติ ${formatBaht(CONCERT_PASS_PRICE)})` : ''}`, price: concertPrice, onRemove: () => onConcertQtyChange(0) });
   }
   if (vipTables > 0) {
-    lines.push({ key: 'vip', emoji: '👑', tint: '#FEF3C7', label: `VIP TABLE × ${vipTables}`, sub: `${vipTables * VIP_TABLE_SEATS} ท่าน · ${vipOff > 0 ? `ลด ${percentOf(CONCERT_BUNDLE_RATE)}% เหลือ ${formatBaht(vipUnit - vipUnitOff)}` : formatBaht(vipUnit)} บาท/โต๊ะ${earlyBird ? ` (Early Bird · ปกติ ${formatBaht(VIP_TABLE_PRICE)})` : ''}`, price: vipPrice, onRemove: () => onVipTablesChange(0) });
+    lines.push({ key: 'vip', emoji: '👑', tint: '#FEF3C7', label: `VIP TABLE × ${vipTables}`, sub: `${vipTables * VIP_TABLE_SEATS} ท่าน · ${vipOff > 0 ? `ลด ${percentOf(vipRate)}% เหลือ ${formatBaht(vipUnit - vipUnitOff)}` : formatBaht(vipUnit)} บาท/โต๊ะ${earlyBird ? ` (Early Bird · ปกติ ${formatBaht(VIP_TABLE_PRICE)})` : ''}`, price: vipPrice, onRemove: () => onVipTablesChange(0) });
   }
   if (picked) {
     lines.push({
@@ -521,6 +533,18 @@ export const TicketShop: React.FC<TicketShopProps> = ({
       onRemove: () => onAddOnsChange({ ...EMPTY_ADD_ONS }),
     });
   }
+
+  const clearBasket = () => {
+    if (!clearArmed) {
+      setClearArmed(true);
+      return;
+    }
+    setClearArmed(false);
+    onRunChange(null);
+    onConcertQtyChange(0);
+    onVipTablesChange(0);
+    onAddOnsChange({ ...EMPTY_ADD_ONS });
+  };
 
   const checkoutBtn = (compact = false) => (
     <button
@@ -556,7 +580,7 @@ export const TicketShop: React.FC<TicketShopProps> = ({
               {tr('เลือกได้ 1, 2 หรือครบ 3 อย่าง', 'Pick 1, 2 or all 3')} <span className="text-[#7C3AED]">{tr('แล้วจ่ายทีเดียวจบ', 'and pay once')}</span>
             </p>
           </div>
-          <DealStrip hasRun={eligible} hasGaConcert={hasConcert} hasConcert={hasConcert} activities={activityCount} />
+          <DealStrip hasRun={eligible} hasGaConcert={hasConcert} hasConcert={hasConcert} hasVip={vipTables > 0} activities={activityCount} />
         </div>
         {salesClosed && (
           <SalesOpenNotice
@@ -681,14 +705,15 @@ export const TicketShop: React.FC<TicketShopProps> = ({
                       <p className="mt-1 text-2xl font-black text-[#FFD84D] tabular-nums leading-none">
                         {(earlyBird || vipUnitOff > 0) && <span className="mr-1.5 text-base font-bold text-white/60 line-through">{formatBaht(VIP_TABLE_PRICE)}</span>}
                         {formatBaht(vipUnit - vipUnitOff)} <span className="text-xs font-bold text-white/85">บาท / โต๊ะ ({VIP_TABLE_SEATS} ท่าน)</span>
-                        {eligible && (
+                        {vipRate > 0 && (
                           <span aria-hidden="true" className="deal-sticker ml-2 align-middle inline-block px-2.5 py-1 rounded-full border-2 border-[var(--ink)] bg-[#FFE268] text-[var(--ink)] text-xs font-black shadow-[0_3px_0_var(--ink)]">
-                            ลด {percentOf(CONCERT_BUNDLE_RATE)}%!
+                            ลด {percentOf(vipRate)}%!
                           </span>
                         )}
-                        {!eligible && (
-                          <span className="mt-1.5 block w-fit rounded-full bg-[#FFE268] px-2.5 py-1 text-xs font-extrabold text-[var(--ink)]">
-                            🏃 ซื้อคู่ตั๋ววิ่ง ลดเหลือ {formatBaht(vipUnit - Math.round(vipUnit * CONCERT_BUNDLE_RATE))} บาท/โต๊ะ!
+                        {vipRate < VIP_ADDON_RATE && (
+                          <span className="mt-1.5 block w-fit rounded-full bg-[#FFE268] px-2.5 py-1 text-xs font-extrabold leading-snug text-[var(--ink)]">
+                            {!eligible && <>🏃 ซื้อคู่ตั๋ววิ่ง ลดเหลือ {formatBaht(vipUnit - Math.round(vipUnit * CONCERT_BUNDLE_RATE))} บาท/โต๊ะ · </>}
+                            🎢 ครบ 3 กิจกรรม ลดเหลือ {formatBaht(vipUnit - Math.round(vipUnit * VIP_ADDON_RATE))} บาท/โต๊ะ!
                           </span>
                         )}
                       </p>
@@ -803,15 +828,26 @@ export const TicketShop: React.FC<TicketShopProps> = ({
                 <ShoppingBasket className="w-5 h-5 text-[#FFC928]" aria-hidden="true" />
               </span>
               <span className="min-w-0 flex-1">
-                <span className="block text-xs font-extrabold text-[#6B5A85] break-words">
+                <span className="block text-xs font-extrabold text-[#6B5A85] whitespace-nowrap overflow-hidden text-ellipsis">
                   {nudge && <span className="hidden lg:block text-[#6D28D9]">{nudge}</span>}
-                  {lines.length ? lines.map((l) => l.emoji).join(' ') + ` · ${count} ${tr('อย่าง', 'item(s)')}` : tr('ตะกร้ายังว่าง', 'Basket is empty')}
+                  {lines.length ? (<><span className="hidden min-[460px]:inline">{lines.map((l) => l.emoji).join(' ')} · </span>{count} {tr('อย่าง', 'item(s)')}</>) : tr('ตะกร้ายังว่าง', 'Basket is empty')}
                 </span>
-                <motion.span key={total} initial={{ scale: 1.15 }} animate={{ scale: 1 }} className="block origin-left text-xl font-black text-[var(--ink)] tabular-nums leading-tight">
+                <motion.span key={total} initial={{ scale: 1.15 }} animate={{ scale: 1 }} className="block origin-left whitespace-nowrap text-xl font-black text-[var(--ink)] tabular-nums leading-tight">
                   {formatBaht(total)} <span className="text-xs font-bold">บาท</span>
                   {totalSaved > 0 && <span className="ml-2 align-middle inline-block whitespace-nowrap rounded-full bg-[#FFE268] border-2 border-[var(--ink)] px-2 py-0.5 text-[11px] font-black">ประหยัด {formatBaht(totalSaved)} 🎉</span>}
                 </motion.span>
               </span>
+              <button
+                type="button"
+                onClick={clearBasket}
+                aria-label={tr('ล้างตะกร้า', 'Clear basket')}
+                className={`shrink-0 inline-flex items-center justify-center gap-1.5 rounded-full border-2 px-3 min-h-[48px] text-xs font-black cursor-pointer transition-colors ${
+                  clearArmed ? 'border-rose-600 bg-rose-600 text-white' : 'border-rose-300 bg-rose-50 text-rose-700 hover:bg-rose-100'
+                }`}
+              >
+                <Trash2 className="w-4 h-4 shrink-0" aria-hidden="true" />
+                <span className={clearArmed ? '' : 'max-[420px]:sr-only'}>{clearArmed ? tr('แน่ใจไหม? กดอีกครั้ง', 'Sure? Tap again') : tr('ล้างตะกร้า', 'Clear')}</span>
+              </button>
               {checkoutBtn(true)}
             </div>
           </motion.div>

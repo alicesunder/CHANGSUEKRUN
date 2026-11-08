@@ -194,6 +194,7 @@ export function addOnSavingPerPerson(s: AddOnSelection): number {
 //   all 3 activities (no run needed)   → activities 10% off   (only the full set earns a discount)
 //   run + all 3 activities             → activities 15% off (instead of the 10% above)
 //   concert (GA or VIP) + all 3        → activities a further 10% off
+//   VIP table + all 3 activities       → the VIP table itself 15% off (not added to the 10% a run ticket gives; the bigger one applies)
 // The activity discounts add up, capped at 20%. 1 or 2 activities get no discount (the package prices already
 // make them cheaper than buying separately). A VIP table bought with a run ticket gets the same 10% off as a GA ticket (CONCERT_BUNDLE_RATE).
 // ---------------------------------------------------------------------------
@@ -202,6 +203,8 @@ export const ADDON_TWO_RATE = 0.1;
 export const ADDON_THREE_RATE = 0.15;
 export const ADDON_CONCERT_RATE = 0.1;
 export const ADDON_MAX_RATE = 0.2;
+/** Discount on the VIP table price when the order has all 3 activities. */
+export const VIP_ADDON_RATE = 0.15;
 
 export const percentOf = (rate: number): number => Math.round(rate * 100);
 
@@ -256,6 +259,16 @@ export function addOnTotal(s: AddOnSelection, ctx: DiscountContext): number {
 /** Baht off ONE concert ticket (GA) or ONE VIP table when it is bought together with a run ticket: pass that item's unit price. */
 export function concertDiscountPerTicket(unitPrice: number, eligible: boolean): number {
   return eligible ? Math.round(unitPrice * CONCERT_BUNDLE_RATE) : 0;
+}
+
+/** The share taken off a VIP table: 15% with all 3 activities, 10% with a run ticket (the bigger one, never both). */
+export function vipTableRate(runEligible: boolean, allThree: boolean): number {
+  return allThree ? VIP_ADDON_RATE : runEligible ? CONCERT_BUNDLE_RATE : 0;
+}
+
+/** Baht off ONE VIP table. `runEligible` = a run ticket (no sponsor code); `allThree` = all 3 activities (no sponsor code). */
+export function vipDiscountPerTable(unitPrice: number, runEligible: boolean, allThree: boolean): number {
+  return Math.round(unitPrice * vipTableRate(runEligible, allThree));
 }
 
 export function addOnLabel(s: AddOnSelection): string {

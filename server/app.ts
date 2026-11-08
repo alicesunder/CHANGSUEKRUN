@@ -79,7 +79,7 @@ import {
   setEarlyBirdSchedule,
 } from './store';
 import { billerIdFromQr, isValidQrPayload } from '../src/utils/promptPay';
-import { WIND_TUNNEL_LIMIT, addOnBonusDiscount, addOnLabel, addOnPricePerPerson, addOnTotal, concertDiscountPerTicket, hasAddOns, normalizeAddOns } from '../src/data/addOns';
+import { WIND_TUNNEL_LIMIT, addOnBonusDiscount, addOnLabel, addOnPricePerPerson, addOnTotal, concertDiscountPerTicket, hasAddOns, hasAllThree, normalizeAddOns, vipDiscountPerTable } from '../src/data/addOns';
 import { needsInsurance, parseInsurance, type InsuranceInfo } from '../src/data/insurance';
 import { parseShooting, type ShootingInfo } from '../src/data/shooting';
 import { parseActivityWaiver, waiversFor, type ActivityWaiverInfo } from '../src/data/activityWaivers';
@@ -441,7 +441,7 @@ export function createApp(): express.Express {
     const fullName = insurance ? `${insurance.firstName} ${insurance.lastName}`.slice(0, 120) : clean(b.fullName, 120);
     const phone = clean(b.phone, 30);
     const email = clean(b.email, 120);
-    const emergencyPhone = clean(b.emergencyPhone, 30);
+    const emergencyPhone = clean(insurance?.emergencyPhone || b.emergencyPhone, 30);
     const shirtSize = noRun ? '' : SHIRT_SIZES.includes(b.shirtSize) ? b.shirtSize : '';
     // VIP tables come with parking for 2 cars each: the buyer registers the plates.
     let parkingPlates: ParkingPlate[] | undefined;
@@ -478,7 +478,7 @@ export function createApp(): express.Express {
     if (!insuranceError && fullName.length < 2) errors.push('กรุณากรอกชื่อ-นามสกุล');
     if (phone.replace(/\D/g, '').length < 9) errors.push('เบอร์โทรศัพท์ไม่ถูกต้อง');
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errors.push('อีเมลไม่ถูกต้อง');
-    if (emergencyPhone.replace(/\D/g, '').length < 9) errors.push('เบอร์ติดต่อฉุกเฉินไม่ถูกต้อง');
+    if (!insuranceError && emergencyPhone.replace(/\D/g, '').length < 9) errors.push('เบอร์ติดต่อฉุกเฉินไม่ถูกต้อง');
     if (!noRun && !shirtSize) errors.push('กรุณาเลือกไซซ์เสื้อ');
     if (b.privacyConsent !== true) errors.push('กรุณายอมรับข้อกำหนดและเงื่อนไขและประกาศความเป็นส่วนตัว');
     if (errors.length) {
@@ -500,12 +500,12 @@ export function createApp(): express.Express {
     const concertUnit = concertPassPrice(earlyBird);
     const concertDiscount =
       concertQty * concertDiscountPerTicket(concertUnit, !noRun && !sponsorCode) +
-      vipTables * concertDiscountPerTicket(vipTablePrice(earlyBird), !noRun && !sponsorCode);
+      vipTables * vipDiscountPerTable(vipTablePrice(earlyBird), !noRun && !sponsorCode, !sponsorCode && hasAllThree(addOns));
     const vipTotal = vipTablePrice(earlyBird) * vipTables;
     const ticketTotal = isAddonOnly
       ? 0
       : isConcert
-        ? concertUnit * concertQty + vipTotal
+        ? concertUnit * concertQty - concertDiscount + vipTotal
         : sponsorCode
           ? 0
           : calcTicketTotal(routeId, extraPeople, extraDogs, earlyBird) + concertUnit * concertQty - concertDiscount + vipTotal;

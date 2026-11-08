@@ -12,6 +12,7 @@ import {
   type WaiverParticipant,
 } from '../data/activityWaivers';
 import { digitsOnly, formatThaiId, isValidThaiId } from '../data/shooting';
+import { normalizePassport } from '../data/insurance';
 import { WaiverDocument } from './WaiverDocument';
 
 const labelCls = 'block text-xs font-extrabold text-[#2A1450] mb-1.5';
@@ -26,6 +27,8 @@ export function mergeParticipant(auto: Partial<WaiverParticipant>, edit: Partial
     birthDate: e.birthDate ?? auto.birthDate ?? '',
     phone: e.phone ?? auto.phone ?? '',
     idCard: e.idCard ?? auto.idCard ?? '',
+    foreigner: auto.foreigner,
+    passportNo: e.passportNo ?? auto.passportNo ?? '',
     guardianName: e.guardianName ?? auto.guardianName ?? '',
     windHealth: { ...(auto.windHealth || {}), ...(e.windHealth || {}) },
   };
@@ -91,22 +94,38 @@ export const ActivityWaiverForm: React.FC<{
                 <label className={labelCls}>เบอร์โทรศัพท์มือถือ *</label>
                 <input type="tel" inputMode="tel" required value={p.phone} onChange={(e) => onEdit(i, { phone: digitsOnly(e.target.value).slice(0, 15) })} className={inputCls} />
               </div>
-              <div>
-                <label className={labelCls}>เลขบัตรประจำตัวประชาชน 13 หลัก *</label>
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  autoComplete="off"
-                  required
-                  maxLength={17}
-                  value={formatThaiId(p.idCard)}
-                  onChange={(e) => onEdit(i, { idCard: digitsOnly(e.target.value).slice(0, 13) })}
-                  placeholder="x-xxxx-xxxxx-xx-x"
-                  aria-invalid={idBad}
-                  className={`${inputCls} font-mono ${idBad ? '!border-rose-500' : ''}`}
-                />
-                {idBad && <p className="mt-1 text-xs font-bold text-rose-600">เลขบัตรไม่ถูกต้อง กรุณาตรวจอีกครั้ง</p>}
-              </div>
+              {p.foreigner ? (
+                <div>
+                  <label className={labelCls}>Passport no. (เลขที่หนังสือเดินทาง) *</label>
+                  <input
+                    type="text"
+                    autoComplete="off"
+                    autoCapitalize="characters"
+                    required
+                    maxLength={20}
+                    value={p.passportNo || ''}
+                    onChange={(e) => onEdit(i, { passportNo: normalizePassport(e.target.value) })}
+                    className={`${inputCls} font-mono uppercase`}
+                  />
+                </div>
+              ) : (
+                <div>
+                  <label className={labelCls}>เลขบัตรประจำตัวประชาชน 13 หลัก *</label>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    autoComplete="off"
+                    required
+                    maxLength={17}
+                    value={formatThaiId(p.idCard)}
+                    onChange={(e) => onEdit(i, { idCard: digitsOnly(e.target.value).slice(0, 13) })}
+                    placeholder="x-xxxx-xxxxx-xx-x"
+                    aria-invalid={idBad}
+                    className={`${inputCls} font-mono ${idBad ? '!border-rose-500' : ''}`}
+                  />
+                  {idBad && <p className="mt-1 text-xs font-bold text-rose-600">เลขบัตรไม่ถูกต้อง กรุณาตรวจอีกครั้ง</p>}
+                </div>
+              )}
               {minor && (
                 <div className="sm:col-span-2">
                   <label className={labelCls}>อายุต่ำกว่า {WAIVER_GUARDIAN_AGE} ปี: ชื่อ-นามสกุลผู้ปกครองที่ลงนามแทน *</label>

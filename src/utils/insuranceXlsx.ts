@@ -9,7 +9,8 @@ import { appendSecurityAuditLog } from './securityShield';
  *  - position: what the insurer calls "ตำแหน่ง"
  *  - plan / premium: left empty until the organiser knows the plan chosen with the insurer (the insurer's own numbers)
  *  - cover dates: the race day
- * Beneficiary = the emergency contact the runner named (name + relationship) — the form tells the runner so.
+ * Beneficiary = the beneficiary the runner named (name + relationship); older orders have none, so the emergency contact is used.
+ * Foreign runners: the ID-number column stays empty and the passport number + expiry go into the "บัตรประชาชน / VISA / PASSPORT" columns.
  * Dates are written dd/mm/yyyy in the Buddhist era (พ.ศ.) as text, the way Thai insurers usually want them.
  */
 export const MTI_DEFAULTS: {
@@ -81,14 +82,14 @@ export async function exportInsuranceXlsx(orders: TicketOrder[], actor = 'admin'
     n.lastName,
     thaiBuddhistDate(n.birthDate),
     n.age,
-    n.idCard || '', // text: a 13-digit number must not turn into 1.23E+12
+    n.foreigner ? '' : n.idCard || '', // text: a 13-digit number must not turn into 1.23E+12
     MTI_DEFAULTS.position,
     MTI_DEFAULTS.planOrSumInsured ?? '',
     MTI_DEFAULTS.premium ?? '',
-    '',
-    '',
-    n.emergencyName,
-    n.relationship,
+    n.foreigner ? `PASSPORT ${n.passportNo || ''}${n.nationality ? ` (${n.nationality})` : ''}` : '',
+    n.foreigner ? thaiBuddhistDate(n.passportExpiry || '') : '',
+    n.beneficiaryName || n.emergencyName,
+    n.beneficiaryName ? n.beneficiaryRelationship || '' : n.relationship,
     thaiBuddhistDate(MTI_DEFAULTS.coverFrom),
     thaiBuddhistDate(MTI_DEFAULTS.coverTo),
   ]);

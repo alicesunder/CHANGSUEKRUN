@@ -1,5 +1,6 @@
 import React from 'react';
-import { BLOOD_TYPES, GENDERS, PREFIXES, RELATIONSHIPS, ageFromBirthDate, type InsuranceInfo } from '../data/insurance';
+import { BookUser, CalendarDays, Globe, Phone, User, Users } from 'lucide-react';
+import { BLOOD_TYPES, GENDERS, NATIONALITIES, PREFIXES, RELATIONSHIPS, ageFromBirthDate, isFutureIsoDate, isValidPassport, normalizePassport, type InsuranceInfo } from '../data/insurance';
 import { digitsOnly, formatThaiId, isValidThaiId } from '../data/shooting';
 import { SHIRT_CHART, SHIRT_SIZES as SHIRT_SIZE_IDS, isSpecialShirtSize, type ShirtSize } from '../data/shirts';
 
@@ -21,10 +22,22 @@ export interface RunnerEntry {
   bloodType: string;
   medicalConditions: string;
   shirtSize: ShirtSize;
+  /** a foreign runner: nationality + passport number + expiry replace the Thai national ID */
+  foreigner: boolean;
+  nationality: string;
+  passportNo: string;
+  /** YYYY-MM-DD */
+  passportExpiry: string;
+  /** emergency contact: name, relationship to the runner, phone */
   emergencyName: string;
   relationship: string;
+  emergencyPhone: string;
   /** runner 2+: use runner 1's emergency contact */
   sameEmergency: boolean;
+  /** insurance beneficiary: the same person as the emergency contact (one tick), or their own name + relationship */
+  beneficiarySame: boolean;
+  beneficiaryName: string;
+  beneficiaryRelationship: string;
 }
 
 export const emptyRunner = (i: number): RunnerEntry => ({
@@ -37,9 +50,17 @@ export const emptyRunner = (i: number): RunnerEntry => ({
   bloodType: '',
   medicalConditions: '',
   shirtSize: i === 0 ? 'L' : 'M',
+  foreigner: false,
+  nationality: '',
+  passportNo: '',
+  passportExpiry: '',
   emergencyName: '',
   relationship: '',
+  emergencyPhone: '',
   sameEmergency: i > 0,
+  beneficiarySame: true,
+  beneficiaryName: '',
+  beneficiaryRelationship: '',
 });
 
 export const runnerName = (r: RunnerEntry | undefined) => (r ? `${r.firstName.trim()} ${r.lastName.trim()}`.trim() : '');
@@ -63,13 +84,23 @@ export function runnerFromSaved(i: number, name: string, shirt: string | undefin
     birthDate: ins.birthDate,
     bloodType: ins.bloodType,
     medicalConditions: ins.medicalConditions === 'ไม่มี' ? '' : ins.medicalConditions,
+    foreigner: !!ins.foreigner,
+    nationality: ins.nationality || '',
+    passportNo: ins.passportNo || '',
+    passportExpiry: ins.passportExpiry || '',
     emergencyName: ins.emergencyName,
     relationship: ins.relationship,
+    emergencyPhone: ins.emergencyPhone || '',
     sameEmergency: false,
+    beneficiarySame: !ins.beneficiaryName,
+    beneficiaryName: ins.beneficiaryName || '',
+    beneficiaryRelationship: ins.beneficiaryRelationship || '',
   };
 }
 
-type Field = 'prefix' | 'firstName' | 'lastName' | 'idCard' | 'gender' | 'birthDate' | 'bloodType' | 'emergencyName' | 'relationship';
+type Field =
+  | 'prefix' | 'firstName' | 'lastName' | 'idCard' | 'nationality' | 'passportNo' | 'passportExpiry' | 'gender' | 'birthDate' | 'bloodType'
+  | 'emergencyName' | 'relationship' | 'emergencyPhone' | 'beneficiaryName' | 'beneficiaryRelationship';
 
 /** Missing fields of one runner (empty = complete). */
 export function runnerProblems(r: RunnerEntry, i: number, insured: boolean): Field[] {
@@ -78,7 +109,11 @@ export function runnerProblems(r: RunnerEntry, i: number, insured: boolean): Fie
   if (!r.firstName.trim()) out.push('firstName');
   if (!r.lastName.trim()) out.push('lastName');
   if (!insured) return out;
-  if (!isValidThaiId(r.idCard)) out.push('idCard');
+  if (r.foreigner) {
+    if (!r.nationality) out.push('nationality');
+    if (!isValidPassport(normalizePassport(r.passportNo))) out.push('passportNo');
+    if (!isFutureIsoDate(r.passportExpiry)) out.push('passportExpiry');
+  } else if (!isValidThaiId(r.idCard)) out.push('idCard');
   if (!r.gender) out.push('gender');
   const age = ageFromBirthDate(r.birthDate);
   if (age === null || age < 0 || age > 110) out.push('birthDate');
@@ -86,6 +121,11 @@ export function runnerProblems(r: RunnerEntry, i: number, insured: boolean): Fie
   if (i === 0 || !r.sameEmergency) {
     if (r.emergencyName.trim().length < 2) out.push('emergencyName');
     if (!r.relationship) out.push('relationship');
+    if (digitsOnly(r.emergencyPhone).length < 9) out.push('emergencyPhone');
+  }
+  if (!r.beneficiarySame) {
+    if (r.beneficiaryName.trim().length < 2) out.push('beneficiaryName');
+    if (!r.beneficiaryRelationship) out.push('beneficiaryRelationship');
   }
   return out;
 }
@@ -97,7 +137,8 @@ export function toInsurance(r: RunnerEntry, main: RunnerEntry): InsuranceInfo {
     prefix: r.prefix,
     firstName: r.firstName.trim(),
     lastName: r.lastName.trim(),
-    idCard: r.idCard,
+    idCard: r.foreigner ? '' : r.idCard,
+    ...(r.foreigner ? { foreigner: true, nationality: r.nationality, passportNo: normalizePassport(r.passportNo), passportExpiry: r.passportExpiry } : {}),
     gender: r.gender,
     birthDate: r.birthDate,
     age: ageFromBirthDate(r.birthDate) ?? 0,
@@ -105,6 +146,9 @@ export function toInsurance(r: RunnerEntry, main: RunnerEntry): InsuranceInfo {
     medicalConditions: r.medicalConditions.trim() || 'ไม่มี',
     emergencyName: em.emergencyName.trim(),
     relationship: em.relationship,
+    emergencyPhone: digitsOnly(em.emergencyPhone),
+    beneficiaryName: r.beneficiarySame ? em.emergencyName.trim() : r.beneficiaryName.trim(),
+    beneficiaryRelationship: r.beneficiarySame ? em.relationship : r.beneficiaryRelationship,
   };
 }
 
@@ -149,6 +193,13 @@ const Pills: React.FC<{
       );
     })}
   </div>
+);
+
+/** Icon in front of a field (decoration only). */
+const FieldIcon: React.FC<{ Icon: React.ComponentType<{ className?: string }> }> = ({ Icon }) => (
+  <span aria-hidden="true" className="hidden sm:flex w-9 shrink-0 pt-8 justify-center text-[#6D28D9]">
+    <Icon className="w-5 h-5" />
+  </span>
 );
 
 /** A tinted block inside the card with an emoji title. */
@@ -292,21 +343,74 @@ export const RunnerDetailsForm: React.FC<{
                   </div>
                 </div>
                 <div className="sm:col-span-2">
-                  <label className={lbl} htmlFor={`r${i}-idcard`}>เลขบัตรประชาชน 13 หลัก *</label>
-                  <input
-                    id={`r${i}-idcard`}
-                    type="text"
-                    inputMode="numeric"
-                    maxLength={17}
-                    autoComplete="off"
-                    value={formatThaiId(r.idCard)}
-                    onChange={(e) => set({ idCard: digitsOnly(e.target.value).slice(0, 13) })}
-                    placeholder="x-xxxx-xxxxx-xx-x"
-                    aria-invalid={bad('idCard')}
-                    className={`${box(bad('idCard'))} font-mono`}
+                  <span className={lbl}>สัญชาติ *</span>
+                  <Pills
+                    label="สัญชาติ"
+                    options={['คนไทย', 'ชาวต่างชาติ (Foreigner)']}
+                    value={r.foreigner ? 'ชาวต่างชาติ (Foreigner)' : 'คนไทย'}
+                    onPick={(v) => set({ foreigner: v !== 'คนไทย' })}
+                    color={color}
                   />
-                  <p className="mt-1 text-[11px] font-bold text-[#6B5A85]">ใช้ส่งบริษัทประกันเท่านั้น (เด็กที่ยังไม่มีบัตร ใช้เลขประจำตัวประชาชน 13 หลักในสูติบัตร)</p>
                 </div>
+                {!r.foreigner ? (
+                  <div className="sm:col-span-2">
+                    <label className={lbl} htmlFor={`r${i}-idcard`}>เลขบัตรประชาชน 13 หลัก *</label>
+                    <input
+                      id={`r${i}-idcard`}
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={17}
+                      autoComplete="off"
+                      value={formatThaiId(r.idCard)}
+                      onChange={(e) => set({ idCard: digitsOnly(e.target.value).slice(0, 13) })}
+                      placeholder="x-xxxx-xxxxx-xx-x"
+                      aria-invalid={bad('idCard')}
+                      className={`${box(bad('idCard'))} font-mono`}
+                    />
+                    <p className="mt-1 text-[11px] font-bold text-[#6B5A85]">ใช้ส่งบริษัทประกันเท่านั้น (เด็กที่ยังไม่มีบัตร ใช้เลขประจำตัวประชาชน 13 หลักในสูติบัตร)</p>
+                  </div>
+                ) : (
+                  <div className="sm:col-span-2 space-y-3 rounded-2xl bg-[#F3ECFF] border-2 border-[#C9B4EE] p-3 sm:p-4">
+                    <div className="flex gap-2">
+                      <FieldIcon Icon={Globe} />
+                      <div className="flex-1 min-w-0">
+                        <label className={lbl} htmlFor={`r${i}-nat`}>Nationality (สัญชาติ) *</label>
+                        <select id={`r${i}-nat`} value={r.nationality} onChange={(e) => set({ nationality: e.target.value })} className={box(bad('nationality'))}>
+                          <option value="">เลือกสัญชาติ</option>
+                          {NATIONALITIES.map((n) => (
+                            <option key={n} value={n}>{n}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <FieldIcon Icon={BookUser} />
+                      <div className="flex-1 min-w-0">
+                        <label className={lbl} htmlFor={`r${i}-passport`}>Passport no. (เลขที่หนังสือเดินทาง) *</label>
+                        <input
+                          id={`r${i}-passport`}
+                          type="text"
+                          maxLength={20}
+                          autoComplete="off"
+                          autoCapitalize="characters"
+                          value={r.passportNo}
+                          onChange={(e) => set({ passportNo: normalizePassport(e.target.value) })}
+                          placeholder="กรอกเลขที่หนังสือเดินทาง"
+                          aria-invalid={bad('passportNo')}
+                          className={`${box(bad('passportNo'))} font-mono uppercase`}
+                        />
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <FieldIcon Icon={CalendarDays} />
+                      <div className="flex-1 min-w-0">
+                        <label className={lbl} htmlFor={`r${i}-pexp`}>Expiry date (วันหมดอายุหนังสือเดินทาง) *</label>
+                        <input id={`r${i}-pexp`} type="date" min={todayIso} max="2099-12-31" value={r.passportExpiry} onChange={(e) => set({ passportExpiry: e.target.value })} aria-invalid={bad('passportExpiry')} className={box(bad('passportExpiry'))} />
+                      </div>
+                    </div>
+                    <p className="text-[11px] font-bold text-[#6B5A85]">Used for the accident insurance only · ใช้ส่งบริษัทประกันเท่านั้น</p>
+                  </div>
+                )}
                 <div>
                   <label className={lbl} htmlFor={`r${i}-med`}>โรคประจำตัว / แพ้ยา</label>
                   <input id={`r${i}-med`} type="text" maxLength={200} value={r.medicalConditions} onChange={(e) => set({ medicalConditions: e.target.value })} placeholder="ไม่มี เว้นว่างได้" className={box(false)} />
@@ -321,7 +425,7 @@ export const RunnerDetailsForm: React.FC<{
           </Group>
 
           {insured && (
-            <Group icon="🆘" title="ผู้ติดต่อกรณีฉุกเฉิน / ผู้รับผลประโยชน์ประกัน" tint="#FFEFF3" note={i === 0 ? 'บุคคลนี้จะเป็นผู้รับผลประโยชน์ของประกันอุบัติเหตุด้วย · เบอร์โทรกรอกในส่วน "ช่องทางติดต่อ" ด้านล่าง' : 'บุคคลนี้จะเป็นผู้รับผลประโยชน์ของประกันอุบัติเหตุด้วย'}>
+            <Group icon="🆘" title="ผู้ติดต่อกรณีฉุกเฉิน" tint="#FFEFF3" note="ผู้ที่เจ้าหน้าที่จะโทรหาถ้าเกิดเหตุฉุกเฉินระหว่างงาน">
               {i > 0 && (
                 <label className="flex items-center gap-2.5 rounded-xl bg-white border-2 border-[#2A1450]/15 px-3 py-2.5 cursor-pointer">
                   <input type="checkbox" checked={r.sameEmergency} onChange={(e) => set({ sameEmergency: e.target.checked })} className="w-5 h-5 accent-[#7C3AED] shrink-0" />
@@ -332,14 +436,53 @@ export const RunnerDetailsForm: React.FC<{
               )}
               {(i === 0 || !r.sameEmergency) && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  <div className="sm:col-span-2">
+                    <label className={lbl} htmlFor={`r${i}-emname`}>ชื่อ-นามสกุล *</label>
+                    <div className="relative">
+                      <User aria-hidden="true" className="w-5 h-5 text-[#6D28D9] absolute left-3.5 top-1/2 -translate-y-1/2" />
+                      <input id={`r${i}-emname`} type="text" maxLength={80} value={r.emergencyName} onChange={(e) => set({ emergencyName: e.target.value })} placeholder="กรอกชื่อ-นามสกุล" className={`${box(bad('emergencyName'))} pl-11`} />
+                    </div>
+                  </div>
                   <div>
-                    <label className={lbl} htmlFor={`r${i}-emname`}>ชื่อผู้ติดต่อ *</label>
-                    <input id={`r${i}-emname`} type="text" maxLength={80} value={r.emergencyName} onChange={(e) => set({ emergencyName: e.target.value })} placeholder="ชื่อ-นามสกุล" className={box(bad('emergencyName'))} />
+                    <label className={lbl} htmlFor={`r${i}-emphone`}>เบอร์โทรศัพท์ *</label>
+                    <div className="relative">
+                      <Phone aria-hidden="true" className="w-5 h-5 text-[#6D28D9] absolute left-3.5 top-1/2 -translate-y-1/2" />
+                      <input id={`r${i}-emphone`} type="tel" inputMode="tel" maxLength={20} value={r.emergencyPhone} onChange={(e) => set({ emergencyPhone: e.target.value })} placeholder="08x-xxx-xxxx" className={`${box(bad('emergencyPhone'))} pl-11`} />
+                    </div>
                   </div>
                   <div>
                     <label className={lbl} htmlFor={`r${i}-rel`}>ความสัมพันธ์ *</label>
                     <select id={`r${i}-rel`} value={r.relationship} onChange={(e) => set({ relationship: e.target.value })} className={box(bad('relationship'))}>
-                      <option value="">เลือก</option>
+                      <option value="">เลือกความสัมพันธ์</option>
+                      {RELATIONSHIPS.map((g) => (
+                        <option key={g} value={g}>{g}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              )}
+            </Group>
+          )}
+
+          {insured && (
+            <Group icon="☂️" title="ผู้รับผลประโยชน์ (ประกันอุบัติเหตุ)" tint="#EEF2FF" note="ผู้ที่จะได้รับสิทธิประโยชน์จากกรมธรรม์ประกันอุบัติเหตุตามเงื่อนไขของกิจกรรม">
+              <label className="flex items-center gap-2.5 rounded-xl bg-white border-2 border-[#2A1450]/15 px-3 py-2.5 cursor-pointer">
+                <input type="checkbox" checked={r.beneficiarySame} onChange={(e) => set({ beneficiarySame: e.target.checked })} className="w-5 h-5 accent-[#7C3AED] shrink-0" />
+                <span className="text-sm font-bold text-[#2A1450]">เป็นคนเดียวกับผู้ติดต่อฉุกเฉิน</span>
+              </label>
+              {!r.beneficiarySame && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  <div>
+                    <label className={lbl} htmlFor={`r${i}-bename`}>ชื่อ-นามสกุล *</label>
+                    <div className="relative">
+                      <User aria-hidden="true" className="w-5 h-5 text-[#6D28D9] absolute left-3.5 top-1/2 -translate-y-1/2" />
+                      <input id={`r${i}-bename`} type="text" maxLength={80} value={r.beneficiaryName} onChange={(e) => set({ beneficiaryName: e.target.value })} placeholder="กรอกชื่อ-นามสกุล" className={`${box(bad('beneficiaryName'))} pl-11`} />
+                    </div>
+                  </div>
+                  <div>
+                    <label className={lbl} htmlFor={`r${i}-berel`}>ความสัมพันธ์ *</label>
+                    <select id={`r${i}-berel`} value={r.beneficiaryRelationship} onChange={(e) => set({ beneficiaryRelationship: e.target.value })} className={box(bad('beneficiaryRelationship'))}>
+                      <option value="">เลือกความสัมพันธ์</option>
                       {RELATIONSHIPS.map((g) => (
                         <option key={g} value={g}>{g}</option>
                       ))}

@@ -11,6 +11,7 @@
 import express from 'express';
 import type { Express, Request, RequestHandler, Response } from 'express';
 import { docsSignature } from './auth';
+import { addParkingPlates } from '../src/data/vipParking';
 import { SITE_URL, maskEmail, sendAccountMail, sendTicketEmail } from './mailer';
 import { findOrderByCode, listOrdersByRunner, rateLimited, recordEmailResult, toRunnerView, updateOrder, getOrder } from './store';
 import {
@@ -282,6 +283,32 @@ export function registerRunnerRoutes(app: Express, h: Wrap, clientIp: (req: Requ
         docsUrl: o.paymentStatus === 'PAID' && !o.cancelledAt ? `/api/orders/${encodeURIComponent(o.orderId)}/documents?s=${docsSignature(o.orderId)}` : undefined,
       })),
     });
+  }));
+
+  // VIP parking: a table comes with 2 car passes; the buyer registers the cars left over later (paid, own order only).
+  app.post('/api/me/orders/:orderId/parking-plates', requireRunner, json, h(async (req, res) => {
+    const s = (req as any).runner as RunnerSession;
+    const id = String(req.params.orderId).slice(0, 40);
+    if (await rateLimited(`plates-me:${s.sub}`, 20, 60 * 60 * 1000)) {
+      res.status(429).json({ error: 'ลองบ่อยเกินไป กรุณารอสักครู่' });
+      return;
+    }
+    const order = await getOrder(id);
+    if (!order || order.runnerId !== s.sub || order.paymentStatus !== 'PAID' || order.cancelledAt || !order.vipTables) {
+      res.status(404).json({ error: 'ไม่พบคำสั่งซื้อ VIP ที่ชำระแล้วของคุณ' });
+      return;
+    }
+    const r = addParkingPlates(order.parkingPlates || [], req.body?.plates, order.vipTables);
+    if (!r.ok) {
+      res.status(400).json({ error: r.error });
+      return;
+    }
+    const updated = await updateOrder(order.orderId, (o) => {
+      // re-check against the freshest copy so two quick requests can't go over the limit
+      const again = addParkingPlates(o.parkingPlates || [], req.body?.plates, o.vipTables || 0);
+      if (again.ok) o.parkingPlates = again.value;
+    });
+    res.json({ ok: true, order: toRunnerView(updated || order) });
   }));
 
   // An order made before the runner had an account: needs the order id AND the e-mail written on that order.

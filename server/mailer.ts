@@ -16,7 +16,9 @@ import { parkingQrPayload } from '../src/data/vipParking';
 import type { StoredOrder } from './store';
 import { EMAIL_LOGO_PNG_BASE64 } from './emailLogo';
 import { docsSignature } from './auth';
-import { buildDocumentsHtml } from './documents';
+import { buildDocumentsHtml, DOC_IMAGES } from './documents';
+import { ACT_DAY, RACE_DAY, priceLines, ticketEntitlements } from './entitlements';
+import { VIP_PARKING_PER_TABLE } from '../src/data/vipParking';
 
 const SITE = (process.env.PUBLIC_SITE_URL || 'https://www.changsuekrun.com').replace(/\/+$/, '');
 
@@ -64,6 +66,28 @@ const row = (label: string, value: string) =>
 const chip = (icon: string, text: string) =>
   `<td style="padding:4px;vertical-align:top"><div style="background:#F4EEFF;border:2px solid #E2D5F8;border-radius:12px;padding:8px 10px;font-size:12px;font-weight:700;color:#2A1450;text-align:center">${icon}<br/>${text}</div></td>`;
 
+/** The BIB / logo pictures as data: URIs (fetched from the site once, kept in memory). Mail apps open the attached
+ *  A4 file in a sandbox that blocks outside images, so without this the BIB comes up with no background and no sponsor logos. */
+let inlineCache: Record<string, string> | null = null;
+async function documentImages(): Promise<Record<string, string> | undefined> {
+  if (inlineCache) return inlineCache;
+  const out: Record<string, string> = {};
+  await Promise.all(
+    DOC_IMAGES.map(async (path) => {
+      try {
+        const r = await fetch(`${SITE}${path}`, { signal: AbortSignal.timeout(6000) });
+        if (!r.ok) return;
+        out[path] = `data:${r.headers.get('content-type') || 'image/webp'};base64,${Buffer.from(await r.arrayBuffer()).toString('base64')}`;
+      } catch {
+        /* that picture falls back to a normal link */
+      }
+    })
+  );
+  // only keep it when everything came through; a partial set is retried on the next mail
+  if (Object.keys(out).length === DOC_IMAGES.length) inlineCache = out;
+  return Object.keys(out).length ? out : undefined;
+}
+
 /** Builds the e-mail (subject, HTML, attachments) for a paid order. */
 export async function buildTicketEmail(o: StoredOrder) {
   const isRun = o.ticketType !== 'CONCERT' && o.ticketType !== 'ADDON';
@@ -88,29 +112,45 @@ export async function buildTicketEmail(o: StoredOrder) {
     attachments.push({ filename: `VIP_PARKING_${o.orderId}_${i + 1}.png`, content: buf.toString('base64'), content_id: `parking-${i + 1}` });
   }
 
-  const rows: string[] = [
-    row('คำสั่งซื้อ', `<span style="font-family:Consolas,monospace">${esc(o.orderId)}</span>`),
-    row('ชื่อ', esc(o.fullName)),
-    row('รายการ', esc(o.routeName)),
-  ];
-  if (isRun) {
-    rows.push(row('วันวิ่ง', `${esc(eventInfo.dateNotice)}${start ? ` · ปล่อยตัว ${esc(start)}` : ''}`));
-    if (o.shirtSize) rows.push(row('ไซส์เสื้อ', esc(o.shirtSize)));
-    if (o.runningWithDog) rows.push(row('น้องสุนัข', `🐶 ${esc(o.dogName || '-')}`));
-  }
-  if (o.concertQty) rows.push(row('ตั๋วคอนเสิร์ต GA', `🎶 ${o.concertQty} ใบ · ${esc(eventInfo.dateNotice)} Door Open 17.30 น. · เริ่ม 18.00 น.`));
-  if (o.vipTables) rows.push(row('VIP TABLE', `⭐ ${o.vipTables} โต๊ะ`));
-  if (o.addOns)
-    rows.push(
-      row('กิจกรรมเสริม', `${esc(o.addOns.label)} × ${o.addOns.people} คน<br/><span style="color:#6B5A85;font-weight:600">${esc(eventInfo.activityDateNotice)}</span>`)
-    );
-  rows.push(row('ยอดชำระ', `<span style="color:#15803D">${formatBaht(o.totalPrice)} บาท ✓</span>`));
+  const rows: string[] = [row('คำสั่งซื้อ', `<span style="font-family:Consolas,monospace">${esc(o.orderId)}</span>`), row('ชื่อ', esc(o.fullName))];
+  const lines = priceLines(o);
+  if (lines) for (const l of lines) rows.push(row(l.name, `${l.amount < 0 ? '− ' : ''}${formatBaht(Math.abs(l.amount))} บาท`));
+  rows.push(row('ยอดชำระสุทธิ', `<span style="color:#15803D;font-size:16px">${formatBaht(o.totalPrice)} บาท ✓</span>`));
 
-  const chips = [
-    chip('📅', esc(mainDate)),
-    isRun && start ? chip('⏱️', `ปล่อยตัว ${esc(start)}`) : '',
-    chip('📍', esc(eventInfo.venueShort)),
-  ].join('');
+  // numbered entitlements: one block per thing bought, with when / where
+  const ents = ticketEntitlements(o);
+  const entHtml = ents
+    .map(
+      (e, i) => `
+      <tr><td style="padding:10px 0;border-bottom:1px solid #EEE7F8">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
+          <td width="30" valign="top" style="padding-right:8px"><div style="width:24px;height:24px;border-radius:12px;background:#2A1450;color:#fff;font-weight:900;font-size:13px;line-height:24px;text-align:center">${i + 1}</div></td>
+          <td width="44" valign="top"><div style="width:40px;height:40px;border-radius:12px;background:${e.bg};font-size:22px;line-height:40px;text-align:center">${e.icon}</div></td>
+          <td valign="top" style="padding-left:10px">
+            <div style="font-size:15px;font-weight:900;color:#2A1450">${esc(e.title)} <span style="font-weight:800;color:#7C3AED;font-size:13px">· ${e.qty.map(esc).join(' ')}</span></div>
+            ${e.sub ? `<div style="font-size:12px;color:#6B5A85;margin-top:1px">${esc(e.sub)}</div>` : ''}
+            <div style="font-size:12px;color:#3F3358;font-weight:700;margin-top:3px">📅 ${esc(e.date)}${e.time ? ` · ⏰ ${esc(e.time)}` : ''} · 📍 ${esc(e.place)}</div>
+          </td>
+          <td width="26" valign="top" align="right"><div style="width:22px;height:22px;border-radius:6px;background:#16A34A;color:#fff;font-weight:900;font-size:14px;line-height:22px;text-align:center">✓</div></td>
+        </tr></table>
+      </td></tr>`
+    )
+    .join('');
+
+  const hasRaceDay = isRun || Boolean(o.concertQty) || Boolean(o.vipTables);
+  const detailHtml = `
+      <div style="margin-top:16px;font-size:13px;font-weight:900;color:#2A1450">📍 รายละเอียดงาน</div>
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:6px;border-collapse:separate;border:2px solid #FDE68A;border-radius:14px;background:#FFF7DB">
+        <tr><td style="padding:12px 14px;font-size:13px;line-height:1.75;color:#2A1450">
+          ${hasRaceDay ? `<b>📅 ${esc(RACE_DAY)} (วันเสาร์)</b> ${isRun ? `วิ่ง${start ? ` · ปล่อยตัว ${esc(start)}` : ''}` : ''}${isRun && (o.concertQty || o.vipTables) ? ' + ' : ''}${o.concertQty || o.vipTables ? 'คอนเสิร์ต 18.00–24.00 น.' : ''}<br/>` : ''}
+          ${o.addOns ? `<b>📅 ${esc(ACT_DAY)} (วันอาทิตย์)</b> กิจกรรมเสริม · ดูเวลาแต่ละสถานีบนเว็บไซต์<br/>` : ''}
+          ${isRun ? `<b>🎽 รับอุปกรณ์ Race Kit</b> วันเสาร์ที่ ${esc(RACE_DAY)} ตั้งแต่ 09.00 น. ที่ Sea Sand Sun Hua Hin Resort · แสดง QR ในอีเมลนี้ + บัตรประชาชน (ชาวต่างชาติ: หนังสือเดินทาง)<br/>` : ''}
+          <b>📍 สถานที่</b> ${esc(eventInfo.venue)}<br/>
+          <a href="${esc(eventInfo.googleMapsUrl)}" style="display:inline-block;margin-top:6px;background:#2563EB;color:#ffffff;text-decoration:none;font-weight:900;font-size:13px;border-radius:10px;padding:8px 14px">🗺️ เปิดแผนที่ Google Maps</a>
+        </td></tr>
+      </table>`;
+
+  const parkingLeft = o.vipTables ? Math.max(0, o.vipTables * VIP_PARKING_PER_TABLE - (o.parkingPlates || []).length) : 0;
 
   const parkingHtml = parking
     .map(
@@ -141,7 +181,7 @@ export async function buildTicketEmail(o: StoredOrder) {
   ]
     .filter(Boolean)
     .join(' · ');
-  const docsHtml = await buildDocumentsHtml(o, { assetBase: SITE });
+  const docsHtml = await buildDocumentsHtml(o, { assetBase: SITE, inline: await documentImages() });
   attachments.push({ filename: `CHANGSUEK_RUN_A4_${o.orderId}.html`, content: Buffer.from(docsHtml, 'utf8').toString('base64') });
 
   const html = `<!doctype html><html lang="th"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><meta name="color-scheme" content="light"/></head>
@@ -178,12 +218,16 @@ export async function buildTicketEmail(o: StoredOrder) {
         </tr>
       </table>
 
-      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:12px"><tr>${chips}</tr></table>
+      <div style="margin-top:16px;font-size:13px;font-weight:900;color:#2A1450">🎫 สิทธิ์ที่คุณได้รับ</div>
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:4px">${entHtml}</table>
 
-      <div style="margin-top:16px;font-size:13px;font-weight:900;color:#2A1450">🧾 รายละเอียดคำสั่งซื้อ</div>
+      <div style="margin-top:16px;font-size:13px;font-weight:900;color:#2A1450">🧾 สรุปคำสั่งซื้อ</div>
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:6px;border-collapse:collapse;background:#ffffff;border:2px solid #EEE7F8">${rows.join('')}</table>
 
       ${parkingHtml}
+      ${parkingLeft > 0 ? `<div style="margin-top:10px;padding:10px 12px;border-radius:12px;background:#FFF3CC;border:2px dashed #FFC928;font-size:12.5px;color:#2A1450;line-height:1.6">🚗 ยังลงทะเบียนรถ VIP ได้อีก <b>${parkingLeft} คัน</b> — เข้าสู่ระบบที่ <a href="https://www.changsuekrun.com" style="color:#7C3AED;font-weight:800">changsuekrun.com</a> ไปที่ Runner Center ได้จนถึงวันงาน</div>` : ''}
+
+      ${detailHtml}
 
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:16px;border-collapse:separate;border:3px solid #2A1450;border-radius:18px;background:#FFF7DB">
         <tr><td style="padding:14px 16px;text-align:center">
