@@ -225,7 +225,7 @@ export const DealStrip: React.FC<DealStripProps> = ({ chosen }) => {
                 <span aria-hidden="true" className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-[#3B1780] text-xs font-black text-white">{st.n}</span>
                 <span className="text-[13px] sm:text-base font-black text-[#2A1450]">{st.label}</span>
               </span>
-              <span className={`rounded-full bg-gradient-to-b from-[#5B2BC0] to-[#3B1780] px-5 py-0.5 sm:py-1 font-black tracking-tight text-[#FFD35C] shadow-[0_6px_10px_-5px_rgba(42,20,80,0.85),inset_0_1px_0_rgba(255,255,255,0.3)] whitespace-nowrap ${st.small ? 'text-lg sm:text-2xl' : st.big.length > 5 ? 'text-xl sm:text-[30px]' : 'text-2xl sm:text-[34px]'}`}>
+              <span className={`rounded-full bg-gradient-to-b from-[#5B2BC0] to-[#3B1780] px-5 py-0.5 sm:py-1 font-black tracking-tight text-[#FFD35C] shadow-[0_6px_10px_-5px_rgba(42,20,80,0.85),inset_0_1px_0_rgba(255,255,255,0.3)] whitespace-nowrap ${st.small ? 'text-lg sm:text-2xl' : st.big.length > 5 ? 'px-3 text-base sm:px-5 sm:text-[30px]' : 'text-2xl sm:text-[34px]'}`}>
                 {st.big}
               </span>
               <span className="sr-only">{on ? 'ได้ส่วนลดนี้แล้ว' : `เงื่อนไข: ${st.label}`}</span>
