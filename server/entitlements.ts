@@ -4,6 +4,7 @@
  * Texts are plain (not HTML-escaped); callers escape them.
  */
 import { VIP_TABLE_SEATS, calcTicketTotal, concertPassPrice, eventInfo, formatBaht, routesData, ticketById, vipTablePrice } from '../src/data/eventData';
+import { TOWER_GUN_HOURS } from '../src/data/addOns';
 import { ACTIVITY_LOCATIONS, locationTitle } from '../src/data/activityLocations';
 import { VIP_PARKING_PER_TABLE } from '../src/data/vipParking';
 import type { RouteId } from '../src/types';
@@ -74,14 +75,14 @@ export function ticketEntitlements(o: StoredOrder): Entitlement[] {
   }
   if (o.addOns) {
     const acts = [
-      o.addOns.tower ? { key: 'tower', icon: '🗼', bg: '#DDD6FE', title: 'หอสูง', sub: 'กิจกรรมโดดหอสูง 34 ฟุต' } : null,
-      o.addOns.gun && o.addOns.gun !== 'none' ? { key: 'gun', icon: '🔫', bg: '#FDE68A', title: o.addOns.gun === 'premium' ? 'ยิงปืน Premium' : 'ยิงปืน', sub: 'กิจกรรมยิงปืนที่สนามยิงปืน' } : null,
+      o.addOns.tower ? { key: 'tower', icon: '🗼', bg: '#DDD6FE', title: 'หอสูง', sub: 'กิจกรรมโดดหอสูง 34 ฟุต', time: TOWER_GUN_HOURS } : null,
+      o.addOns.gun && o.addOns.gun !== 'none' ? { key: 'gun', icon: '🔫', bg: '#FDE68A', title: o.addOns.gun === 'premium' ? 'ยิงปืนยาว' : 'ยิงปืนสั้น', sub: 'ปืน + กระสุน 10 นัด ที่สนามยิงปืน', time: TOWER_GUN_HOURS } : null,
       o.addOns.windTunnel ? { key: 'wind', icon: '🌪️', bg: '#BAE6FD', title: 'อุโมงค์ลม', sub: 'อุโมงค์ลมชัยจินดา (Wind Tunnel)' } : null,
-    ].filter(Boolean) as { key: 'tower' | 'gun' | 'wind'; icon: string; bg: string; title: string; sub: string }[];
+    ].filter(Boolean) as { key: 'tower' | 'gun' | 'wind'; icon: string; bg: string; title: string; sub: string; time?: string }[];
     if (!acts.length) acts.push({ key: 'tower', icon: '⭐', bg: '#DDD6FE', title: o.addOns.label, sub: '' });
     for (const a of acts) {
       const loc = ACTIVITY_LOCATIONS.find((l) => l.id === a.key);
-      out.push({ icon: a.icon, bg: a.bg, title: a.title, sub: a.sub, qty: [`${o.addOns.people} คน`], date: ACT_DAY, place: loc ? locationTitle(loc) : eventInfo.venueShort });
+      out.push({ icon: a.icon, bg: a.bg, title: a.title, sub: a.sub, qty: [`${o.addOns.people} คน`], date: ACT_DAY, time: a.time, place: loc ? locationTitle(loc) : eventInfo.venueShort });
     }
   }
   return out;
@@ -95,8 +96,9 @@ export function priceLines(o: StoredOrder): PriceLine[] | null {
   if (isRun) lines.push({ name: `ค่าสมัครวิ่ง ${ticketById(o.routeId).name}${o.runningWithDog ? ` (น้องหมา ${o.dogCount || 1} ตัว)` : ''}`, amount: calcTicketTotal(o.routeId as RouteId, o.extraPeople || 0, o.extraDogs || 0, earlyBird) });
   if (o.concertQty) lines.push({ name: `ตั๋วคอนเสิร์ต GA × ${o.concertQty}`, amount: concertPassPrice(earlyBird) * o.concertQty });
   if (o.vipTables) lines.push({ name: `VIP TABLE × ${o.vipTables} โต๊ะ (${o.vipTables * VIP_TABLE_SEATS} ท่าน)`, amount: vipTablePrice(earlyBird) * o.vipTables });
-  if (o.concertDiscount) lines.push({ name: 'ส่วนลดบัตรคอนเสิร์ต / VIP (โปรโมชั่น)', amount: -o.concertDiscount });
-  if (o.addOns) lines.push({ name: `กิจกรรมเสริม: ${o.addOns.label} × ${o.addOns.people} คน${o.addOns.discount ? ` (ลดแล้ว ${formatBaht(o.addOns.discount)} บาท)` : ''}`, amount: o.addOns.total });
+  const off = (o.concertDiscount || 0) + (o.runDiscount || 0) + (o.addOns?.discount || 0);
+  if (o.addOns) lines.push({ name: `กิจกรรมเสริม: ${o.addOns.label} × ${o.addOns.people} คน`, amount: o.addOns.total + (o.addOns.discount || 0) });
+  if (off > 0) lines.push({ name: `ส่วนลดซื้อหลายอย่าง${o.discountRate ? ` ${Math.round(o.discountRate * 100)}%` : ''}`, amount: -off });
   const sum = lines.reduce((t, l) => t + l.amount, 0);
   return o.paymentMethod !== 'SPONSOR_CODE' && !o.isTest && lines.length > 0 && sum === o.totalPrice ? lines : null;
 }

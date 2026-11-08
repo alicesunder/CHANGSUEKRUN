@@ -702,7 +702,7 @@ export const scheduleData: ScheduleDay[] = [
         id: 's-6b',
         day: 'race_day',
         time: '09.00–14.00 น.',
-        title: 'ตรวจสุขภาพสุนัข (ไม่มีค่าใช้จ่าย)',
+        title: 'ตรวจสุขภาพสุนัข',
         description: 'โดย รพ.สัตว์ทองหล่อ สำหรับผู้สมัครวิ่ง Dog Run ทั้ง 2 ระยะ (1K / 4K)',
         iconName: 'Stethoscope',
         highlight: true,
@@ -710,7 +710,7 @@ export const scheduleData: ScheduleDay[] = [
       {
         id: 's-7',
         day: 'race_day',
-        time: '09.00–11.00 น.',
+        time: '09.00–12.00 น.',
         title: 'กิจกรรมสถานีที่ 1 กิจกรรมยิงปืน',
         description: 'ฐานกิจกรรมสถานีที่ 1 ภายในค่ายนเรศวร',
         iconName: 'Activity',
@@ -718,7 +718,7 @@ export const scheduleData: ScheduleDay[] = [
       {
         id: 's-8',
         day: 'race_day',
-        time: '10.00–12.00 น.',
+        time: '09.00–12.00 น.',
         title: 'กิจกรรมสถานีที่ 2 กิจกรรมหอสูง',
         description: 'ฐานกิจกรรมสถานีที่ 2 ภายในค่ายนเรศวร',
         iconName: 'Activity',

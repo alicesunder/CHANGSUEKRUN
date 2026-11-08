@@ -103,7 +103,7 @@ import { TEST_PRICE_BAHT, useTestMode } from '../utils/testMode';
 import { ActivityWaiverForm, mergeParticipant } from './ActivityWaiverForm';
 import { ParkingPasses } from './ParkingPass';
 import { ProvinceSelect } from './ProvinceSelect';
-import { EMPTY_ADD_ONS, addOnBonusDiscount, addOnConcertRate, addOnCountRate, addOnDiscountRate, addOnLabel, addOnTotal, concertDiscountPerTicket, hasAddOns, hasAllThree, percentOf, vipDiscountPerTable, type AddOnSelection } from '../data/addOns';
+import { EMPTY_ADD_ONS, addOnLabel, hasAddOns, percentOf, priceBasket, type AddOnSelection } from '../data/addOns';
 
 interface RegistrationModalProps {
   isOpen: boolean;
@@ -352,16 +352,23 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
       return next;
     });
   const shirtSize = runners[0]?.shirtSize || 'L';
-  // Bundle discounts never stack with a sponsor code (rules in data/addOns.ts; the server decides the real price).
+  // One basket discount (2 items 10%, 3 items 15%, 4-5 items 20%), never with a sponsor code (rules in data/addOns.ts; the server decides the real price).
   const sponsorOn = Boolean(sponsor) && wantRun;
-  const discountCtx = { hasRun: wantRun, hasConcert: gaQty > 0 || vipTables > 0, sponsor: sponsorOn, earlyBird };
   const concertUnit = concertPassPrice(earlyBird);
   const vipUnit = vipTablePrice(earlyBird);
-  const concertDiscount = gaQty * concertDiscountPerTicket(concertUnit, wantRun && !sponsorOn) + vipTables * vipDiscountPerTable(vipUnit, wantRun && !sponsorOn, !sponsorOn && hasAllThree(addOns));
+  const basket = priceBasket({
+    runGross: wantRun ? calcTicketTotal(selectedRoute, extraPeople, extraDogs, earlyBird) : 0,
+    hasRun: wantRun,
+    gaUnit: concertUnit,
+    gaQty: wantConcert ? gaQty : 0,
+    vipUnit,
+    vipTables: wantConcert ? vipTables : 0,
+    addOns,
+    sponsor: sponsorOn,
+  });
   const vipTotal = vipUnit * vipTables;
-  const ticketTotal = (wantRun ? calcTicketTotal(selectedRoute, extraPeople, extraDogs, earlyBird) : 0) + (wantConcert ? concertUnit * gaQty - concertDiscount + vipTotal : 0);
-  const addOnSum = addOnTotal(addOns, discountCtx);
-  const addOnOff = addOnBonusDiscount(addOns, discountCtx);
+  const addOnSum = basket.addGross - basket.addOff;
+  const ticketTotal = basket.total - addOnSum;
   const concertMissing = wantConcert && gaQty === 0 && vipTables === 0;
   const hasGun = wantAddons && addOns.gun !== 'none';
   const waiverActivities = waiversFor(addOns);
@@ -1129,7 +1136,6 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                     value={addOns}
                     onChange={setAddOns}
                     windTunnelRemaining={typeof publicCfg?.windTunnelRemaining === 'number' ? publicCfg.windTunnelRemaining : null}
-                    discountCtx={discountCtx}
                   />
                 </div>
                 </div>
@@ -1213,12 +1219,6 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                           <span className="font-extrabold text-[#261247] tabular-nums"><EarlyBirdPrice list={VIP_TABLE_PRICE * vipTables} now={vipTotal} /> บาท</span>
                         </div>
                       )}
-                      {concertDiscount > 0 && (
-                        <div className="flex justify-between gap-3 text-emerald-700">
-                          <span>🎶 ส่วนลดซื้อคู่วิ่ง + คอนเสิร์ต (10%)</span>
-                          <span className="font-extrabold tabular-nums shrink-0">-{formatBaht(concertDiscount)} บาท</span>
-                        </div>
-                      )}
                       {isDog && extraPeople > 0 && (
                         <div className="flex justify-between">
                           <span>ผู้ร่วมวิ่งเพิ่ม × {extraPeople} คน</span>
@@ -1240,23 +1240,13 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                           <span>
                             กิจกรรมเสริม: {addOnLabel(addOns)} × {addOns.people} คน
                           </span>
-                          <span className="font-extrabold text-[#261247] tabular-nums shrink-0">+{formatBaht(addOnSum + addOnOff)} บาท</span>
+                          <span className="font-extrabold text-[#261247] tabular-nums shrink-0">+{formatBaht(basket.addGross)} บาท</span>
                         </div>
                       )}
-                      {addOnOff > 0 && (
+                      {basket.saved > 0 && (
                         <div className="flex justify-between gap-3 text-emerald-700">
-                          <span>
-                            🎉 ส่วนลดกิจกรรม {percentOf(addOnDiscountRate(addOns, discountCtx))}%
-                            {' ('}
-                            {[
-                              addOnCountRate(addOns, discountCtx) > 0 && `${wantRun ? 'วิ่ง + ครบ 3' : 'ครบ 3'} กิจกรรม ${percentOf(addOnCountRate(addOns, discountCtx))}%`,
-                              addOnConcertRate(addOns, discountCtx) > 0 && `มีคอนเสิร์ต +${percentOf(addOnConcertRate(addOns, discountCtx))}%`,
-                            ]
-                              .filter(Boolean)
-                              .join(' · ')}
-                            {')'}
-                          </span>
-                          <span className="font-extrabold tabular-nums shrink-0">-{formatBaht(addOnOff)} บาท</span>
+                          <span>🎉 ส่วนลดซื้อ {basket.items} อย่าง {percentOf(basket.rate)}%</span>
+                          <span className="font-extrabold tabular-nums shrink-0">-{formatBaht(basket.saved)} บาท</span>
                         </div>
                       )}
                     </div>

@@ -452,7 +452,7 @@ export const TicketPrintEmailModal: React.FC<TicketPrintEmailModalProps> = ({
                             <PawIcon size={15} color="#16A34A" />
                             <span>
                               K9 Companion Pass: น้อง{profile.dogName || 'เพื่อนซี้สี่ขา'} (
-                              {profile.dogBreed || 'ไม่ระบุสายพันธุ์'}) · เข้าจุดตรวจสุขภาพสัตว์เลี้ยงฟรี
+                              {profile.dogBreed || 'ไม่ระบุสายพันธุ์'}) · เข้าจุดตรวจสุขภาพสัตว์เลี้ยง
                             </span>
                           </div>
                         )}

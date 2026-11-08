@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Clock, Crown, Hourglass, Info } from 'lucide-react';
-import { ADDON_CONCERT_RATE, ADDON_MAX_RATE, ADDON_THREE_RATE, ADDON_TWO_RATE, CONCERT_BUNDLE_RATE, VIP_ADDON_RATE, formatBaht, percentOf } from '../data/addOns';
+import { Clock, Hourglass, Info, Lock } from 'lucide-react';
+import { BASKET_MAX_ITEMS, BASKET_MAX_RATE, BASKET_TIERS, formatBaht, percentOf } from '../data/addOns';
 import { concertPassPrice } from '../data/eventData';
 import { useEarlyBird } from '../utils/earlyBird';
 
@@ -130,129 +130,124 @@ export const DiscountCelebration: React.FC<CelebrationProps> = ({ active, burstK
 };
 
 interface DealStripProps {
-  hasRun: boolean;
-  /** GA concert tickets in the basket (the run + concert deal is on GA only) */
-  hasGaConcert: boolean;
-  /** GA or VIP concert in the basket */
-  hasConcert: boolean;
-  /** a VIP table in the basket */
-  hasVip?: boolean;
-  activities: number;
+  /** which kinds of items are in the basket (each counts as 1 item) */
+  chosen: { run: boolean; concert: boolean; tower: boolean; gun: boolean; wind: boolean };
 }
 
-const ACT_ICONS = ['/images/shop/deals-ic-target.png', '/images/shop/deals-ic-tower.png', '/images/shop/deals-ic-fan.png'];
 const ICON_CLS = 'h-5 w-5 sm:h-[30px] sm:w-[30px] object-contain mix-blend-multiply';
 
-/** Small round icon chip used on the coupons. */
-const Chip: React.FC<{ children: React.ReactNode; tone: 'gold' | 'violet' }> = ({ children, tone }) => (
-  <span
-    aria-hidden="true"
-    className={`inline-flex h-7 w-7 sm:h-[38px] sm:w-[38px] items-center justify-center rounded-lg border-2 ${
-      tone === 'gold' ? 'border-[#E0A100] bg-white text-[#4B1FA8]' : 'border-[#B79AE8] bg-white text-[#4B1FA8]'
-    }`}
-  >
-    {children}
-  </span>
-);
-
-const ThreeActs: React.FC = () => (
-  <>
-    {ACT_ICONS.map((src) => (
-      <span key={src} aria-hidden="true" className="inline-flex h-7 w-7 sm:h-[38px] sm:w-[38px] items-center justify-center rounded-lg border-2 border-[#D9C9EF] bg-white">
-        <img src={src} alt="" className={ICON_CLS} loading="lazy" />
-      </span>
-    ))}
-  </>
-);
+const ITEM_ICONS: { key: keyof DealStripProps['chosen']; src: string; label: string }[] = [
+  { key: 'run', src: '/images/shop/deals-ic-run.png', label: 'ตั๋ววิ่ง' },
+  { key: 'concert', src: '/images/shop/deals-ic-music.png', label: 'คอนเสิร์ต / VIP' },
+  { key: 'tower', src: '/images/shop/deals-ic-tower.png', label: 'หอสูง' },
+  { key: 'gun', src: '/images/shop/deals-ic-target.png', label: 'ยิงปืน' },
+  { key: 'wind', src: '/images/shop/deals-ic-fan.png', label: 'อุโมงค์ลม' },
+];
 
 /**
- * The bundle deals as four collectable coupons (perforated edges, big discount pill). A coupon lights up
- * with a "ได้แล้ว!" stamp as soon as the basket qualifies; the progress pill counts the unlocked deals.
+ * "The more you buy, the more you save": every kind of item counts as one (run, concert / VIP, tower, shooting,
+ * wind tunnel). 2 items -10%, 3 items -15%, 4-5 items -20%, taken off the whole basket. The step the basket has
+ * reached lights up with a "ได้แล้ว!" stamp.
  */
-export const DealStrip: React.FC<DealStripProps> = ({ hasRun, hasGaConcert, hasConcert, hasVip = false, activities }) => {
-  const concertUnit = concertPassPrice(useEarlyBird());
-  const concertNet = concertUnit - Math.round(concertUnit * CONCERT_BUNDLE_RATE);
-  const deals = [
-    { key: 'concert', icons: 'run+music', label: 'วิ่ง + คอนเสิร์ต GA/VIP', big: `-${percentOf(CONCERT_BUNDLE_RATE)}%`, note: `GA เหลือ ${formatBaht(concertNet)} บาท/ใบ`, how: 'ซื้อตั๋ววิ่ง + ตั๋วคอนเสิร์ต GA หรือ VIP', tone: 'gold' as const, on: hasRun && hasGaConcert },
-    { key: 'two', icons: 'acts', label: 'ครบ 3 กิจกรรม', big: `-${percentOf(ADDON_TWO_RATE)}%`, note: 'ค่ากิจกรรมเสริม', how: 'เลือกกิจกรรมเสริมให้ครบ 3 อย่าง', tone: 'violet' as const, on: activities >= 3 },
-    { key: 'three', icons: 'run+acts', label: 'วิ่ง + ครบ 3 กิจกรรม', big: `-${percentOf(ADDON_THREE_RATE)}%`, note: 'แทนส่วนลด 10%', how: 'ตั๋ววิ่ง + ครบ 3 กิจกรรม', tone: 'gold' as const, on: hasRun && activities >= 3 },
-    { key: 'concert-addon', icons: 'music+acts', label: 'คอนเสิร์ต + ครบ 3', big: `+${percentOf(ADDON_CONCERT_RATE)}%`, note: 'ลดเพิ่มค่ากิจกรรม', how: 'มีตั๋วคอนเสิร์ต + ครบ 3 กิจกรรม', tone: 'violet' as const, on: hasConcert && activities >= 3 },
-    { key: 'vip', icons: 'vip+acts', label: 'VIP TABLE + ครบ 3', big: `-${percentOf(VIP_ADDON_RATE)}%`, note: 'ลดค่าโต๊ะ VIP', how: 'VIP TABLE + ครบ 3 กิจกรรม', tone: 'gold' as const, on: hasVip && activities >= 3 },
+export const DealStrip: React.FC<DealStripProps> = ({ chosen }) => {
+  const items = ITEM_ICONS.filter((i) => chosen[i.key]).length;
+  const steps = [
+    { key: 's1', n: 1, label: 'ซื้อ 1 อย่าง', big: 'ราคาปกติ', small: true, min: 0, max: 1, tone: 'gold' as const },
+    ...BASKET_TIERS.map((t, i) => ({
+      key: `s${t.items}`,
+      n: i + 2,
+      label: i === BASKET_TIERS.length - 1 ? `ซื้อ ${t.items}–${BASKET_MAX_ITEMS} อย่าง` : `ซื้อ ${t.items} อย่าง`,
+      big: `-${percentOf(t.rate)}%${i === BASKET_TIERS.length - 1 ? ' สูงสุด' : ''}`,
+      small: false,
+      min: t.items,
+      max: i === BASKET_TIERS.length - 1 ? BASKET_MAX_ITEMS : t.items,
+      tone: 'violet' as const,
+    })),
   ];
-  const unlocked = deals.filter((d) => d.on).length;
-
-  const renderIcons = (kind: string, tone: 'gold' | 'violet') => {
-    const run = <Chip tone={tone}><img src="/images/shop/deals-ic-run.png" alt="" className={ICON_CLS} loading="lazy" /></Chip>;
-    const music = <Chip tone={tone}><img src="/images/shop/deals-ic-music.png" alt="" className={ICON_CLS} loading="lazy" /></Chip>;
-    const plus = <span aria-hidden="true" className="text-base font-black text-[#4B1FA8]">+</span>;
-    if (kind === 'run+music') return <>{run}{plus}{music}</>;
-    if (kind === 'acts') return <ThreeActs />;
-    if (kind === 'run+acts') return <>{run}{plus}<ThreeActs /></>;
-    if (kind === 'vip+acts') return <><Chip tone={tone}><Crown className="h-4 w-4 sm:h-6 sm:w-6 text-[#B45309]" strokeWidth={2.4} /></Chip>{plus}<ThreeActs /></>;
-    return <>{music}{plus}<ThreeActs /></>;
-  };
+  const current = steps.findIndex((st) => items >= st.min && items <= st.max);
 
   return (
     <div className="relative overflow-hidden rounded-[26px] border border-[#E4D6F7] bg-gradient-to-b from-[#FFFDF6] via-[#FBF7FF] to-[#F3ECFF] p-3.5 sm:px-[18px] sm:py-5 shadow-[0_8px_20px_rgba(65,30,120,0.14),inset_0_1px_0_rgba(255,255,255,0.9)]">
       <div className="relative flex flex-wrap items-center gap-x-3 gap-y-2 pb-3 sm:pb-4">
         <img src="/images/shop/deals-percent.png" alt="" aria-hidden="true" className="-mr-1 h-14 w-auto sm:h-[72px] -rotate-6 mix-blend-multiply" />
         <h3 className="relative inline-flex items-center rounded-full bg-gradient-to-b from-[#6D3FD0] to-[#3B1780] py-1.5 sm:py-2 pl-5 sm:pl-7 pr-5 sm:pr-7 text-xl sm:text-[25px] font-black leading-tight text-white shadow-[0_8px_16px_-8px_rgba(42,20,80,0.75),inset_0_1px_0_rgba(255,255,255,0.25)]">
-          ยิ่งซื้อคู่&nbsp;<span className="text-[#FFD35C]">ยิ่งลด!</span>
+          ยิ่งซื้อเพิ่ม&nbsp;<span className="text-[#FFD35C]">ยิ่งลด!</span>
         </h3>
         <p className="rounded-full bg-[#EFE5FF] px-4 py-2 text-[13px] sm:text-base font-extrabold text-[#2A1450]">
-          ส่วนลดกิจกรรมรวมสูงสุด <span className="text-xl sm:text-3xl align-middle font-black text-[#4B1FA8]">{percentOf(ADDON_MAX_RATE)}%</span>
+          ลดสูงสุด <span className="text-xl sm:text-3xl align-middle font-black text-[#4B1FA8]">{percentOf(BASKET_MAX_RATE)}%</span>
         </p>
-        <div
-          className="ml-auto inline-flex items-center gap-2 rounded-full border border-[#D9C9EF] bg-white px-3 py-1.5"
-          aria-label={`ปลดล็อกแล้ว ${unlocked} จาก ${deals.length} ดีล`}
-        >
-          <span className="text-[11.5px] sm:text-xs font-extrabold text-[#4B2D78]">ความคืบหน้า</span>
-          <span className="rounded-full bg-[#4B1FA8] px-2.5 py-0.5 text-xs font-black text-white tabular-nums">{unlocked}/{deals.length}</span>
+        <div className="ml-auto inline-flex items-center gap-2 rounded-full border border-[#D9C9EF] bg-white px-3 py-1.5" aria-label={`เลือกแล้ว ${items} จาก ${BASKET_MAX_ITEMS} อย่าง`}>
+          <span className="text-[11.5px] sm:text-xs font-extrabold text-[#4B2D78]">เลือกแล้ว</span>
+          <span className="rounded-full bg-[#4B1FA8] px-2.5 py-0.5 text-xs font-black text-white tabular-nums">{items}/{BASKET_MAX_ITEMS}</span>
           <span className="hidden sm:flex items-center gap-1" aria-hidden="true">
-            {deals.map((d) => (
-              <span key={d.key} className={`h-2 w-7 rounded-full transition-colors duration-300 ${d.on ? 'bg-gradient-to-b from-[#FFE27A] to-[#FFC928]' : 'bg-[#E4D6F7]'}`} />
+            {ITEM_ICONS.map((it, i) => (
+              <span key={it.key} className={`h-2 w-6 rounded-full transition-colors duration-300 ${i < items ? 'bg-gradient-to-b from-[#FFE27A] to-[#FFC928]' : 'bg-[#E4D6F7]'}`} />
             ))}
           </span>
         </div>
       </div>
 
-      <ul data-reveal-stagger="pop" className="relative grid grid-cols-2 lg:grid-cols-5 gap-2.5 sm:gap-3.5" aria-label="โปรโมชั่นส่วนลด">
-        {deals.map((d) => (
-          <motion.li
-            key={d.key}
-            animate={d.on ? { scale: [1, 1.06, 1] } : { scale: 1 }}
-            transition={{ duration: 0.5 }}
-            className={`${d.key === 'vip' ? 'col-span-2 lg:col-span-1 ' : ''}relative flex flex-col items-center justify-center gap-1.5 sm:gap-2.5 rounded-2xl border-2 px-2 pb-3 pt-3.5 lg:min-h-[180px] text-center leading-tight shadow-[0_8px_18px_-10px_rgba(65,30,120,0.35),inset_0_1px_0_rgba(255,255,255,0.9)] ${
-              d.tone === 'gold' ? 'bg-gradient-to-b from-[#FFF3C4] to-[#FFFBEA]' : 'bg-gradient-to-b from-[#EFE5FF] to-[#FAF6FF]'
-            } ${d.on ? 'border-[#2A1450] shadow-[0_4px_0_#2A1450]' : d.tone === 'gold' ? 'border-[#F2D27A] border-dashed' : 'border-[#D9C9EF] border-dashed'}`}
-          >
-            {/* ticket notches */}
-            <span aria-hidden="true" className="absolute -left-[11px] top-1/2 h-5 w-5 -translate-y-1/2 rounded-full border-2 border-inherit bg-[#F9F5FF] [clip-path:inset(0_0_0_50%)]" />
-            <span aria-hidden="true" className="absolute -right-[11px] top-1/2 h-5 w-5 -translate-y-1/2 rounded-full border-2 border-inherit bg-[#F9F5FF] [clip-path:inset(0_50%_0_0)]" />
-            <span className="flex flex-nowrap items-center justify-center gap-0.5 sm:gap-1">{renderIcons(d.icons, d.tone)}</span>
-            <span className="text-[13px] sm:text-base font-black text-[#2A1450]">{d.label}</span>
-            <span className="rounded-full bg-gradient-to-b from-[#5B2BC0] to-[#3B1780] px-6 py-0.5 sm:py-1 text-2xl sm:text-[34px] font-black tracking-tight text-[#FFD35C] shadow-[0_6px_10px_-5px_rgba(42,20,80,0.85),inset_0_1px_0_rgba(255,255,255,0.3)]">
-              {d.big}
+      {/* the 5 kinds of items, each counts as 1 */}
+      <div className="relative flex flex-wrap items-center justify-center gap-x-2 gap-y-2 rounded-2xl bg-white/70 border border-[#E4D6F7] px-3 py-2.5 mb-3 sm:mb-4">
+        <span className="basis-full sm:basis-auto text-center text-sm sm:text-base font-black text-[#2A1450]">เลือกสินค้าได้ {BASKET_MAX_ITEMS} อย่าง</span>
+        {ITEM_ICONS.map((it, i) => (
+          <React.Fragment key={it.key}>
+            {i > 0 && <span aria-hidden="true" className="text-base font-black text-[#4B1FA8]">+</span>}
+            <span className={`inline-flex items-center gap-1.5 rounded-xl border-2 px-2 py-1 transition-colors ${chosen[it.key] ? 'border-[#2A1450] bg-[#FFE27A]' : 'border-[#E0A100]/60 bg-white'}`}>
+              <img src={it.src} alt="" aria-hidden="true" className={ICON_CLS} loading="lazy" />
+              <span className="text-[11.5px] sm:text-[13px] font-extrabold text-[#2A1450] leading-none">{it.label}</span>
+              {chosen[it.key] && <span aria-hidden="true" className="text-[#15803D] font-black text-sm leading-none">✓</span>}
             </span>
-            <span className="text-[11.5px] sm:text-[13px] font-extrabold text-[#5B4878]">{d.on ? '✓ ได้ส่วนลดนี้แล้ว!' : `(${d.note})`}</span>
-            <span className="sr-only">{d.on ? 'ได้ส่วนลดนี้แล้ว' : `เงื่อนไข: ${d.how}`}</span>
-            <AnimatePresence>
-              {d.on && (
-                <motion.span
-                  aria-hidden="true"
-                  initial={{ scale: 2.4, opacity: 0, rotate: -30 }}
-                  animate={{ scale: 1, opacity: 1, rotate: -12 }}
-                  exit={{ scale: 0.6, opacity: 0 }}
-                  transition={{ type: 'spring', stiffness: 380, damping: 16 }}
-                  className="absolute -right-1.5 -top-2 rounded-md border-2 border-[#B91C1C] bg-white px-1.5 py-px text-xs font-black text-[#B91C1C]"
-                >
-                  ได้แล้ว!
-                </motion.span>
-              )}
-            </AnimatePresence>
-          </motion.li>
+          </React.Fragment>
         ))}
+        <span className="rounded-2xl bg-gradient-to-b from-[#FFE27A] to-[#FFC928] px-3 py-1 text-center text-[11.5px] sm:text-[13px] font-black leading-tight text-[#2A1450] sm:ml-2">
+          เลือกกี่อย่างก็ได้<br />นับอย่างละ 1
+        </span>
+      </div>
+
+      <ul data-reveal-stagger="pop" className="relative grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3.5" aria-label="ส่วนลดตามจำนวนอย่าง">
+        {steps.map((st, i) => {
+          const on = items >= 1 && i === current;
+          const reached = items >= 1 && i <= current;
+          return (
+            <motion.li
+              key={st.key}
+              animate={on ? { scale: [1, 1.06, 1] } : { scale: 1 }}
+              transition={{ duration: 0.5 }}
+              className={`relative flex flex-col items-center justify-center gap-1.5 sm:gap-2.5 rounded-2xl border-2 px-2 pb-3 pt-3.5 text-center leading-tight shadow-[0_8px_18px_-10px_rgba(65,30,120,0.35),inset_0_1px_0_rgba(255,255,255,0.9)] ${
+                st.tone === 'gold' ? 'bg-gradient-to-b from-[#FFF3C4] to-[#FFFBEA]' : 'bg-gradient-to-b from-[#EFE5FF] to-[#FAF6FF]'
+              } ${on ? 'border-[#2A1450] shadow-[0_4px_0_#2A1450]' : reached ? 'border-[#E0A100]' : st.tone === 'gold' ? 'border-[#F2D27A] border-dashed' : 'border-[#D9C9EF] border-dashed'}`}
+            >
+              <span aria-hidden="true" className="absolute -left-[11px] top-1/2 h-5 w-5 -translate-y-1/2 rounded-full border-2 border-inherit bg-[#F9F5FF] [clip-path:inset(0_0_0_50%)]" />
+              <span aria-hidden="true" className="absolute -right-[11px] top-1/2 h-5 w-5 -translate-y-1/2 rounded-full border-2 border-inherit bg-[#F9F5FF] [clip-path:inset(0_50%_0_0)]" />
+              {!reached && i > 0 && <Lock aria-hidden="true" className="hidden sm:block absolute right-2.5 top-2.5 h-4 w-4 text-[#9C8BBD]" />}
+              <span className="flex items-center gap-1.5">
+                <span aria-hidden="true" className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-[#3B1780] text-xs font-black text-white">{st.n}</span>
+                <span className="text-[13px] sm:text-base font-black text-[#2A1450]">{st.label}</span>
+              </span>
+              <span className={`rounded-full bg-gradient-to-b from-[#5B2BC0] to-[#3B1780] px-5 py-0.5 sm:py-1 font-black tracking-tight text-[#FFD35C] shadow-[0_6px_10px_-5px_rgba(42,20,80,0.85),inset_0_1px_0_rgba(255,255,255,0.3)] whitespace-nowrap ${st.small ? 'text-lg sm:text-2xl' : st.big.length > 5 ? 'text-xl sm:text-[30px]' : 'text-2xl sm:text-[34px]'}`}>
+                {st.big}
+              </span>
+              <span className="sr-only">{on ? 'ได้ส่วนลดนี้แล้ว' : `เงื่อนไข: ${st.label}`}</span>
+              <AnimatePresence>
+                {on && (
+                  <motion.span
+                    aria-hidden="true"
+                    initial={{ scale: 2.4, opacity: 0, rotate: -30 }}
+                    animate={{ scale: 1, opacity: 1, rotate: -12 }}
+                    exit={{ scale: 0.6, opacity: 0 }}
+                    transition={{ type: 'spring', stiffness: 380, damping: 16 }}
+                    className="absolute -right-1.5 -top-2 rounded-md border-2 border-[#B91C1C] bg-white px-1.5 py-px text-xs font-black text-[#B91C1C]"
+                  >
+                    ได้แล้ว!
+                  </motion.span>
+                )}
+              </AnimatePresence>
+            </motion.li>
+          );
+        })}
       </ul>
+      <p className="relative mt-3 mx-auto w-fit rounded-full bg-[#EFE5FF] px-4 py-1.5 text-center text-[12px] sm:text-sm font-extrabold text-[#4B2D78]">ส่วนลดคำนวณจากยอดรวมทั้งตะกร้า</p>
     </div>
   );
 };

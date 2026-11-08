@@ -92,8 +92,10 @@ async function documentImages(): Promise<Record<string, string> | undefined> {
 export async function buildTicketEmail(o: StoredOrder) {
   const isRun = o.ticketType !== 'CONCERT' && o.ticketType !== 'ADDON';
   const start = isRun ? routesData[o.routeId as keyof typeof routesData]?.startTime : '';
-  const numberLabel = isRun ? 'BIB NUMBER' : o.ticketType === 'CONCERT' ? 'CONCERT TICKET' : 'TICKET NO.';
-  const title = isRun ? `บัตรวิ่ง & BIB #${o.bibNumber}` : `บัตร #${o.bibNumber}`;
+  // the BIB is handed out at the race-kit pickup, so the e-mail shows the order number instead
+  const numberLabel = isRun ? 'ORDER NO.' : o.ticketType === 'CONCERT' ? 'CONCERT TICKET' : 'TICKET NO.';
+  const numberValue = isRun ? o.orderId : o.bibNumber;
+  const title = isRun ? 'บัตรวิ่ง' : `บัตร #${o.bibNumber}`;
   const subject = `${o.isTest ? '[ทดสอบ] ' : ''}[CHANGSUEK RUN] ชำระเงินสำเร็จ · ${title} · คำสั่งซื้อ ${o.orderId}`;
   // an add-on-only order happens on the activity day; everything else on run day
   const mainDate = !isRun && o.addOns && !o.concertQty && !o.vipTables ? eventInfo.activityDateNotice : eventInfo.dateNotice;
@@ -207,7 +209,7 @@ export async function buildTicketEmail(o: StoredOrder) {
         <tr>
           <td style="padding:16px;vertical-align:middle">
             <div style="font-size:11px;font-weight:900;letter-spacing:2px;color:#7C3AED">${numberLabel}</div>
-            <div style="display:inline-block;margin-top:6px;background:#FFC928;border:3px solid #2A1450;border-radius:14px;padding:6px 14px;font-size:34px;font-weight:900;color:#2A1450;line-height:1">#${esc(o.bibNumber)}</div>
+            <div style="display:inline-block;margin-top:6px;background:#FFC928;border:3px solid #2A1450;border-radius:14px;padding:6px 14px;font-size:${isRun ? 22 : 34}px;font-weight:900;color:#2A1450;line-height:1.2">${isRun ? '' : '#'}${esc(numberValue)}</div>
             <div style="font-size:15px;font-weight:900;color:#2A1450;margin-top:10px">${esc(o.routeName)}</div>
             <div style="font-size:12px;color:#6B5A85;margin-top:2px">${esc(o.fullName)}</div>
           </td>

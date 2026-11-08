@@ -82,8 +82,25 @@ async function downloadPass(orderId: string, p: ParkingPlate, qr: string, n: num
   a.remove();
 }
 
-const PassCard: React.FC<{ orderId: string; plate: ParkingPlate; n: number }> = ({ orderId, plate, n }) => {
+const PassCard: React.FC<{ orderId: string; plate: ParkingPlate; n: number; onSave?: (p: ParkingPlate) => Promise<void> }> = ({ orderId, plate, n, onSave }) => {
   const [qr, setQr] = useState('');
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState<ParkingPlate>(plate);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState('');
+  const save = async () => {
+    if (!onSave) return;
+    setErr('');
+    setBusy(true);
+    try {
+      await onSave({ plate: draft.plate.trim(), province: draft.province.trim() });
+      setEditing(false);
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : 'บันทึกไม่สำเร็จ ลองใหม่อีกครั้ง');
+    } finally {
+      setBusy(false);
+    }
+  };
   useEffect(() => {
     QRCode.toDataURL(parkingQrPayload(orderId, plate), { width: 360, margin: 1, errorCorrectionLevel: 'M' })
       .then(setQr)
@@ -117,10 +134,42 @@ const PassCard: React.FC<{ orderId: string; plate: ParkingPlate; n: number }> = 
             )}
           </div>
         </div>
+        {editing && (
+          <div className="mt-3 rounded-2xl border-2 border-dashed border-[#C9B4EE] bg-[#FAF6FF] p-3 space-y-2">
+            <p className="text-xs font-black text-[#2A1450]">แก้ทะเบียนรถคันที่ {n} (แก้ได้ถึงก่อนวันงาน · QR ใหม่จะใช้แทนใบเดิม)</p>
+            <input
+              type="text"
+              value={draft.plate}
+              maxLength={16}
+              onChange={(e) => setDraft({ ...draft, plate: e.target.value })}
+              aria-label={`ทะเบียนรถคันที่ ${n}`}
+              className="w-full min-h-[48px] px-3 rounded-xl border-2 border-[#2A1450]/20 bg-white text-sm font-semibold text-[#2A1450]"
+            />
+            <ProvinceSelect value={draft.province} onChange={(v) => setDraft({ ...draft, province: v })} />
+            {err && <p role="alert" className="rounded-xl bg-rose-50 border-2 border-rose-300 px-3 py-2 text-xs font-extrabold text-rose-700">{err}</p>}
+            <div className="flex gap-2">
+              <button type="button" disabled={busy} onClick={save} className="min-h-[44px] rounded-full bg-gradient-to-b from-[#FFE268] to-[#FFC928] border-2 border-[#2A1450] px-5 text-sm font-black text-[#2A1450] disabled:opacity-50 cursor-pointer">
+                {busy ? 'กำลังบันทึก…' : 'บันทึก'}
+              </button>
+              <button type="button" disabled={busy} onClick={() => { setEditing(false); setDraft(plate); setErr(''); }} className="min-h-[44px] rounded-full border-2 border-[#2A1450]/30 bg-white px-5 text-sm font-extrabold text-[#2A1450] cursor-pointer">
+                ยกเลิก
+              </button>
+            </div>
+          </div>
+        )}
         <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
           <span className="text-[11px] font-bold text-[#6B5A85]">
             คำสั่งซื้อ <span className="font-mono text-[#2A1450]">{orderId}</span> · แสดง QR ให้เจ้าหน้าที่สแกนที่ทางเข้าลานจอด VIP
           </span>
+          {onSave && !editing && (
+            <button
+              type="button"
+              onClick={() => { setDraft(plate); setEditing(true); }}
+              className="inline-flex items-center gap-1.5 rounded-full border-2 border-[#2A1450] bg-white text-[#2A1450] px-3.5 py-2 text-xs font-extrabold cursor-pointer"
+            >
+              ✏️ แก้ทะเบียน
+            </button>
+          )}
           <button
             type="button"
             disabled={!qr}
@@ -212,7 +261,19 @@ export const ParkingPasses: React.FC<{ orderId: string; vipTables?: number; plat
       {list.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {list.map((p, i) => (
-            <PassCard key={`${p.plate}-${i}`} orderId={orderId} plate={p} n={i + 1} />
+            <PassCard
+              key={`${p.plate}-${i}`}
+              orderId={orderId}
+              plate={p}
+              n={i + 1}
+              onSave={
+                canAdd
+                  ? async (np) => {
+                      setList(await authApi.setParkingPlates(orderId, list.map((x, k) => (k === i ? np : x))));
+                    }
+                  : undefined
+              }
+            />
           ))}
         </div>
       )}

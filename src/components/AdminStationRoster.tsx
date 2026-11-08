@@ -31,8 +31,8 @@ const STATIONS: Station[] = [
   { id: 'concert', emoji: '🎶', name: 'คอนเสิร์ต GA', day: '9 ม.ค.', color: '#DB2777', qty: (o) => o.concertQty || 0, unit: 'ใบ' },
   { id: 'vip', emoji: '⭐', name: 'VIP TABLE', day: '9 ม.ค.', color: '#B45309', qty: (o) => o.vipTables || 0, unit: 'โต๊ะ' },
   { id: 'tower', emoji: '🪂', name: 'หอสูง', day: '10 ม.ค.', color: '#4F46E5', qty: (o) => (o.addOns?.tower ? o.addOns.people : 0), unit: 'คน' },
-  { id: 'gun-standard', emoji: '🎯', name: 'ยิงปืน Standard', day: '10 ม.ค.', color: '#0369A1', qty: (o) => (o.addOns?.gun === 'standard' ? o.addOns.people : 0), unit: 'คน' },
-  { id: 'gun-premium', emoji: '🎯', name: 'ยิงปืน Premium', day: '10 ม.ค.', color: '#1E3A8A', qty: (o) => (o.addOns?.gun === 'premium' ? o.addOns.people : 0), unit: 'คน' },
+  { id: 'gun-standard', emoji: '🎯', name: 'ยิงปืนสั้น', day: '10 ม.ค.', color: '#0369A1', qty: (o) => (o.addOns?.gun === 'standard' ? o.addOns.people : 0), unit: 'คน' },
+  { id: 'gun-premium', emoji: '🎯', name: 'ยิงปืนยาว', day: '10 ม.ค.', color: '#1E3A8A', qty: (o) => (o.addOns?.gun === 'premium' ? o.addOns.people : 0), unit: 'คน' },
   { id: 'wind', emoji: '🌪️', name: 'อุโมงค์ลม', day: '10 ม.ค.', color: '#0F766E', qty: (o) => (o.addOns?.windTunnel ? o.addOns.people : 0), unit: 'คน', limit: WIND_TUNNEL_LIMIT },
 ];
 

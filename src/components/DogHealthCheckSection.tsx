@@ -1,21 +1,21 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { CalendarDays, ChevronRight, Clock, MapPin, PawPrint, Stethoscope, Tag, Ticket, Users } from 'lucide-react';
+import { CalendarDays, ChevronRight, Clock, MapPin, PawPrint, Stethoscope, Ticket, Users } from 'lucide-react';
 
 /** The three facts people look for first, as big tiles. */
 const FACTS = [
   { icon: CalendarDays, label: 'วัน', big: 'เสาร์ 9 ม.ค.', small: '2570', free: false },
   { icon: Clock, label: 'เวลา', big: '09.00–14.00 น.', small: '', free: false },
-  { icon: Tag, label: 'ค่าใช้จ่าย', big: 'ฟรี', small: 'ไม่มีค่าใช้จ่าย', free: true },
+  { icon: MapPin, label: 'สถานที่', big: 'ค่ายนเรศวร', small: 'ชะอำ-หัวหิน', free: false },
 ];
 
 const STEPS = [
   { n: 1, icon: Ticket, text: 'ซื้อบัตร Dog Run (1K หรือ 4K)' },
   { n: 2, icon: PawPrint, text: 'พาน้องหมามาที่จุดตรวจสุขภาพ ระหว่าง 09.00–14.00 น.' },
-  { n: 3, icon: Stethoscope, text: 'ทีมสัตวแพทย์ตรวจสุขภาพน้องหมาให้โดยไม่มีค่าใช้จ่าย' },
+  { n: 3, icon: Stethoscope, text: 'ทีมสัตวแพทย์ตรวจสุขภาพน้องหมาให้' },
 ];
 
-/** Free vet check by Thonglor Pet Hospital for the Dog Run (1K / 4K) runners, 09.00–14.00 on run day. */
+/** Vet check by Thonglor Pet Hospital for the Dog Run (1K / 4K) runners, 09.00–14.00 on run day. */
 export const DogHealthCheckSection: React.FC = () => (
   <section id="dog-health-check" aria-labelledby="dog-health-heading" className="mt-10 sm:mt-14 scroll-mt-24">
     <div className="relative overflow-hidden ds-card rounded-[28px]! bg-[#EFE6FC]">
@@ -41,11 +41,11 @@ export const DogHealthCheckSection: React.FC = () => (
             <div className="relative mt-1.5 inline-flex items-center">
               <PawPrint aria-hidden="true" className="mr-2 h-8 w-8 shrink-0 -rotate-12 text-[#FFC928] drop-shadow sm:h-11 sm:w-11" />
               <span className="inline-block -skew-x-6 rounded-xl bg-gradient-to-r from-[#FFC928] via-[#FFE268] to-[#FFC928] px-5 py-1 shadow-[0_10px_22px_-8px_rgba(255,179,0,0.95)] sm:px-8 sm:py-1.5">
-                <span className="block skew-x-6 font-hero text-3xl font-bold text-[#2A1450] sm:text-5xl lg:text-6xl">ไม่มีค่าใช้จ่าย</span>
+                <span className="block skew-x-6 font-hero text-3xl font-bold text-[#2A1450] sm:text-5xl lg:text-6xl">โดย รพ.สัตว์ทองหล่อ</span>
               </span>
             </div>
             <p className="mt-4 max-w-lg text-sm font-semibold leading-relaxed text-white sm:text-lg">
-              พาน้องหมามาให้คุณหมอตรวจสุขภาพ ไม่ต้องเสียค่าใช้จ่ายเพิ่ม
+              พาน้องหมามาให้คุณหมอตรวจเช็กความพร้อมก่อนวิ่ง
             </p>
           </div>
 

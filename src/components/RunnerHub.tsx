@@ -576,8 +576,8 @@ export const RunnerHub: React.FC<{
       {activityOrders.map((o) => {
         const st = statusOf(o);
         const picks = [
-          o.addOns!.tower && { id: 'tower' as const, emoji: '🪂', th: 'หอสูง', en: 'High tower', time: '10.00–12.00' },
-          o.addOns!.gun !== 'none' && { id: 'gun' as const, emoji: '🎯', th: `ยิงปืน ${o.addOns!.gun === 'premium' ? 'Premium' : 'Standard'}`, en: `Shooting ${o.addOns!.gun === 'premium' ? 'Premium' : 'Standard'}`, time: '09.00–11.00' },
+          o.addOns!.tower && { id: 'tower' as const, emoji: '🪂', th: 'หอสูง', en: 'High tower', time: '09.00–12.00' },
+          o.addOns!.gun !== 'none' && { id: 'gun' as const, emoji: '🎯', th: `ยิง${o.addOns!.gun === 'premium' ? 'ปืนยาว' : 'ปืนสั้น'}`, en: `Shooting (${o.addOns!.gun === 'premium' ? 'long gun' : 'short gun'})`, time: '09.00–12.00' },
           o.addOns!.windTunnel && { id: 'wind' as const, emoji: '🌪️', th: 'อุโมงค์ลม', en: 'Wind tunnel', time: '13.00–15.00' },
         ].filter(Boolean) as { id: 'tower' | 'gun' | 'wind'; emoji: string; th: string; en: string; time: string }[];
         return (
@@ -649,7 +649,7 @@ export const RunnerHub: React.FC<{
               ))}
             </dl>
             <p className="mt-2 rounded-xl bg-[#E6FBF1] px-3 py-2 text-xs font-bold text-[#047857]">
-              🩺 {t('ตรวจสุขภาพสุนัขฟรี วันงาน 9 ม.ค. 09.00–14.00 น. โดยรพ.สัตว์ทองหล่อ (สำหรับผู้สมัคร Dog Run 1K / 4K)', 'Free dog health check on race day, 9 Jan, 09:00–14:00 by Thonglor Pet Hospital (Dog Run 1K / 4K runners)')}
+              🩺 {t('ตรวจสุขภาพสุนัข วันงาน 9 ม.ค. 09.00–14.00 น. โดยรพ.สัตว์ทองหล่อ (สำหรับผู้สมัคร Dog Run 1K / 4K)', 'Dog health check on race day, 9 Jan, 09:00–14:00 by Thonglor Pet Hospital (Dog Run 1K / 4K runners)')}
             </p>
           </Box>
         );
@@ -667,7 +667,7 @@ export const RunnerHub: React.FC<{
   // ============================ event guide ============================
   const timeline: { time: string; th: string; en: string; hot?: boolean }[] = [
     { time: '09.00', th: 'เปิดรับ Race Kit (BIB · เสื้อ · ชิป) และงาน Expo', en: 'Race Kit pick-up (BIB · shirt · chip) and Expo open' },
-    { time: '09.00–14.00', th: 'จุดตรวจสุขภาพสุนัข (ฟรี) สำหรับ Dog Run 1K / 4K', en: 'Free dog health check for Dog Run 1K / 4K' },
+    { time: '09.00–14.00', th: 'จุดตรวจสุขภาพสุนัข สำหรับ Dog Run 1K / 4K', en: 'Dog health check for Dog Run 1K / 4K' },
     { time: '16.30', th: 'ปล่อยตัว 10K Runner', en: '10K Runner start', hot: true },
     { time: '17.00', th: 'ปล่อยตัว 5K Runner', en: '5K Runner start', hot: true },
     { time: '17.15', th: 'ปล่อยตัว 4K Dog Run', en: '4K Dog Run start', hot: true },
@@ -688,8 +688,8 @@ export const RunnerHub: React.FC<{
         </ol>
         <p className="mt-3 flex items-center gap-1.5 text-sm font-black text-[#2A1450]"><CalendarDays className="h-4 w-4 text-[#7C3AED]" /> {t('วันอาทิตย์ที่ 10 ม.ค. 2570 · กิจกรรมเสริม', 'Sunday 10 Jan 2027 · activities')}</p>
         <ul className="mt-1.5 flex flex-wrap gap-1.5 text-xs font-extrabold">
-          <li className="rounded-full bg-[#F1EAFD] px-3 py-1">🎯 {t('ยิงปืน 09.00–11.00', 'Shooting 09:00–11:00')}</li>
-          <li className="rounded-full bg-[#F1EAFD] px-3 py-1">🪂 {t('หอสูง 10.00–12.00', 'High tower 10:00–12:00')}</li>
+          <li className="rounded-full bg-[#F1EAFD] px-3 py-1">🎯 {t('ยิงปืน 09.00–12.00', 'Shooting 09:00–12:00')}</li>
+          <li className="rounded-full bg-[#F1EAFD] px-3 py-1">🪂 {t('หอสูง 09.00–12.00', 'High tower 09:00–12:00')}</li>
           <li className="rounded-full bg-[#F1EAFD] px-3 py-1">🌪️ {t('อุโมงค์ลม 13.00–15.00', 'Wind tunnel 13:00–15:00')}</li>
         </ul>
       </Box>

@@ -11,7 +11,8 @@
 import express from 'express';
 import type { Express, Request, RequestHandler, Response } from 'express';
 import { docsSignature } from './auth';
-import { addParkingPlates } from '../src/data/vipParking';
+import { addParkingPlates, parseParkingPlates } from '../src/data/vipParking';
+import { eventInfo } from '../src/data/eventData';
 import { SITE_URL, maskEmail, sendAccountMail, sendTicketEmail } from './mailer';
 import { findOrderByCode, listOrdersByRunner, rateLimited, recordEmailResult, toRunnerView, updateOrder, getOrder } from './store';
 import {
@@ -306,6 +307,36 @@ export function registerRunnerRoutes(app: Express, h: Wrap, clientIp: (req: Requ
     const updated = await updateOrder(order.orderId, (o) => {
       // re-check against the freshest copy so two quick requests can't go over the limit
       const again = addParkingPlates(o.parkingPlates || [], req.body?.plates, o.vipTables || 0);
+      if (again.ok) o.parkingPlates = again.value;
+    });
+    res.json({ ok: true, order: toRunnerView(updated || order) });
+  }));
+
+  // The buyer may also change the plates already registered (a wrong digit, another car), until the event day.
+  // The full list is sent; every plate is checked again and a changed plate gets a new pass QR.
+  app.put('/api/me/orders/:orderId/parking-plates', requireRunner, json, h(async (req, res) => {
+    const s = (req as any).runner as RunnerSession;
+    const id = String(req.params.orderId).slice(0, 40);
+    if (await rateLimited(`plates-edit:${s.sub}`, 30, 60 * 60 * 1000)) {
+      res.status(429).json({ error: 'ลองบ่อยเกินไป กรุณารอสักครู่' });
+      return;
+    }
+    const order = await getOrder(id);
+    if (!order || order.runnerId !== s.sub || order.paymentStatus !== 'PAID' || order.cancelledAt || !order.vipTables) {
+      res.status(404).json({ error: 'ไม่พบคำสั่งซื้อ VIP ที่ชำระแล้วของคุณ' });
+      return;
+    }
+    if (Date.now() >= Date.parse(`${eventInfo.date}T00:00:00+07:00`)) {
+      res.status(403).json({ error: 'แก้ไขทะเบียนรถได้ถึงก่อนวันงานเท่านั้น กรุณาติดต่อผู้จัดงานหน้างาน' });
+      return;
+    }
+    const r = parseParkingPlates(req.body?.plates, order.vipTables);
+    if (!r.ok) {
+      res.status(400).json({ error: r.error });
+      return;
+    }
+    const updated = await updateOrder(order.orderId, (o) => {
+      const again = parseParkingPlates(req.body?.plates, o.vipTables || 0);
       if (again.ok) o.parkingPlates = again.value;
     });
     res.json({ ok: true, order: toRunnerView(updated || order) });

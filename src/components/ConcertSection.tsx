@@ -10,21 +10,6 @@ const PHOTOS = [
   { src: '/images/concert/crowd.webp', alt: 'ผู้ชมนั่งบนสนามหญ้าชมคอนเสิร์ตริมหาดตอนพลบค่ำ', cap: 'นั่งชิลล์ริมหาด ฟังดนตรีสดหลังจบการวิ่ง' },
 ];
 
-/**
- * Photos of the artists on stage at last year's festival (no names shown).
- */
-const PAST_FESTIVAL = {
-  name: 'HUAHIN BEACH CROSS COUNTRY & MUSIC FESTIVAL 2026',
-  date: '2 พฤษภาคม 2026',
-};
-const ARTISTS: { src: string; glow: string }[] = [
-  { src: '/images/concert/artists/artist-1.webp', glow: '#FF4D6D' },
-  { src: '/images/concert/artists/artist-2.webp', glow: '#22D3EE' },
-  { src: '/images/concert/artists/artist-3.webp', glow: '#60A5FA' },
-  { src: '/images/concert/artists/artist-4.webp', glow: '#F472B6' },
-  { src: '/images/concert/artists/artist-5.webp', glow: '#3B82F6' },
-  { src: '/images/concert/artists/artist-6.webp', glow: '#FBBF24' },
-];
 const BEAMS = [
   { left: '20%', c: '#C084FC', d: '0s' },
   { left: '80%', c: '#22D3EE', d: '-3s' },
@@ -61,9 +46,10 @@ export const ConcertSection: React.FC = () => {
           <div className="px-3 pb-6 sm:px-6 sm:pb-8">
             {/* ---------- this year's line-up ---------- */}
             <div className="relative -mt-3 overflow-hidden rounded-[26px] border-2 border-[#FFC928] bg-[#1B0B3A] shadow-[0_0_0_4px_rgba(255,201,40,0.18),0_0_40px_-4px_rgba(255,201,40,0.4),0_24px_60px_-18px_rgba(168,85,247,0.55)]">
+              <img src="/images/concert/lineup-bg-v1.webp" alt="" aria-hidden="true" decoding="async" className="absolute inset-0 h-full w-full object-cover object-[center_35%]" />
               {/* stage with the group */}
               <div className="relative overflow-hidden">
-                <img src="/images/concert/conc-stage.webp" alt="" aria-hidden="true" decoding="async" className="absolute inset-0 h-full w-full object-cover" />
+                
                 <div className="relative z-[2] flex flex-col gap-2 px-4 pt-5 sm:flex-row sm:items-start sm:justify-between sm:px-7 sm:pt-6">
                   <div>
                     <span className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#7C3AED] to-[#4B1FA8] px-4 py-1.5 text-xs font-black tracking-wider text-[#FFE268] ring-1 ring-[#FFC928]/70 shadow-[0_0_18px_rgba(168,85,247,0.7)] sm:text-sm">
@@ -80,31 +66,16 @@ export const ConcertSection: React.FC = () => {
                     <CalendarDays className="h-4 w-4 sm:h-5 sm:w-5" aria-hidden="true" /> 9 ม.ค. 2570 <span aria-hidden="true">·</span> <Clock className="h-4 w-4 sm:h-5 sm:w-5" aria-hidden="true" /> 18.00–24.00 น.
                   </span>
                 </div>
-                <figure className="relative z-[2] mx-auto mt-1 w-full max-w-[880px] px-2 max-sm:left-1/2 max-sm:w-[112%] max-sm:max-w-none max-sm:-translate-x-1/2 sm:mt-0 sm:px-6">
-                  <img
-                    src="/images/concert/lineup-cut.webp"
-                    alt="ศิลปินคอนเสิร์ต CHANGSUEK RUN 2027: LomoSonic, ดาเอนโดฟิน, จ่ะ อาร์สยาม และศิลปินรับเชิญพิเศษ"
-                    width={1400}
-                    height={813}
-                    loading="lazy"
-                    decoding="async"
-                    className="block h-auto w-full drop-shadow-[0_0_28px_rgba(168,85,247,0.55)] [mask-image:linear-gradient(to_bottom,black_80%,transparent)]"
-                  />
-                </figure>
-                {/* the crowd stands in front of the group */}
-                <span
-                  aria-hidden="true"
-                  className="pointer-events-none absolute inset-x-0 bottom-0 z-[3] h-[22%] bg-cover bg-bottom [mask-image:linear-gradient(to_top,black_55%,transparent)]"
-                  style={{ backgroundImage: 'url(/images/concert/conc-stage.webp)' }}
-                />
+                {/* room for the stage scene to show between the heading and the time table */}
+                <div aria-hidden="true" className="relative z-[2] h-52 sm:h-60 lg:h-72" />
               </div>
 
               {/* time table */}
-              <ol data-reveal-stagger="pop" className="relative z-[4] grid grid-cols-2 gap-2.5 bg-gradient-to-b from-[#1B0B3A] to-[#2A1450] p-3 sm:grid-cols-4 sm:gap-3.5 sm:p-5" aria-label="ตารางการแสดง">
+              <ol data-reveal-stagger="pop" className="relative z-[4] grid grid-cols-2 gap-2.5 bg-gradient-to-b from-transparent to-[#1B0B3A]/80 p-3 sm:grid-cols-4 sm:gap-3.5 sm:p-5" aria-label="ตารางการแสดง">
                 {CONCERT_LINEUP.map((a) => (
                   <li
                     key={a.time}
-                    className="lineup-slot rounded-2xl border-2 bg-white/[0.06] px-3 py-3 text-center sm:px-4 sm:py-4"
+                    className="lineup-slot rounded-2xl border-2 bg-[#1B0B3A]/75 backdrop-blur-sm px-3 py-3 text-center sm:px-4 sm:py-4"
                     style={{ ['--glow' as string]: a.color, borderColor: a.color }}
                   >
                     <span className="inline-flex items-center gap-1 whitespace-nowrap rounded-full px-2 py-0.5 text-[10.5px] font-black tracking-tight text-[#0B0418] sm:px-2.5 sm:text-sm" style={{ background: a.color }}>
@@ -128,49 +99,8 @@ export const ConcertSection: React.FC = () => {
 
             <details className="group mt-6">
               <summary className="mx-auto flex w-fit min-h-[48px] cursor-pointer list-none items-center gap-2 rounded-2xl border-2 border-[#FFC928]/60 bg-white/10 px-5 text-sm font-extrabold text-[#FFE28A] [&::-webkit-details-marker]:hidden">
-                🎞️ ดูภาพบรรยากาศปีที่แล้ว <span className="group-open:hidden">▾</span><span className="hidden group-open:inline">▴</span>
+                🎞️ ดูภาพบรรยากาศงานวิ่งและคอนเสิร์ต <span className="group-open:hidden">▾</span><span className="hidden group-open:inline">▴</span>
               </summary>
-              {/* Last year's line-up: smaller photos */}
-              <div className="mt-8 relative rounded-[26px] bg-[#0E0620] border-2 border-[#FFC928]/40 p-3 sm:p-5 overflow-clip">
-                {BEAMS.map((b) => (
-                  <span key={b.left} aria-hidden="true" className="concert-beam" style={{ left: b.left, animationDelay: b.d, ['--beam' as string]: b.c }} />
-                ))}
-                <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
-                  <div>
-                    <span className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-[#FF4D6D] to-[#A855F7] border-2 border-white/40 px-4 py-2 text-lg sm:text-2xl font-black text-white shadow-[0_0_20px_rgba(255,77,109,0.45)]">
-                      <span className="w-3 h-3 rounded-full bg-white animate-pulse" aria-hidden="true" /> ย้อนบรรยากาศปีที่แล้ว
-                    </span>
-                    <p className="mt-2 text-sm sm:text-base font-black leading-tight text-white/90">
-                      ศิลปินบนเวที <span className="text-[#FFC928]">{PAST_FESTIVAL.name}</span>
-                    </p>
-                  </div>
-                  <span className="self-start sm:self-auto shrink-0 rounded-xl bg-white/10 text-[#FFE28A] text-xs sm:text-sm font-black px-3 py-1.5 border border-white/25">
-                    📅 {PAST_FESTIVAL.date}
-                  </span>
-                </div>
-                <ul
-                  data-reveal-stagger="pop"
-                  className="relative grid grid-cols-3 md:grid-cols-6 auto-rows-[78px] sm:auto-rows-[100px] gap-2"
-                  aria-label={`ภาพศิลปินจากงาน ${PAST_FESTIVAL.name}`}
-                >
-                  {ARTISTS.map((a, i) => (
-                    <li
-                      key={a.src}
-                      className="artist-tile group relative overflow-hidden rounded-xl border-2 border-white/15"
-                      style={{ ['--glow' as string]: a.glow }}
-                    >
-                      <img
-                        src={a.src}
-                        alt={`ศิลปินบนเวที ${PAST_FESTIVAL.name} ภาพที่ ${i + 1}`}
-                        loading="lazy"
-                        decoding="async"
-                        className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.06]"
-                      />
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
               <ul data-reveal-stagger="" className="mt-6 grid grid-cols-3 gap-2 sm:gap-3 max-w-[820px] mx-auto">
                 {PHOTOS.map((p) => (
                   <li key={p.src} className="rounded-2xl overflow-hidden bg-white/[0.07] border-2 border-[#FFC928]/35">
@@ -197,7 +127,7 @@ export const ConcertSection: React.FC = () => {
                 👑 หรืออัปเกรดเป็น <span className="font-black text-white">VIP TABLE</span> <EarlyBirdPrice list={VIP_TABLE_PRICE} now={vipTablePrice(earlyBird)} /> บาท/โต๊ะ (6 ที่นั่ง)
               </p>
               <p className="mx-auto mt-4 max-w-2xl text-center text-xs font-medium text-white/80 sm:text-sm">
-                ภาพปีที่แล้วเป็นภาพบรรยากาศประกอบ ชื่อศิลปินวงปิดจะประกาศอีกครั้งผ่านช่องทางทางการของงาน
+                ภาพบรรยากาศเป็นภาพประกอบ ชื่อศิลปินวงปิดจะประกาศอีกครั้งผ่านช่องทางทางการของงาน
               </p>
             </div>
           </div>

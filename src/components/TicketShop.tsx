@@ -8,30 +8,22 @@ import { useLang } from '../i18n/lang';
 import { CONCERT_PASS_PRICE, MAX_VIP_TABLES, VIP_TABLE_PERKS, VIP_TABLE_PRICE, VIP_TABLE_SEATS, calcTicketTotal, concertPassPrice, runBasePrice, vipTablePrice, isDogCategory, routesData, ticketById } from '../data/eventData';
 import {
   AddOnSelection,
+  BASKET_MAX_ITEMS,
+  BASKET_MAX_RATE,
+  BASKET_TIERS,
   EMPTY_ADD_ONS,
-  PREMIUM_GUNS,
-  STANDARD_GUNS,
-  ADDON_CONCERT_RATE,
-  ADDON_MAX_RATE,
-  ADDON_THREE_RATE,
-  ADDON_TWO_RATE,
-  CONCERT_BUNDLE_RATE,
-  VIP_ADDON_RATE,
+  LONG_GUNS,
+  LONG_GUN_PRICE,
+  SHORT_GUNS,
+  SHORT_GUN_PRICE,
   activityCount as countActivities,
-  addOnBonusDiscount,
-  addOnConcertRate,
-  addOnCountRate,
-  addOnDiscountRate,
   addOnLabel,
   addOnPricePerPerson,
-  addOnTotal,
-  concertDiscountPerTicket,
+  basketRate,
   formatBaht,
   hasAddOns,
-  hasAllThree,
   percentOf,
-  vipDiscountPerTable,
-  vipTableRate,
+  priceBasket,
 } from '../data/addOns';
 import { getPublicConfig } from '../utils/api';
 import { AddOnPicker } from './AddOnPicker';
@@ -47,7 +39,7 @@ const BRAND_HEADER = 'linear-gradient(135deg, #2A1450 0%, #4C1D95 55%, #6D28D9 1
 const STATIONS = {
   run: { n: 1, emoji: '🏃', title: 'ตั๋ววิ่ง', titleEn: 'Run ticket', hint: 'เลือก 1 ระยะ (ไม่วิ่งก็ข้ามได้)', hintEn: 'Pick 1 distance (skip it if you are not running)', grad: BRAND_HEADER },
   concert: { n: 2, emoji: '🎶', title: 'ตั๋วคอนเสิร์ต', titleEn: 'Concert ticket', hint: 'ริมหาด Door Open 17.30 น. · เริ่ม 18.00 น. · GA หรือ VIP TABLE · ซื้อแยกได้', hintEn: 'On the beach: Doors open 17:30 · Show starts 18:00 · GA or VIP table · can be bought separately', grad: BRAND_HEADER },
-  addon: { n: 3, emoji: '🎢', title: 'กิจกรรมเสริม (เฉพาะบุคคล)', titleEn: 'Activities (individuals only)', hint: 'วันอาทิตย์ที่ 10 ม.ค. 2570 · ยิงปืน 09.00–11.00 · หอสูง 10.00–12.00 · อุโมงค์ลม 13.00–15.00 น.', hintEn: 'Sunday 10 Jan 2027 · shooting 09:00–11:00 · high tower 10:00–12:00 · wind tunnel 13:00–15:00', grad: BRAND_HEADER },
+  addon: { n: 3, emoji: '🎢', title: 'กิจกรรมเสริม (เฉพาะบุคคล)', titleEn: 'Activities (individuals only)', hint: 'วันอาทิตย์ที่ 10 ม.ค. 2570 · ยิงปืน + หอสูง 09.00–12.00 · อุโมงค์ลม 13.00–15.00 น.', hintEn: 'Sunday 10 Jan 2027 · shooting + high tower 09:00–12:00 · wind tunnel 13:00–15:00', grad: BRAND_HEADER },
 } as const;
 type StationKey = keyof typeof STATIONS;
 
@@ -166,15 +158,12 @@ const perks = (isDog: boolean) => [
 const RUN_ORDER: RouteId[] = ['1km', '3km', '5km', '10km'];
 const QUICK_LABEL: Record<string, string> = { '1km': 'Dog 1K', '3km': 'Dog 4K', '5km': '5K', '10km': '10K' };
 
-// Package prices per person (2+ activities), shown in the price list under the activities
-const PACKAGE_TABLE: { name: string; price: number; strong?: boolean }[] = [
-  { name: 'หอสูง + ยิงปืน Standard', price: 1190 },
-  { name: 'หอสูง + อุโมงค์ลม', price: 1190 },
-  { name: 'ยิงปืน Standard + อุโมงค์ลม', price: 1690 },
-  { name: 'หอสูง + ยิงปืน Premium', price: 2250 },
-  { name: 'ยิงปืน Premium + อุโมงค์ลม', price: 2750 },
-  { name: 'ครบ 3 กิจกรรม', price: 1990, strong: true },
-  { name: 'ครบ 3 + ยิงปืน Premium', price: 3050 },
+// Price per person of each activity (the basket discount is taken off the whole basket)
+const PRICE_TABLE: { name: string; price: number }[] = [
+  { name: 'หอสูง', price: 350 },
+  { name: 'ยิงปืนสั้น + กระสุน 10 นัด', price: SHORT_GUN_PRICE },
+  { name: 'ยิงปืนยาว + กระสุน 10 นัด', price: LONG_GUN_PRICE },
+  { name: 'อุโมงค์ลม', price: 990 },
 ];
 
 // ---------------------------------------------------------------------------
@@ -468,60 +457,54 @@ export const TicketShop: React.FC<TicketShopProps> = ({
   }, []);
 
   const picked = hasAddOns(addOns);
-  // The GA concert discount needs a run ticket; the activity discounts follow the rules in data/addOns.ts.
   const eligible = !!run;
   const hasConcert = concertQty > 0 || vipTables > 0;
-  const discountCtx = { hasRun: eligible, hasConcert, earlyBird };
   const activityCount = countActivities(addOns);
-  const addOnRate = addOnDiscountRate(addOns, discountCtx);
-  const countRate = addOnCountRate(addOns, discountCtx);
-  const concertBonusRate = addOnConcertRate(addOns, discountCtx);
   const concertUnit = concertPassPrice(earlyBird);
   const vipUnit = vipTablePrice(earlyBird);
-  const runPrice = run ? calcTicketTotal(run, 0, 0, earlyBird) : 0;
-  const concertUnitOff = concertDiscountPerTicket(concertUnit, eligible);
-  const concertOff = concertUnitOff * concertQty;
-  const concertPrice = concertUnit * concertQty - concertOff;
-  const vipRate = vipTableRate(eligible, hasAllThree(addOns));
-  const vipUnitOff = vipDiscountPerTable(vipUnit, eligible, hasAllThree(addOns));
-  const vipOff = vipUnitOff * vipTables;
-  const vipPrice = vipUnit * vipTables - vipOff;
-  const bonus = addOnBonusDiscount(addOns, discountCtx);
-  const addOnPrice = addOnTotal(addOns, discountCtx);
-  const total = runPrice + concertPrice + vipPrice + addOnPrice;
-  const totalSaved = concertOff + vipOff + bonus;
+  // One basket discount: 2 items 10%, 3 items 15%, 4-5 items 20% (data/addOns.ts; the server charges the same)
+  const basket = priceBasket({
+    runGross: run ? calcTicketTotal(run, 0, 0, earlyBird) : 0,
+    hasRun: eligible,
+    gaUnit: concertUnit,
+    gaQty: concertQty,
+    vipUnit,
+    vipTables,
+    addOns,
+  });
+  const rate = basket.rate;
+  const runPrice = basket.runGross - basket.runOff;
+  const concertOff = basket.gaOff;
+  const concertUnitOff = concertQty > 0 ? Math.round(concertOff / concertQty) : 0;
+  const concertPrice = basket.gaGross - basket.gaOff;
+  const vipOff = basket.vipOff;
+  const vipUnitOff = vipTables > 0 ? Math.round(vipOff / vipTables) : 0;
+  const vipPrice = basket.vipGross - basket.vipOff;
+  const bonus = basket.addOff;
+  const addOnPrice = basket.addGross - basket.addOff;
+  const total = basket.total;
+  const totalSaved = basket.saved;
   const count = (run ? 1 : 0) + (hasConcert ? 1 : 0) + (picked ? 1 : 0);
-  const concertDeal = eligible && hasConcert;
-  const addOnDealLabel = [
-    countRate > 0 && (countRate >= ADDON_THREE_RATE ? 'วิ่ง + ครบ 3 กิจกรรม' : 'ครบ 3 กิจกรรม'),
-    concertBonusRate > 0 && 'มีคอนเสิร์ต',
-  ]
-    .filter(Boolean)
-    .join(' + ') + ' 🎉';
+  const items = basket.items;
+  const nextTier = BASKET_TIERS.find((t) => t.items > items);
   // what to do next to unlock a better price
   const nudge =
-    count === 0
+    items === 0
       ? ''
-      : picked && activityCount < 3
-        ? `เลือกกิจกรรมให้ครบ 3 อย่าง ลดค่ากิจกรรม ${percentOf(run ? ADDON_THREE_RATE : ADDON_TWO_RATE)}% ทันที! 🎢`
-        : picked && !hasConcert
-          ? `เพิ่มตั๋วคอนเสิร์ต กิจกรรมลดเพิ่มอีก ${percentOf(ADDON_CONCERT_RATE)}%! 🎶`
-          : run && !hasConcert
-              ? `เพิ่มตั๋วคอนเสิร์ต GA หรือ VIP ลดทันที ${percentOf(CONCERT_BUNDLE_RATE)}% 🎶`
-              : !run && hasConcert
-                ? `เพิ่มตั๋ววิ่ง ตั๋วคอนเสิร์ต GA / VIP ลด ${percentOf(CONCERT_BUNDLE_RATE)}%! 🏃`
-                : '';
+      : nextTier
+        ? `เพิ่มอีก ${nextTier.items - items} อย่าง ลด ${percentOf(nextTier.rate)}% ทั้งตะกร้า! 🎁`
+        : `ลด ${percentOf(BASKET_MAX_RATE)}% สูงสุดแล้ว! สุดคุ้ม 🎉`;
 
   const lines: { key: string; emoji: string; tint: string; label: string; sub?: string; price: number; onRemove: () => void }[] = [];
   if (run) {
     const t = ticketById(run);
-    lines.push({ key: 'run', emoji: '🏃', tint: LOOK[run].accentSoft, label: `วิ่ง ${t.distanceLabel}`, sub: t.name, price: runPrice, onRemove: () => onRunChange(null) });
+    lines.push({ key: 'run', emoji: '🏃', tint: LOOK[run].accentSoft, label: `วิ่ง ${t.distanceLabel}`, sub: basket.runOff > 0 ? `${t.name} · ลด ${percentOf(rate)}% (−${formatBaht(basket.runOff)})` : t.name, price: runPrice, onRemove: () => onRunChange(null) });
   }
   if (concertQty > 0) {
-    lines.push({ key: 'concert', emoji: '🎶', tint: '#FEF3C7', label: `คอนเสิร์ต GA × ${concertQty}`, sub: concertOff > 0 ? `ลด ${percentOf(CONCERT_BUNDLE_RATE)}% เหลือ ${formatBaht(concertUnit - concertUnitOff)} บาท/ใบ (−${formatBaht(concertOff)})` : `${formatBaht(concertUnit)} บาท/ใบ${earlyBird ? ` (Early Bird · ปกติ ${formatBaht(CONCERT_PASS_PRICE)})` : ''}`, price: concertPrice, onRemove: () => onConcertQtyChange(0) });
+    lines.push({ key: 'concert', emoji: '🎶', tint: '#FEF3C7', label: `คอนเสิร์ต GA × ${concertQty}`, sub: concertOff > 0 ? `ลด ${percentOf(rate)}% เหลือ ${formatBaht(concertUnit - concertUnitOff)} บาท/ใบ (−${formatBaht(concertOff)})` : `${formatBaht(concertUnit)} บาท/ใบ${earlyBird ? ` (Early Bird · ปกติ ${formatBaht(CONCERT_PASS_PRICE)})` : ''}`, price: concertPrice, onRemove: () => onConcertQtyChange(0) });
   }
   if (vipTables > 0) {
-    lines.push({ key: 'vip', emoji: '👑', tint: '#FEF3C7', label: `VIP TABLE × ${vipTables}`, sub: `${vipTables * VIP_TABLE_SEATS} ท่าน · ${vipOff > 0 ? `ลด ${percentOf(vipRate)}% เหลือ ${formatBaht(vipUnit - vipUnitOff)}` : formatBaht(vipUnit)} บาท/โต๊ะ${earlyBird ? ` (Early Bird · ปกติ ${formatBaht(VIP_TABLE_PRICE)})` : ''}`, price: vipPrice, onRemove: () => onVipTablesChange(0) });
+    lines.push({ key: 'vip', emoji: '👑', tint: '#FEF3C7', label: `VIP TABLE × ${vipTables}`, sub: `${vipTables * VIP_TABLE_SEATS} ท่าน · ${vipOff > 0 ? `ลด ${percentOf(rate)}% เหลือ ${formatBaht(vipUnit - vipUnitOff)}` : formatBaht(vipUnit)} บาท/โต๊ะ${earlyBird ? ` (Early Bird · ปกติ ${formatBaht(VIP_TABLE_PRICE)})` : ''}`, price: vipPrice, onRemove: () => onVipTablesChange(0) });
   }
   if (picked) {
     lines.push({
@@ -529,7 +512,7 @@ export const TicketShop: React.FC<TicketShopProps> = ({
       emoji: '🎢',
       tint: '#E0F7FA',
       label: `${addOnLabel(addOns)} × ${addOns.people}`,
-      sub: bonus > 0 ? `ลด ${percentOf(addOnRate)}% แล้ว (−${formatBaht(bonus)})` : `${formatBaht(addOnPricePerPerson(addOns, earlyBird))} บาท/คน`,      price: addOnPrice,
+      sub: bonus > 0 ? `ลด ${percentOf(rate)}% แล้ว (−${formatBaht(bonus)})` : `${formatBaht(addOnPricePerPerson(addOns, earlyBird))} บาท/คน`,      price: addOnPrice,
       onRemove: () => onAddOnsChange({ ...EMPTY_ADD_ONS }),
     });
   }
@@ -580,7 +563,7 @@ export const TicketShop: React.FC<TicketShopProps> = ({
               {tr('เลือกได้ 1, 2 หรือครบ 3 อย่าง', 'Pick 1, 2 or all 3')} <span className="text-[#7C3AED]">{tr('แล้วจ่ายทีเดียวจบ', 'and pay once')}</span>
             </p>
           </div>
-          <DealStrip hasRun={eligible} hasGaConcert={hasConcert} hasConcert={hasConcert} hasVip={vipTables > 0} activities={activityCount} />
+          <DealStrip chosen={{ run: !!run, concert: hasConcert, tower: addOns.tower, gun: addOns.gun !== 'none', wind: addOns.windTunnel }} />
         </div>
         {salesClosed && (
           <SalesOpenNotice
@@ -657,7 +640,7 @@ export const TicketShop: React.FC<TicketShopProps> = ({
             <StationCard id="shop-concert" k="concert" done={hasConcert}>
               <span id="concert-pass" className="block h-0 scroll-mt-28" aria-hidden="true" />
               <div className="relative lg:grid lg:grid-cols-2 lg:gap-4">
-              <DiscountCelebration active={concertDeal} burstKey={`concert-${hasConcert}`} kicker="วิ่ง + คอนเสิร์ต 🎶🏃" headline={`ลดทันที ${percentOf(CONCERT_BUNDLE_RATE)}%!!!`} discount={concertOff + vipOff} pieces={60} />
+              <DiscountCelebration active={rate > 0 && hasConcert} burstKey={`concert-${items}`} kicker={`ซื้อ ${items} อย่าง 🎁`} headline={`ลดทันที ${percentOf(rate)}%!!!`} discount={totalSaved} pieces={rate >= BASKET_MAX_RATE ? 110 : 60} />
               <div className="relative overflow-hidden ds-frame-dark bg-gradient-to-br from-[#241047] via-[#341866] to-[#4A1F8F] text-white p-4 sm:p-5 lg:flex lg:flex-col">
                 <span aria-hidden="true" className="pointer-events-none absolute -top-14 -left-10 w-48 h-48 rounded-full bg-[#FFC928]/30 blur-3xl" />
                 <span aria-hidden="true" className="pointer-events-none absolute -bottom-16 -right-10 w-56 h-56 rounded-full bg-[#EC4899]/35 blur-3xl" />
@@ -672,15 +655,15 @@ export const TicketShop: React.FC<TicketShopProps> = ({
                       <p className="mt-1 text-2xl font-black text-[#FFD84D] tabular-nums leading-none">
                         {(concertUnitOff > 0 || earlyBird) && <span className="mr-1.5 text-base font-bold text-white/60 line-through">{formatBaht(CONCERT_PASS_PRICE)}</span>}
                         {formatBaht(concertUnit - concertUnitOff)} <span className="text-xs font-bold text-white/85">บาท / ใบ</span>
-                        {eligible && (
+                        {concertUnitOff > 0 && (
                           <span aria-hidden="true" className="deal-sticker ml-2 align-middle inline-block px-2.5 py-1 rounded-full border-2 border-[var(--ink)] bg-[#FFE268] text-[var(--ink)] text-xs font-black shadow-[0_3px_0_var(--ink)]">
-                            ลด {percentOf(CONCERT_BUNDLE_RATE)}%!
+                            ลด {percentOf(rate)}%!
                           </span>
                         )}
                       </p>
-                      {!eligible && (
+                      {rate < BASKET_MAX_RATE && (
                         <p className="mt-1.5 inline-block rounded-full bg-[#FFE268] px-2.5 py-1 text-xs font-extrabold text-[var(--ink)]">
-                          🏃 ซื้อคู่ตั๋ววิ่ง ลดเหลือ {formatBaht(concertUnit - Math.round(concertUnit * CONCERT_BUNDLE_RATE))} บาท/ใบ!
+                          🎁 ซื้อหลายอย่างยิ่งลด: 2 อย่าง {percentOf(BASKET_TIERS[0].rate)}% · 3 อย่าง {percentOf(BASKET_TIERS[1].rate)}% · 4–5 อย่าง {percentOf(BASKET_TIERS[2].rate)}%
                         </p>
                       )}
                     </div>
@@ -705,15 +688,14 @@ export const TicketShop: React.FC<TicketShopProps> = ({
                       <p className="mt-1 text-2xl font-black text-[#FFD84D] tabular-nums leading-none">
                         {(earlyBird || vipUnitOff > 0) && <span className="mr-1.5 text-base font-bold text-white/60 line-through">{formatBaht(VIP_TABLE_PRICE)}</span>}
                         {formatBaht(vipUnit - vipUnitOff)} <span className="text-xs font-bold text-white/85">บาท / โต๊ะ ({VIP_TABLE_SEATS} ท่าน)</span>
-                        {vipRate > 0 && (
+                        {vipUnitOff > 0 && (
                           <span aria-hidden="true" className="deal-sticker ml-2 align-middle inline-block px-2.5 py-1 rounded-full border-2 border-[var(--ink)] bg-[#FFE268] text-[var(--ink)] text-xs font-black shadow-[0_3px_0_var(--ink)]">
-                            ลด {percentOf(vipRate)}%!
+                            ลด {percentOf(rate)}%!
                           </span>
                         )}
-                        {vipRate < VIP_ADDON_RATE && (
+                        {rate < BASKET_MAX_RATE && (
                           <span className="mt-1.5 block w-fit rounded-full bg-[#FFE268] px-2.5 py-1 text-xs font-extrabold leading-snug text-[var(--ink)]">
-                            {!eligible && <>🏃 ซื้อคู่ตั๋ววิ่ง ลดเหลือ {formatBaht(vipUnit - Math.round(vipUnit * CONCERT_BUNDLE_RATE))} บาท/โต๊ะ · </>}
-                            🎢 ครบ 3 กิจกรรม ลดเหลือ {formatBaht(vipUnit - Math.round(vipUnit * VIP_ADDON_RATE))} บาท/โต๊ะ!
+                            🎁 ซื้อหลายอย่างยิ่งลด: ซื้อเพิ่มอีกอย่างลดทั้งตะกร้า
                           </span>
                         )}
                       </p>
@@ -738,8 +720,8 @@ export const TicketShop: React.FC<TicketShopProps> = ({
 
             {/* 3. Activities */}
             <div className="relative">
-              <DiscountCelebration active={addOnRate > 0} burstKey={`addon-${addOnRate}`} kicker={addOnDealLabel} headline={`ลดทันที ${percentOf(addOnRate)}%!!!`} discount={bonus} pieces={addOnRate >= ADDON_THREE_RATE ? 110 : 60} />
-              <div className={`rounded-[34px] p-[3px] transition-all ${addOnRate > 0 ? 'addon-celebrate' : ''}`}>
+              <DiscountCelebration active={rate > 0 && picked} burstKey={`addon-${items}`} kicker={`ซื้อ ${items} อย่าง 🎁`} headline={`ลดทันที ${percentOf(rate)}%!!!`} discount={totalSaved} pieces={rate >= BASKET_MAX_RATE ? 110 : 60} />
+              <div className={`rounded-[34px] p-[3px] transition-all ${rate > 0 && picked ? 'addon-celebrate' : ''}`}>
                 <StationCard
                   id="shop-addon"
                   k="addon"
@@ -760,51 +742,41 @@ export const TicketShop: React.FC<TicketShopProps> = ({
                   }
                 >
                   <span id="addons" className="block h-0 scroll-mt-28" aria-hidden="true" />
-                  {(activityCount >= 1 || addOnRate > 0) && <p className={`mb-3 rounded-2xl px-3 py-2 text-sm font-extrabold text-center border-2 ${addOnRate > 0 ? 'bg-[#FFE268] border-[var(--ink)] text-[var(--ink)]' : 'bg-gradient-to-r from-[#E0F7FA] to-[#ECFDF5] border-[#0EA5E9]/30 text-[#0369A1]'}`}>
-                    {addOnRate >= ADDON_MAX_RATE
-                      ? `🎉🎉 กิจกรรมลด ${percentOf(addOnRate)}% สูงสุดแล้ว! สุดคุ้ม!!!`
-                      : addOnRate > 0
-                        ? `🎉 กิจกรรมลด ${percentOf(addOnRate)}% แล้ว!${hasConcert ? '' : ` เพิ่มตั๋วคอนเสิร์ต ลดเพิ่มอีก ${percentOf(ADDON_CONCERT_RATE)}%`}`
-                        : `เลือกให้ครบ 3 กิจกรรม ลด ${percentOf(ADDON_TWO_RATE)}% (มีตั๋ววิ่งลด ${percentOf(ADDON_THREE_RATE)}%) · มีคอนเสิร์ตลดเพิ่มอีก ${percentOf(ADDON_CONCERT_RATE)}% (สูงสุด ${percentOf(ADDON_MAX_RATE)}%) 🎁`}
+                  {items >= 1 && <p className={`mb-3 rounded-2xl px-3 py-2 text-sm font-extrabold text-center border-2 ${rate > 0 ? 'bg-[#FFE268] border-[var(--ink)] text-[var(--ink)]' : 'bg-gradient-to-r from-[#E0F7FA] to-[#ECFDF5] border-[#0EA5E9]/30 text-[#0369A1]'}`}>
+                    {rate >= BASKET_MAX_RATE
+                      ? `🎉🎉 ซื้อ ${items} อย่าง ลด ${percentOf(rate)}% สูงสุดแล้ว! สุดคุ้ม!!!`
+                      : rate > 0
+                        ? `🎉 ซื้อ ${items} อย่าง ลด ${percentOf(rate)}% แล้ว! ${nudge}`
+                        : `เลือกเพิ่มอีกอย่าง ลดทันที ${percentOf(BASKET_TIERS[0].rate)}% ทั้งตะกร้า (3 อย่าง ${percentOf(BASKET_TIERS[1].rate)}% · 4–5 อย่าง ${percentOf(BASKET_TIERS[2].rate)}%) 🎁`}
                   </p>}
-                  <AddOnPicker value={addOns} onChange={onAddOnsChange} windTunnelRemaining={windRemaining} showResult={false} layout="grid" discountCtx={discountCtx} />
+                  <AddOnPicker value={addOns} onChange={onAddOnsChange} windTunnelRemaining={windRemaining} showResult={false} layout="grid" />
                   <details className="group mt-3 rounded-2xl bg-[#FAF7FF] border-2 border-[var(--ink)]/10">
                     <summary className="list-none cursor-pointer flex items-center justify-between gap-3 px-4 py-2.5 min-h-[48px] text-sm font-extrabold text-[var(--ink)]">
-                      <span>ราคาแพ็กเกจ & รายชื่อปืนที่เลือกได้</span>
+                      <span>ราคากิจกรรม & รายชื่อปืนที่เลือกได้</span>
                       <ChevronDown className="w-5 h-5 shrink-0 text-[#0EA5E9] transition-transform group-open:rotate-180" aria-hidden="true" />
                     </summary>
                     <div className="px-4 pb-4 grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                       <div>
-                        <p className="font-extrabold text-[#0369A1] mb-1">แพ็กเกจ (บาท/คน) · ราคาหลังลด</p>
+                        <p className="font-extrabold text-[#0369A1] mb-1">ราคาต่อคน (บาท)</p>
                         <table className="w-full font-semibold text-[var(--ink)]">
-                          <thead>
-                            <tr className="text-[11px] text-[#6B5A85]">
-                              <th className="text-left font-bold pb-1">แพ็กเกจ</th>
-                              <th className="text-right font-bold pb-1">ปกติ</th>
-                              <th className="text-right font-bold pb-1">ครบ 3: −{percentOf(ADDON_TWO_RATE)}%</th>
-                              <th className="text-right font-bold pb-1">ครบ 3 + คอนเสิร์ต −{percentOf(ADDON_MAX_RATE)}%</th>
-                            </tr>
-                          </thead>
                           <tbody className="tabular-nums">
-                            {PACKAGE_TABLE.map((p) => (
-                              <tr key={p.name} className={p.strong ? 'font-extrabold' : ''}>
+                            {PRICE_TABLE.map((p) => (
+                              <tr key={p.name}>
                                 <td className="py-0.5 pr-2">{p.name}</td>
                                 <td className="py-0.5 text-right">{formatBaht(p.price)}</td>
-                                <td className="py-0.5 text-right">{p.name.startsWith('ครบ 3') ? formatBaht(p.price - Math.round(p.price * ADDON_TWO_RATE)) : '—'}</td>
-                                <td className="py-0.5 text-right">{p.name.startsWith('ครบ 3') ? formatBaht(p.price - Math.round(p.price * ADDON_MAX_RATE)) : '—'}</td>
                               </tr>
                             ))}
                           </tbody>
                         </table>
                         <p className="mt-1.5 text-xs font-bold text-[#6B5A85]">
-                          ส่วนลดกิจกรรมมีเฉพาะเมื่อเลือกครบ 3 กิจกรรม: ลด {percentOf(ADDON_TWO_RATE)}% · มีตั๋ววิ่งลด {percentOf(ADDON_THREE_RATE)}% · มีตั๋วคอนเสิร์ตลดเพิ่ม {percentOf(ADDON_CONCERT_RATE)}% · รวมสูงสุด {percentOf(ADDON_MAX_RATE)}%
+                          ซื้อ 2 อย่างลด {percentOf(BASKET_TIERS[0].rate)}% · 3 อย่างลด {percentOf(BASKET_TIERS[1].rate)}% · 4–5 อย่างลด {percentOf(BASKET_TIERS[2].rate)}% ทั้งตะกร้า (นับ ตั๋ววิ่ง / คอนเสิร์ต / หอสูง / ยิงปืน / อุโมงค์ลม อย่างละ 1 อย่าง)
                         </p>
                       </div>
                       <div>
-                        <p className="font-extrabold text-[#0369A1] mb-1">ปืน Standard (เลือก 1 กระบอก · 10 นัด)</p>
-                        <p className="font-semibold text-[#4B2D78] leading-relaxed">{STANDARD_GUNS.flatMap((g) => g.guns).join(' · ')}</p>
-                        <p className="font-extrabold text-[#0369A1] mt-2 mb-1">ปืน Premium</p>
-                        <p className="font-semibold text-[#4B2D78] leading-relaxed">{PREMIUM_GUNS.join(' · ')}</p>
+                        <p className="font-extrabold text-[#0369A1] mb-1">ปืนสั้น + กระสุน 10 นัด ({formatBaht(SHORT_GUN_PRICE)} บาท · เลือก 1 กระบอก)</p>
+                        <p className="font-semibold text-[#4B2D78] leading-relaxed">{SHORT_GUNS.join(' · ')}</p>
+                        <p className="font-extrabold text-[#0369A1] mt-2 mb-1">ปืนยาว + กระสุน 10 นัด ({formatBaht(LONG_GUN_PRICE)} บาท · เลือก 1 กระบอก)</p>
+                        <p className="font-semibold text-[#4B2D78] leading-relaxed">{LONG_GUNS.join(' · ')}</p>
                       </div>
                     </div>
                   </details>

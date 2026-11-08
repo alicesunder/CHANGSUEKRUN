@@ -79,7 +79,7 @@ import {
   setEarlyBirdSchedule,
 } from './store';
 import { billerIdFromQr, isValidQrPayload } from '../src/utils/promptPay';
-import { WIND_TUNNEL_LIMIT, addOnBonusDiscount, addOnLabel, addOnPricePerPerson, addOnTotal, concertDiscountPerTicket, hasAddOns, hasAllThree, normalizeAddOns, vipDiscountPerTable } from '../src/data/addOns';
+import { WIND_TUNNEL_LIMIT, addOnLabel, addOnPricePerPerson, hasAddOns, normalizeAddOns, priceBasket } from '../src/data/addOns';
 import { needsInsurance, parseInsurance, type InsuranceInfo } from '../src/data/insurance';
 import { parseShooting, type ShootingInfo } from '../src/data/shooting';
 import { parseActivityWaiver, waiversFor, type ActivityWaiverInfo } from '../src/data/activityWaivers';
@@ -392,10 +392,8 @@ export function createApp(): express.Express {
     const concertQty = isConcert ? (vipTables > 0 ? wantedConcert : Math.max(1, wantedConcert)) : concertAllowed ? wantedConcert : 0;
     // Bundle discounts never stack with a sponsor code; see src/data/addOns.ts for the rules.
     const earlyBird = (await getEarlyBird()).on;
-    const discountCtx = { hasRun: !noRun, hasConcert: concertQty > 0 || vipTables > 0, sponsor: !!sponsorCode, earlyBird };
-    const addOnSum = addOnTotal(addOns, discountCtx);
     // A fully free sponsor registration doesn't need the payment gateway.
-    if ((!sponsorCode || addOnSum > 0) && !(await getEasySlipKey())) {
+    if ((!sponsorCode || hasAddOns(addOns)) && !(await getEasySlipKey())) {
       res.status(503).json({ error: 'ระบบชำระเงินยังไม่เปิดใช้งาน กรุณาติดต่อผู้จัดงาน' });
       return;
     }
@@ -497,19 +495,22 @@ export function createApp(): express.Express {
       sponsorName = used.sponsorName;
     }
 
+    // One basket, one discount (priceBasket in src/data/addOns.ts): 2 items 10%, 3 items 15%, 4-5 items 20%.
     const concertUnit = concertPassPrice(earlyBird);
-    const concertDiscount =
-      concertQty * concertDiscountPerTicket(concertUnit, !noRun && !sponsorCode) +
-      vipTables * vipDiscountPerTable(vipTablePrice(earlyBird), !noRun && !sponsorCode, !sponsorCode && hasAllThree(addOns));
-    const vipTotal = vipTablePrice(earlyBird) * vipTables;
-    const ticketTotal = isAddonOnly
-      ? 0
-      : isConcert
-        ? concertUnit * concertQty - concertDiscount + vipTotal
-        : sponsorCode
-          ? 0
-          : calcTicketTotal(routeId, extraPeople, extraDogs, earlyBird) + concertUnit * concertQty - concertDiscount + vipTotal;
-    const total = testMode ? 1 : ticketTotal + addOnSum;
+    const runGross = noRun || sponsorCode ? 0 : calcTicketTotal(routeId, extraPeople, extraDogs, earlyBird);
+    const basket = priceBasket({
+      runGross,
+      hasRun: !noRun,
+      gaUnit: concertUnit,
+      gaQty: concertQty,
+      vipUnit: vipTablePrice(earlyBird),
+      vipTables,
+      addOns,
+      sponsor: !!sponsorCode,
+    });
+    const concertDiscount = basket.gaOff + basket.vipOff;
+    const addOnSum = basket.addGross - basket.addOff;
+    const total = testMode ? 1 : basket.total;
     const token = crypto.randomBytes(24).toString('base64url');
     const now = new Date();
     const settings = await getSettings();
@@ -533,6 +534,8 @@ export function createApp(): express.Express {
       ticketType: isAddonOnly ? 'ADDON' : isConcert ? 'CONCERT' : 'RUN',
       concertQty: concertQty > 0 ? concertQty : undefined,
       concertDiscount: concertDiscount > 0 ? concertDiscount : undefined,
+      ...(basket.runOff > 0 ? { runDiscount: basket.runOff } : {}),
+      ...(basket.rate > 0 ? { discountRate: basket.rate } : {}),
       ...(earlyBird ? { earlyBird: true } : {}),
       vipTables: vipTables > 0 ? vipTables : undefined,
       parkingPlates,
@@ -556,7 +559,7 @@ export function createApp(): express.Express {
       sponsorCode: sponsorCode || undefined,
       sponsorName: sponsorName || undefined,
       addOns: hasAddOns(addOns)
-        ? { ...addOns, pricePerPerson: addOnPricePerPerson(addOns, earlyBird), total: addOnSum, discount: addOnBonusDiscount(addOns, discountCtx), label: addOnLabel(addOns) }
+        ? { ...addOns, pricePerPerson: addOnPricePerPerson(addOns, earlyBird), total: addOnSum, discount: basket.addOff, label: addOnLabel(addOns) }
         : undefined,
       paymentStatus: 'PENDING',
       paymentRef: '',

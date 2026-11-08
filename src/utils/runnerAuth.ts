@@ -189,6 +189,14 @@ export const authApi = {
     });
     return r.order.parkingPlates || [];
   },
+  /** Replaces all the plates on my VIP order (until the event day). Resolves with the saved list. */
+  async setParkingPlates(orderId: string, plates: { plate: string; province: string }[]): Promise<{ plate: string; province: string }[]> {
+    const r = await call<{ order: { parkingPlates?: { plate: string; province: string }[] } }>(`/api/me/orders/${encodeURIComponent(orderId)}/parking-plates`, {
+      method: 'PUT',
+      body: JSON.stringify({ plates }),
+    });
+    return r.order.parkingPlates || [];
+  },
   /** E-mails the ticket of one of my paid orders again; resolves with the masked address it went to. */
   async resendTicket(orderId: string): Promise<string> {
     return (await call<{ to: string }>(`/api/me/orders/${encodeURIComponent(orderId)}/resend-ticket`, { method: 'POST', body: '{}' })).to;

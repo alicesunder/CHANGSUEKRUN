@@ -23,6 +23,7 @@ import { TicketShop } from './components/TicketShop';
 import { DogContestSection } from './components/DogContestSection';
 import { DogHealthCheckSection } from './components/DogHealthCheckSection';
 import { WinnersSection } from './components/WinnersSection';
+import { RunnerAwardsSection } from './components/RunnerAwardsSection';
 import { EMPTY_ADD_ONS, hasAddOns, type AddOnSelection } from './data/addOns';
 import { RaceDistances } from './components/RaceDistances';
 import { SponsorsSection } from './components/SponsorsSection';
@@ -340,6 +341,7 @@ export default function App() {
           }
           beforeMerch={
             <>
+              <RunnerAwardsSection />
               <DogHealthCheckSection />
               <DogContestSection />
             </>

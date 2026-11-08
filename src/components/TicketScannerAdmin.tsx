@@ -63,7 +63,7 @@ function activityRows(o: ScanOrder) {
   if (!a) return [];
   const rows: { key: string; icon: string; title: string; bg: string }[] = [];
   if (a.tower) rows.push({ key: 'tower', icon: '🗼', title: 'หอสูง', bg: 'bg-violet-100' });
-  if (a.gun && a.gun !== 'none') rows.push({ key: 'gun', icon: '🔫', title: a.gun === 'premium' ? 'ยิงปืน Premium' : 'ยิงปืน', bg: 'bg-amber-100' });
+  if (a.gun && a.gun !== 'none') rows.push({ key: 'gun', icon: '🔫', title: a.gun === 'premium' ? 'ยิงปืนยาว' : 'ยิงปืนสั้น', bg: 'bg-amber-100' });
   if (a.windTunnel) rows.push({ key: 'wind', icon: '🌪️', title: 'อุโมงค์ลม', bg: 'bg-sky-100' });
   if (!rows.length) rows.push({ key: 'other', icon: '⭐', title: a.label, bg: 'bg-violet-100' });
   return rows;

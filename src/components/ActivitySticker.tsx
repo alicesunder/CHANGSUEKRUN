@@ -4,8 +4,8 @@ export type ActivityStickerId = 'tower' | 'gun' | 'gunPremium' | 'wind' | 'mangr
 
 const STICKERS: Record<ActivityStickerId, { src: string; title: string; emoji: string; glow: string }> = {
   tower: { src: '/images/addons/sticker-tower.webp', title: 'หอสูง', emoji: '🪂', glow: '#10B981' },
-  gun: { src: '/images/addons/sticker-gun.webp', title: 'ยิงปืน', emoji: '🎯', glow: '#8B5CF6' },
-  gunPremium: { src: '/images/addons/sticker-gun-premium.webp', title: 'ยิงปืน Premium', emoji: '🎯', glow: '#F59E0B' },
+  gun: { src: '/images/addons/sticker-gun.webp', title: 'ยิงปืนสั้น', emoji: '🎯', glow: '#8B5CF6' },
+  gunPremium: { src: '/images/addons/sticker-gun-premium.webp', title: 'ยิงปืนยาว', emoji: '🎯', glow: '#F59E0B' },
   wind: { src: '/images/addons/sticker-wind-3.webp', title: 'อุโมงค์ลม', emoji: '🌪️', glow: '#0EA5E9' },
   // landmarks on the course map
   mangrove: { src: '/images/map/sticker-mangrove.webp', title: 'หอดูนก · ป่าชายเลน', emoji: '🌳', glow: '#22C55E' },
