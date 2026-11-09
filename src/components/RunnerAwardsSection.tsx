@@ -3,9 +3,9 @@ import { motion } from 'motion/react';
 
 /** Overall prizes by Gun Time. Dog Run (4K / 1K) top 3 pairs get a product gift set. */
 const MONEY = [
-  { rank: 1, baht: 3000, ring: '#F5B800', leaf: '#D99A00', img: '/images/awards/award-gold-v1.webp' },
-  { rank: 2, baht: 1500, ring: '#A9B2BF', leaf: '#8C97A6', img: '/images/awards/award-silver-v1.webp' },
-  { rank: 3, baht: 1000, ring: '#CD8A4B', leaf: '#B2703A', img: '/images/awards/award-bronze-v1.webp' },
+  { rank: 1, baht: 3000, ring: '#F5B800', leaf: '#D99A00', badge: '/images/awards/rank-1-v3.webp', ink: '#6B4400', img: '/images/awards/award-gold-v1.webp' },
+  { rank: 2, baht: 1500, ring: '#A9B2BF', leaf: '#8C97A6', badge: '/images/awards/rank-2-v3.webp', ink: '#3B4350', img: '/images/awards/award-silver-v1.webp' },
+  { rank: 3, baht: 1000, ring: '#CD8A4B', leaf: '#B2703A', badge: '/images/awards/rank-3-v3.webp', ink: '#5A2F10', img: '/images/awards/award-bronze-v1.webp' },
 ];
 
 const MONEY_CARDS = [
@@ -20,18 +20,6 @@ const DOG_CARDS = [
 
 const CARD = 'overflow-hidden rounded-[22px] border-[3px] border-[#FFC928] bg-white shadow-[0_8px_0_rgba(26,10,56,0.6),0_18px_30px_-12px_rgba(0,0,0,0.5)]';
 const HEAD = 'relative flex items-center gap-3 border-b-[3px] border-[#E0A100] bg-gradient-to-b from-[#FFE066] via-[#FFD233] to-[#FFC11A] px-4 py-3 sm:px-5';
-
-/** Laurel wreath that frames the rank number. */
-const Laurel: React.FC<{ color: string }> = ({ color }) => (
-  <svg aria-hidden="true" viewBox="0 0 100 70" className="pointer-events-none absolute inset-0 h-full w-full">
-    {[0, 1, 2, 3, 4].map((i) => (
-      <React.Fragment key={i}>
-        <ellipse cx={9 + i * 2.5} cy={58 - i * 10} rx="3.6" ry="7" transform={`rotate(${-35 + i * 10} ${9 + i * 2.5} ${58 - i * 10})`} fill={color} />
-        <ellipse cx={91 - i * 2.5} cy={58 - i * 10} rx="3.6" ry="7" transform={`rotate(${35 - i * 10} ${91 - i * 2.5} ${58 - i * 10})`} fill={color} />
-      </React.Fragment>
-    ))}
-  </svg>
-);
 
 /** The runners' prize board (design by ChatGPT, built in HTML so the text stays sharp and editable). */
 export const RunnerAwardsSection: React.FC = () => (
@@ -59,9 +47,7 @@ export const RunnerAwardsSection: React.FC = () => (
           {MONEY_CARDS.map((c) => (
             <li key={c.id} className={CARD}>
               <div className={HEAD}>
-                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white/80 ring-2 ring-[#E0A100]/60 sm:h-14 sm:w-14">
-                  <img src="/images/awards/award-runner-v1.webp" alt="" aria-hidden="true" className="h-8 w-auto mix-blend-multiply sm:h-10" />
-                </span>
+                <img src="/images/awards/icon-runner-v3.webp" alt="" aria-hidden="true" className="h-12 w-12 shrink-0 drop-shadow-[0_3px_3px_rgba(80,50,0,0.35)] sm:h-16 sm:w-16" />
                 <div className="leading-tight">
                   <p className="text-xl font-black text-[#2A1450] sm:text-[1.7rem]">{c.title}</p>
                   <p className="text-xs font-extrabold text-[#5B3A00] sm:text-sm">รางวัลภาพรวม (Gun Time)</p>
@@ -70,12 +56,9 @@ export const RunnerAwardsSection: React.FC = () => (
               <ul className="bg-gradient-to-b from-white to-[#F3ECFF]">
                 {MONEY.map((m) => (
                   <li key={m.rank} className="grid grid-cols-[auto_auto_1fr] items-center gap-2 border-b border-[#E7DCFA] px-2.5 py-2 last:border-b-0 sm:gap-4 sm:px-5 sm:py-2.5">
-                    <span className="relative flex h-[58px] w-[104px] shrink-0 items-center justify-center sm:h-[66px] sm:w-[120px]">
-                      <Laurel color={m.leaf} />
-                      <span className="relative text-center leading-none">
-                        <span className="block text-[11px] font-black text-[#2A1450] sm:text-xs">อันดับ</span>
-                        <span className="block font-hero text-3xl font-black text-[#2A1450] sm:text-4xl">{m.rank}</span>
-                      </span>
+                    <span className="relative flex h-[68px] w-[78px] shrink-0 items-center justify-center sm:h-[78px] sm:w-[90px]">
+                      <img src={m.badge} alt="" aria-hidden="true" className="h-full w-auto drop-shadow-[0_3px_3px_rgba(60,30,0,0.3)]" loading="lazy" />
+                      <span className="sr-only">อันดับ {m.rank}</span>
                     </span>
                     <img src={m.img} alt="" aria-hidden="true" className="h-12 w-auto mix-blend-multiply sm:h-14" loading="lazy" />
                     <span className="text-right leading-tight sm:text-left">
@@ -91,9 +74,7 @@ export const RunnerAwardsSection: React.FC = () => (
           {DOG_CARDS.map((c) => (
             <li key={c.id} className={CARD}>
               <div className={HEAD}>
-                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white/80 ring-2 ring-[#E0A100]/60 sm:h-14 sm:w-14">
-                  <img src="/images/awards/award-runner-dog-v1.webp" alt="" aria-hidden="true" className="h-8 w-auto mix-blend-multiply sm:h-10" />
-                </span>
+                <img src="/images/awards/icon-runner-dog-v3.webp" alt="" aria-hidden="true" className="h-12 w-12 shrink-0 drop-shadow-[0_3px_3px_rgba(80,50,0,0.35)] sm:h-16 sm:w-16" />
                 <div className="leading-tight">
                   <p className="text-xl font-black text-[#2A1450] sm:text-[1.7rem]">{c.title}</p>
                   <p className="text-xs font-extrabold text-[#5B3A00] sm:text-sm">รางวัล Top 3 คู่วิ่งกับน้องหมา (Gun Time)</p>
