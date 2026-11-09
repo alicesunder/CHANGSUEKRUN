@@ -278,7 +278,7 @@ const RunTicket: React.FC<{ id: RouteId; on: boolean; onPick: () => void }> = ({
           {perks(isDog).slice(0, 2).map(({ title }, i) => (
             <div key={title} className="flex flex-col items-center gap-1 px-1.5 text-center">
               <motion.img
-                src={i === 0 ? '/images/shop/shirt-real.webp' : '/images/shop/medal-real.webp'}
+                src={i === 0 ? '/images/shop/shirt-real.webp' : '/images/shop/medal-real-v2.webp'}
                 alt=""
                 loading="lazy"
                 animate={on ? { y: [0, -16, 0], rotate: [0, i ? 14 : -14, 0], scale: [1, 1.35, 1.12] } : { y: 0, rotate: 0, scale: 1 }}

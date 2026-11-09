@@ -6,6 +6,9 @@
 
 /** Exact text (after trimming) -> English. */
 export const EN_EXACT: Record<string, string> = {
+  [`มินตรา`]: `Mintra`,
+  [`ครูเต้ย อภิวัฒน์`]: `Kru Toey Apiwat`,
+  [`บอล เชิญยิ้ม & Joker Family`]: `Ball Cherngyim & Joker Family`,
   [`ยิ่งซื้อเพิ่ม`]: `The more you buy,`,
   [`ซื้อ 1 อย่าง`]: `Buy 1 item`,
   [`ราคาปกติ`]: `Regular price`,
@@ -739,7 +742,7 @@ export const EN_EXACT: Record<string, string> = {
   [`ซูมไปที่หอสูง`]: `Zoom to the high tower`,
   [`ซูมไปที่อุโมงค์ลม`]: `Zoom to the wind tunnel`,
   [`ซูมไปที่Sea Sand Sun Hua Hin Resort`]: `Zoom to Sea Sand Sun Hua Hin Resort`,
-  [`ศิลปินคอนเสิร์ต CHANGSUEK RUN 2027: LomoSonic, ดาเอนโดฟิน, จ่ะ อาร์สยาม และศิลปินรับเชิญพิเศษ`]: `CHANGSUEK RUN 2027 concert artists: LomoSonic, Da Endorphine, Ja R-Siam and a special guest artist`,
+  [`ศิลปินคอนเสิร์ต CHANGSUEK RUN 2027: มินตรา, ครูเต้ย อภิวัฒน์, บอล เชิญยิ้ม & Joker Family`]: `CHANGSUEK RUN 2027 concert artists: Mintra, Kru Toey Apiwat, Ball Cherngyim & Joker Family`,
   [`ตารางการแสดง`]: `Performance schedule`,
   [`ภาพศิลปินจากงาน HUAHIN BEACH CROSS COUNTRY & MUSIC FESTIVAL 2026`]: `Artists from HUAHIN BEACH CROSS COUNTRY & MUSIC FESTIVAL 2026`,
   [`นักวิ่งในเสื้อสีม่วงเดินผ่านซุ้มปล่อยตัวบนชายหาด ยิ้มและชูนิ้วโป้ง`]: `A runner in a purple shirt walks through the start arch on the beach, smiling with a thumbs-up`,

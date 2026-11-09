@@ -972,26 +972,42 @@ const ProfileForm: React.FC<{ session: Session; onLogout: () => void }> = ({ ses
   const box = 'min-h-[46px] w-full rounded-xl border-2 border-[#2A1450]/20 bg-white px-3 text-sm font-semibold text-[#2A1450] focus:border-[#7C3AED] outline-none';
   const lab = 'mb-1 block text-xs font-extrabold';
   const today = new Date().toISOString().slice(0, 10);
+  // No save button: every change is saved by itself a moment after the last keystroke.
+  const save = async () => {
+    setBusy(true);
+    setMsg(null);
+    try {
+      const name = `${firstName.trim()} ${lastName.trim()}`.trim();
+      await authApi.saveProfile({
+        name,
+        phone,
+        email,
+        profile: { firstName: firstName.trim(), lastName: lastName.trim(), gender, birthDate, bloodType, shirtSize: shirt, emergencyName: emName, relationship, emergencyPhone: emPhone },
+      });
+      setMsg({ ok: true, text: t('บันทึกให้อัตโนมัติแล้ว ✓ ครั้งหน้าระบบจะเติมข้อมูลนี้ให้ในฟอร์มสั่งซื้อ', 'Saved automatically ✓ we will pre-fill these details in your next order') });
+    } catch (err) {
+      setMsg({ ok: false, text: err instanceof Error ? err.message : t('บันทึกไม่สำเร็จ', 'Could not save') });
+    } finally {
+      setBusy(false);
+    }
+  };
+  const firstRun = useRef(true);
+  const saveRef = useRef(save);
+  saveRef.current = save;
+  useEffect(() => {
+    if (firstRun.current) {
+      firstRun.current = false;
+      return;
+    }
+    if (!firstName.trim()) return;
+    const id = window.setTimeout(() => void saveRef.current(), 1200);
+    return () => window.clearTimeout(id);
+  }, [firstName, lastName, phone, email, gender, birthDate, bloodType, shirt, emName, relationship, emPhone]);
   return (
     <form
-      onSubmit={async (e) => {
+      onSubmit={(e) => {
         e.preventDefault();
-        setBusy(true);
-        setMsg(null);
-        try {
-          const name = `${firstName.trim()} ${lastName.trim()}`.trim();
-          await authApi.saveProfile({
-            name,
-            phone,
-            email,
-            profile: { firstName: firstName.trim(), lastName: lastName.trim(), gender, birthDate, bloodType, shirtSize: shirt, emergencyName: emName, relationship, emergencyPhone: emPhone },
-          });
-          setMsg({ ok: true, text: t('บันทึกข้อมูลแล้ว ✓ ครั้งหน้าระบบจะเติมข้อมูลนี้ให้ในฟอร์มสั่งซื้อ', 'Saved ✓ we will pre-fill these details in your next order') });
-        } catch (err) {
-          setMsg({ ok: false, text: err instanceof Error ? err.message : t('บันทึกไม่สำเร็จ', 'Could not save') });
-        } finally {
-          setBusy(false);
-        }
+        void save();
       }}
       className="space-y-4 ds-card p-4 sm:p-5"
     >
@@ -1021,7 +1037,7 @@ const ProfileForm: React.FC<{ session: Session; onLogout: () => void }> = ({ ses
       </div>
       {msg && <p role="status" className={`rounded-xl px-3 py-2 text-sm font-bold ${msg.ok ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}`}>{msg.text}</p>}
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <button disabled={busy} className="inline-flex min-h-[48px] items-center gap-2 rounded-full bg-gradient-to-b from-[#FFE268] to-[#FFB300] px-6 text-sm font-black text-[#2A1450] shadow-[0_8px_18px_-8px_rgba(255,179,0,0.85)] disabled:opacity-60 cursor-pointer"><Save className="h-4 w-4" /> {busy ? t('กำลังบันทึก…', 'Saving…') : t('บันทึก', 'Save')}</button>
+        <span aria-live="polite" className="text-xs font-bold text-[#6B5A85]">{busy ? t('กำลังบันทึก…', 'Saving…') : t('แก้แล้วบันทึกให้เอง', 'Changes save automatically')}</span>
         <button type="button" onClick={onLogout} className="inline-flex min-h-[48px] items-center gap-2 rounded-full border-2 border-[#7C3AED] bg-white px-5 text-sm font-black text-[#4B1FA8] hover:bg-[#F6F1FD] cursor-pointer"><LogOut className="h-4 w-4" /> {t('ออกจากระบบ', 'Log out')}</button>
       </div>
     </form>

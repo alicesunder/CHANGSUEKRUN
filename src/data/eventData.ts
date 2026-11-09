@@ -625,12 +625,11 @@ export const routesData: Record<RouteId, RouteData> = {
 // Accommodations near Naresuan Camp (Merged from Agoda, Booking.com, Traveloka, Expedia, Trip)
 export { hotelsData } from "./hotelsData";
 
-/** This year's concert, 9 Jan 2570 on the beach (organiser's line-up; the closing act is still to be announced). */
+/** This year's concert, 9 Jan 2570 on the beach (organiser's line-up). */
 export const CONCERT_LINEUP: { time: string; artist: string; tba?: boolean; color: string }[] = [
-  { time: '19.00–20.00 น.', artist: 'ดาเอนโดฟิน', color: '#F43F5E' },
-  { time: '20.00–21.00 น.', artist: 'LomoSonic', color: '#22D3EE' },
-  { time: '21.00–22.00 น.', artist: 'จ่ะ อาร์สยาม', color: '#A855F7' },
-  { time: '22.00–23.00 น.', artist: 'วงปิด · ศิลปินรับเชิญพิเศษ', tba: true, color: '#FFC928' },
+  { time: '19.00–20.00 น.', artist: 'มินตรา', color: '#F43F5E' },
+  { time: '20.00–21.00 น.', artist: 'ครูเต้ย อภิวัฒน์', color: '#22D3EE' },
+  { time: '21.00–22.00 น.', artist: 'บอล เชิญยิ้ม & Joker Family', color: '#A855F7' },
 ];
 
 // Schedule Data
@@ -797,7 +796,7 @@ export const scheduleData: ScheduleDay[] = [
         id: 's-16',
         day: 'race_day',
         time: '19.00–20.00 น.',
-        title: 'คอนเสิร์ต: ดาเอนโดฟิน',
+        title: 'คอนเสิร์ต: มินตรา',
         description: 'คอนเสิร์ตริมหาด',
         iconName: 'Sparkles',
       },
@@ -805,7 +804,7 @@ export const scheduleData: ScheduleDay[] = [
         id: 's-17',
         day: 'race_day',
         time: '20.00–21.00 น.',
-        title: 'คอนเสิร์ต: LomoSonic',
+        title: 'คอนเสิร์ต: ครูเต้ย อภิวัฒน์',
         description: 'คอนเสิร์ตริมหาด',
         iconName: 'Sparkles',
       },
@@ -813,18 +812,9 @@ export const scheduleData: ScheduleDay[] = [
         id: 's-18',
         day: 'race_day',
         time: '21.00–22.00 น.',
-        title: 'คอนเสิร์ต: จ่ะ อาร์สยาม',
+        title: 'คอนเสิร์ต: บอล เชิญยิ้ม & Joker Family',
         description: 'คอนเสิร์ตริมหาด',
         iconName: 'Sparkles',
-      },
-      {
-        id: 's-19',
-        day: 'race_day',
-        time: '22.00–23.00 น.',
-        title: 'คอนเสิร์ตวงปิด',
-        description: 'ศิลปินรับเชิญพิเศษ (รอประกาศ)',
-        iconName: 'Sparkles',
-        highlight: true,
       },
     ],
   },

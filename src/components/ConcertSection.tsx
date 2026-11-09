@@ -71,7 +71,7 @@ export const ConcertSection: React.FC = () => {
               </div>
 
               {/* time table */}
-              <ol data-reveal-stagger="pop" className="relative z-[4] grid grid-cols-2 gap-2.5 bg-gradient-to-b from-transparent to-[#1B0B3A]/80 p-3 sm:grid-cols-4 sm:gap-3.5 sm:p-5" aria-label="ตารางการแสดง">
+              <ol data-reveal-stagger="pop" className="relative z-[4] grid grid-cols-1 gap-2.5 bg-gradient-to-b from-transparent to-[#1B0B3A]/80 p-3 sm:grid-cols-3 sm:gap-3.5 sm:p-5" aria-label="ตารางการแสดง">
                 {CONCERT_LINEUP.map((a) => (
                   <li
                     key={a.time}
@@ -127,7 +127,7 @@ export const ConcertSection: React.FC = () => {
                 👑 หรืออัปเกรดเป็น <span className="font-black text-white">VIP TABLE</span> <EarlyBirdPrice list={VIP_TABLE_PRICE} now={vipTablePrice(earlyBird)} /> บาท/โต๊ะ (6 ที่นั่ง)
               </p>
               <p className="mx-auto mt-4 max-w-2xl text-center text-xs font-medium text-white/80 sm:text-sm">
-                ภาพบรรยากาศเป็นภาพประกอบ ชื่อศิลปินวงปิดจะประกาศอีกครั้งผ่านช่องทางทางการของงาน
+                ภาพบรรยากาศเป็นภาพประกอบ รายชื่อศิลปินและเวลาอาจมีการเปลี่ยนแปลง ติดตามประกาศทางการของงาน
               </p>
             </div>
           </div>
