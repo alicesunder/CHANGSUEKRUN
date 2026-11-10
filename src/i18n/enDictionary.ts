@@ -6,6 +6,9 @@
 
 /** Exact text (after trimming) -> English. */
 export const EN_EXACT: Record<string, string> = {
+  [`หมายเหตุ : แพ็กเกจเริ่มต้น 10 นัด สามารถซื้อกระสุนเพิ่มเติมได้ ณ สนามยิงปืน`]: `Note: the starter package is 10 rounds; extra ammunition can be bought at the shooting range`,
+  [`โดย รพ.สัตว์ทองหล่อ พาน้องหมามาตรวจเช็กความพร้อมก่อนวิ่ง ไม่ต้องเสียค่าใช้จ่ายเพิ่ม`]: `By Thonglor Pet Hospital · bring your dog for a pre-run check at no extra cost`,
+  [`ทีมสัตวแพทย์ตรวจสุขภาพน้องหมาให้ ไม่มีค่าใช้จ่าย`]: `The vet team checks your dog at no charge`,
   [`มินตรา`]: `Mintra`,
   [`ครูเต้ย อภิวัฒน์`]: `Kru Toey Apiwat`,
   [`บอล เชิญยิ้ม & Joker Family`]: `Ball Cherngyim & Joker Family`,

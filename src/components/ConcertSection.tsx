@@ -46,7 +46,7 @@ export const ConcertSection: React.FC = () => {
           <div className="px-3 pb-6 sm:px-6 sm:pb-8">
             {/* ---------- this year's line-up ---------- */}
             <div className="relative -mt-3 overflow-hidden rounded-[26px] border-2 border-[#FFC928] bg-[#1B0B3A] shadow-[0_0_0_4px_rgba(255,201,40,0.18),0_0_40px_-4px_rgba(255,201,40,0.4),0_24px_60px_-18px_rgba(168,85,247,0.55)]">
-              <img src="/images/concert/lineup-bg-v1.webp" alt="" aria-hidden="true" decoding="async" className="absolute inset-0 h-full w-full object-cover object-[center_35%]" />
+              <img src="/images/concert/concert-real-v2.webp" alt="" aria-hidden="true" decoding="async" className="absolute inset-0 h-full w-full object-cover object-[center_20%]" />
               {/* stage with the group */}
               <div className="relative overflow-hidden">
                 

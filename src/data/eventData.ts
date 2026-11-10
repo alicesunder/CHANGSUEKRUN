@@ -701,7 +701,7 @@ export const scheduleData: ScheduleDay[] = [
         id: 's-6b',
         day: 'race_day',
         time: '09.00–14.00 น.',
-        title: 'ตรวจสุขภาพสุนัข',
+        title: 'ตรวจสุขภาพสุนัข (ไม่มีค่าใช้จ่าย)',
         description: 'โดย รพ.สัตว์ทองหล่อ สำหรับผู้สมัครวิ่ง Dog Run ทั้ง 2 ระยะ (1K / 4K)',
         iconName: 'Stethoscope',
         highlight: true,
@@ -1276,10 +1276,10 @@ export const isDogCategory = (id: RouteId) => ticketById(id).group === 'dog';
 export const formatBaht = (n: number) => `${n.toLocaleString('th-TH')}`;
 
 /** Concert-only pass (no run): entry to the evening concert; add-on activities can be bought on top. */
-export const CONCERT_PASS_PRICE = 890;
+export const CONCERT_PASS_PRICE = 490;
 
 /** VIP table at the concert: one price per table of 6 seats (10% off with a run ticket, same as GA). */
-export const VIP_TABLE_PRICE = 13990;
+export const VIP_TABLE_PRICE = 8990;
 export const VIP_TABLE_SEATS = 6;
 export const MAX_VIP_TABLES = 3;
 export const VIP_TABLE_PERKS = [

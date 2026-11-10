@@ -19,16 +19,16 @@ export const TICKET_CARD_IMAGES: Record<
   }
 > = {
   '5km': {
-    src: '/images/distances/card-5k-editorial.jpg',
-    objectPosition: '82% center',
+    src: '/images/distances/card-5k-photo-v2.jpg',
+    objectPosition: '50% 55%',
     alt: 'บัตรวิ่ง 5 km บุคคลทั่วไป - นักวิ่งชายหญิงวิ่งรับแสงเช้าเลียบชายหาดพร้อมช้างศึก',
     sceneTag: 'SUNRISE COASTAL RUN',
     terrainBadge: 'ทางเรียบเลียบหาด & รอบค่าย',
     skyGrad: 'linear-gradient(135deg, #FFF3B0 0%, #FFD55A 55%, #FFAE34 100%)',
   },
   '10km': {
-    src: '/images/distances/card-10k-editorial.jpg',
-    objectPosition: '85% center',
+    src: '/images/distances/card-10k-photo-v2.jpg',
+    objectPosition: '50% 45%',
     alt: 'บัตรวิ่ง 10 km มินิมาราธอน - นักวิ่งท้าทายเส้นทางถนนเลียบชายฝั่งและธรรมชาติเคียงข้างช้างศึก',
     sceneTag: 'COASTAL & MANGROVE TRAIL',
     terrainBadge: 'ถนนค่าย + สะพานไม้ป่าชายเลน',
@@ -230,10 +230,10 @@ export const RacePackCardVisual: React.FC<{
     return (
       <div className="relative w-full h-36 rounded-xl overflow-hidden bg-gradient-to-br from-[#3D106B] via-[#5B20A8] to-[#8C4AE2] border border-purple-200/80 mb-3 group-hover:shadow-md transition-all">
         <img loading="lazy" decoding="async"
-          src="/images/merch/jersey-front.jpg"
+          src="/images/merch/kit-jersey-v3.webp"
           alt="เสื้อวิ่ง CHANGSUEK Micro-Dry Sublimation"
           referrerPolicy="no-referrer"
-          className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
+          className="w-full h-full object-contain object-center bg-[#E9E2F8] group-hover:scale-105 transition-transform duration-500"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-[#25183B]/70 via-transparent to-transparent" />
         <span className="absolute bottom-2 left-2.5 text-[11px] font-bold text-white bg-[#5B20A8]/90 px-2.5 py-0.5 rounded-full border border-white/30">
@@ -247,10 +247,10 @@ export const RacePackCardVisual: React.FC<{
     return (
       <div className="relative w-full h-36 rounded-xl overflow-hidden bg-gradient-to-br from-[#4A2500] via-[#9E6B00] to-[#F5B800] border border-amber-200/80 mb-3 group-hover:shadow-md transition-all">
         <img loading="lazy" decoding="async"
-          src="/images/merch/medal-front.jpg"
+          src="/images/merch/kit-medal-v3.webp"
           alt="เหรียญที่ระลึก Finisher 3D Zinc Alloy"
           referrerPolicy="no-referrer"
-          className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
+          className="w-full h-full object-contain object-center bg-[#E9E2F8] group-hover:scale-105 transition-transform duration-500"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-[#25183B]/70 via-transparent to-transparent" />
         <span className="absolute bottom-2 left-2.5 text-[11px] font-bold text-[#25183B] bg-[#FFC928] px-2.5 py-0.5 rounded-full border border-white/50">

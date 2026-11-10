@@ -173,8 +173,8 @@ const ROUTE_THEME: Record<
 
 // Square icons cropped from the distance illustrations so each ticket shows its own runner(s)
 const TICKET_ICONS: Record<RouteId, { src: string; alt: string }> = {
-  '10km': { src: '/images/distances/icon-10k.webp', alt: 'นักวิ่ง 10 กม. บนถนนเลียบชายฝั่ง' },
-  '5km': { src: '/images/distances/icon-5k.webp', alt: 'นักวิ่ง 5 กม. คู่หนึ่งวิ่งริมหาด' },
+  '10km': { src: '/images/distances/icon-10k-v2.webp', alt: 'นักวิ่ง 10 กม. บนถนนเลียบชายฝั่ง' },
+  '5km': { src: '/images/distances/icon-5k-v2.webp', alt: 'นักวิ่ง 5 กม. คู่หนึ่งวิ่งริมหาด' },
   '3km': { src: '/images/distances/icon-3k.webp', alt: 'นักวิ่งกับน้องสุนัขระยะ 4 กม. ริมหาด' },
   '1km': { src: '/images/distances/icon-1k.webp', alt: 'น้องสุนัขวิ่งระยะ 1 กม.' },
 };

@@ -66,7 +66,7 @@ const BIG: MapDef = {
       label: 'หอดูนก · ป่าชายเลน',
       sub: 'อุทยานสิ่งแวดล้อมนานาชาติสิรินธร',
       color: '#16A34A',
-      sticker: { id: 'mangrove', src: '/images/map/sticker-mangrove.webp', x: 6, y: 280, w: 320, h: 320, rotate: -5 },
+      sticker: { id: 'mangrove', src: '/images/map/sticker-mangrove-v2.webp', x: 6, y: 290, w: 340, h: 235, rotate: -5 },
     },
     { id: 'palace', pin: [1040, 300], label: 'พระราชนิเวศน์มฤคทายวัน', labelAbove: true, color: '#B45309' },
     {
@@ -75,7 +75,7 @@ const BIG: MapDef = {
       label: 'Sea Sand Sun Hua Hin Resort',
       labelAbove: true,
       color: '#0284C7',
-      sticker: { id: 'resort', src: '/images/map/sticker-resort.webp', x: 1110, y: -95, w: 400, h: 267, rotate: 4 },
+      sticker: { id: 'resort', src: '/images/map/sticker-resort-v2.webp', x: 1110, y: -60, w: 400, h: 187, rotate: 4 },
     },
     {
       id: 'camp',
@@ -83,7 +83,7 @@ const BIG: MapDef = {
       label: 'ค่ายนเรศวร',
       sub: 'กองบัญชาการตำรวจตระเวนชายแดน',
       color: '#7C3AED',
-      sticker: { id: 'camp', src: '/images/map/sticker-bpp-school.webp', x: 1645, y: 628, w: 196, h: 199, rotate: -4 },
+      sticker: { id: 'camp', src: '/images/map/sticker-bpp-school-v2.webp', x: 1620, y: 630, w: 230, h: 207, rotate: -4 },
     },
     {
       id: 'statue',
@@ -91,7 +91,7 @@ const BIG: MapDef = {
       label: 'พระบรมราชานุสาวรีย์',
       sub: 'สมเด็จพระนเรศวรมหาราช',
       color: '#D97706',
-      sticker: { id: 'statue', src: '/images/map/sticker-statue.webp', x: 2470, y: 480, w: 330, h: 330, rotate: -4 },
+      sticker: { id: 'statue', src: '/images/map/sticker-statue-v2.webp', x: 2470, y: 500, w: 330, h: 269, rotate: -4 },
     },
   ],
   routes: {
@@ -128,7 +128,7 @@ const CAMP: MapDef = {
       label: 'Sea Sand Sun Resort',
       labelAt: [58, 470],
       color: '#0284C7',
-      sticker: { id: 'resort', src: '/images/map/sticker-resort.webp', x: 330, y: -70, w: 420, h: 280, rotate: 4 },
+      sticker: { id: 'resort', src: '/images/map/sticker-resort-v2.webp', x: 330, y: -40, w: 420, h: 197, rotate: 4 },
     },
     {
       id: 'camp',
@@ -142,7 +142,7 @@ const CAMP: MapDef = {
       anchor: 'middle',
       fs: 44,
       color: '#7C3AED',
-      sticker: { id: 'camp', src: '/images/map/sticker-bpp-school.webp', x: 560, y: 930, w: 240, h: 243, rotate: -4 },
+      sticker: { id: 'camp', src: '/images/map/sticker-bpp-school-v2.webp', x: 550, y: 930, w: 270, h: 243, rotate: -4 },
     },
     {
       id: 'statue',
@@ -153,7 +153,7 @@ const CAMP: MapDef = {
       anchor: 'end',
       fs: 32,
       color: '#D97706',
-      sticker: { id: 'statue', src: '/images/map/sticker-statue.webp', x: 1236, y: 1236, w: 230, h: 230, rotate: -4 },
+      sticker: { id: 'statue', src: '/images/map/sticker-statue-v2.webp', x: 1226, y: 1236, w: 250, h: 204, rotate: -4 },
     },
   ],
   routes: {

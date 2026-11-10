@@ -274,16 +274,26 @@ const RunTicket: React.FC<{ id: RouteId; on: boolean; onPick: () => void }> = ({
       </div>
 
       <div className="flex-1 px-4 pt-3">
-        <div className={`grid grid-cols-2 divide-x rounded-xl py-2.5 ${on ? 'divide-white/15 bg-white/10' : 'divide-[#EDE7F6] bg-gradient-to-b from-[#F6F1FD] to-[#FFF8E1]'}`}>
-          {perks(isDog).slice(0, 2).map(({ title }, i) => (
+        <div className={`grid ${isDog ? 'grid-cols-3' : 'grid-cols-2'} divide-x rounded-xl py-2.5 ${on ? 'divide-white/15 bg-white/10' : 'divide-[#EDE7F6] bg-gradient-to-b from-[#F6F1FD] to-[#FFF8E1]'}`}>
+          {(isDog
+            ? [
+                { title: 'เสื้อวิ่ง', src: '/images/shop/shirt-v3.webp' },
+                { title: 'ผ้าพันคอน้อง', src: '/images/shop/bandana-v3.webp' },
+                { title: 'เหรียญ Finisher', src: '/images/shop/medal-v3.webp' },
+              ]
+            : [
+                { title: 'เสื้อวิ่ง Micro-Dry', src: '/images/shop/shirt-v3.webp' },
+                { title: 'เหรียญ Finisher', src: '/images/shop/medal-v3.webp' },
+              ]
+          ).map(({ title, src }, i) => (
             <div key={title} className="flex flex-col items-center gap-1 px-1.5 text-center">
               <motion.img
-                src={i === 0 ? '/images/shop/shirt-real.webp' : '/images/shop/medal-real-v2.webp'}
+                src={src}
                 alt=""
                 loading="lazy"
-                animate={on ? { y: [0, -16, 0], rotate: [0, i ? 14 : -14, 0], scale: [1, 1.35, 1.12] } : { y: 0, rotate: 0, scale: 1 }}
+                animate={on ? { y: [0, -16, 0], rotate: [0, i % 2 ? 14 : -14, 0], scale: [1, 1.35, 1.12] } : { y: 0, rotate: 0, scale: 1 }}
                 transition={{ duration: 0.7, delay: 0.12 + i * 0.1, type: 'spring', stiffness: 260, damping: 11 }}
-                className={`h-14 w-14 object-contain ${on ? "rounded-xl bg-white" : "mix-blend-multiply"}`}
+                className={`h-16 w-16 object-contain drop-shadow-[0_4px_5px_rgba(42,20,80,0.3)] ${on ? 'rounded-xl bg-white/90 p-1' : ''}`}
               />
               <span className={`text-[11px] font-extrabold leading-tight ${on ? 'text-white' : 'text-[#281A3B]'}`}>{title}</span>
             </div>
@@ -777,6 +787,7 @@ export const TicketShop: React.FC<TicketShopProps> = ({
                         <p className="font-semibold text-[#4B2D78] leading-relaxed">{SHORT_GUNS.join(' · ')}</p>
                         <p className="font-extrabold text-[#0369A1] mt-2 mb-1">ปืนยาว + กระสุน 10 นัด ({formatBaht(LONG_GUN_PRICE)} บาท · เลือก 1 กระบอก)</p>
                         <p className="font-semibold text-[#4B2D78] leading-relaxed">{LONG_GUNS.join(' · ')}</p>
+                        <p className="mt-2 rounded-xl bg-[#FFF7DB] border border-[#FFC928]/60 px-2.5 py-1.5 text-xs font-extrabold text-[#7A4B00]">หมายเหตุ : แพ็กเกจเริ่มต้น 10 นัด สามารถซื้อกระสุนเพิ่มเติมได้ ณ สนามยิงปืน</p>
                       </div>
                     </div>
                   </details>

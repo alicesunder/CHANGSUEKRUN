@@ -48,7 +48,7 @@ export const RouteAndScheduleSection: React.FC<RouteAndScheduleProps> = ({
   const shortTitle: Record<string, [string, string]> = {
     'race-kit': ['รับอุปกรณ์ Race Kit (BIB · เสื้อ)', 'Race Kit pick-up (BIB · shirt)'],
     'dog-contest': ['การแข่งขันประกวดน้องสุนัข', 'Dog contests'],
-    'dog-health-check': ['ตรวจสุขภาพสุนัข', 'Dog health check'],
+    'dog-health-check': ['ตรวจสุขภาพสุนัข (ไม่มีค่าใช้จ่าย)', 'Dog health check (no charge)'],
     'dog-awards': ['พิธีมอบรางวัลการประกวดน้องสุนัข', 'Dog contest awards'],
     'start-10k': ['ปล่อยตัวนักวิ่ง 10 กิโลเมตร', '10 km start'],
     'start-5k': ['ปล่อยตัว 5 กิโลเมตร', '5 km start'],
@@ -90,7 +90,7 @@ export const RouteAndScheduleSection: React.FC<RouteAndScheduleProps> = ({
     {
       id: 'dog-health-check',
       time: '09.00–14.00 น.',
-      title: 'ตรวจสุขภาพสุนัข',
+      title: 'ตรวจสุขภาพสุนัข (ไม่มีค่าใช้จ่าย)',
       desc: 'โดย รพ.สัตว์ทองหล่อ • สำหรับผู้สมัครวิ่ง Dog Run ทั้ง 2 ระยะ (1K / 4K)',
       badge: 'FREE VET CHECK',
       iconBg: '#D1FAE5',

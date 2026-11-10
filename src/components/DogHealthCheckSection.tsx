@@ -1,18 +1,23 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { CalendarDays, ChevronRight, Clock, MapPin, PawPrint, Stethoscope, Ticket, Users } from 'lucide-react';
+import { CalendarDays, ChevronRight, Clock, MapPin, PawPrint, Stethoscope, Tag, Ticket, Users } from 'lucide-react';
 
-/** The three facts people look for first, as big tiles. */
+/** The three facts people look for first, as big colourful tiles (the cost one is the star). */
 const FACTS = [
-  { icon: CalendarDays, label: 'วัน', big: 'เสาร์ 9 ม.ค.', small: '2570', free: false },
-  { icon: Clock, label: 'เวลา', big: '09.00–14.00 น.', small: '', free: false },
-  { icon: MapPin, label: 'สถานที่', big: 'ค่ายนเรศวร', small: 'ชะอำ-หัวหิน', free: false },
-];
+  { icon: CalendarDays, label: 'วัน', big: 'เสาร์ 9 ม.ค.', small: '2570', tone: 'violet' },
+  { icon: Clock, label: 'เวลา', big: '09.00–14.00 น.', small: '', tone: 'gold' },
+  { icon: Tag, label: 'ค่าใช้จ่าย', big: 'ไม่มีค่าใช้จ่าย', small: 'โดย รพ.สัตว์ทองหล่อ', tone: 'green' },
+] as const;
+const TONE = {
+  violet: { card: 'from-white to-[#EFE5FF] border-[#C9B4EE]', icon: 'from-[#F1EAFD] to-[#DDD0F7] text-[#6D28D9]', big: 'text-[#2A1450]' },
+  gold: { card: 'from-white to-[#FFF3C4] border-[#F2D27A]', icon: 'from-[#FFF3C4] to-[#FFE08A] text-[#92400E]', big: 'text-[#2A1450]' },
+  green: { card: 'from-white to-[#D1FAE5] border-[#6EE7B7]', icon: 'from-[#D1FAE5] to-[#6EE7B7] text-[#047857]', big: 'text-[#047857]' },
+} as const;
 
 const STEPS = [
   { n: 1, icon: Ticket, text: 'ซื้อบัตร Dog Run (1K หรือ 4K)' },
   { n: 2, icon: PawPrint, text: 'พาน้องหมามาที่จุดตรวจสุขภาพ ระหว่าง 09.00–14.00 น.' },
-  { n: 3, icon: Stethoscope, text: 'ทีมสัตวแพทย์ตรวจสุขภาพน้องหมาให้' },
+  { n: 3, icon: Stethoscope, text: 'ทีมสัตวแพทย์ตรวจสุขภาพน้องหมาให้ ไม่มีค่าใช้จ่าย' },
 ];
 
 /** Vet check by Thonglor Pet Hospital for the Dog Run (1K / 4K) runners, 09.00–14.00 on run day. */
@@ -41,11 +46,11 @@ export const DogHealthCheckSection: React.FC = () => (
             <div className="relative mt-1.5 inline-flex items-center">
               <PawPrint aria-hidden="true" className="mr-2 h-8 w-8 shrink-0 -rotate-12 text-[#FFC928] drop-shadow sm:h-11 sm:w-11" />
               <span className="inline-block -skew-x-6 rounded-xl bg-gradient-to-r from-[#FFC928] via-[#FFE268] to-[#FFC928] px-5 py-1 shadow-[0_10px_22px_-8px_rgba(255,179,0,0.95)] sm:px-8 sm:py-1.5">
-                <span className="block skew-x-6 font-hero text-3xl font-bold text-[#2A1450] sm:text-5xl lg:text-6xl">โดย รพ.สัตว์ทองหล่อ</span>
+                <span className="block skew-x-6 font-hero text-3xl font-bold text-[#2A1450] sm:text-5xl lg:text-6xl">ไม่มีค่าใช้จ่าย</span>
               </span>
             </div>
             <p className="mt-4 max-w-lg text-sm font-semibold leading-relaxed text-white sm:text-lg">
-              พาน้องหมามาให้คุณหมอตรวจเช็กความพร้อมก่อนวิ่ง
+              โดย รพ.สัตว์ทองหล่อ พาน้องหมามาตรวจเช็กความพร้อมก่อนวิ่ง ไม่ต้องเสียค่าใช้จ่ายเพิ่ม
             </p>
           </div>
 
@@ -73,14 +78,14 @@ export const DogHealthCheckSection: React.FC = () => (
           {FACTS.map((f) => (
             <li
               key={f.label}
-              className={`ds-card flex flex-col items-center gap-1 p-2.5 text-center sm:flex-row sm:gap-5 sm:p-5 sm:text-left ${f.free ? 'bg-gradient-to-r from-white to-[#E6FBF1]' : 'bg-gradient-to-r from-white to-[#F6F1FD]'}`}
+              className={`ds-card flex flex-col items-center gap-1 p-2.5 text-center sm:flex-row sm:gap-5 sm:p-5 sm:text-left bg-gradient-to-r border-2 ${TONE[f.tone].card}`}
             >
-              <span className={`flex h-10 w-10 sm:h-[72px] sm:w-[72px] shrink-0 items-center justify-center rounded-full shadow-inner ${f.free ? 'bg-gradient-to-b from-[#D1FAE5] to-[#A7F3D0] text-[#047857]' : 'bg-gradient-to-b from-[#F1EAFD] to-[#DDD0F7] text-[#6D28D9]'}`} aria-hidden="true">
+              <span className={`flex h-10 w-10 sm:h-[72px] sm:w-[72px] shrink-0 items-center justify-center rounded-full shadow-inner bg-gradient-to-b ${TONE[f.tone].icon}`} aria-hidden="true">
                 <f.icon className="h-5 w-5 sm:h-9 sm:w-9" />
               </span>
               <span className="min-w-0">
                 <span className="block text-[11px] sm:text-lg font-extrabold text-[#2A1450]">{f.label}</span>
-                <span className={`block text-[14px] sm:text-[2rem] font-black leading-tight ${f.free ? 'text-[#047857]' : 'text-[#2A1450]'}`}>{f.big}</span>
+                <span className={`block text-[14px] sm:text-[2rem] font-black leading-tight ${TONE[f.tone].big}`}>{f.big}</span>
                 {f.small && <span className="block text-[11px] sm:text-lg font-bold text-[#4B2D78]">{f.small}</span>}
               </span>
             </li>

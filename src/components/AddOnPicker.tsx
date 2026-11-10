@@ -313,6 +313,7 @@ export const AddOnPicker: React.FC<AddOnPickerProps> = ({ value, onChange, windT
                 );
               })}
             </div>
+            <p className="rounded-xl bg-[#FFF7DB] border border-[#FFC928]/60 px-2.5 py-1.5 text-[11.5px] font-extrabold leading-snug text-[#7A4B00]">{tr('หมายเหตุ : แพ็กเกจเริ่มต้น 10 นัด สามารถซื้อกระสุนเพิ่มเติมได้ ณ สนามยิงปืน', 'Note: the starter package is 10 rounds; extra ammunition can be bought at the shooting range')}</p>
             <p className="text-xs font-extrabold text-[#6B5A85]">{gunOn ? tr('แตะที่เลือกอีกครั้งเพื่อยกเลิก', 'Tap the selected option again to remove it') : tr('เลือกปืนสั้นหรือปืนยาว · ราคาต่อคน (บาท)', 'Choose short or long gun · price per person (THB)')}</p>
           </Card>
           <PinLink id="gun" />

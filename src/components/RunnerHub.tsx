@@ -649,7 +649,7 @@ export const RunnerHub: React.FC<{
               ))}
             </dl>
             <p className="mt-2 rounded-xl bg-[#E6FBF1] px-3 py-2 text-xs font-bold text-[#047857]">
-              🩺 {t('ตรวจสุขภาพสุนัข วันงาน 9 ม.ค. 09.00–14.00 น. โดยรพ.สัตว์ทองหล่อ (สำหรับผู้สมัคร Dog Run 1K / 4K)', 'Dog health check on race day, 9 Jan, 09:00–14:00 by Thonglor Pet Hospital (Dog Run 1K / 4K runners)')}
+              🩺 {t('ตรวจสุขภาพสุนัข (ไม่มีค่าใช้จ่าย) วันงาน 9 ม.ค. 09.00–14.00 น. โดยรพ.สัตว์ทองหล่อ (สำหรับผู้สมัคร Dog Run 1K / 4K)', 'Dog health check on race day, 9 Jan, 09:00–14:00 by Thonglor Pet Hospital (Dog Run 1K / 4K runners)')}
             </p>
           </Box>
         );
@@ -667,7 +667,7 @@ export const RunnerHub: React.FC<{
   // ============================ event guide ============================
   const timeline: { time: string; th: string; en: string; hot?: boolean }[] = [
     { time: '09.00', th: 'เปิดรับ Race Kit (BIB · เสื้อ · ชิป) และงาน Expo', en: 'Race Kit pick-up (BIB · shirt · chip) and Expo open' },
-    { time: '09.00–14.00', th: 'จุดตรวจสุขภาพสุนัข สำหรับ Dog Run 1K / 4K', en: 'Dog health check for Dog Run 1K / 4K' },
+    { time: '09.00–14.00', th: 'จุดตรวจสุขภาพสุนัข (ไม่มีค่าใช้จ่าย) สำหรับ Dog Run 1K / 4K', en: 'Dog health check (no charge) for Dog Run 1K / 4K' },
     { time: '16.30', th: 'ปล่อยตัว 10K Runner', en: '10K Runner start', hot: true },
     { time: '17.00', th: 'ปล่อยตัว 5K Runner', en: '5K Runner start', hot: true },
     { time: '17.15', th: 'ปล่อยตัว 4K Dog Run', en: '4K Dog Run start', hot: true },
