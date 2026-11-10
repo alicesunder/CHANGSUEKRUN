@@ -49,6 +49,9 @@ export interface VisitStats {
 }
 
 export type ServerOrder = TicketOrder & {
+  /** VAT 7% added on top of the discounted price (totalPrice includes it) */
+  subtotalPrice?: number;
+  vatAmount?: number;
   /** printable A4 documents (BIB, ticket, parking, insurance, waivers) once paid */
   documentsUrl?: string;
   ticketType?: 'RUN' | 'CONCERT' | 'ADDON';

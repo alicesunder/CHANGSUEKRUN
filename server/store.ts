@@ -35,6 +35,10 @@ export interface StoredOrder {
   /** number of concert passes (CONCERT orders only) */
   concertQty?: number;
   /** baht taken off the concert tickets by the run + concert bundle */
+  /** VAT 7% added on top: amount before VAT, the VAT itself and the rate (totalPrice = subtotalPrice + vatAmount) */
+  subtotalPrice?: number;
+  vatAmount?: number;
+  vatRate?: number;
   /** baht taken off the run ticket by the basket discount, and the rate (0.1 / 0.15 / 0.2) */
   runDiscount?: number;
   discountRate?: number;

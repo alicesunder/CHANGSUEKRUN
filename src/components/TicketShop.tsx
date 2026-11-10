@@ -215,7 +215,7 @@ const TIER: Record<RouteId, { from: string; to: string; ink: string; soft: strin
 };
 
 /** One run ticket: one calm card style; when picked the whole card turns royal purple with gold. */
-const RunTicket: React.FC<{ id: RouteId; on: boolean; onPick: () => void }> = ({ id, on, onPick }) => {
+const RunTicket: React.FC<{ id: RouteId; on: boolean; onPick: () => void; extra?: number; onAddExtra?: () => void; onRemoveExtra?: () => void }> = ({ id, on, onPick, extra = 0, onAddExtra, onRemoveExtra }) => {
   const earlyBird = useEarlyBird();
   const { t: tr } = useLang();
   const t = ticketById(id);
@@ -302,8 +302,20 @@ const RunTicket: React.FC<{ id: RouteId; on: boolean; onPick: () => void }> = ({
         <div className={`mt-2 flex items-center justify-between gap-2 rounded-xl border border-dashed px-3 py-1.5 text-xs font-extrabold ${on ? 'border-white/35 bg-white/10 text-white' : 'border-[#D9C9EF] bg-[#FFFCF7] text-[#4B2D78]'}`}>
           {isDog ? (
             <>
-              <span>เพิ่มผู้ร่วมวิ่ง</span>
-              <span className={`tabular-nums ${on ? 'text-[#FFE268]' : 'text-[#4B1FA8]'}`}>+{t.addPersonPrice}฿/คน</span>
+              <span>{extra > 0 ? `✓ มีคนที่ 2 (+${t.addPersonPrice}฿)` : 'ไปวิ่งกันหลายคน?'}</span>
+              {extra > 0 ? (
+                <button type="button" onClick={onRemoveExtra} className="min-h-[34px] cursor-pointer rounded-full border-2 border-white/60 bg-white/15 px-3 py-1 text-xs font-black text-inherit">− เอาออก</button>
+              ) : (
+                <motion.button
+                  type="button"
+                  onClick={onAddExtra}
+                  animate={{ boxShadow: ['0 0 0 0 rgba(255,201,40,0.65)', '0 0 0 9px rgba(255,201,40,0)'] }}
+                  transition={{ duration: 1.5, repeat: Infinity }}
+                  className="min-h-[36px] cursor-pointer rounded-full border-2 border-[#2A1450] bg-gradient-to-b from-[#FFE268] to-[#FFC928] px-3 py-1 text-xs font-black text-[#2A1450]"
+                >
+                  + เพิ่มคนที่ 2 <span className="tabular-nums">(+{t.addPersonPrice}฿)</span>
+                </motion.button>
+              )}
             </>
           ) : id === '10km' ? (
             <>
@@ -414,6 +426,9 @@ interface TicketShopProps {
   onConcertQtyChange: (n: number) => void;
   vipTables: number;
   onVipTablesChange: (n: number) => void;
+  /** extra runners on a Dog Run ticket (the 2nd person…) */
+  extraPeople: number;
+  onExtraPeopleChange: (n: number) => void;
   addOns: AddOnSelection;
   onAddOnsChange: (s: AddOnSelection) => void;
   /** Opens the form with everything chosen here */
@@ -431,6 +446,8 @@ export const TicketShop: React.FC<TicketShopProps> = ({
   onConcertQtyChange,
   vipTables,
   onVipTablesChange,
+  extraPeople,
+  onExtraPeopleChange,
   addOns,
   onAddOnsChange,
   onCheckout,
@@ -443,6 +460,13 @@ export const TicketShop: React.FC<TicketShopProps> = ({
   const [salesClosed, setSalesClosed] = useState(false);
   // "clear the basket" asks twice: the first tap arms it for a few seconds, the second one empties everything
   const [clearArmed, setClearArmed] = useState(false);
+  // the pop-up that tells the buyer the 2nd person can pick their own activities
+  const [extraTip, setExtraTip] = useState(false);
+  useEffect(() => {
+    if (!extraTip) return;
+    const id = window.setTimeout(() => setExtraTip(false), 10000);
+    return () => window.clearTimeout(id);
+  }, [extraTip]);
   useEffect(() => {
     if (!clearArmed) return;
     const id = window.setTimeout(() => setClearArmed(false), 4000);
@@ -468,13 +492,18 @@ export const TicketShop: React.FC<TicketShopProps> = ({
 
   const picked = hasAddOns(addOns);
   const eligible = !!run;
+  const dogRun = !!run && isDogCategory(run);
+  const extra = dogRun ? extraPeople : 0;
+  useEffect(() => {
+    if (!dogRun && extraPeople > 0) onExtraPeopleChange(0);
+  }, [dogRun, extraPeople, onExtraPeopleChange]);
   const hasConcert = concertQty > 0 || vipTables > 0;
   const activityCount = countActivities(addOns);
   const concertUnit = concertPassPrice(earlyBird);
   const vipUnit = vipTablePrice(earlyBird);
   // One basket discount: 2 items 10%, 3 items 15%, 4-5 items 20% (data/addOns.ts; the server charges the same)
   const basket = priceBasket({
-    runGross: run ? calcTicketTotal(run, 0, 0, earlyBird) : 0,
+    runGross: run ? calcTicketTotal(run, extra, 0, earlyBird) : 0,
     hasRun: eligible,
     gaUnit: concertUnit,
     gaQty: concertQty,
@@ -508,7 +537,7 @@ export const TicketShop: React.FC<TicketShopProps> = ({
   const lines: { key: string; emoji: string; tint: string; label: string; sub?: string; price: number; onRemove: () => void }[] = [];
   if (run) {
     const t = ticketById(run);
-    lines.push({ key: 'run', emoji: '🏃', tint: LOOK[run].accentSoft, label: `วิ่ง ${t.distanceLabel}`, sub: basket.runOff > 0 ? `${t.name} · ลด ${percentOf(rate)}% (−${formatBaht(basket.runOff)})` : t.name, price: runPrice, onRemove: () => onRunChange(null) });
+    lines.push({ key: 'run', emoji: '🏃', tint: LOOK[run].accentSoft, label: `วิ่ง ${t.distanceLabel}`, sub: `${t.name}${extra > 0 ? ` · วิ่ง ${1 + extra} คน` : ''}${basket.runOff > 0 ? ` · ลด ${percentOf(rate)}% (−${formatBaht(basket.runOff)})` : ''}`, price: runPrice, onRemove: () => onRunChange(null) });
   }
   if (concertQty > 0) {
     lines.push({ key: 'concert', emoji: '🎶', tint: '#FEF3C7', label: `คอนเสิร์ต GA × ${concertQty}`, sub: concertOff > 0 ? `ลด ${percentOf(rate)}% เหลือ ${formatBaht(concertUnit - concertUnitOff)} บาท/ใบ (−${formatBaht(concertOff)})` : `${formatBaht(concertUnit)} บาท/ใบ${earlyBird ? ` (Early Bird · ปกติ ${formatBaht(CONCERT_PASS_PRICE)})` : ''}`, price: concertPrice, onRemove: () => onConcertQtyChange(0) });
@@ -534,6 +563,7 @@ export const TicketShop: React.FC<TicketShopProps> = ({
     }
     setClearArmed(false);
     onRunChange(null);
+    onExtraPeopleChange(0);
     onConcertQtyChange(0);
     onVipTablesChange(0);
     onAddOnsChange({ ...EMPTY_ADD_ONS });
@@ -623,7 +653,22 @@ export const TicketShop: React.FC<TicketShopProps> = ({
                 className="flex gap-4 overflow-x-auto snap-x snap-mandatory -mx-3.5 px-3.5 pt-3 pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:px-0 sm:pt-2 sm:pb-1 sm:grid sm:grid-cols-2 lg:grid-cols-4 sm:overflow-visible"
               >
                 {RUN_ORDER.map((id) => (
-                  <RunTicket key={id} id={id} on={run === id} onPick={() => onRunChange(run === id ? null : id)} />
+                  <RunTicket
+                    key={id}
+                    id={id}
+                    on={run === id}
+                    onPick={() => onRunChange(run === id ? null : id)}
+                    extra={run === id ? extra : 0}
+                    onAddExtra={() => {
+                      if (run !== id) onRunChange(id);
+                      onExtraPeopleChange(1);
+                      setExtraTip(true);
+                    }}
+                    onRemoveExtra={() => {
+                      onExtraPeopleChange(0);
+                      setExtraTip(false);
+                    }}
+                  />
                 ))}
               </div>
               <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs font-bold text-[#6B5A85]">
@@ -759,7 +804,20 @@ export const TicketShop: React.FC<TicketShopProps> = ({
                         ? `🎉 ซื้อ ${items} อย่าง ลด ${percentOf(rate)}% แล้ว! ${nudge}`
                         : `เลือกเพิ่มอีกอย่าง ลดทันที ${percentOf(BASKET_TIERS[0].rate)}% ทั้งตะกร้า (3 อย่าง ${percentOf(BASKET_TIERS[1].rate)}% · 4–5 อย่าง ${percentOf(BASKET_TIERS[2].rate)}%) 🎁`}
                   </p>}
-                  <AddOnPicker value={addOns} onChange={onAddOnsChange} windTunnelRemaining={windRemaining} showResult={false} layout="grid" />
+                  {extra > 0 && (
+                    <div className="mb-3 flex items-center gap-3 rounded-2xl border-2 border-[#2A1450] bg-gradient-to-r from-[#FFE268] to-[#FFC928] px-3.5 py-2.5 shadow-[0_4px_0_#2A1450]">
+                      <span aria-hidden="true" className="text-2xl">👥</span>
+                      <p className="text-sm font-black leading-snug text-[#2A1450]">คนที่ 2 เลือกกิจกรรมแยกจากคนแรกได้! <span className="font-bold">แตะชื่อคนที่ 2 ด้านล่าง แล้วเลือกหอสูง · ยิงปืน · อุโมงค์ลม</span></p>
+                    </div>
+                  )}
+                  <AddOnPicker
+                    value={addOns}
+                    onChange={onAddOnsChange}
+                    windTunnelRemaining={windRemaining}
+                    showResult={false}
+                    layout="grid"
+                    runnerNames={extra > 0 ? Array.from({ length: 1 + extra }, (_, i) => `คนที่ ${i + 1}`) : undefined}
+                  />
                   <details className="group mt-3 rounded-2xl bg-[#FAF7FF] border-2 border-[var(--ink)]/10">
                     <summary className="list-none cursor-pointer flex items-center justify-between gap-3 px-4 py-2.5 min-h-[48px] text-sm font-extrabold text-[var(--ink)]">
                       <span>ราคากิจกรรม & รายชื่อปืนที่เลือกได้</span>
@@ -796,6 +854,34 @@ export const TicketShop: React.FC<TicketShopProps> = ({
             </div>
           </div>
 
+          {/* ---------- pop-up: the 2nd person can choose activities ---------- */}
+          <AnimatePresence>
+            {extraTip && (
+              <motion.div
+                role="status"
+                initial={{ opacity: 0, y: 40, scale: 0.9 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 30, scale: 0.95 }}
+                transition={{ type: 'spring', stiffness: 380, damping: 22 }}
+                className="fixed bottom-[96px] left-3 right-3 z-[60] mx-auto max-w-md overflow-hidden rounded-3xl border-[3px] border-[#FFC928] bg-gradient-to-br from-[#2A1450] via-[#4B1FA8] to-[#6D28D9] p-4 text-white shadow-[0_18px_40px_-10px_rgba(20,8,40,0.8)] lg:bottom-24"
+              >
+                <button type="button" aria-label="ปิด" onClick={() => setExtraTip(false)} className="absolute right-2 top-2 flex h-9 w-9 cursor-pointer items-center justify-center rounded-full bg-white/15 text-lg font-black">×</button>
+                <p className="pr-8 text-lg font-black leading-tight text-[#FFE268]">🎉 เพิ่มคนที่ 2 แล้ว!</p>
+                <p className="mt-1 text-sm font-bold leading-snug text-white/95">คนที่ 2 เลือกกิจกรรมของตัวเองได้ ไม่ต้องเหมือนคนแรก — <span className="text-[#FFE268]">หอสูง · ยิงปืน · อุโมงค์ลม</span></p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setExtraTip(false);
+                    document.getElementById('shop-addon')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  }}
+                  className="mt-3 inline-flex min-h-[44px] w-full cursor-pointer items-center justify-center gap-2 rounded-full border-2 border-[#2A1450] bg-gradient-to-b from-[#FFE268] to-[#FFC928] px-4 text-sm font-black text-[#2A1450] shadow-[0_4px_0_#2A1450]"
+                >
+                  เลือกกิจกรรมให้คนที่ 2 <ArrowRight className="h-4 w-4" />
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           {/* ---------- Basket: one sticky summary bar on every screen ---------- */}
           <AnimatePresence>
           {count > 0 && (
@@ -816,7 +902,7 @@ export const TicketShop: React.FC<TicketShopProps> = ({
                   {lines.length ? (<><span className="hidden min-[460px]:inline">{lines.map((l) => l.emoji).join(' ')} · </span>{count} {tr('อย่าง', 'item(s)')}</>) : tr('ตะกร้ายังว่าง', 'Basket is empty')}
                 </span>
                 <motion.span key={total} initial={{ scale: 1.15 }} animate={{ scale: 1 }} className="block origin-left whitespace-nowrap text-xl font-black text-[var(--ink)] tabular-nums leading-tight">
-                  {formatBaht(total)} <span className="text-xs font-bold">บาท</span>
+                  {formatBaht(total)} <span className="text-xs font-bold">บาท</span> <span className="text-[10px] font-bold text-[#6B5A85]">(ยังไม่รวม VAT 7%)</span>
                   {totalSaved > 0 && <span className="ml-2 align-middle inline-block whitespace-nowrap rounded-full bg-[#FFE268] border-2 border-[var(--ink)] px-2 py-0.5 text-[11px] font-black">ประหยัด {formatBaht(totalSaved)} 🎉</span>}
                 </motion.span>
               </span>

@@ -161,6 +161,11 @@ export const PaymentStep: React.FC<{
           </div>
           <CopyButton text={amount.toFixed(2)} label="ยอดเงิน" />
         </div>
+        {order.vatAmount ? (
+          <p className="mt-2 rounded-xl bg-[#F5F0FF] px-3 py-2 text-xs font-bold text-[#4B2D78]">
+            ยอดก่อนภาษี {baht(order.subtotalPrice ?? amount - order.vatAmount)} + VAT 7% {baht(order.vatAmount)} = {baht(amount)} บาท
+          </p>
+        ) : null}
       </div>
       )}
 

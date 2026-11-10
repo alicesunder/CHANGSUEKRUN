@@ -79,6 +79,7 @@ import {
   setEarlyBirdSchedule,
 } from './store';
 import { billerIdFromQr, isValidQrPayload } from '../src/utils/promptPay';
+import { VAT_RATE, vatOf } from '../src/data/vat';
 import { WIND_TUNNEL_LIMIT, addOnCounts, addOnLabel, hasAddOns, normalizeAddOns, priceBasket, waiverPeopleCount } from '../src/data/addOns';
 import { needsInsurance, parseInsurance, type InsuranceInfo } from '../src/data/insurance';
 import { parseShooting, type ShootingInfo } from '../src/data/shooting';
@@ -511,7 +512,10 @@ export function createApp(): express.Express {
     });
     const concertDiscount = basket.gaOff + basket.vipOff;
     const addOnSum = basket.addGross - basket.addOff;
-    const total = testMode ? 1 : basket.total;
+    // Prices are without VAT: VAT 7% is added on the amount after discounts (see src/data/vat.ts)
+    const subtotal = basket.total;
+    const vatAmount = testMode ? 0 : vatOf(subtotal);
+    const total = testMode ? 1 : subtotal + vatAmount;
     const token = crypto.randomBytes(24).toString('base64url');
     const now = new Date();
     const settings = await getSettings();
@@ -555,6 +559,7 @@ export function createApp(): express.Express {
       peopleCount: isAddonOnly ? addOns.people : isConcert ? concertQty + vipTables * VIP_TABLE_SEATS : isDog ? 1 + extraPeople : 1,
       dogCount: isDog ? 1 + extraDogs : 0,
       totalPrice: total,
+      ...(vatAmount > 0 ? { subtotalPrice: subtotal, vatAmount, vatRate: VAT_RATE } : {}),
       bibNumber: '',
       paymentMethod: sponsorCode ? 'SPONSOR_CODE' : 'PROMPTPAY_QR',
       sponsorCode: sponsorCode || undefined,

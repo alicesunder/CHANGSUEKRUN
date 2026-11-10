@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import { isDogCategory } from './data/eventData';
 import React, { Suspense, lazy, useEffect, useState } from 'react';
 import { Sparkles, X } from 'lucide-react';
 import { RouteId } from './types';
@@ -85,6 +86,7 @@ export default function App() {
   const [shopRun, setShopRun] = useState<RouteId | null>(null);
   const [shopConcertQty, setShopConcertQty] = useState(0);
   const [shopVipTables, setShopVipTables] = useState(0);
+  const [shopExtraPeople, setShopExtraPeople] = useState(0);
   const [registerConcertQty, setRegisterConcertQty] = useState(1);
   const [registerVipTables, setRegisterVipTables] = useState(0);
   const [comparisonModalOpen, setComparisonModalOpen] = useState(false);
@@ -262,7 +264,7 @@ export default function App() {
     setRegisterVipTables(shopVipTables);
     setRegisterTargetRoute(shopRun ?? selectedRoute);
     if (shopRun) setSelectedRoute(shopRun);
-    setRegisterExtras({ people: 0, dogs: 0 });
+    setRegisterExtras({ people: shopRun && isDogCategory(shopRun) ? shopExtraPeople : 0, dogs: 0 });
     setRegisterAddOns(addOnsPicked ? pageAddOns : undefined);
     setRegisterModalOpen(true);
   };
@@ -331,6 +333,8 @@ export default function App() {
               onConcertQtyChange={setShopConcertQty}
               vipTables={shopVipTables}
               onVipTablesChange={setShopVipTables}
+              extraPeople={shopExtraPeople}
+              onExtraPeopleChange={setShopExtraPeople}
               addOns={pageAddOns}
               onAddOnsChange={setPageAddOns}
               onCheckout={handleShopCheckout}
