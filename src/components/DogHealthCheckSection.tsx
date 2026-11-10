@@ -36,7 +36,7 @@ export const DogHealthCheckSection: React.FC = () => {
         {/* ---------- banner: dusk beach scene, text on the left, characters on the right ---------- */}
         <div className="relative overflow-hidden bg-gradient-to-b from-[#7C3AED] via-[#4B1FA8] to-[#2A1450] md:bg-none">
           <img
-            src="/images/contest/vet-scene.webp"
+            src="/images/contest/vet-scene-v2.webp"
             alt="สัตวแพทย์ใช้หูฟังตรวจน้องชิบะที่เต็นท์ริมชายหาดยามเย็น ผู้ช่วยในหมวกม่วงกอดน้องไว้ น้องโกลเด้นและน้องบีเกิ้ลนั่งรอตรวจ"
             decoding="async"
             className="fx-off fx-kenburns absolute inset-0 hidden h-full w-full object-cover object-[center_45%] md:block"
@@ -81,7 +81,7 @@ export const DogHealthCheckSection: React.FC = () => {
             >
               {/* phones: the scene sits only behind the characters, the text below stays on plain purple */}
               <span aria-hidden="true" className="pointer-events-none absolute inset-y-0 -inset-x-4 overflow-hidden sm:-inset-x-8 md:hidden">
-                <img src="/images/contest/vet-scene.webp" alt="" decoding="async" className="h-full w-full object-cover object-[78%_center] [mask-image:linear-gradient(to_bottom,black_78%,transparent)]" />
+                <img src="/images/contest/vet-scene-v2.webp" alt="" decoding="async" className="h-full w-full object-cover object-[78%_center] [mask-image:linear-gradient(to_bottom,black_78%,transparent)]" />
               </span>
               <span aria-hidden="true" className="block h-56 sm:h-72 md:h-[360px] lg:h-[420px]" />
             </motion.div>

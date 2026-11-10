@@ -35,7 +35,7 @@ export const TICKET_CARD_IMAGES: Record<
     skyGrad: 'linear-gradient(135deg, #E2CEFF 0%, #9F65EB 55%, #4A1C88 100%)',
   },
   '1km': {
-    src: '/images/hero/sunset-cinematic.webp',
+    src: '/images/hero/sunset-cinematic-v2.webp',
     objectPosition: '58% 45%',
     alt: 'บัตรวิ่ง 1 km Dog Run - ช้างศึกสีม่วง นักวิ่ง และน้องสุนัขวิ่งเล่นสนุกสนานริมชายหาด',
     sceneTag: 'BEACH PUPPY FUN RUN',
@@ -43,7 +43,7 @@ export const TICKET_CARD_IMAGES: Record<
     skyGrad: 'linear-gradient(135deg, #FFE0C2 0%, #FFB076 55%, #FF8442 100%)',
   },
   '3km': {
-    src: '/images/distances/card-3k-editorial.jpg',
+    src: '/images/distances/card-3k-editorial-v2.jpg',
     objectPosition: '85% 38%',
     alt: 'บัตรวิ่ง 4 km Dog Run - นักวิ่งและน้องสุนัขโกลเด้นวิ่งเคียงข้างกันบนเส้นทางเลียบหาดและทิวสน',
     sceneTag: 'SHADED PINE & BEACH LOOP',

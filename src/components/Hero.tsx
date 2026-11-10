@@ -29,7 +29,7 @@ interface HeroProps {
   onSelectDistance: (distance: RouteId) => void;
 }
 
-const BEACH = '/images/hero/sunset-cinematic.webp';
+const BEACH = '/images/hero/sunset-cinematic-v2.webp';
 
 const fadeMask: React.CSSProperties = {
   WebkitMaskImage:
@@ -161,7 +161,7 @@ export const Hero: React.FC<HeroProps> = ({
           <picture>
             <source media="(min-width: 640px) and (orientation: landscape)" srcSet={BEACH} />
             <motion.img
-              src="/images/hero/sunset-cinematic-mobile.webp"
+              src="/images/hero/sunset-cinematic-mobile-v2.webp"
               alt="ช้างศึกสีม่วง นักวิ่ง และน้องสุนัขโกลเด้น วิ่งเล่นน้ำริมหาดยามเย็น"
               className="absolute inset-0 w-full h-full object-cover object-[50%_56%] [@media(orientation:landscape)]:object-[62%_60%]"
               fetchPriority="high"

@@ -67,7 +67,7 @@ export const RunnerAwardsSection: React.FC = () => {
             <motion.span className={TAB} {...fx(reduce, { scale: 1.07 })}>Dog Run 4K &amp; 1K</motion.span>
             <div className="flex flex-col items-center">
               <div className="flex items-end justify-center">
-                <motion.img {...fx(reduce, { rotate: -4, y: -8, scale: 1.05 })} src="/images/awards/part-dog-v6.webp" alt="น้องหมาโกลเด้นใส่ผ้าพันคอ" loading="lazy" className="relative z-10 h-28 w-auto drop-shadow-[0_8px_10px_rgba(0,0,0,0.4)] sm:h-44" />
+                <motion.img {...fx(reduce, { rotate: -4, y: -8, scale: 1.05 })} src="/images/awards/part-dog-v7.webp" alt="น้องหมาโกลเด้นใส่ผ้าพันคอ" loading="lazy" className="relative z-10 h-28 w-auto drop-shadow-[0_8px_10px_rgba(0,0,0,0.4)] sm:h-44" />
                 <motion.img {...(reduce ? {} : { whileHover: { rotate: [0, -7, 7, -5, 3, 0], scale: 1.1, y: -6, transition: { duration: 0.6 } }, whileTap: { scale: 0.97 } })} src="/images/awards/part-gift-v6.webp" alt="กล่องของขวัญ" loading="lazy" className="-ml-5 h-24 w-auto drop-shadow-[0_8px_10px_rgba(0,0,0,0.4)] sm:-ml-9 sm:h-36" />
               </div>
               <motion.span {...fx(reduce, { rotate: 0, scale: 1.05 })} className="mt-2 block w-full max-w-[22rem] -rotate-2 sm:mt-3">
