@@ -1,98 +1,64 @@
 import React from 'react';
 import { motion } from 'motion/react';
 
-/** Overall prizes by Gun Time. Dog Run (4K / 1K) top 3 pairs get a product gift set. */
-const MONEY = [
-  { rank: 1, baht: 3000, ring: '#F5B800', leaf: '#D99A00', badge: '/images/awards/rank-1-v3.webp', ink: '#6B4400', img: '/images/awards/award-gold-v1.webp' },
-  { rank: 2, baht: 1500, ring: '#A9B2BF', leaf: '#8C97A6', badge: '/images/awards/rank-2-v3.webp', ink: '#3B4350', img: '/images/awards/award-silver-v1.webp' },
-  { rank: 3, baht: 1000, ring: '#CD8A4B', leaf: '#B2703A', badge: '/images/awards/rank-3-v3.webp', ink: '#5A2F10', img: '/images/awards/award-bronze-v1.webp' },
+/** Podium order (2nd, 1st, 3rd) with the trophy artwork. No prize money is shown (removed on purpose). */
+const PODIUM = [
+  { rank: 2, img: '/images/awards/award-silver-v4.webp', h: 'h-12 sm:h-16', trophy: 'h-20 sm:h-28', color: 'from-[#8C97A6] to-[#5B6577]' },
+  { rank: 1, img: '/images/awards/award-gold-v4.webp', h: 'h-[4.5rem] sm:h-24', trophy: 'h-24 sm:h-36', color: 'from-[#F5B800] to-[#B47A00]' },
+  { rank: 3, img: '/images/awards/award-bronze-v4.webp', h: 'h-9 sm:h-12', trophy: 'h-[4.5rem] sm:h-24', color: 'from-[#CD8A4B] to-[#8A4F22]' },
 ];
 
-const MONEY_CARDS = [
-  { id: '10k', title: 'วิ่ง 10 กม. (10K)' },
-  { id: '5k', title: 'วิ่ง 5 กม. (5K)' },
-];
+const PANEL = 'relative rounded-[26px] border-[3px] border-[#FFC928]/90 bg-gradient-to-b from-[#4B1FA8]/90 to-[#2A1450]/95 px-3 pb-4 pt-9 shadow-[0_10px_0_rgba(20,8,40,0.55),0_0_32px_-6px_rgba(255,201,40,0.45)] sm:px-5 sm:pb-5 sm:pt-11 backdrop-blur-[2px]';
+const TAB = 'absolute left-1/2 top-0 -translate-x-1/2 -translate-y-1/2 whitespace-nowrap rounded-full border-[3px] border-[#2A1450] bg-gradient-to-b from-[#FFE268] to-[#FFC928] px-5 py-1.5 text-lg font-black text-[#2A1450] shadow-[0_4px_0_rgba(20,8,40,0.6)] sm:px-8 sm:text-3xl';
+const FOOT = 'mt-3 flex items-center justify-center gap-2 rounded-full border-2 border-[#FFC928] bg-[#2A1450]/80 px-3 py-2 text-center text-sm font-black text-white sm:mt-4 sm:text-xl';
 
-const DOG_CARDS = [
-  { id: 'dog4', title: 'Dog Run 4K' },
-  { id: 'dog1', title: 'Dog Run 1K' },
-];
-
-const CARD = 'overflow-hidden rounded-[22px] border-[3px] border-[#FFC928] bg-white shadow-[0_8px_0_rgba(26,10,56,0.6),0_18px_30px_-12px_rgba(0,0,0,0.5)]';
-const HEAD = 'relative flex items-center gap-3 border-b-[3px] border-[#E0A100] bg-gradient-to-b from-[#FFE066] via-[#FFD233] to-[#FFC11A] px-4 py-3 sm:px-5';
-
-/** The runners' prize board (design by ChatGPT, built in HTML so the text stays sharp and editable). */
+/** The runners' prize board: trophies for 10K / 5K, a product gift set for Dog Run (designed with ChatGPT, built in HTML). */
 export const RunnerAwardsSection: React.FC = () => (
   <section id="runner-awards" aria-labelledby="runner-awards-heading" className="mt-10 sm:mt-14 scroll-mt-24">
     <div className="relative isolate overflow-hidden rounded-[30px] border-[3px] border-[#2A1450] bg-[#2A1450] shadow-[0_10px_0_#2A1450]">
       <img src="/images/awards/awards-bg-v1.webp" alt="" aria-hidden="true" decoding="async" loading="lazy" className="absolute inset-0 -z-10 h-full w-full object-cover" />
-      <span aria-hidden="true" className="absolute inset-0 -z-10 bg-gradient-to-b from-[#2A1450]/30 via-[#2A1450]/10 to-[#2A1450]/55" />
+      <span aria-hidden="true" className="absolute inset-0 -z-10 bg-gradient-to-b from-[#2A1450]/25 via-[#2A1450]/10 to-[#2A1450]/55" />
 
       <div className="px-3 pb-6 pt-5 sm:px-8 sm:pb-9 sm:pt-7">
-        <img src="/images/brand/changsuek-run-logo-v2.webp" alt="CHANGSUEK RUN 2027" className="mx-auto h-16 w-auto object-contain drop-shadow-[0_4px_10px_rgba(20,8,38,0.7)] sm:h-24" loading="lazy" />
+        <img src="/images/brand/changsuek-run-logo-v2.webp" alt="CHANGSUEK RUN 2027" className="mx-auto h-16 w-auto object-contain sm:h-24" loading="lazy" />
 
-        <div className="relative mx-auto mt-3 flex w-fit max-w-full items-center gap-2 rounded-full border-[3px] border-[#FFC928] bg-gradient-to-b from-[#3B1780] to-[#2A1450] py-2 pl-3 pr-5 shadow-[0_0_28px_-4px_rgba(255,201,40,0.75)] sm:gap-3 sm:py-3 sm:pl-5 sm:pr-8">
-          <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white sm:h-14 sm:w-14"><img src="/images/awards/award-gold-v1.webp" alt="" aria-hidden="true" className="h-8 w-auto mix-blend-multiply sm:h-11" /></span>
-          <h2 id="runner-awards-heading" className="font-hero text-xl font-bold leading-tight text-white sm:text-4xl">
-            รางวัลนักวิ่ง <span className="text-[#FFC928]">· OVERALL AWARD</span>
-          </h2>
-        </div>
+        <h2 id="runner-awards-heading" className="mt-2 text-center font-hero text-4xl font-bold leading-tight text-[#FFE268] drop-shadow-[0_4px_0_rgba(42,20,80,0.9)] sm:text-6xl">
+          <span aria-hidden="true" className="mr-2 text-[#FFC928]">❦</span>รางวัลนักวิ่ง<span aria-hidden="true" className="ml-2 inline-block -scale-x-100 text-[#FFC928]">❦</span>
+        </h2>
 
-        <motion.ul
-          data-reveal-stagger="pop"
-          className="relative mt-5 grid grid-cols-1 gap-4 sm:mt-7 sm:grid-cols-2 sm:gap-6"
-          initial={false}
-          aria-label="เงินรางวัลและรางวัลของนักวิ่ง"
-        >
-          {MONEY_CARDS.map((c) => (
-            <li key={c.id} className={CARD}>
-              <div className={HEAD}>
-                <img src="/images/awards/icon-runner-v3.webp" alt="" aria-hidden="true" className="h-12 w-12 shrink-0 drop-shadow-[0_3px_3px_rgba(80,50,0,0.35)] sm:h-16 sm:w-16" />
-                <div className="leading-tight">
-                  <p className="text-xl font-black text-[#2A1450] sm:text-[1.7rem]">{c.title}</p>
-                  <p className="text-xs font-extrabold text-[#5B3A00] sm:text-sm">รางวัลภาพรวม (Gun Time)</p>
+        <motion.div data-reveal-stagger="pop" className="relative mt-8 grid grid-cols-1 gap-9 sm:mt-10 sm:grid-cols-2 sm:gap-7" initial={false}>
+          {/* 10K & 5K: trophies on a podium */}
+          <div className={PANEL}>
+            <span className={TAB}>10K &amp; 5K</span>
+            <div className="flex items-end justify-center gap-1.5 sm:gap-3" role="img" aria-label="ถ้วยรางวัลอันดับ 1 2 3">
+              {PODIUM.map((p) => (
+                <div key={p.rank} className="flex flex-1 flex-col items-center">
+                  <img src={p.img} alt="" aria-hidden="true" loading="lazy" className={`${p.trophy} w-auto drop-shadow-[0_6px_8px_rgba(0,0,0,0.45)]`} />
+                  <div className={`${p.h} mt-1 flex w-full items-center justify-center rounded-t-xl border-2 border-b-0 border-white/25 bg-gradient-to-b ${p.color} font-hero text-3xl font-black text-white drop-shadow sm:text-5xl`}>{p.rank}</div>
                 </div>
-              </div>
-              <ul className="bg-gradient-to-b from-white to-[#F3ECFF]">
-                {MONEY.map((m) => (
-                  <li key={m.rank} className="grid grid-cols-[auto_auto_1fr] items-center gap-2 border-b border-[#E7DCFA] px-2.5 py-2 last:border-b-0 sm:gap-4 sm:px-5 sm:py-2.5">
-                    <span className="relative flex h-[68px] w-[78px] shrink-0 items-center justify-center sm:h-[78px] sm:w-[90px]">
-                      <img src={m.badge} alt="" aria-hidden="true" className="h-full w-auto drop-shadow-[0_3px_3px_rgba(60,30,0,0.3)]" loading="lazy" />
-                      <span className="sr-only">อันดับ {m.rank}</span>
-                    </span>
-                    <img src={m.img} alt="" aria-hidden="true" className="h-12 w-auto mix-blend-multiply sm:h-14" loading="lazy" />
-                    <span className="text-right leading-tight sm:text-left">
-                      <span className="block text-[11px] font-bold text-[#6B5A85] sm:text-sm">พร้อมเงินรางวัล</span>
-                      <span className="block text-xl font-black tabular-nums text-[#2A1450] sm:text-[1.7rem]">{m.baht.toLocaleString('th-TH')} บาท</span>
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </li>
-          ))}
+              ))}
+            </div>
+            <p className={FOOT}>รางวัลภาพรวม (Gun Time)</p>
+          </div>
 
-          {DOG_CARDS.map((c) => (
-            <li key={c.id} className={CARD}>
-              <div className={HEAD}>
-                <img src="/images/awards/icon-runner-dog-v3.webp" alt="" aria-hidden="true" className="h-12 w-12 shrink-0 drop-shadow-[0_3px_3px_rgba(80,50,0,0.35)] sm:h-16 sm:w-16" />
-                <div className="leading-tight">
-                  <p className="text-xl font-black text-[#2A1450] sm:text-[1.7rem]">{c.title}</p>
-                  <p className="text-xs font-extrabold text-[#5B3A00] sm:text-sm">รางวัล Top 3 คู่วิ่งกับน้องหมา (Gun Time)</p>
-                </div>
-              </div>
-              <div className="flex items-center justify-center gap-4 bg-gradient-to-b from-white to-[#F3ECFF] px-4 py-5 sm:gap-8 sm:py-7">
-                <span className="relative shrink-0">
-                  <span aria-hidden="true" className="absolute -inset-3 rounded-full bg-[radial-gradient(circle,rgba(255,201,40,0.55),transparent_65%)]" />
-                  <img src="/images/awards/award-gift-v1.webp" alt="" aria-hidden="true" className="relative h-24 w-auto mix-blend-multiply sm:h-32" loading="lazy" />
-                </span>
-                <span className="text-center leading-tight">
-                  <span className="inline-block rounded-full bg-gradient-to-b from-[#EFE5FF] to-[#DCCBFA] px-5 py-1 text-lg font-black text-[#4B1FA8] sm:text-2xl">อันดับ 1 – 3</span>
-                  <span className="mt-2 block text-xl font-black text-[#2A1450] sm:text-[1.7rem]">ชุดของรางวัลสินค้า</span>
-                </span>
-              </div>
-            </li>
-          ))}
-        </motion.ul>
+          {/* Dog Run: gift set of product */}
+          <div className={PANEL}>
+            <span className={TAB}>Dog Run 4K &amp; 1K</span>
+            <div className="flex items-center justify-center gap-3 sm:gap-5">
+              <span className="relative shrink-0">
+                <span aria-hidden="true" className="absolute -inset-4 rounded-full bg-[radial-gradient(circle,rgba(255,201,40,0.5),transparent_65%)]" />
+                <img src="/images/awards/award-gift-v4.webp" alt="" aria-hidden="true" loading="lazy" className="relative h-28 w-auto drop-shadow-[0_8px_10px_rgba(0,0,0,0.45)] sm:h-40" />
+              </span>
+              <span className="min-w-0 rounded-2xl border-2 border-[#FFC928] bg-gradient-to-b from-[#FFE268] to-[#FFC928] px-3 py-2 text-center leading-tight shadow-[0_4px_0_rgba(20,8,40,0.55)] sm:px-5 sm:py-3">
+                <span className="block text-lg font-black tracking-tight text-[#2A1450] sm:text-3xl">GIFT SET OF PRODUCT</span>
+                <span className="mt-1 block rounded-full bg-[#2A1450] px-3 py-1 text-sm font-black text-white sm:text-xl">ชุดผลิตภัณฑ์ของขวัญ</span>
+              </span>
+            </div>
+            <p className={FOOT}>
+              <img src="/images/awards/icon-runner-dog-v3.webp" alt="" aria-hidden="true" className="h-7 w-7 sm:h-9 sm:w-9" /> Top 3 คู่วิ่งกับน้องหมา
+            </p>
+          </div>
+        </motion.div>
       </div>
     </div>
   </section>

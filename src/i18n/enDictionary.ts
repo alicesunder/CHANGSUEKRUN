@@ -6,6 +6,15 @@
 
 /** Exact text (after trimming) -> English. */
 export const EN_EXACT: Record<string, string> = {
+  [`GIFT SET OF PRODUCT`]: `GIFT SET OF PRODUCT`,
+  [`ชุดผลิตภัณฑ์ของขวัญ`]: `Gift set of products`,
+  [`Top 3 คู่วิ่งกับน้องหมา`]: `Top 3 dog-and-runner pairs`,
+  [`รางวัลนักวิ่ง`]: `Runner awards`,
+  [`+ เพิ่มคนที่ 2`]: `+ Add 2nd runner`,
+  [`เลือกกิจกรรมให้คนที่ 2`]: `Pick activities for runner 2`,
+  [`ภาษีมูลค่าเพิ่ม (VAT 7%)`]: `VAT 7%`,
+  [`ยอดรวมก่อนภาษี (หลังหักส่วนลด)`]: `Subtotal before VAT (after discounts)`,
+  [`(ยังไม่รวม VAT 7%)`]: `(excl. 7% VAT)`,
   [`หมายเหตุ : แพ็กเกจเริ่มต้น 10 นัด สามารถซื้อกระสุนเพิ่มเติมได้ ณ สนามยิงปืน`]: `Note: the starter package is 10 rounds; extra ammunition can be bought at the shooting range`,
   [`โดย รพ.สัตว์ทองหล่อ พาน้องหมามาตรวจเช็กความพร้อมก่อนวิ่ง ไม่ต้องเสียค่าใช้จ่ายเพิ่ม`]: `By Thonglor Pet Hospital · bring your dog for a pre-run check at no extra cost`,
   [`ทีมสัตวแพทย์ตรวจสุขภาพน้องหมาให้ ไม่มีค่าใช้จ่าย`]: `The vet team checks your dog at no charge`,
