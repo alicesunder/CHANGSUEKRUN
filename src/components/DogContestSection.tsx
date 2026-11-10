@@ -254,10 +254,10 @@ export const DogContestSection: React.FC = () => {
             >
               <SelectBurst active={burst} count={30} spread={1.6} className="left-1/2 top-24" />
               {/* picture side: gold ribbon frame; the artwork fills the window */}
-              <div className="relative mx-auto w-full max-w-[470px] md:col-span-5">
-                <div className="relative aspect-[490/464]">
+              <div className="relative mx-auto w-full max-w-[520px] md:col-span-5">
+                <div className="relative aspect-[606/464]">
                   
-                  <div className="absolute left-[13%] right-[13%] top-[27%] bottom-[17%] z-10 flex items-end justify-center overflow-hidden rounded-[30%_30%_26%_26%/22%_22%_30%_30%] bg-[radial-gradient(ellipse_at_50%_40%,#FFFFFF_0%,#EFE6FF_55%,#D9C8F7_100%)]">
+                  <div className="absolute left-[14%] right-[14%] top-[31%] bottom-[20%] z-10 flex items-end justify-center overflow-hidden rounded-[30%_30%_26%_26%/22%_22%_30%_30%] bg-[radial-gradient(ellipse_at_50%_40%,#FFFFFF_0%,#EFE6FF_55%,#D9C8F7_100%)]">
                     {c.image ? (
                       <motion.img
                         src={c.image.src}
@@ -271,8 +271,8 @@ export const DogContestSection: React.FC = () => {
                       <div className="text-[96px]">🐕</div>
                     )}
                   </div>
-                  <span aria-hidden="true" className="fx-sweep" style={{ WebkitMaskImage: `url(${CT('ct-frame')})`, maskImage: `url(${CT('ct-frame')})` }} />
-                  <motion.img src={CT('ct-frame')} alt="" aria-hidden="true" loading="lazy" className="fx-off pointer-events-none select-none absolute inset-0 z-20 h-full w-full" {...fx({ scale: 1.02 })} />
+                  <span aria-hidden="true" className="fx-sweep" style={{ WebkitMaskImage: `url(${'/images/contest/ct-frame-v2.webp'})`, maskImage: `url(${'/images/contest/ct-frame-v2.webp'})` }} />
+                  <motion.img src={'/images/contest/ct-frame-v2.webp'} alt="" aria-hidden="true" loading="lazy" className="fx-off pointer-events-none select-none absolute inset-0 z-20 h-full w-full" {...fx({ scale: 1.02 })} />
                   {[['8%', '30%', '0s'], ['90%', '38%', '.8s'], ['14%', '76%', '1.5s'], ['86%', '80%', '.4s'], ['50%', '4%', '1.1s'], ['30%', '16%', '2.0s'], ['72%', '14%', '.2s']].map(([l, t, d]) => (
                     <i key={l + t} aria-hidden="true" className="fx-spark z-30" style={{ left: l, top: t, animationDelay: d }} />
                   ))}
