@@ -438,6 +438,24 @@ interface TicketShopProps {
   onShowMap?: () => void;
 }
 
+/** Lights, colour and music notes that switch on while a concert ticket (GA or VIP) is in the basket. */
+const NOTES = [['♪', '8%', '0s', '14px'], ['♫', '24%', '.9s', '-18px'], ['♬', '42%', '1.8s', '10px'], ['♪', '60%', '.4s', '-12px'], ['♫', '78%', '1.3s', '20px'], ['♬', '90%', '2.4s', '-10px']];
+const LiveStage: React.FC<{ active: boolean; vip?: boolean }> = ({ active, vip }) => (
+  <>
+    <SelectBurst active={active} count={34} spread={1.5} className="left-1/2 top-1/2" />
+    {active && (
+      <span aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden rounded-[inherit]">
+        <span className="fx-aurora" />
+        <span className="fx-stagebeam" style={{ left: '4%', background: 'linear-gradient(to bottom, rgba(255,226,104,.8), transparent 80%)' }} />
+        <span className="fx-stagebeam" style={{ right: '4%', background: `linear-gradient(to bottom, ${vip ? 'rgba(255,201,40,.8)' : 'rgba(34,211,238,.8)'}, transparent 80%)`, animationDelay: '-1.6s', animationDirection: 'alternate-reverse' }} />
+        {NOTES.map(([n, l, d, dx]) => (
+          <i key={l} className="fx-note not-italic" style={{ left: l, animationDelay: d, ['--dx' as string]: dx }}>{n}</i>
+        ))}
+      </span>
+    )}
+  </>
+);
+
 /** The ticket shop: run, concert and activities — any one, or any mix — with one basket. */
 export const TicketShop: React.FC<TicketShopProps> = ({
   run,
@@ -696,13 +714,14 @@ export const TicketShop: React.FC<TicketShopProps> = ({
               <span id="concert-pass" className="block h-0 scroll-mt-28" aria-hidden="true" />
               <div className="relative lg:grid lg:grid-cols-2 lg:gap-4">
               <DiscountCelebration active={rate > 0 && hasConcert} burstKey={`concert-${items}`} kicker={`ซื้อ ${items} อย่าง 🎁`} headline={`ลดทันที ${percentOf(rate)}%!!!`} discount={totalSaved} pieces={rate >= BASKET_MAX_RATE ? 110 : 60} />
-              <div className="relative overflow-hidden ds-frame-dark bg-gradient-to-br from-[#241047] via-[#341866] to-[#4A1F8F] text-white p-4 sm:p-5 lg:flex lg:flex-col">
+              <div className={`relative overflow-hidden ds-frame-dark bg-gradient-to-br from-[#241047] via-[#341866] to-[#4A1F8F] text-white p-4 sm:p-5 lg:flex lg:flex-col ${concertQty > 0 ? 'fx-live' : ''}`}>
+                <LiveStage active={concertQty > 0} />
                 <span aria-hidden="true" className="pointer-events-none absolute -top-14 -left-10 w-48 h-48 rounded-full bg-[#FFC928]/30 blur-3xl" />
                 <span aria-hidden="true" className="pointer-events-none absolute -bottom-16 -right-10 w-56 h-56 rounded-full bg-[#EC4899]/35 blur-3xl" />
                 <div className="relative flex flex-col sm:flex-row sm:items-center lg:flex-col lg:items-stretch lg:justify-between lg:flex-1 gap-4">
                   <div className="flex items-center gap-3 min-w-0 flex-1 lg:flex-none">
                     <span className="w-24 h-24 shrink-0 flex items-center justify-center">
-                      <img src="/images/shop/concert.webp" alt="" loading="lazy" className="h-full w-full object-contain drop-shadow-[0_8px_14px_rgba(0,0,0,0.45)]" />
+                      <img src="/images/shop/concert.webp" alt="" loading="lazy" className={`fx-off relative z-10 h-full w-full object-contain drop-shadow-[0_8px_14px_rgba(0,0,0,0.45)] ${concertQty > 0 ? 'fx-dance' : ''}`} />
                     </span>
                     <div className="min-w-0">
                       <p className="text-lg font-extrabold leading-tight">บัตร GA · คอนเสิร์ตริมหาด</p>
@@ -731,7 +750,8 @@ export const TicketShop: React.FC<TicketShopProps> = ({
               </div>
 
               {/* VIP table */}
-              <div className="relative mt-3 lg:mt-0 overflow-hidden ds-frame-dark bg-gradient-to-br from-[#1A0B33] via-[#2A1450] to-[#5B2A0E] text-white p-4 sm:p-5">
+              <div className={`relative mt-3 lg:mt-0 overflow-hidden ds-frame-dark bg-gradient-to-br from-[#1A0B33] via-[#2A1450] to-[#5B2A0E] text-white p-4 sm:p-5 ${vipTables > 0 ? 'fx-live' : ''}`}>
+                <LiveStage active={vipTables > 0} vip />
                 <span aria-hidden="true" className="pointer-events-none absolute -top-14 -right-10 w-48 h-48 rounded-full bg-[#FFC928]/25 blur-3xl" />
                 <div className="relative flex flex-col sm:flex-row sm:items-start lg:flex-col lg:items-stretch gap-4">
                   <div className="flex items-start gap-3 min-w-0 flex-1">

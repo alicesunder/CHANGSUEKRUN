@@ -114,3 +114,41 @@
   .fx-ecg { animation: none; stroke-dashoffset: 0; }
   .fx-nudge, .fx-ring, .fx-heart { animation: none; }
 }
+
+/* ---------- 5) concert ticket picked: the card turns into a little stage ---------- */
+.fx-live { animation: fxLive 2.2s ease-in-out infinite; }
+@keyframes fxLive {
+  0%, 100% { box-shadow: 0 0 0 3px rgba(255, 201, 40, .9), 0 0 28px 2px rgba(236, 72, 153, .65), 0 0 60px -6px rgba(124, 58, 237, .8); }
+  33% { box-shadow: 0 0 0 3px rgba(34, 211, 238, .9), 0 0 28px 2px rgba(34, 211, 238, .6), 0 0 60px -6px rgba(255, 201, 40, .7); }
+  66% { box-shadow: 0 0 0 3px rgba(192, 132, 252, .95), 0 0 28px 2px rgba(255, 201, 40, .65), 0 0 60px -6px rgba(236, 72, 153, .75); }
+}
+.fx-aurora {
+  position: absolute; inset: -40%; z-index: 0; pointer-events: none; opacity: .4;
+  background: conic-gradient(from 0deg, #ec4899, #ffc928, #22d3ee, #a855f7, #ec4899);
+  filter: blur(46px);
+  animation: fxSpin 9s linear infinite;
+}
+@keyframes fxSpin { to { rotate: 360deg; } }
+.fx-note {
+  position: absolute; bottom: -8%; z-index: 2; pointer-events: none; font-size: 22px; line-height: 1;
+  color: #ffe268; text-shadow: 0 0 10px rgba(255, 201, 40, .9);
+  animation: fxNote 3.6s ease-in infinite;
+}
+@keyframes fxNote {
+  0% { translate: 0 0; opacity: 0; rotate: -12deg; scale: .6; }
+  15% { opacity: 1; }
+  100% { translate: var(--dx, 20px) -260px; opacity: 0; rotate: 18deg; scale: 1.2; }
+}
+.fx-dance { animation: fxDance 1.1s ease-in-out infinite; transform-origin: 50% 90%; }
+@keyframes fxDance { 0%, 100% { rotate: -5deg; scale: 1; } 50% { rotate: 5deg; scale: 1.1; } }
+.fx-stagebeam {
+  position: absolute; top: -20%; z-index: 1; width: 40%; height: 150%; pointer-events: none; mix-blend-mode: screen;
+  clip-path: polygon(46% 0, 54% 0, 100% 100%, 0 100%); transform-origin: 50% 0; filter: blur(3px);
+  animation: fxBeamTop 3.2s ease-in-out infinite alternate;
+}
+@keyframes fxBeamTop { from { rotate: -26deg; opacity: .35; } to { rotate: 26deg; opacity: .85; } }
+@media (prefers-reduced-motion: reduce) {
+  .fx-live { animation: none; box-shadow: 0 0 0 3px rgba(255, 201, 40, .9), 0 0 28px 2px rgba(236, 72, 153, .5); }
+  .fx-aurora, .fx-note, .fx-dance, .fx-stagebeam { animation: none; }
+  .fx-note { display: none; }
+}
