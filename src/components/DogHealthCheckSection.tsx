@@ -111,22 +111,24 @@ export const DogHealthCheckSection: React.FC = () => (
             </div>
             <p className="relative mt-3 text-xs font-semibold text-[#4B2D78] sm:text-base">ผู้สมัครวิ่งทั้ง 2 ระยะนี้ พาน้องหมามาตรวจได้เลย</p>
           </div>
-          <div className="ds-card relative flex items-center gap-3 overflow-hidden p-3.5 sm:gap-5 sm:p-6 md:col-span-2">
+          <div className="ds-card relative flex flex-col overflow-hidden md:col-span-2">
+            {/* the picture sits in its own band above the text, so nothing overlaps */}
             <img
               src="/images/contest/vet-tent.webp"
-              alt=""
-              aria-hidden="true"
+              alt="จุดตรวจสุขภาพสุนัข เต็นท์ตรวจริมชายหาด"
               loading="lazy"
               decoding="async"
-              className="pointer-events-none absolute bottom-0 right-0 h-full w-auto max-w-[70%] object-cover object-left opacity-70 [mask-image:linear-gradient(to_left,black_35%,transparent)]"
+              className="h-28 w-full object-cover object-[center_60%] sm:h-36"
             />
-            <span className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-gradient-to-b from-[#F1EAFD] to-[#DDD0F7] text-[#6D28D9] sm:h-[72px] sm:w-[72px]" aria-hidden="true">
-              <MapPin className="h-7 w-7 sm:h-9 sm:w-9" />
-            </span>
-            <p className="relative text-sm font-bold leading-snug text-[#2A1450] sm:text-lg">
-              <span className="block text-lg font-black sm:text-2xl">จุดตรวจสุขภาพสุนัข</span>
-              ภายในงาน <span className="text-[#4B1FA8]">ค่ายนเรศวร ชะอำ-หัวหิน</span>
-            </p>
+            <div className="flex items-center gap-3 p-3.5 sm:gap-4 sm:p-5">
+              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gradient-to-b from-[#F1EAFD] to-[#DDD0F7] text-[#6D28D9] sm:h-14 sm:w-14" aria-hidden="true">
+                <MapPin className="h-6 w-6 sm:h-7 sm:w-7" />
+              </span>
+              <p className="text-sm font-bold leading-snug text-[#2A1450] sm:text-lg">
+                <span className="block text-lg font-black sm:text-2xl">จุดตรวจสุขภาพสุนัข</span>
+                ภายในงาน <span className="text-[#4B1FA8]">ค่ายนเรศวร ชะอำ-หัวหิน</span>
+              </p>
+            </div>
           </div>
         </div>
 
