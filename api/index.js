@@ -33658,24 +33658,8 @@ var scheduleData = [
       {
         id: "s-16",
         day: "race_day",
-        time: "19.00\u201320.00 \u0E19.",
-        title: "\u0E04\u0E2D\u0E19\u0E40\u0E2A\u0E34\u0E23\u0E4C\u0E15: \u0E21\u0E34\u0E19\u0E15\u0E23\u0E32",
-        description: "\u0E04\u0E2D\u0E19\u0E40\u0E2A\u0E34\u0E23\u0E4C\u0E15\u0E23\u0E34\u0E21\u0E2B\u0E32\u0E14",
-        iconName: "Sparkles"
-      },
-      {
-        id: "s-17",
-        day: "race_day",
-        time: "20.00\u201321.00 \u0E19.",
-        title: "\u0E04\u0E2D\u0E19\u0E40\u0E2A\u0E34\u0E23\u0E4C\u0E15: \u0E04\u0E23\u0E39\u0E40\u0E15\u0E49\u0E22 \u0E2D\u0E20\u0E34\u0E27\u0E31\u0E12\u0E19\u0E4C",
-        description: "\u0E04\u0E2D\u0E19\u0E40\u0E2A\u0E34\u0E23\u0E4C\u0E15\u0E23\u0E34\u0E21\u0E2B\u0E32\u0E14",
-        iconName: "Sparkles"
-      },
-      {
-        id: "s-18",
-        day: "race_day",
-        time: "21.00\u201322.00 \u0E19.",
-        title: "\u0E04\u0E2D\u0E19\u0E40\u0E2A\u0E34\u0E23\u0E4C\u0E15: \u0E1A\u0E2D\u0E25 \u0E40\u0E0A\u0E34\u0E0D\u0E22\u0E34\u0E49\u0E21 & Joker Family",
+        time: "18.00\u201324.00 \u0E19.",
+        title: "\u0E04\u0E2D\u0E19\u0E40\u0E2A\u0E34\u0E23\u0E4C\u0E15: WANYAI \u2022 No One Else \u2022 \u0E21\u0E35\u0E19\u0E15\u0E23\u0E32 \u0E2D\u0E34\u0E19\u0E17\u0E34\u0E23\u0E32 \u2022 \u0E1A\u0E2D\u0E25 \u0E40\u0E0A\u0E34\u0E0D\u0E22\u0E34\u0E49\u0E21 & Joker Family",
         description: "\u0E04\u0E2D\u0E19\u0E40\u0E2A\u0E34\u0E23\u0E4C\u0E15\u0E23\u0E34\u0E21\u0E2B\u0E32\u0E14",
         iconName: "Sparkles"
       }

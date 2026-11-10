@@ -86,17 +86,19 @@ export const ConcertSection: React.FC = () => {
               </div>
 
               {/* time table */}
-              <ol data-reveal-stagger="pop" className="relative z-[4] grid grid-cols-1 gap-2.5 p-3 sm:-mt-10 sm:grid-cols-3 sm:gap-3.5 sm:px-8 sm:pb-6" aria-label="ตารางการแสดง">
+              <ol data-reveal-stagger="pop" className="relative z-[4] grid grid-cols-1 gap-2.5 p-3 sm:-mt-10 sm:grid-cols-2 sm:gap-3.5 sm:px-8 sm:pb-6 lg:grid-cols-4" aria-label="ตารางการแสดง">
                 {CONCERT_LINEUP.map((a) => (
                   <li
-                    key={a.time}
+                    key={a.artist}
                     className="lineup-slot rounded-2xl border-2 bg-[#1B0B3A]/90 backdrop-blur-sm px-3 py-3 text-center sm:px-4 sm:py-4"
                     style={{ ['--glow' as string]: a.color, borderColor: a.color }}
                   >
-                    <span className="inline-flex items-center gap-1 whitespace-nowrap rounded-full px-2 py-0.5 text-[10.5px] font-black tracking-tight text-[#0B0418] sm:px-2.5 sm:text-sm" style={{ background: a.color }}>
-                      {a.time}
-                    </span>
-                    <p className="mt-2 text-base font-black leading-tight text-white sm:text-xl">{a.artist}</p>
+                    {a.time && (
+                      <span className="mb-2 inline-flex items-center gap-1 whitespace-nowrap rounded-full px-2 py-0.5 text-[10.5px] font-black tracking-tight text-[#0B0418] sm:px-2.5 sm:text-sm" style={{ background: a.color }}>
+                        {a.time}
+                      </span>
+                    )}
+                    <p className="text-base font-black leading-tight text-white sm:text-xl">{a.artist}</p>
                     {a.tba && <p className="mt-1 text-xs font-bold text-[#FFE28A] sm:text-sm">พบกับเซอร์ไพรส์สุดพิเศษ! 🎁</p>}
                   </li>
                 ))}

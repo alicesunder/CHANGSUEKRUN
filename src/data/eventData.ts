@@ -626,10 +626,12 @@ export const routesData: Record<RouteId, RouteData> = {
 export { hotelsData } from "./hotelsData";
 
 /** This year's concert, 9 Jan 2570 on the beach (organiser's line-up). */
-export const CONCERT_LINEUP: { time: string; artist: string; tba?: boolean; color: string }[] = [
-  { time: '19.00–20.00 น.', artist: 'มินตรา', color: '#F43F5E' },
-  { time: '20.00–21.00 น.', artist: 'ครูเต้ย อภิวัฒน์', color: '#22D3EE' },
-  { time: '21.00–22.00 น.', artist: 'บอล เชิญยิ้ม & Joker Family', color: '#A855F7' },
+export const CONCERT_LINEUP: { time?: string; artist: string; tba?: boolean; color: string }[] = [
+  // set times are not announced yet, so no time is shown per artist (the concert runs 18.00–24.00)
+  { artist: 'WANYAI', color: '#FACC15' },
+  { artist: 'No One Else', color: '#F43F5E' },
+  { artist: 'มีนตรา อินทิรา', color: '#22D3EE' },
+  { artist: 'บอล เชิญยิ้ม & Joker Family', color: '#A855F7' },
 ];
 
 // Schedule Data
@@ -795,24 +797,8 @@ export const scheduleData: ScheduleDay[] = [
       {
         id: 's-16',
         day: 'race_day',
-        time: '19.00–20.00 น.',
-        title: 'คอนเสิร์ต: มินตรา',
-        description: 'คอนเสิร์ตริมหาด',
-        iconName: 'Sparkles',
-      },
-      {
-        id: 's-17',
-        day: 'race_day',
-        time: '20.00–21.00 น.',
-        title: 'คอนเสิร์ต: ครูเต้ย อภิวัฒน์',
-        description: 'คอนเสิร์ตริมหาด',
-        iconName: 'Sparkles',
-      },
-      {
-        id: 's-18',
-        day: 'race_day',
-        time: '21.00–22.00 น.',
-        title: 'คอนเสิร์ต: บอล เชิญยิ้ม & Joker Family',
+        time: '18.00–24.00 น.',
+        title: 'คอนเสิร์ต: WANYAI • No One Else • มีนตรา อินทิรา • บอล เชิญยิ้ม & Joker Family',
         description: 'คอนเสิร์ตริมหาด',
         iconName: 'Sparkles',
       },
