@@ -137,7 +137,7 @@ export const EssentialRunnerChecklist: React.FC = () => {
                 type="button"
                 onClick={resetChecklist}
                 title="รีเซ็ตเช็กลิสต์"
-                className="p-2 rounded-full bg-[#FAF7FF] hover:bg-purple-100 text-[#5B20A8] border border-purple-200 cursor-pointer"
+                className="min-h-[44px] min-w-[44px] p-2 rounded-full bg-[#FAF7FF] hover:bg-purple-100 text-[#5B20A8] border border-purple-200 cursor-pointer"
               >
                 <RefreshCw className="w-3.5 h-3.5" />
               </button>

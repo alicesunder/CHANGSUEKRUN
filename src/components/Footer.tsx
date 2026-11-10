@@ -66,22 +66,22 @@ export const Footer: React.FC<FooterProps> = ({
             </h4>
             <ul className="space-y-2.5 text-xs text-white/70 font-semibold">
               <li>
-                <a href="#hero" className="inline-block py-3 hover:text-[#FFCC00] hover:translate-x-1.5 transition-all before:content-['🐾'] before:mr-1.5 before:opacity-0 hover:before:opacity-100 before:transition-opacity">{t('หน้าแรก', 'Home')}</a>
+                <a href="#hero" className="inline-flex min-h-[44px] items-center hover:text-[#FFCC00] hover:translate-x-1.5 transition-all before:content-['🐾'] before:mr-1.5 before:opacity-0 hover:before:opacity-100 before:transition-opacity">{t('หน้าแรก', 'Home')}</a>
               </li>
               <li>
-                <a href="#objective" className="inline-block py-3 hover:text-[#FFCC00] hover:translate-x-1.5 transition-all before:content-['🐾'] before:mr-1.5 before:opacity-0 hover:before:opacity-100 before:transition-opacity">{t('รายละเอียดงาน', 'About the event')}</a>
+                <a href="#objective" className="inline-flex min-h-[44px] items-center hover:text-[#FFCC00] hover:translate-x-1.5 transition-all before:content-['🐾'] before:mr-1.5 before:opacity-0 hover:before:opacity-100 before:transition-opacity">{t('รายละเอียดงาน', 'About the event')}</a>
               </li>
               <li>
-                <a href="#distances" className="inline-block py-3 hover:text-[#FFCC00] hover:translate-x-1.5 transition-all before:content-['🐾'] before:mr-1.5 before:opacity-0 hover:before:opacity-100 before:transition-opacity">{t('ระยะวิ่ง', 'Distances')} (10K / 5K / Dog 4K / Dog 1K)</a>
+                <a href="#distances" className="inline-flex min-h-[44px] items-center hover:text-[#FFCC00] hover:translate-x-1.5 transition-all before:content-['🐾'] before:mr-1.5 before:opacity-0 hover:before:opacity-100 before:transition-opacity">{t('ระยะวิ่ง', 'Distances')} (10K / 5K / Dog 4K / Dog 1K)</a>
               </li>
               <li>
-                <a href="#schedule-and-map" className="inline-block py-3 hover:text-[#FFCC00] hover:translate-x-1.5 transition-all before:content-['🐾'] before:mr-1.5 before:opacity-0 hover:before:opacity-100 before:transition-opacity">{t('เส้นทางวิ่ง & กำหนดการแข่งขัน', 'Route & schedule')}</a>
+                <a href="#schedule-and-map" className="inline-flex min-h-[44px] items-center hover:text-[#FFCC00] hover:translate-x-1.5 transition-all before:content-['🐾'] before:mr-1.5 before:opacity-0 hover:before:opacity-100 before:transition-opacity">{t('เส้นทางวิ่ง & กำหนดการแข่งขัน', 'Route & schedule')}</a>
               </li>
               <li>
-                <a href="#hotels" className="inline-block py-3 hover:text-[#FFCC00] hover:translate-x-1.5 transition-all before:content-['🐾'] before:mr-1.5 before:opacity-0 hover:before:opacity-100 before:transition-opacity">{t('ที่พักใกล้สถานที่จัดงาน', 'Hotels near the venue')}</a>
+                <a href="#hotels" className="inline-flex min-h-[44px] items-center hover:text-[#FFCC00] hover:translate-x-1.5 transition-all before:content-['🐾'] before:mr-1.5 before:opacity-0 hover:before:opacity-100 before:transition-opacity">{t('ที่พักใกล้สถานที่จัดงาน', 'Hotels near the venue')}</a>
               </li>
               <li>
-                <a href="#faq" className="inline-block py-3 hover:text-[#FFCC00] hover:translate-x-1.5 transition-all before:content-['🐾'] before:mr-1.5 before:opacity-0 hover:before:opacity-100 before:transition-opacity">{t('คำถามที่พบบ่อย (FAQ)', 'FAQ')}</a>
+                <a href="#faq" className="inline-flex min-h-[44px] items-center hover:text-[#FFCC00] hover:translate-x-1.5 transition-all before:content-['🐾'] before:mr-1.5 before:opacity-0 hover:before:opacity-100 before:transition-opacity">{t('คำถามที่พบบ่อย (FAQ)', 'FAQ')}</a>
               </li>
             </ul>
           </div>
@@ -100,13 +100,13 @@ export const Footer: React.FC<FooterProps> = ({
                 <Phone className="w-4 h-4 text-[#FFCC00] flex-shrink-0 mt-2" />
                 <div className="flex flex-col">
                   {eventInfo.contactPhones.map((p) => (
-                    <a key={p} href={`tel:${p.replace(/[^0-9]/g, '')}`} className="inline-block py-2.5 hover:text-[#FFCC00]">{p}</a>
+                    <a key={p} href={`tel:${p.replace(/[^0-9]/g, '')}`} className="inline-flex min-h-[44px] items-center hover:text-[#FFCC00]">{p}</a>
                   ))}
                 </div>
               </div>
               <div className="flex items-center gap-2">
                 <Mail className="w-4 h-4 text-[#FFCC00] flex-shrink-0" />
-                <a href={`mailto:${eventInfo.contactEmail}`} className="inline-block py-2.5 hover:text-[#FFCC00]">{eventInfo.contactEmail}</a>
+                <a href={`mailto:${eventInfo.contactEmail}`} className="inline-flex min-h-[44px] items-center hover:text-[#FFCC00]">{eventInfo.contactEmail}</a>
               </div>
 
             </div>

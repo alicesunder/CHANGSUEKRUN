@@ -70,7 +70,7 @@ export const FAQSection: React.FC = () => {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={t('ค้นหาคำถาม เช่น น้องสุนัข, ที่จอดรถ, เหรียญรางวัล, เสื้อ...', 'Search, e.g. dog, parking, medal, shirt...')}
-              className="w-full pl-11 pr-4 py-2.5 rounded-2xl border-2 border-purple-100 bg-[#FAF8FF] text-xs sm:text-sm font-semibold text-[#2A1450] focus:outline-none focus:border-[#5B20A8]"
+              className="w-full pl-11 pr-4 py-3 rounded-2xl border-2 border-purple-100 bg-[#FAF8FF] text-xs sm:text-sm font-semibold text-[#2A1450] focus:outline-none focus:border-[#5B20A8]"
             />
           </div>
 

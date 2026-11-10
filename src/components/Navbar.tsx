@@ -144,7 +144,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             <button
               type="button"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="lg:hidden p-2 rounded-xl text-white/85 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+              className="lg:hidden min-h-[44px] min-w-[44px] p-2.5 rounded-xl text-white/85 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
               aria-label={t('เมนูหลัก', 'Main menu')}
             >
               {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
