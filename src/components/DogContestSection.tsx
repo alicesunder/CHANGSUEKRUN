@@ -257,20 +257,21 @@ export const DogContestSection: React.FC = () => {
               <div className="relative mx-auto w-full max-w-[520px] md:col-span-5">
                 <div className="relative aspect-[606/464]">
                   
-                  <div className="absolute left-[14%] right-[14%] top-[31%] bottom-[20%] z-10 flex items-end justify-center overflow-hidden rounded-[30%_30%_26%_26%/22%_22%_30%_30%] bg-[radial-gradient(ellipse_at_50%_40%,#FFFFFF_0%,#EFE6FF_55%,#D9C8F7_100%)]">
+                  <div className="pointer-events-none absolute left-[7%] right-[7%] top-[15%] bottom-[14%] z-30 flex items-end justify-center">
                     {c.image ? (
                       <motion.img
                         src={c.image.src}
                         alt={c.image.alt}
                         loading="lazy"
                         decoding="async"
-                        className="fx-off h-[104%] w-[104%] max-w-none object-contain object-bottom drop-shadow-[0_6px_8px_rgba(42,20,80,0.3)]"
+                        className="fx-off h-full w-full object-contain object-bottom drop-shadow-[0_10px_12px_rgba(42,20,80,0.45)]"
                         {...idle({ y: [0, -4, 0] }, 3.6)}
                       />
                     ) : (
                       <div className="text-[96px]">🐕</div>
                     )}
                   </div>
+                  <span aria-hidden="true" className="absolute left-[14%] right-[14%] top-[31%] bottom-[20%] z-10 rounded-[30%_30%_26%_26%/22%_22%_30%_30%] bg-[radial-gradient(ellipse_at_50%_40%,#FFFFFF_0%,#EFE6FF_55%,#D9C8F7_100%)]" />
                   <span aria-hidden="true" className="fx-sweep" style={{ WebkitMaskImage: `url(${'/images/contest/ct-frame-v2.webp'})`, maskImage: `url(${'/images/contest/ct-frame-v2.webp'})` }} />
                   <motion.img src={'/images/contest/ct-frame-v2.webp'} alt="" aria-hidden="true" loading="lazy" className="fx-off pointer-events-none select-none absolute inset-0 z-20 h-full w-full" {...fx({ scale: 1.02 })} />
                   {[['8%', '30%', '0s'], ['90%', '38%', '.8s'], ['14%', '76%', '1.5s'], ['86%', '80%', '.4s'], ['50%', '4%', '1.1s'], ['30%', '16%', '2.0s'], ['72%', '14%', '.2s']].map(([l, t, d]) => (
