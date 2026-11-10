@@ -30,7 +30,6 @@ interface HeroProps {
 }
 
 const BEACH = '/images/hero/sunset-cinematic.webp';
-const COASTAL_SUNSET = '/images/hero/sunset-cinematic.webp';
 
 const fadeMask: React.CSSProperties = {
   WebkitMaskImage:
@@ -348,14 +347,6 @@ export const Hero: React.FC<HeroProps> = ({
                 <span className="relative z-10">{t('ซื้อบัตรตอนนี้', 'Buy tickets now')}</span>
               </button>
 
-              <button
-                type="button"
-                onClick={() => scrollToSection('distances')}
-                className="inline-flex items-center justify-center gap-1.5 sm:gap-2 rounded-full px-4 sm:px-6 py-3.5 text-xs sm:text-base font-extrabold bg-white/95 hover:bg-white text-[#261247] border-2 border-[#261247]/80 shadow-[0_10px_24px_-8px_rgba(42,20,80,0.28),0_4px_0_#261247] hover:scale-[1.03] active:scale-95 transition-transform cursor-pointer sm:min-w-[185px]"
-              >
-                <span>{t('ดูบัตรวิ่งโฉมใหม่', 'See the new run tickets')}</span>
-                <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-              </button>
             </div>
           </motion.div>
         </div>
@@ -382,25 +373,6 @@ export const Hero: React.FC<HeroProps> = ({
       {/* 2. CURVED PURPLE COUNTDOWN & SUNSET QUOTE WAVE BANNER             */}
       {/* ================================================================= */}
       <div className="relative bg-gradient-to-r from-[#2A0E4F] via-[#3D176E] to-[#2B1052] text-white overflow-hidden">
-        {/* Sunset Coastal Runner & Dog Background */}
-        <div
-          aria-hidden="true"
-          className="absolute inset-0 md:inset-y-0 md:left-auto md:right-0 md:w-[52%] opacity-30 md:opacity-100 pointer-events-none"
-          style={{
-            backgroundImage: `url(${COASTAL_SUNSET})`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center 55%',
-            WebkitMaskImage:
-              'linear-gradient(to left, rgba(0,0,0,0.85) 45%, transparent 100%)',
-            maskImage:
-              'linear-gradient(to left, rgba(0,0,0,0.85) 45%, transparent 100%)',
-          }}
-        />
-        <div
-          aria-hidden="true"
-          className="hidden md:block absolute inset-y-0 right-0 w-[52%] bg-gradient-to-r from-[#3A1668] via-[#3A1668]/45 to-amber-900/30 pointer-events-none"
-        />
-
         {/* Decorative Paw Prints */}
         <PawIcon
           size={44}
