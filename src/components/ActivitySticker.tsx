@@ -8,10 +8,10 @@ const STICKERS: Record<ActivityStickerId, { src: string; title: string; emoji: s
   gunPremium: { src: '/images/addons/sticker-gun-premium.webp', title: 'ยิงปืนยาว', emoji: '🎯', glow: '#F59E0B' },
   wind: { src: '/images/addons/sticker-wind-3.webp', title: 'อุโมงค์ลม', emoji: '🌪️', glow: '#0EA5E9' },
   // landmarks on the course map
-  mangrove: { src: '/images/map/sticker-mangrove.webp', title: 'หอดูนก · ป่าชายเลน', emoji: '🌳', glow: '#22C55E' },
-  resort: { src: '/images/map/sticker-resort.webp', title: 'Sea Sand Sun Hua Hin Resort', emoji: '🏖️', glow: '#0EA5E9' },
-  camp: { src: '/images/map/sticker-bpp-school.webp', title: 'ค่ายนเรศวร', emoji: '🐘', glow: '#8B5CF6' },
-  statue: { src: '/images/map/sticker-statue.webp', title: 'พระบรมราชานุสาวรีย์', emoji: '🙏', glow: '#F59E0B' },
+  mangrove: { src: '/images/map/sticker-mangrove-v2.webp', title: 'หอดูนก · ป่าชายเลน', emoji: '🌳', glow: '#22C55E' },
+  resort: { src: '/images/map/sticker-resort-v2.webp', title: 'Sea Sand Sun Hua Hin Resort', emoji: '🏖️', glow: '#0EA5E9' },
+  camp: { src: '/images/map/sticker-bpp-school-v2.webp', title: 'ค่ายนเรศวร', emoji: '🐘', glow: '#8B5CF6' },
+  statue: { src: '/images/map/sticker-statue-v2.webp', title: 'พระบรมราชานุสาวรีย์', emoji: '🙏', glow: '#F59E0B' },
 };
 const WARM: ActivityStickerId[] = ['tower', 'gun', 'gunPremium', 'wind'];
 
