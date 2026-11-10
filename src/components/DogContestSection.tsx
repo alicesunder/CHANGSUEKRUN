@@ -257,14 +257,14 @@ export const DogContestSection: React.FC = () => {
               <div className="relative mx-auto w-full max-w-[470px] md:col-span-5">
                 <div className="relative aspect-[490/464]">
                   
-                  <div className="absolute left-[7%] right-[7%] top-[10%] bottom-[12%] z-30 flex items-end justify-center">
+                  <div className="absolute left-[13%] right-[13%] top-[27%] bottom-[17%] z-10 flex items-end justify-center overflow-hidden rounded-[30%_30%_26%_26%/22%_22%_30%_30%] bg-[radial-gradient(ellipse_at_50%_40%,#FFFFFF_0%,#EFE6FF_55%,#D9C8F7_100%)]">
                     {c.image ? (
                       <motion.img
                         src={c.image.src}
                         alt={c.image.alt}
                         loading="lazy"
                         decoding="async"
-                        className="fx-off h-full w-full object-contain object-bottom drop-shadow-[0_8px_10px_rgba(42,20,80,0.35)]"
+                        className="fx-off h-[104%] w-[104%] max-w-none object-contain object-bottom drop-shadow-[0_6px_8px_rgba(42,20,80,0.3)]"
                         {...idle({ y: [0, -4, 0] }, 3.6)}
                       />
                     ) : (
