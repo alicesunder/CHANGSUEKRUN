@@ -38,7 +38,7 @@ export const RunnerAwardsSection: React.FC = () => {
       <span aria-hidden="true" className="absolute inset-0 -z-10 bg-gradient-to-b from-[#2A1450]/10 via-transparent to-[#2A1450]/35" />
 
       <div className="px-3 pb-7 pt-5 sm:px-9 sm:pb-10 sm:pt-7">
-        <motion.img src="/images/brand/changsuek-run-logo-v2.webp" alt="CHANGSUEK RUN 2027" className="mx-auto block h-16 w-auto object-contain sm:h-24" loading="lazy" {...fx(reduce, { scale: 1.06, rotate: -1.5 })} />
+        <motion.img src="/images/brand/changsuek-run-logo-v3.webp" alt="CHANGSUEK RUN 2027" className="mx-auto block h-16 w-auto object-contain sm:h-24" loading="lazy" {...fx(reduce, { scale: 1.06, rotate: -1.5 })} />
 
         <div className="mt-1 flex items-center justify-center gap-2 sm:gap-5">
           <Laurel side="l" className="h-12 sm:h-24" reduce={reduce} />

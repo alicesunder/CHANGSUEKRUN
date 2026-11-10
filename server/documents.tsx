@@ -34,7 +34,7 @@ const thaiDateTime = (iso?: string) =>
   iso ? new Date(iso).toLocaleString('th-TH', { timeZone: 'Asia/Bangkok', dateStyle: 'medium', timeStyle: 'short' }) : '';
 
 /** The images the BIB / header use, so the attached copy can carry them inside the file. */
-export const DOC_IMAGES: string[] = ['/images/brand/changsuek-run-logo-v2.webp', '/images/bib/bib-base-v2.webp', ...BIB_SPONSOR_LOGOS];
+export const DOC_IMAGES: string[] = ['/images/brand/changsuek-run-logo-v3.webp', '/images/bib/bib-base-v3.webp', ...BIB_SPONSOR_LOGOS];
 
 export async function buildDocumentsHtml(
   o: StoredOrder,
@@ -60,7 +60,7 @@ export async function buildDocumentsHtml(
 
   const head = (kicker: string, title: string, color: string) => `
     <header class="band" style="--c:${color}">
-      ${pic('/images/brand/changsuek-run-logo-v2.webp', 'logo')}
+      ${pic('/images/brand/changsuek-run-logo-v3.webp', 'logo')}
       <div><p class="kicker">${kicker}</p><h1>${title}</h1></div>
       <div class="band-id"><small>เลขคำสั่งซื้อ</small><b>${esc(o.orderId)}</b></div>
     </header>`;
@@ -81,7 +81,7 @@ export async function buildDocumentsHtml(
         const code = await qr(JSON.stringify({ orderId: o.orderId, bib }));
         return `
         <div class="bib">
-          ${pic('/images/bib/bib-base-v2.webp', 'bib-bg')}
+          ${pic('/images/bib/bib-base-v3.webp', 'bib-bg')}
           <div class="bib-dist"><b>${d.label}</b><span>${d.sub}</span></div>
           <div class="bib-age">
             <div class="bib-age-box"><b>${letter}</b><i></i><b>${decade ?? '•'}</b></div>
@@ -270,7 +270,7 @@ const CSS = `
   .page { zoom:var(--z); width:210mm; min-height:297mm; margin:16px auto; background:#fff; position:relative; overflow:hidden; box-shadow:0 10px 40px rgba(30,11,61,.18); padding:0 0 14mm; }
   .band { display:flex; align-items:center; gap:14px; padding:14px 18mm; color:#fff; background:linear-gradient(115deg, var(--ink), var(--c) 70%, var(--pink)); position:relative; }
   .band::after { content:''; position:absolute; left:0; right:0; bottom:-6px; height:6px; background:repeating-linear-gradient(135deg, var(--gold) 0 12px, var(--ink) 12px 24px); }
-  .band .logo { width:64px; height:64px; object-fit:contain; background:#fff; border-radius:16px; padding:4px; border:3px solid var(--gold); }
+  .band .logo { width:64px; height:64px; object-fit:contain; background:#fff center / contain no-repeat; border-radius:16px; padding:4px; border:3px solid var(--gold); }
   .band h1 { margin:0; font:700 24px/1.2 'Mitr',sans-serif; }
   .band .kicker { margin:0; font:800 11px/1 'Montserrat',sans-serif; letter-spacing:.2em; color:var(--gold); }
   .band-id { margin-left:auto; text-align:right; } .band-id small { display:block; font-size:11px; opacity:.8 } .band-id b { font:800 15px 'Montserrat',sans-serif; }

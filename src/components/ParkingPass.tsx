@@ -33,7 +33,7 @@ async function downloadPass(orderId: string, p: ParkingPlate, qr: string, n: num
   ctx.fill();
 
   const logo = new Image();
-  logo.src = '/images/brand/changsuek-run-logo-v2.webp';
+  logo.src = '/images/brand/changsuek-run-logo-v3.webp';
   await new Promise<void>((r) => {
     logo.onload = () => r();
     logo.onerror = () => r();
@@ -112,7 +112,7 @@ const PassCard: React.FC<{ orderId: string; plate: ParkingPlate; n: number; onSa
       <span aria-hidden="true" className="absolute -top-10 -left-12 w-32 h-20 rounded-full bg-[#5B20A8] -rotate-12" />
       <span aria-hidden="true" className="absolute -bottom-10 -right-10 w-44 h-24 rounded-full bg-[#FFC928] -rotate-12" />
       <div className="relative p-4 sm:p-5">
-        <img src="/images/brand/changsuek-run-logo-v2.webp" alt="CHANGSUEK RUN" className="h-12 sm:h-14 w-auto mx-auto object-contain" />
+        <img src="/images/brand/changsuek-run-logo-v3.webp" alt="CHANGSUEK RUN" className="h-12 sm:h-14 w-auto mx-auto object-contain" />
         <div className="mt-2 flex items-center gap-2 rounded-xl bg-[#FFC928] border-2 border-[#2A1450] px-3 py-1.5">
           <Car className="w-6 h-6 text-[#3B1270] shrink-0" aria-hidden="true" />
           <span className="font-display text-3xl sm:text-4xl font-black text-[#3B1270] leading-none">VIP</span>

@@ -4,7 +4,7 @@ import { eventInfo } from '../data/eventData';
 import { BIB_PERKS, BIB_SIZE_LABEL, BIB_SPONSOR_LOGOS } from '../data/bibStrip';
 
 /**
- * The race BIB in the organiser's design (public/images/bib/bib-base-v2.webp, 1536 x 1024, sponsor strip
+ * The race BIB in the organiser's design (public/images/bib/bib-base-v3.webp, 1536 x 1024, sponsor strip
  * included, number / name / QR areas left blank): number, name, distance, age group and QR are drawn on top.
  * Sizes are in container units, so the card scales to any width. Styles: .rbib-* in index.css.
  */
@@ -47,7 +47,7 @@ export const RaceBib: React.FC<{
 
   return (
     <div className={`rbib ${className}`} role="img" aria-label={`ป้าย BIB หมายเลข ${bib} ${name} ระยะ ${d.label}`}>
-      <img className="rbib-bg" src="/images/bib/bib-base-v2.webp" alt="" draggable={false} />
+      <img className="rbib-bg" src="/images/bib/bib-base-v3.webp" alt="" draggable={false} />
       <div className="rbib-dist">
         <b>{d.label}</b>
         <span>{d.sub}</span>

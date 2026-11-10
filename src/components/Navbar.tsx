@@ -74,7 +74,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             title="CHANGSUEK RUN 2027 - เห็นช้างวิ่ง วิ่งตามช้าง"
           >
             <img
-              src="/images/brand/changsuek-run-logo-v2.webp"
+              src="/images/brand/changsuek-run-logo-v3.webp"
               alt="CHANGSUEK RUN"
               className="h-10 sm:h-11 w-auto object-contain logo-glow"
               referrerPolicy="no-referrer"

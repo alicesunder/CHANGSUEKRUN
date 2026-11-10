@@ -38,7 +38,7 @@ export const ChangsuekLogo: React.FC<ChangsuekLogoProps> = ({
     return (
       <div className={`inline-flex items-center justify-center p-2.5 sm:p-3 bg-white rounded-2xl shadow-md border border-purple-100 ${className}`}>
         <img
-          src="/images/brand/changsuek-run-logo-v2.webp"
+          src="/images/brand/changsuek-run-logo-v3.webp"
           alt="CHANGSUEK RUN - เห็นช้างวิ่ง วิ่งตามช้าง"
           style={{ height: heightPx, width: 'auto' }}
           className="object-contain select-none"
@@ -50,7 +50,7 @@ export const ChangsuekLogo: React.FC<ChangsuekLogoProps> = ({
 
   return (
     <img
-      src="/images/brand/changsuek-run-logo-v2.webp"
+      src="/images/brand/changsuek-run-logo-v3.webp"
       alt="CHANGSUEK RUN - เห็นช้างวิ่ง วิ่งตามช้าง"
       style={{ height: heightPx, width: 'auto' }}
       className={`object-contain select-none logo-glow ${className}`}
