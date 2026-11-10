@@ -159,11 +159,9 @@ export const DogContestSection: React.FC = () => {
       <span id="costume-contest" className="block -translate-y-24" aria-hidden="true" />
       <div className="relative overflow-hidden rounded-[28px] sm:rounded-[40px] border-[3px] border-[#FFD86B]/90 bg-gradient-to-b from-[#7A4BD8] via-[#6A3BC9] to-[#5427B0] shadow-[0_0_0_2px_rgba(91,39,176,0.35),0_0_36px_-6px_rgba(255,201,40,0.55),0_20px_44px_-18px_rgba(42,20,80,0.7)]">
         {/* ---------- the stage: one picture (palms, trophy, rosette, flags, lanterns, lights all standing on the beach) ---------- */}
-        <div className="relative h-[390px] overflow-hidden sm:h-auto sm:aspect-[2021/690]">
-          <span aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 z-[1] h-[38%] bg-gradient-to-b from-transparent via-[#7A4BD8]/40 to-[#7A4BD8]" />
-          <img src="/images/contest/ct-stage-v1.webp" alt="" aria-hidden="true" decoding="async" draggable={false} className="pointer-events-none select-none absolute inset-0 h-full w-full object-cover object-[50%_top] max-sm:scale-110 max-sm:blur-[1.5px]" />
-          {/* phones: the whole stage (trophy, rosette, flags) as a strip along the bottom, so nothing is cut off */}
-          <img src="/images/contest/ct-stage-v1.webp" alt="" aria-hidden="true" decoding="async" draggable={false} className="pointer-events-none select-none absolute inset-x-0 bottom-10 z-[2] w-full h-auto sm:hidden [mask-image:linear-gradient(to_bottom,transparent,black_30%)]" />
+        <div className="relative overflow-hidden max-sm:bg-gradient-to-b max-sm:from-[#4B1FA8] max-sm:via-[#6A3BC9] max-sm:to-[#7A4BD8] sm:aspect-[2021/690]">
+          <span aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 z-[1] hidden h-[38%] sm:block bg-gradient-to-b from-transparent via-[#7A4BD8]/40 to-[#7A4BD8]" />
+          <img src="/images/contest/ct-stage-v1.webp" alt="" aria-hidden="true" decoding="async" draggable={false} className="pointer-events-none select-none absolute inset-0 hidden h-full w-full object-fill sm:block" />
 
           {/* light effects laid exactly on the picture's lamps, trophy, rosette, sun and sea (wide screens) */}
           <div aria-hidden="true" className="pointer-events-none absolute inset-0 hidden sm:block">
@@ -181,7 +179,7 @@ export const DogContestSection: React.FC = () => {
             ))}
           </div>
           {/* rising light orbs and paws over the whole stage */}
-          <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
+          <div aria-hidden="true" className="pointer-events-none absolute inset-0 hidden overflow-hidden sm:block">
             {[['14%', 8, 0], ['38%', 7, 4.5], ['62%', 8, 6], ['84%', 7, 5.4]].map(([l, sz, d]) => (
               <i key={String(l)} className="fx-orb" style={{ left: l as string, width: sz as number, height: sz as number, animationDelay: `${d}s`, ['--dx' as string]: `${Number(sz) % 2 ? 20 : -20}px` }} />
             ))}
@@ -190,7 +188,7 @@ export const DogContestSection: React.FC = () => {
             ))}
           </div>
 
-          <div className="relative px-4 pt-4 text-center sm:pt-[2.4%]">
+          <div className="relative px-4 pb-3 pt-5 text-center sm:pb-0 sm:pt-[2.4%]">
             <span className="fx-sheen inline-flex items-center gap-1.5 rounded-full border-2 border-[#F5C84C] bg-gradient-to-b from-white to-[#F6EEFF] px-3.5 py-1.5 text-xs sm:text-lg font-black text-[#4B1FA8] shadow-[0_4px_12px_-4px_rgba(42,20,80,0.5)]">
               <PawPrint className="h-4 w-4 sm:h-5 sm:w-5 text-[#F5B800]" aria-hidden="true" />
               ประกวดน้องหมา 3 รายการ · วันเสาร์ที่ 9 ม.ค. 2570
@@ -204,10 +202,12 @@ export const DogContestSection: React.FC = () => {
             </svg>
             <p className="mx-auto mt-1 w-fit rounded-full border-2 border-[#F5C84C] bg-gradient-to-b from-white to-[#F6EEFF] px-4 py-1.5 text-sm sm:text-xl font-black text-[#3B1780] shadow-[0_4px_12px_-4px_rgba(42,20,80,0.5)]">ฟรีสำหรับคู่วิ่ง Dog Run · ลงได้ทุกรายการ</p>
           </div>
+          {/* phones: the whole beach stage as its own picture under the heading (nothing behind the text) */}
+          <img src="/images/contest/ct-stage-v1.webp" alt="" aria-hidden="true" decoding="async" loading="lazy" draggable={false} className="pointer-events-none block h-auto w-full select-none sm:hidden [mask-image:linear-gradient(to_bottom,transparent,black_18%)]" />
         </div>
 
         {/* tabs sit on the sand line of the stage */}
-        <div role="tablist" aria-label="เลือกรายการประกวด" className="relative z-10 -mt-16 sm:-mt-[10.5%] mx-auto flex w-fit max-w-[94%] gap-1.5 sm:gap-2 rounded-full border-2 border-white/90 bg-white/80 p-1.5 shadow-[0_10px_24px_-10px_rgba(75,31,168,0.6)] backdrop-blur overflow-x-auto [scrollbar-width:none]">
+        <div role="tablist" aria-label="เลือกรายการประกวด" className="relative z-10 mt-2 sm:mt-0 sm:-mt-[10.5%] mx-auto flex w-fit max-w-[94%] gap-1.5 sm:gap-2 rounded-full border-2 border-white/90 bg-white/80 p-1.5 shadow-[0_10px_24px_-10px_rgba(75,31,168,0.6)] backdrop-blur overflow-x-auto [scrollbar-width:none]">
           {CONTESTS.map((t) => {
             const on = t.id === active;
             return (
