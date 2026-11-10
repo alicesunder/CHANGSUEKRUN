@@ -1,0 +1,116 @@
+/*
+ * Site-wide life: small hover motion + soft light on every object, so the page never feels stiff.
+ * Uses the individual `scale` / `filter` properties (not `transform`) so it never fights motion/react or Tailwind's
+ * transform utilities. Everything stops for visitors who asked for reduced motion and for touch screens (no hover).
+ */
+
+/* ---------- 1) hover: any real picture (has alt text) gets a springy grow + warm glow ---------- */
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  main img[alt]:not([alt=""]):not(.fx-off),
+  footer img[alt]:not([alt=""]) {
+    transition: scale .4s cubic-bezier(.2, 1.5, .4, 1), filter .35s ease;
+  }
+  main img[alt]:not([alt=""]):not(.fx-off):hover,
+  footer img[alt]:not([alt=""]):hover {
+    scale: 1.045;
+    filter: brightness(1.05) saturate(1.08) drop-shadow(0 10px 14px rgba(42, 20, 80, .32));
+  }
+
+  /* cards: warm golden glow when the mouse is over them */
+  main .ds-card,
+  main .lineup-slot {
+    transition: box-shadow .35s ease, border-color .35s ease;
+  }
+  main .ds-card:hover {
+    box-shadow: 0 0 0 2px rgba(255, 201, 40, .55), 0 14px 34px -10px rgba(124, 58, 237, .5), 0 0 26px -6px rgba(255, 201, 40, .55);
+  }
+
+  /* round buttons / pills: swell a little and brighten */
+  main a[class*="rounded-full"],
+  main button[class*="rounded-full"] {
+    transition: scale .3s cubic-bezier(.2, 1.6, .4, 1), filter .25s ease;
+  }
+  main a[class*="rounded-full"]:hover,
+  main button[class*="rounded-full"]:hover:not(:disabled) {
+    scale: 1.035;
+    filter: brightness(1.07) saturate(1.1);
+  }
+  main a[class*="rounded-full"]:active,
+  main button[class*="rounded-full"]:active:not(:disabled) {
+    scale: .97;
+  }
+
+  /* little icon discs (round, fixed size) hop when their card is hovered */
+  main li:hover > span[aria-hidden="true"][class*="rounded-full"],
+  main li:hover > span > span[aria-hidden="true"][class*="rounded-full"] {
+    animation: fxHop .6s ease;
+  }
+}
+
+/* ---------- 2) light: a soft shine that sweeps across the main call-to-action buttons ---------- */
+.fx-sheen { position: relative; overflow: hidden; isolation: isolate; }
+.fx-sheen::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(105deg, transparent 38%, rgba(255, 255, 255, .6) 50%, transparent 62%);
+  translate: -130% 0;
+  animation: fxSheen 4.8s ease-in-out infinite;
+}
+
+/* gentle idle float and glow pulse for loose objects (add the class where it looks good) */
+.fx-float { animation: fxFloat 5s ease-in-out infinite; }
+.fx-glow { animation: fxGlow 3.4s ease-in-out infinite; }
+
+/* ---------- 3) concert stage: beams, slow camera push and sparkles ---------- */
+.fx-kenburns { animation: fxKen 26s ease-in-out infinite alternate; transform-origin: 50% 60%; }
+.fx-beam {
+  position: absolute;
+  bottom: 12%;
+  width: 46%;
+  height: 120%;
+  transform-origin: 50% 100%;
+  mix-blend-mode: screen;
+  filter: blur(6px);
+  pointer-events: none;
+  animation: fxBeam 7s ease-in-out infinite alternate;
+}
+.fx-spark {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #fff 0 25%, rgba(255, 226, 104, .9) 45%, transparent 70%);
+  pointer-events: none;
+  animation: fxTwinkle 2.8s ease-in-out infinite;
+}
+
+@keyframes fxSheen { 0%, 55% { translate: -130% 0; } 100% { translate: 130% 0; } }
+@keyframes fxFloat { 0%, 100% { translate: 0 0; } 50% { translate: 0 -7px; } }
+@keyframes fxGlow { 0%, 100% { filter: drop-shadow(0 0 4px rgba(255, 201, 40, .35)); } 50% { filter: drop-shadow(0 0 16px rgba(255, 201, 40, .9)); } }
+@keyframes fxKen { from { scale: 1; } to { scale: 1.09; } }
+@keyframes fxBeam { from { rotate: -22deg; opacity: .55; } to { rotate: 22deg; opacity: .95; } }
+@keyframes fxTwinkle { 0%, 100% { opacity: .15; scale: .5; } 50% { opacity: 1; scale: 1.25; } }
+@keyframes fxHop { 0%, 100% { translate: 0 0; } 35% { translate: 0 -6px; rotate: -8deg; } 65% { translate: 0 1px; rotate: 6deg; } }
+@keyframes fxPulseRing { 0% { box-shadow: 0 0 0 0 rgba(255, 201, 40, .55); } 100% { box-shadow: 0 0 0 14px rgba(255, 201, 40, 0); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .fx-sheen::after, .fx-float, .fx-glow, .fx-kenburns, .fx-beam, .fx-spark { animation: none; }
+  .fx-sheen::after { display: none; }
+  .fx-beam, .fx-spark { opacity: .4; }
+}
+
+/* ---------- 4) dog health check: heartbeat line, marching chevrons, pulsing step badges ---------- */
+.fx-ecg { stroke-dasharray: 260; stroke-dashoffset: 260; animation: fxEcg 2.8s linear infinite; }
+@keyframes fxEcg { 0% { stroke-dashoffset: 260; } 70%, 100% { stroke-dashoffset: 0; } }
+.fx-nudge { animation: fxNudge 1.6s ease-in-out infinite; }
+@keyframes fxNudge { 0%, 100% { translate: 0 0; } 50% { translate: 6px 0; } }
+.fx-ring { animation: fxPulseRing 2s ease-out infinite; }
+.fx-heart { animation: fxBeat 1.5s ease-in-out infinite; }
+@keyframes fxBeat { 0%, 100% { scale: 1; } 15% { scale: 1.25; } 30% { scale: 1; } 45% { scale: 1.18; } }
+@media (prefers-reduced-motion: reduce) {
+  .fx-ecg { animation: none; stroke-dashoffset: 0; }
+  .fx-nudge, .fx-ring, .fx-heart { animation: none; }
+}

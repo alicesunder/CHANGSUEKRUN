@@ -30,7 +30,7 @@ export const DogHealthCheckSection: React.FC = () => (
           src="/images/contest/vet-scene.webp"
           alt="สัตวแพทย์ใช้หูฟังตรวจน้องชิบะที่เต็นท์ริมชายหาดยามเย็น ผู้ช่วยในหมวกม่วงกอดน้องไว้ น้องโกลเด้นและน้องบีเกิ้ลนั่งรอตรวจ"
           decoding="async"
-          className="absolute inset-0 hidden h-full w-full object-cover object-[center_45%] md:block"
+          className="fx-off fx-kenburns absolute inset-0 hidden h-full w-full object-cover object-[center_45%] md:block"
         />
         <span aria-hidden="true" className="absolute inset-0 hidden bg-gradient-to-r from-[#2A1450]/70 via-[#2A1450]/25 to-transparent md:block" />
         <span aria-hidden="true" className="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-b from-transparent to-[#EFE6FC] md:h-20" />
@@ -43,9 +43,12 @@ export const DogHealthCheckSection: React.FC = () => (
             <h2 id="dog-health-heading" className="mt-3 font-hero text-[2.6rem] leading-[1.15] font-bold text-white drop-shadow-[0_4px_10px_rgba(20,8,38,0.55)] sm:text-6xl lg:text-7xl">
               ตรวจสุขภาพสุนัข
             </h2>
+            <svg aria-hidden="true" className="mt-1 h-8 w-56 sm:h-10 sm:w-80" viewBox="0 0 260 40" fill="none">
+              <path d="M0 22 H70 L82 22 L92 4 L104 36 L114 14 L122 22 H260" stroke="#FFE268" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="fx-ecg" />
+            </svg>
             <div className="relative mt-1.5 inline-flex items-center">
-              <PawPrint aria-hidden="true" className="mr-2 h-8 w-8 shrink-0 -rotate-12 text-[#FFC928] drop-shadow sm:h-11 sm:w-11" />
-              <span className="inline-block -skew-x-6 rounded-xl bg-gradient-to-r from-[#FFC928] via-[#FFE268] to-[#FFC928] px-5 py-1 shadow-[0_10px_22px_-8px_rgba(255,179,0,0.95)] sm:px-8 sm:py-1.5">
+              <PawPrint aria-hidden="true" className="fx-heart mr-2 h-8 w-8 shrink-0 -rotate-12 text-[#FFC928] drop-shadow sm:h-11 sm:w-11" />
+              <span className="fx-sheen fx-glow inline-block -skew-x-6 rounded-xl bg-gradient-to-r from-[#FFC928] via-[#FFE268] to-[#FFC928] px-5 py-1 shadow-[0_10px_22px_-8px_rgba(255,179,0,0.95)] sm:px-8 sm:py-1.5">
                 <span className="block skew-x-6 font-hero text-3xl font-bold text-[#2A1450] sm:text-5xl lg:text-6xl">ไม่มีค่าใช้จ่าย</span>
               </span>
             </div>
@@ -76,11 +79,13 @@ export const DogHealthCheckSection: React.FC = () => (
         {/* facts */}
         <ul className="grid grid-cols-3 gap-2 sm:gap-4" aria-label="รายละเอียดการตรวจสุขภาพสุนัข">
           {FACTS.map((f) => (
-            <li
+            <motion.li
               key={f.label}
+              whileHover={{ y: -6, scale: 1.02 }}
+              transition={{ type: 'spring', stiffness: 320, damping: 16 }}
               className={`ds-card flex flex-col items-center gap-1 p-2.5 text-center sm:flex-row sm:gap-5 sm:p-5 sm:text-left bg-gradient-to-r border-2 ${TONE[f.tone].card}`}
             >
-              <span className={`flex h-10 w-10 sm:h-[72px] sm:w-[72px] shrink-0 items-center justify-center rounded-full shadow-inner bg-gradient-to-b ${TONE[f.tone].icon}`} aria-hidden="true">
+              <span className={`fx-ring flex h-10 w-10 sm:h-[72px] sm:w-[72px] shrink-0 items-center justify-center rounded-full shadow-inner bg-gradient-to-b ${TONE[f.tone].icon}`} aria-hidden="true">
                 <f.icon className="h-5 w-5 sm:h-9 sm:w-9" />
               </span>
               <span className="min-w-0">
@@ -88,7 +93,7 @@ export const DogHealthCheckSection: React.FC = () => (
                 <span className={`block text-[14px] sm:text-[2rem] font-black leading-tight ${TONE[f.tone].big}`}>{f.big}</span>
                 {f.small && <span className="block text-[11px] sm:text-lg font-bold text-[#4B2D78]">{f.small}</span>}
               </span>
-            </li>
+            </motion.li>
           ))}
         </ul>
 
@@ -133,14 +138,14 @@ export const DogHealthCheckSection: React.FC = () => (
           <ol className="grid grid-cols-1 items-stretch gap-2 md:grid-cols-[1fr_auto_1fr_auto_1fr]">
             {STEPS.map((s, i) => (
               <React.Fragment key={s.n}>
-                <li className="flex items-center gap-3 rounded-2xl bg-gradient-to-r from-[#F1EAFD] to-[#F8F4FE] p-2.5 sm:p-4">
+                <li className="flex items-center gap-3 rounded-2xl bg-gradient-to-r from-[#F1EAFD] to-[#F8F4FE] p-2.5 transition-transform duration-300 hover:-translate-y-1 sm:p-4">
                   <span className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gradient-to-b from-white to-[#E9DFFA] text-[#6D28D9] shadow-sm sm:h-16 sm:w-16" aria-hidden="true">
                     <s.icon className="h-6 w-6 sm:h-8 sm:w-8" />
-                    <span className="absolute -right-1 -top-1 flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-b from-[#FFE268] to-[#FFB300] text-xs font-black text-[#2A1450] ring-2 ring-white sm:h-7 sm:w-7 sm:text-sm">{s.n}</span>
+                    <span className="fx-ring absolute -right-1 -top-1 flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-b from-[#FFE268] to-[#FFB300] text-xs font-black text-[#2A1450] ring-2 ring-white sm:h-7 sm:w-7 sm:text-sm" style={{ animationDelay: `${i * 0.5}s` }}>{s.n}</span>
                   </span>
                   <span className="text-xs font-extrabold leading-snug text-[#2A1450] sm:text-base">{s.text}</span>
                 </li>
-                {i < STEPS.length - 1 && <ChevronRight className="hidden h-8 w-8 self-center text-[#FFB300] md:block" aria-hidden="true" />}
+                {i < STEPS.length - 1 && <ChevronRight className="fx-nudge hidden h-8 w-8 self-center text-[#FFB300] md:block" aria-hidden="true" />}
               </React.Fragment>
             ))}
           </ol>
@@ -154,8 +159,8 @@ export const DogHealthCheckSection: React.FC = () => (
           <path d="M0 70 C 240 10, 520 120, 820 60 S 1280 10, 1440 70" fill="none" stroke="#FFC928" strokeWidth="3" />
           <path d="M0 84 C 260 30, 540 130, 840 76 S 1290 28, 1440 86" fill="none" stroke="#FFE268" strokeWidth="1.5" opacity=".6" />
         </svg>
-        <PawPrint aria-hidden="true" className="pointer-events-none absolute left-6 top-6 h-12 w-12 -rotate-12 text-white/30" />
-        <PawPrint aria-hidden="true" className="pointer-events-none absolute right-8 bottom-16 h-10 w-10 rotate-12 text-white/25" />
+        <PawPrint aria-hidden="true" className="fx-float pointer-events-none absolute left-6 top-6 h-12 w-12 -rotate-12 text-white/30" />
+        <PawPrint aria-hidden="true" className="fx-float pointer-events-none absolute right-8 bottom-16 h-10 w-10 rotate-12 text-white/25" style={{ animationDelay: '-2s' }} />
         <div className="relative mx-auto max-w-4xl rounded-[22px] bg-white/85 p-3 shadow-[0_14px_30px_-14px_rgba(42,20,80,0.55)] ring-1 ring-white/70 backdrop-blur sm:p-4">
           <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 sm:gap-x-8">
             <div className="flex items-center gap-3">
