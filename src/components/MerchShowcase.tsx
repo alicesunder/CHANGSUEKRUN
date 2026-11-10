@@ -84,7 +84,7 @@ const KIT: KitItem[] = [
     nameEn: 'Race bib (BIB)',
     desc: 'พิมพ์ชื่อและเบอร์ของคุณ มี QR ดูผลการวิ่ง และเบอร์ติดต่อฉุกเฉิน',
     descEn: 'Printed with your name and number, a QR code for results and an emergency contact number.',
-    image: '/images/merch/bib.webp',
+    image: '/images/merch/bib-v2.webp',
     group: 'all',
     wide: true,
   },
@@ -103,7 +103,7 @@ const KIT: KitItem[] = [
     nameEn: 'Pet Sponsor Gift Pack',
     desc: 'รวมผลิตภัณฑ์สำหรับน้องสุนัขจากผู้สนับสนุนภายในงาน (หมายเหตุ : สำหรับ Dog Run ระยะ 1 km และ 4 km)',
     descEn: 'A bundle of dog products from the event sponsors (note: for Dog Run 1 km and 4 km).',
-    image: '/images/merch/kit-pet-sponsor-pack.webp',
+    image: '/images/merch/kit-pet-sponsor-pack-v3.webp',
     group: 'dog',
   },
 ];

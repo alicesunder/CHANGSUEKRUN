@@ -35761,7 +35761,7 @@ var esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<"
 var qr = (text, dark = "#1E0B3D") => import_qrcode.default.toDataURL(text, { margin: 1, width: 360, errorCorrectionLevel: "M", color: { dark, light: "#FFFFFF" } });
 var runnerBib = (bib, i) => i === 0 ? bib : `${bib}-${i + 1}`;
 var thaiDateTime = (iso) => iso ? new Date(iso).toLocaleString("th-TH", { timeZone: "Asia/Bangkok", dateStyle: "medium", timeStyle: "short" }) : "";
-var DOC_IMAGES = ["/images/brand/changsuek-run-logo-v2.webp", "/images/bib/bib-base.webp", ...BIB_SPONSOR_LOGOS];
+var DOC_IMAGES = ["/images/brand/changsuek-run-logo-v2.webp", "/images/bib/bib-base-v2.webp", ...BIB_SPONSOR_LOGOS];
 async function buildDocumentsHtml(o, opts = {}) {
   const A = opts.assetBase || "";
   const inl = opts.inline;
@@ -35794,7 +35794,7 @@ async function buildDocumentsHtml(o, opts = {}) {
         const code = await qr(JSON.stringify({ orderId: o.orderId, bib }));
         return `
         <div class="bib">
-          ${pic("/images/bib/bib-base.webp", "bib-bg")}
+          ${pic("/images/bib/bib-base-v2.webp", "bib-bg")}
           <div class="bib-dist"><b>${d.label}</b><span>${d.sub}</span></div>
           <div class="bib-age">
             <div class="bib-age-box"><b>${letter}</b><i></i><b>${decade ?? "\u2022"}</b></div>

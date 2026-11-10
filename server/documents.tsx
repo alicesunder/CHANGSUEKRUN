@@ -34,7 +34,7 @@ const thaiDateTime = (iso?: string) =>
   iso ? new Date(iso).toLocaleString('th-TH', { timeZone: 'Asia/Bangkok', dateStyle: 'medium', timeStyle: 'short' }) : '';
 
 /** The images the BIB / header use, so the attached copy can carry them inside the file. */
-export const DOC_IMAGES: string[] = ['/images/brand/changsuek-run-logo-v2.webp', '/images/bib/bib-base.webp', ...BIB_SPONSOR_LOGOS];
+export const DOC_IMAGES: string[] = ['/images/brand/changsuek-run-logo-v2.webp', '/images/bib/bib-base-v2.webp', ...BIB_SPONSOR_LOGOS];
 
 export async function buildDocumentsHtml(
   o: StoredOrder,
@@ -81,7 +81,7 @@ export async function buildDocumentsHtml(
         const code = await qr(JSON.stringify({ orderId: o.orderId, bib }));
         return `
         <div class="bib">
-          ${pic('/images/bib/bib-base.webp', 'bib-bg')}
+          ${pic('/images/bib/bib-base-v2.webp', 'bib-bg')}
           <div class="bib-dist"><b>${d.label}</b><span>${d.sub}</span></div>
           <div class="bib-age">
             <div class="bib-age-box"><b>${letter}</b><i></i><b>${decade ?? '•'}</b></div>
