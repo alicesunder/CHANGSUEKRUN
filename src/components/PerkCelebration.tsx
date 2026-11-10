@@ -167,9 +167,9 @@ export const DealStrip: React.FC<DealStripProps> = ({ chosen }) => {
   const current = steps.findIndex((st) => items >= st.min && items <= st.max);
 
   return (
-    <div className="relative overflow-hidden rounded-[26px] border border-[#E4D6F7] bg-gradient-to-b from-[#FFFDF6] via-[#FBF7FF] to-[#F3ECFF] p-3.5 sm:px-[18px] sm:py-5 shadow-[0_8px_20px_rgba(65,30,120,0.14),inset_0_1px_0_rgba(255,255,255,0.9)]">
-      <div className="relative flex flex-wrap items-center gap-x-3 gap-y-2 pb-3 sm:pb-4">
-        <img src="/images/shop/deals-percent.png" alt="" aria-hidden="true" className="-mr-1 h-14 w-auto sm:h-[72px] -rotate-6 mix-blend-multiply" />
+    <div className="relative overflow-hidden rounded-[26px] border border-[#E4D6F7] bg-gradient-to-b from-[#FFFDF6] via-[#FBF7FF] to-[#F3ECFF] p-3 sm:px-[18px] sm:py-5 shadow-[0_8px_20px_rgba(65,30,120,0.14),inset_0_1px_0_rgba(255,255,255,0.9)]">
+      <div className="relative flex flex-wrap items-center gap-x-2 gap-y-1.5 pb-2 sm:gap-x-3 sm:gap-y-2 sm:pb-4">
+        <img src="/images/shop/deals-percent.png" alt="" aria-hidden="true" className="-mr-1 h-10 w-auto sm:h-[72px] -rotate-6 mix-blend-multiply" />
         <h3 className="relative inline-flex items-center rounded-full bg-gradient-to-b from-[#6D3FD0] to-[#3B1780] py-1.5 sm:py-2 pl-5 sm:pl-7 pr-5 sm:pr-7 text-xl sm:text-[25px] font-black leading-tight text-white shadow-[0_8px_16px_-8px_rgba(42,20,80,0.75),inset_0_1px_0_rgba(255,255,255,0.25)]">
           ยิ่งซื้อเพิ่ม&nbsp;<span className="text-[#FFD35C]">ยิ่งลด!</span>
         </h3>
@@ -188,7 +188,9 @@ export const DealStrip: React.FC<DealStripProps> = ({ chosen }) => {
       </div>
 
       {/* the 5 kinds of items, each counts as 1 */}
-      <div className="relative flex flex-wrap items-center justify-center gap-x-2 gap-y-2 rounded-2xl bg-white/70 border border-[#E4D6F7] px-3 py-2.5 mb-3 sm:mb-4">
+      <details className="group relative mb-2 sm:hidden"><summary className="flex min-h-[44px] cursor-pointer list-none items-center justify-between gap-2 rounded-2xl border border-[#E4D6F7] bg-white/70 px-3 text-[13px] font-extrabold text-[#2A1450] [&::-webkit-details-marker]:hidden"><span>เลือกได้ {BASKET_MAX_ITEMS} อย่าง · นับอย่างละ 1</span><span className="rounded-full bg-[#FFC928] px-2.5 py-0.5 text-[11px] group-open:hidden">ดู ▾</span><span className="hidden rounded-full bg-[#FFC928] px-2.5 py-0.5 text-[11px] group-open:inline">ซ่อน ▴</span></summary><div className="mt-2 flex flex-wrap justify-center gap-1.5 rounded-2xl border border-[#E4D6F7] bg-white/70 p-2">{ITEM_ICONS.map((it) => (<span key={it.key} className={`inline-flex items-center gap-1.5 rounded-xl border-2 px-2 py-1 ${chosen[it.key] ? 'border-[#2A1450] bg-[#FFE27A]' : 'border-[#E0A100]/60 bg-white'}`}><img src={it.src} alt="" aria-hidden="true" className={ICON_CLS} loading="lazy" /><span className="text-[11.5px] font-extrabold leading-none text-[#2A1450]">{it.label}</span>{chosen[it.key] && <span aria-hidden="true" className="text-sm font-black leading-none text-[#15803D]">✓</span>}</span>))}</div></details>
+
+      <div className="relative hidden flex-wrap items-center justify-center gap-x-2 gap-y-2 rounded-2xl bg-white/70 border border-[#E4D6F7] px-3 py-2.5 mb-3 sm:mb-4 sm:flex">
         <span className="basis-full sm:basis-auto text-center text-sm sm:text-base font-black text-[#2A1450]">เลือกสินค้าได้ {BASKET_MAX_ITEMS} อย่าง</span>
         {ITEM_ICONS.map((it, i) => (
           <React.Fragment key={it.key}>
@@ -205,7 +207,20 @@ export const DealStrip: React.FC<DealStripProps> = ({ chosen }) => {
         </span>
       </div>
 
-      <ul data-reveal-stagger="pop" className="relative grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3.5" aria-label="ส่วนลดตามจำนวนอย่าง">
+      <ul className="relative grid grid-cols-4 gap-1.5 sm:hidden" aria-label="ส่วนลดตามจำนวนอย่าง">
+        {steps.map((st, i) => {
+          const on = items >= 1 && i === current;
+          const reached = items >= 1 && i <= current;
+          return (
+            <li key={`m${st.key}`} className={`flex flex-col items-center justify-center rounded-xl border-2 px-1 py-1.5 text-center leading-tight ${on ? 'border-[#2A1450] bg-[#FFE27A] shadow-[0_3px_0_#2A1450]' : reached ? 'border-[#E0A100] bg-[#FFF3C4]' : 'border-dashed border-[#D9C9EF] bg-[#F6F0FF]'}`}>
+              <span className="text-[11px] font-extrabold text-[#4B2D78]">{i === 0 ? '1 อย่าง' : i === steps.length - 1 ? `${BASKET_TIERS[BASKET_TIERS.length - 1].items}–${BASKET_MAX_ITEMS}` : `${st.min} อย่าง`}</span>
+              <span className="text-base font-black text-[#3B1780]">{i === 0 ? 'ปกติ' : st.big.replace(' สูงสุด', '')}</span>
+              {on && <span className="text-[10px] font-black text-[#B91C1C]">ได้แล้ว!</span>}
+            </li>
+          );
+        })}
+      </ul>
+      <ul data-reveal-stagger="pop" className="relative hidden grid-cols-2 gap-2.5 sm:grid sm:gap-3.5 lg:grid-cols-4" aria-label="ส่วนลดตามจำนวนอย่าง">
         {steps.map((st, i) => {
           const on = items >= 1 && i === current;
           const reached = items >= 1 && i <= current;
@@ -247,7 +262,7 @@ export const DealStrip: React.FC<DealStripProps> = ({ chosen }) => {
           );
         })}
       </ul>
-      <p className="relative mt-3 mx-auto w-fit rounded-full bg-[#EFE5FF] px-4 py-1.5 text-center text-[12px] sm:text-sm font-extrabold text-[#4B2D78]">ส่วนลดคำนวณจากยอดรวมทั้งตะกร้า</p>
+      <p className="relative mx-auto mt-2 w-fit rounded-full bg-[#EFE5FF] px-3 py-1 text-center text-[11px] sm:mt-3 sm:px-4 sm:py-1.5 sm:text-sm font-extrabold text-[#4B2D78]">ส่วนลดคำนวณจากยอดรวมทั้งตะกร้า</p>
     </div>
   );
 };
