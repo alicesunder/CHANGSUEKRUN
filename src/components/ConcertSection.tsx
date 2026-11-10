@@ -67,13 +67,16 @@ export const ConcertSection: React.FC = () => {
               </div>
 
               {/* the real photo of last year's stage, shown clearly (no blur) */}
-              <div className="relative mx-3 h-[300px] overflow-hidden rounded-2xl border border-[#FFC928]/60 shadow-[0_0_30px_-6px_rgba(168,85,247,0.8)] sm:mx-6 sm:h-[440px] lg:h-[520px]">
+              <div className="relative mx-3 overflow-hidden rounded-2xl border border-[#FFC928]/60 bg-[#1B0B3A] shadow-[0_0_30px_-6px_rgba(168,85,247,0.8)] sm:mx-6">
+                {/* wide screens: the same photo, blurred, fills the sides so the whole picture can be shown uncropped */}
+                <img src="/images/concert/concert-real-v2.webp" alt="" aria-hidden="true" decoding="async" loading="lazy" className="fx-off absolute inset-0 h-full w-full scale-125 object-cover opacity-60 blur-2xl" />
+                <div className="relative mx-auto w-full max-w-[860px]">
                 <img
                   src="/images/concert/concert-real-v2.webp"
                   alt="เวทีคอนเสิร์ตจริงของงาน Hua Hin Beach Cross Country & Music Festival พร้อมจอ LED และไฟสปอตไลต์"
                   decoding="async"
                   loading="lazy"
-                  className="fx-off fx-kenburns absolute inset-0 h-full w-full object-cover object-[center_42%]"
+                  className="fx-off block h-auto w-full"
                 />
                 {/* moving spotlight beams + twinkles on top of the photo */}
                 <span aria-hidden="true" className="fx-beam" style={{ left: '-6%', background: 'linear-gradient(to top, rgba(192,132,252,.7), transparent 75%)', clipPath: 'polygon(46% 100%, 54% 100%, 100% 0, 0 0)' }} />
@@ -82,11 +85,12 @@ export const ConcertSection: React.FC = () => {
                   <i key={l + t} aria-hidden="true" className="fx-spark" style={{ left: l, top: t, animationDelay: d }} />
                 ))}
                 <span aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_55%,rgba(27,11,58,0.7)_100%)]" />
-                <span className="absolute right-3 top-3 rounded-full bg-[#1B0B3A]/80 px-3 py-1 text-[11px] font-bold text-[#FFE28A] ring-1 ring-[#FFC928]/60 backdrop-blur sm:text-sm">📸 ภาพจริงจากเวทีคอนเสิร์ต</span>
+                </div>
+                <span className="absolute right-3 top-3 z-10 rounded-full bg-[#1B0B3A]/80 px-3 py-1 text-[11px] font-bold text-[#FFE28A] ring-1 ring-[#FFC928]/60 backdrop-blur sm:text-sm">📸 ภาพจริงจากเวทีคอนเสิร์ต</span>
               </div>
 
               {/* time table */}
-              <ol data-reveal-stagger="pop" className="relative z-[4] grid grid-cols-1 gap-2.5 p-3 sm:-mt-10 sm:grid-cols-2 sm:gap-3.5 sm:px-8 sm:pb-6 lg:grid-cols-4" aria-label="ตารางการแสดง">
+              <ol data-reveal-stagger="pop" className="relative z-[4] grid grid-cols-1 gap-2.5 p-3 sm:grid-cols-2 sm:gap-3.5 sm:px-8 sm:pb-6 lg:grid-cols-4" aria-label="ตารางการแสดง">
                 {CONCERT_LINEUP.map((a) => (
                   <li
                     key={a.artist}
