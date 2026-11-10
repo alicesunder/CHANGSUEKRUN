@@ -167,8 +167,8 @@ export const DogContestSection: React.FC = () => {
 
           {/* light effects laid exactly on the picture's lamps, trophy, rosette, sun and sea (wide screens) */}
           <div aria-hidden="true" className="pointer-events-none absolute inset-0 hidden sm:block">
-            <span className="fx-rays" style={{ left: '79.5%', top: '38%' }} />
-            {BULBS.map(([x, y], i) => (
+            <span className="fx-rays fx-static" style={{ left: '79.5%', top: '38%' }} />
+            {BULBS.filter((_, i) => i % 2 === 0).map(([x, y], i) => (
               <i key={`b${i}`} className="fx-bulb" style={{ left: `${x}%`, top: `${y + 2.2}%`, animationDelay: `${(i % 6) * 0.35}s` }} />
             ))}
             <i className="fx-lamp" style={{ left: '6.9%', top: '54%' }} />
@@ -176,16 +176,16 @@ export const DogContestSection: React.FC = () => {
             {GLINTS.map(([x, y, d]) => (
               <i key={`g${x}`} className="fx-glint not-italic" style={{ left: `${x}%`, top: `${y}%`, animationDelay: `${d}s` }}>✦</i>
             ))}
-            {[[30, 58], [42, 61], [55, 57], [66, 60], [79, 54], [48, 64], [36, 56], [72, 63]].map(([x, y], i) => (
+            {[[30, 58], [48, 64], [66, 60], [79, 54]].map(([x, y], i) => (
               <i key={`s${i}`} className="fx-seaglint" style={{ left: `${x}%`, top: `${y}%`, animationDelay: `${i * 0.42}s` }} />
             ))}
           </div>
           {/* rising light orbs and paws over the whole stage */}
           <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
-            {[['12%', 8, 0], ['26%', 12, 2.2], ['38%', 7, 4.5], ['50%', 10, 1.2], ['62%', 8, 6], ['72%', 12, 3.3], ['84%', 7, 5.4], ['93%', 10, 7.4]].map(([l, sz, d]) => (
+            {[['14%', 8, 0], ['38%', 7, 4.5], ['62%', 8, 6], ['84%', 7, 5.4]].map(([l, sz, d]) => (
               <i key={String(l)} className="fx-orb" style={{ left: l as string, width: sz as number, height: sz as number, animationDelay: `${d}s`, ['--dx' as string]: `${Number(sz) % 2 ? 20 : -20}px` }} />
             ))}
-            {[['30%', 0], ['55%', 4], ['70%', 7.5]].map(([l, d]) => (
+            {[['30%', 0], ['70%', 7.5]].map(([l, d]) => (
               <PawPrint key={String(l)} className="fx-paw-drift h-5 w-5" style={{ left: l as string, animationDelay: `${d}s`, ['--dx' as string]: '24px' }} />
             ))}
           </div>

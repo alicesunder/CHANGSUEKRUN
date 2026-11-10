@@ -9,6 +9,9 @@ import App from './App.tsx';
 import { LangProvider } from './i18n/lang';
 import './index.css';
 import './fx.css';
+import { startFxPause } from './fxPause';
+
+startFxPause();
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

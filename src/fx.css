@@ -194,3 +194,10 @@
 .fx-bulb { position: absolute; width: 14px; height: 14px; translate: -50% -50%; border-radius: 50%; pointer-events: none; background: radial-gradient(circle, rgba(255, 250, 220, 1) 0 20%, rgba(255, 210, 90, .75) 45%, transparent 72%); animation: fxTwinkle 2.4s ease-in-out infinite; }
 .fx-lamp { position: absolute; width: 110px; height: 110px; translate: -50% -50%; border-radius: 50%; pointer-events: none; mix-blend-mode: screen; background: radial-gradient(circle, rgba(255, 220, 120, .85) 0%, rgba(255, 180, 60, .35) 35%, transparent 68%); animation: fxHalo 2.6s ease-in-out infinite; }
 @media (prefers-reduced-motion: reduce) { .fx-bulb, .fx-lamp { animation: none; } }
+
+/* ---------- performance: nothing animates while its section is far off screen (see fxPause.ts) ---------- */
+[data-fx-off], [data-fx-off] *, [data-fx-off] *::before, [data-fx-off] *::after { animation-play-state: paused !important; }
+/* the new picture sections draw many layers: skip the costly blur-behind and blend modes there */
+#dog-contest *, #dog-health-check *, #runner-awards * { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
+.fx-rays, .fx-lamp, .fx-beam { mix-blend-mode: normal !important; }
+.fx-static { animation: none !important; }
