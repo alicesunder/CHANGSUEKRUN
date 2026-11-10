@@ -66,11 +66,10 @@ export const ConcertSection: React.FC = () => {
                 </span>
               </div>
 
+              <div className="lg:grid lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)] lg:items-center lg:gap-6 lg:px-6 lg:pb-6">
               {/* the real photo of last year's stage, shown clearly (no blur) */}
-              <div className="relative mx-3 overflow-hidden rounded-2xl border border-[#FFC928]/60 bg-[#1B0B3A] shadow-[0_0_30px_-6px_rgba(168,85,247,0.8)] sm:mx-6">
-                {/* wide screens: the same photo, blurred, fills the sides so the whole picture can be shown uncropped */}
-                <img src="/images/concert/concert-real-v2.webp" alt="" aria-hidden="true" decoding="async" loading="lazy" className="fx-off absolute inset-0 h-full w-full scale-125 object-cover opacity-60 blur-2xl" />
-                <div className="relative mx-auto w-full max-w-[860px]">
+              <div className="relative mx-3 overflow-hidden rounded-2xl border border-[#FFC928]/60 bg-[#1B0B3A] shadow-[0_0_30px_-6px_rgba(168,85,247,0.8)] sm:mx-6 lg:mx-0">
+                <div className="relative w-full">
                 <img
                   src="/images/concert/concert-real-v2.webp"
                   alt="เวทีคอนเสิร์ตจริงของงาน Hua Hin Beach Cross Country & Music Festival พร้อมจอ LED และไฟสปอตไลต์"
@@ -90,11 +89,11 @@ export const ConcertSection: React.FC = () => {
               </div>
 
               {/* time table */}
-              <ol data-reveal-stagger="pop" className="relative z-[4] grid grid-cols-1 gap-2.5 p-3 sm:grid-cols-2 sm:gap-3.5 sm:px-8 sm:pb-6 lg:grid-cols-4" aria-label="ตารางการแสดง">
+              <ol data-reveal-stagger="pop" className="relative z-[4] grid grid-cols-1 gap-2.5 p-3 sm:grid-cols-2 sm:gap-3.5 sm:px-8 sm:pb-6 lg:grid-cols-1 lg:gap-3.5 lg:p-0" aria-label="ตารางการแสดง">
                 {CONCERT_LINEUP.map((a) => (
                   <li
                     key={a.artist}
-                    className="lineup-slot rounded-2xl border-2 bg-[#1B0B3A]/90 backdrop-blur-sm px-3 py-3 text-center sm:px-4 sm:py-4"
+                    className="lineup-slot rounded-2xl border-2 bg-[#1B0B3A]/90 backdrop-blur-sm px-3 py-3 text-center sm:px-4 sm:py-4 lg:py-5"
                     style={{ ['--glow' as string]: a.color, borderColor: a.color }}
                   >
                     {a.time && (
@@ -102,11 +101,12 @@ export const ConcertSection: React.FC = () => {
                         {a.time}
                       </span>
                     )}
-                    <p className="text-base font-black leading-tight text-white sm:text-xl">{a.artist}</p>
+                    <p className="text-base font-black leading-tight text-white sm:text-xl lg:text-2xl">{a.artist}</p>
                     {a.tba && <p className="mt-1 text-xs font-bold text-[#FFE28A] sm:text-sm">พบกับเซอร์ไพรส์สุดพิเศษ! 🎁</p>}
                   </li>
                 ))}
               </ol>
+              </div>
             </div>
 
             <div className="mt-5 flex justify-center">
