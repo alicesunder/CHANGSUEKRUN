@@ -1092,6 +1092,94 @@ export function createApp(): express.Express {
     res.json({ ok: true, orderId: id });
   }));
 
+  // Admin: create a free / gift ticket by hand (a NEW order only; existing orders are never touched).
+  // Paid at once (no money), gets a BIB like any paid order, and can be e-mailed to the holder. Manager role or higher.
+  app.post('/api/admin/orders/manual', requireAdmin, smallJson, h(async (req, res) => {
+    const b = req.body || {};
+    const admin = (req as any).admin.username as string;
+    const isConcert = b.ticketType === 'CONCERT';
+    const routeId = (isConcert ? 'concert' : b.routeId) as RouteId;
+    if (!isConcert && !ROUTE_IDS.includes(routeId)) {
+      res.status(400).json({ error: 'ระยะวิ่งไม่ถูกต้อง' });
+      return;
+    }
+    const fullName = clean(b.fullName, 120);
+    const phone = clean(b.phone, 30);
+    const email = clean(b.email, 120);
+    const emergencyPhone = clean(b.emergencyPhone, 30) || phone;
+    const reason = clean(b.reason, 300);
+    const shirtSize = isConcert ? '' : SHIRT_SIZES.includes(b.shirtSize) ? b.shirtSize : '';
+    const isDog = !isConcert && isDogCategory(routeId);
+    const dogName = isDog ? clean(b.dogName, 80) : '';
+    const concertQty = isConcert ? Math.min(9, Math.max(1, Math.floor(Number(b.concertQty) || 1))) : 0;
+    const errors: string[] = [];
+    if (fullName.length < 2) errors.push('กรุณากรอกชื่อ-นามสกุล');
+    if (phone && phone.replace(/\D/g, '').length < 9) errors.push('เบอร์โทรศัพท์ไม่ถูกต้อง');
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errors.push('อีเมลไม่ถูกต้อง');
+    const sendEmail = b.sendEmail !== false;
+    if (sendEmail && !email) errors.push('ต้องการส่งอีเมลตั๋ว กรุณากรอกอีเมล (หรือปิดตัวเลือกส่งอีเมล)');
+    if (!isConcert && !shirtSize) errors.push('กรุณาเลือกไซซ์เสื้อ');
+    if (reason.length < 3) errors.push('กรุณาระบุเหตุผล/ที่มาของตั๋ว (เช่น ผู้สนับสนุน, แขกผู้จัดงาน)');
+    if (errors.length) {
+      res.status(400).json({ error: errors.join(' · ') });
+      return;
+    }
+    const token = crypto.randomBytes(24).toString('base64url');
+    const now = new Date();
+    const order: StoredOrder = {
+      orderId: await nextOrderId(),
+      accessTokenHash: hashToken(token),
+      fullName,
+      phone,
+      email,
+      emergencyPhone,
+      routeId,
+      routeName: isConcert ? 'ตั๋วคอนเสิร์ต / เข้างาน (ไม่วิ่ง)' : ticketById(routeId).name,
+      ticketType: isConcert ? 'CONCERT' : 'RUN',
+      concertQty: concertQty > 0 ? concertQty : undefined,
+      shirtSize,
+      runningWithDog: isDog,
+      dogName: isDog ? dogName : undefined,
+      extraPeople: 0,
+      extraDogs: 0,
+      peopleCount: isConcert ? concertQty : 1,
+      dogCount: isDog ? 1 : 0,
+      totalPrice: 0,
+      bibNumber: '',
+      paymentMethod: 'ADMIN_GIFT',
+      paymentStatus: 'PENDING',
+      paymentRef: '',
+      senderBank: '',
+      verificationStatus: 'AWAITING_PAYMENT',
+      kitStatus: 'PENDING_PICKUP',
+      registrationStatus: 'REGISTERED',
+      createdAt: now.toISOString(),
+      expiresAt: new Date(now.getTime() + 15 * 60 * 1000).toISOString(),
+    };
+    const ins = await insertOrderChecked(order, WIND_TUNNEL_LIMIT);
+    if (!ins.ok) {
+      res.status(409).json({ error: 'สร้างตั๋วไม่สำเร็จ (ที่นั่งเต็ม)' });
+      return;
+    }
+    let paid: StoredOrder | undefined;
+    try {
+      paid = await markOrderPaid(order.orderId, {
+        status: 'ADMIN_APPROVED',
+        verifiedBy: `แอดมิน ${admin}`,
+        paymentRef: '',
+        senderBank: 'ADMIN',
+        note: `ตั๋วมอบ/ฟรี สร้างโดยแอดมิน ${admin} — ${reason}`,
+      });
+    } catch (err) {
+      await rollbackNewOrder(order.orderId).catch(() => {});
+      throw err;
+    }
+    if (sendEmail) await mailNewlyPaid(false, paid);
+    console.log(`[admin] ${admin} created gift ticket ${order.orderId}`);
+    const done = (await getOrder(order.orderId)) || paid || order;
+    res.json({ order: toAdminView(done), emailed: sendEmail && !!done.emailStatus?.ok, emailError: sendEmail && done.emailStatus && !done.emailStatus.ok ? done.emailStatus.error : undefined });
+  }));
+
   app.post('/api/admin/orders/:orderId/restore', requireAdmin, h(async (req, res) => {
     const id = String(req.params.orderId);
     const r = await restoreOrderChecked(id, WIND_TUNNEL_LIMIT);

@@ -75,7 +75,7 @@ const KIT: KitItem[] = [
     nameEn: 'Drawstring bag',
     desc: 'กระเป๋าสีม่วงสกรีนโลโก้งาน เชือกถักสะพายหลังได้',
     descEn: 'Purple bag printed with the event logo, with braided rope straps to carry on your back.',
-    image: '/images/merch/kit-bag-v2.webp',
+    image: '/images/merch/kit-bag-v3.webp',
     group: 'all',
   },
   {

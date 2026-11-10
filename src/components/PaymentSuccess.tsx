@@ -121,9 +121,9 @@ export const PaymentSuccess: React.FC<{
           {!noRun && <Fact label="เสื้อวิ่ง" value={`ไซซ์ ${order.shirtSize} (${order.peopleCount} คน)`} />}
           {!noRun && <Fact label="เวลาปล่อยตัว" value={`${startTime} · 9 ม.ค. 70`} />}
           <Fact
-            label={order.paymentMethod === 'SPONSOR_CODE' ? 'สิทธิ์สปอนเซอร์' : 'ยอดที่ชำระ'}
+            label={order.paymentMethod === 'SPONSOR_CODE' ? 'สิทธิ์สปอนเซอร์' : order.paymentMethod === 'ADMIN_GIFT' ? 'ตั๋วมอบจากผู้จัดงาน' : 'ยอดที่ชำระ'}
             tone="ok"
-            value={order.paymentMethod === 'SPONSOR_CODE' ? `วิ่ง + คอนเสิร์ต ฟรี${order.totalPrice > 0 ? ` · กิจกรรมเสริม ${formatBaht(order.totalPrice)} บาท` : ''}` : `${formatBaht(order.totalPrice)} บาท`}
+            value={order.paymentMethod === 'ADMIN_GIFT' ? 'ไม่มีค่าใช้จ่าย' : order.paymentMethod === 'SPONSOR_CODE' ? `วิ่ง + คอนเสิร์ต ฟรี${order.totalPrice > 0 ? ` · กิจกรรมเสริม ${formatBaht(order.totalPrice)} บาท` : ''}` : `${formatBaht(order.totalPrice)} บาท`}
           />
           {order.addOns && <Fact label="กิจกรรมเสริม" value={`${order.addOns.label} × ${order.addOns.people} คน`} />}
           {order.runningWithDog && (

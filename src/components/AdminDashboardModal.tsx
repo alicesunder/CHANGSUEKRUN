@@ -38,6 +38,7 @@ import {
 } from 'lucide-react';
 import { RouteId } from '../types';
 import { SponsorCodesAdmin } from './SponsorCodesAdmin';
+import { GiftTicketAdmin } from './GiftTicketAdmin';
 import { TicketScannerAdmin } from './TicketScannerAdmin';
 import { WinnersAdmin } from './WinnersAdmin';
 import { RunnersAdmin } from './RunnersAdmin';
@@ -158,7 +159,7 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
   });
   const [loadError, setLoadError] = useState<string | null>(null);
 
-  const [activeTab, setActiveTab] = useState<'overview' | 'roster' | 'orders' | 'security' | 'settings' | 'sponsors' | 'scan' | 'winners' | 'runners' | 'admins'>(
+  const [activeTab, setActiveTab] = useState<'overview' | 'roster' | 'orders' | 'security' | 'settings' | 'sponsors' | 'gift' | 'scan' | 'winners' | 'runners' | 'admins'>(
     'orders'
   );
   const [orders, setOrders] = useState<TicketOrder[]>([]);
@@ -756,6 +757,7 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
                   id: 'sales', label: 'ขาย', icon: '🧾',
                   tabs: [
                     { id: 'orders', label: 'คำสั่งซื้อ', icon: '🧾', show: true },
+                    { id: 'gift', label: 'สร้างตั๋วมอบ/ฟรี', icon: '🎁', show: canManage },
                     { id: 'overview', label: 'ภาพรวม', icon: '📊', show: true },
                   ],
                 },
@@ -1658,6 +1660,7 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
             />
           )}
           {activeTab === 'sponsors' && <SponsorCodesAdmin />}
+          {activeTab === 'gift' && canManage && <GiftTicketAdmin />}
           {activeTab === 'scan' && <TicketScannerAdmin />}
           {activeTab === 'winners' && <WinnersAdmin />}
           {activeTab === 'runners' && (

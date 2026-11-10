@@ -349,7 +349,7 @@ export const OrderFullDetails: React.FC<{ order: ServerOrder }> = ({ order: o })
       title: '💳 การชำระเงิน',
       items: [
         ['ยอดชำระ', `฿${formatBaht(o.totalPrice)}`],
-        ['ช่องทาง', o.paymentMethod === 'SPONSOR_CODE' ? `รหัสสปอนเซอร์${o.sponsorName ? ` · ${o.sponsorName}` : ''}` : 'โอน/สแกนจ่าย + แนบสลิป'],
+        ['ช่องทาง', o.paymentMethod === 'ADMIN_GIFT' ? 'ตั๋วมอบ/ฟรี (แอดมินสร้าง)' : o.paymentMethod === 'SPONSOR_CODE' ? `รหัสสปอนเซอร์${o.sponsorName ? ` · ${o.sponsorName}` : ''}` : 'โอน/สแกนจ่าย + แนบสลิป'],
         ['สถานะ', o.paymentStatus === 'PAID' ? `ชำระแล้ว (${fmtDate(o.paidAt)})` : `รอชำระ · หมดเวลา ${fmtDate(o.expiresAt)}`],
         ['ผลตรวจสลิป', o.slipNote || '-'],
         ['เลขอ้างอิงสลิป', o.slipRef || o.paymentRef || '-'],

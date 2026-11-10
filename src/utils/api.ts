@@ -467,6 +467,13 @@ export const adminApi = {
     adminFetch<{ runner: { id: string; name: string; email: string; username: string; phone: string; emailVerified: boolean; social: string[]; hasPassword: boolean; disabled?: boolean; createdAt: string }; orders: ServerOrder[] }>(
       `/api/admin/runners/${encodeURIComponent(id)}`
     ),
+  /** Create a free / gift ticket by hand (a new order only; paid at once, e-mail optional). */
+  createGiftTicket: (input: { ticketType: 'RUN' | 'CONCERT'; routeId?: string; fullName: string; phone?: string; email?: string; emergencyPhone?: string; shirtSize?: string; dogName?: string; concertQty?: number; reason: string; sendEmail: boolean }) =>
+    adminFetch<{ order: ServerOrder; emailed: boolean; emailError?: string }>('/api/admin/orders/manual', {
+      method: 'POST',
+      headers: jsonHeaders,
+      body: JSON.stringify(input),
+    }),
   listSponsorCodes: () => adminFetch<{ codes: SponsorCodeRow[] }>('/api/admin/sponsor-codes'),
   createSponsorCode: (input: { sponsorName: string; maxUses: number | null; code?: string; note?: string }) =>
     adminFetch<{ code: SponsorCodeRow }>('/api/admin/sponsor-codes', {

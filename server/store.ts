@@ -62,7 +62,8 @@ export interface StoredOrder {
   dogCount: number;
   totalPrice: number;
   bibNumber: string;
-  paymentMethod: 'PROMPTPAY_QR' | 'SPONSOR_CODE';
+  paymentMethod: 'PROMPTPAY_QR' | 'SPONSOR_CODE' | 'ADMIN_GIFT';
+  /** ADMIN_GIFT = a free / gift ticket created by an admin in the admin page (no payment) */
   /** Set when the registration was made free with a sponsor code */
   sponsorCode?: string;
   sponsorName?: string;

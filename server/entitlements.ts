@@ -103,5 +103,5 @@ export function priceLines(o: StoredOrder): PriceLine[] | null {
   if (off > 0) lines.push({ name: `ส่วนลดซื้อหลายอย่าง${o.discountRate ? ` ${Math.round(o.discountRate * 100)}%` : ''}`, amount: -off });
   if (o.vatAmount) lines.push({ name: `ภาษีมูลค่าเพิ่ม (VAT ${Math.round((o.vatRate || 0.07) * 100)}%)`, amount: o.vatAmount });
   const sum = lines.reduce((t, l) => t + l.amount, 0);
-  return o.paymentMethod !== 'SPONSOR_CODE' && !o.isTest && lines.length > 0 && sum === o.totalPrice ? lines : null;
+  return o.paymentMethod !== 'SPONSOR_CODE' && o.paymentMethod !== 'ADMIN_GIFT' && !o.isTest && lines.length > 0 && sum === o.totalPrice ? lines : null;
 }

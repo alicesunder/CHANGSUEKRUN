@@ -35691,7 +35691,7 @@ function priceLines(o) {
   if (off > 0) lines.push({ name: `\u0E2A\u0E48\u0E27\u0E19\u0E25\u0E14\u0E0B\u0E37\u0E49\u0E2D\u0E2B\u0E25\u0E32\u0E22\u0E2D\u0E22\u0E48\u0E32\u0E07${o.discountRate ? ` ${Math.round(o.discountRate * 100)}%` : ""}`, amount: -off });
   if (o.vatAmount) lines.push({ name: `\u0E20\u0E32\u0E29\u0E35\u0E21\u0E39\u0E25\u0E04\u0E48\u0E32\u0E40\u0E1E\u0E34\u0E48\u0E21 (VAT ${Math.round((o.vatRate || 0.07) * 100)}%)`, amount: o.vatAmount });
   const sum = lines.reduce((t, l) => t + l.amount, 0);
-  return o.paymentMethod !== "SPONSOR_CODE" && !o.isTest && lines.length > 0 && sum === o.totalPrice ? lines : null;
+  return o.paymentMethod !== "SPONSOR_CODE" && o.paymentMethod !== "ADMIN_GIFT" && !o.isTest && lines.length > 0 && sum === o.totalPrice ? lines : null;
 }
 
 // src/data/bibStrip.ts
@@ -35854,7 +35854,7 @@ async function buildDocumentsHtml(o, opts = {}) {
 
     <div class="sum">
       ${lines ? `<ul>${lines.map((l) => `<li><span>${esc(l.name)}</span><b>${l.amount < 0 ? "\u2212 " : ""}${formatBaht(Math.abs(l.amount))} \u0E1A\u0E32\u0E17</b></li>`).join("")}</ul>` : "<div></div>"}
-      <div class="total"><span>${o.paymentMethod === "SPONSOR_CODE" ? `\u0E22\u0E2D\u0E14\u0E0A\u0E33\u0E23\u0E30 (\u0E2A\u0E34\u0E17\u0E18\u0E34\u0E4C\u0E2A\u0E1B\u0E2D\u0E19\u0E40\u0E0B\u0E2D\u0E23\u0E4C${o.sponsorName ? ` ${esc(o.sponsorName)}` : ""})` : "\u0E22\u0E2D\u0E14\u0E0A\u0E33\u0E23\u0E30\u0E2A\u0E38\u0E17\u0E18\u0E34"}</span><b>${formatBaht(o.totalPrice)} \u0E1A\u0E32\u0E17</b></div>
+      <div class="total"><span>${o.paymentMethod === "ADMIN_GIFT" ? "\u0E15\u0E31\u0E4B\u0E27\u0E21\u0E2D\u0E1A\u0E08\u0E32\u0E01\u0E1C\u0E39\u0E49\u0E08\u0E31\u0E14\u0E07\u0E32\u0E19 (\u0E44\u0E21\u0E48\u0E21\u0E35\u0E04\u0E48\u0E32\u0E43\u0E0A\u0E49\u0E08\u0E48\u0E32\u0E22)" : o.paymentMethod === "SPONSOR_CODE" ? `\u0E22\u0E2D\u0E14\u0E0A\u0E33\u0E23\u0E30 (\u0E2A\u0E34\u0E17\u0E18\u0E34\u0E4C\u0E2A\u0E1B\u0E2D\u0E19\u0E40\u0E0B\u0E2D\u0E23\u0E4C${o.sponsorName ? ` ${esc(o.sponsorName)}` : ""})` : "\u0E22\u0E2D\u0E14\u0E0A\u0E33\u0E23\u0E30\u0E2A\u0E38\u0E17\u0E18\u0E34"}</span><b>${formatBaht(o.totalPrice)} \u0E1A\u0E32\u0E17</b></div>
     </div>
 
     <h2 class="sec" style="margin-top:14px">\u{1F4CD} \u0E23\u0E32\u0E22\u0E25\u0E30\u0E40\u0E2D\u0E35\u0E22\u0E14\u0E07\u0E32\u0E19</h2>
@@ -50016,6 +50016,92 @@ function createApp() {
     res.locals.auditDetail = { deleted: summary };
     console.log("[admin] " + req.admin.username + " DELETED order " + id);
     res.json({ ok: true, orderId: id });
+  }));
+  app2.post("/api/admin/orders/manual", requireAdmin, smallJson, h(async (req, res) => {
+    const b = req.body || {};
+    const admin = req.admin.username;
+    const isConcert = b.ticketType === "CONCERT";
+    const routeId = isConcert ? "concert" : b.routeId;
+    if (!isConcert && !ROUTE_IDS.includes(routeId)) {
+      res.status(400).json({ error: "\u0E23\u0E30\u0E22\u0E30\u0E27\u0E34\u0E48\u0E07\u0E44\u0E21\u0E48\u0E16\u0E39\u0E01\u0E15\u0E49\u0E2D\u0E07" });
+      return;
+    }
+    const fullName = clean(b.fullName, 120);
+    const phone = clean(b.phone, 30);
+    const email = clean(b.email, 120);
+    const emergencyPhone = clean(b.emergencyPhone, 30) || phone;
+    const reason = clean(b.reason, 300);
+    const shirtSize = isConcert ? "" : SHIRT_SIZES2.includes(b.shirtSize) ? b.shirtSize : "";
+    const isDog = !isConcert && isDogCategory(routeId);
+    const dogName = isDog ? clean(b.dogName, 80) : "";
+    const concertQty = isConcert ? Math.min(9, Math.max(1, Math.floor(Number(b.concertQty) || 1))) : 0;
+    const errors2 = [];
+    if (fullName.length < 2) errors2.push("\u0E01\u0E23\u0E38\u0E13\u0E32\u0E01\u0E23\u0E2D\u0E01\u0E0A\u0E37\u0E48\u0E2D-\u0E19\u0E32\u0E21\u0E2A\u0E01\u0E38\u0E25");
+    if (phone && phone.replace(/\D/g, "").length < 9) errors2.push("\u0E40\u0E1A\u0E2D\u0E23\u0E4C\u0E42\u0E17\u0E23\u0E28\u0E31\u0E1E\u0E17\u0E4C\u0E44\u0E21\u0E48\u0E16\u0E39\u0E01\u0E15\u0E49\u0E2D\u0E07");
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errors2.push("\u0E2D\u0E35\u0E40\u0E21\u0E25\u0E44\u0E21\u0E48\u0E16\u0E39\u0E01\u0E15\u0E49\u0E2D\u0E07");
+    const sendEmail = b.sendEmail !== false;
+    if (sendEmail && !email) errors2.push("\u0E15\u0E49\u0E2D\u0E07\u0E01\u0E32\u0E23\u0E2A\u0E48\u0E07\u0E2D\u0E35\u0E40\u0E21\u0E25\u0E15\u0E31\u0E4B\u0E27 \u0E01\u0E23\u0E38\u0E13\u0E32\u0E01\u0E23\u0E2D\u0E01\u0E2D\u0E35\u0E40\u0E21\u0E25 (\u0E2B\u0E23\u0E37\u0E2D\u0E1B\u0E34\u0E14\u0E15\u0E31\u0E27\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E2A\u0E48\u0E07\u0E2D\u0E35\u0E40\u0E21\u0E25)");
+    if (!isConcert && !shirtSize) errors2.push("\u0E01\u0E23\u0E38\u0E13\u0E32\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E44\u0E0B\u0E0B\u0E4C\u0E40\u0E2A\u0E37\u0E49\u0E2D");
+    if (reason.length < 3) errors2.push("\u0E01\u0E23\u0E38\u0E13\u0E32\u0E23\u0E30\u0E1A\u0E38\u0E40\u0E2B\u0E15\u0E38\u0E1C\u0E25/\u0E17\u0E35\u0E48\u0E21\u0E32\u0E02\u0E2D\u0E07\u0E15\u0E31\u0E4B\u0E27 (\u0E40\u0E0A\u0E48\u0E19 \u0E1C\u0E39\u0E49\u0E2A\u0E19\u0E31\u0E1A\u0E2A\u0E19\u0E38\u0E19, \u0E41\u0E02\u0E01\u0E1C\u0E39\u0E49\u0E08\u0E31\u0E14\u0E07\u0E32\u0E19)");
+    if (errors2.length) {
+      res.status(400).json({ error: errors2.join(" \xB7 ") });
+      return;
+    }
+    const token = crypto12.randomBytes(24).toString("base64url");
+    const now = /* @__PURE__ */ new Date();
+    const order = {
+      orderId: await nextOrderId(),
+      accessTokenHash: hashToken(token),
+      fullName,
+      phone,
+      email,
+      emergencyPhone,
+      routeId,
+      routeName: isConcert ? "\u0E15\u0E31\u0E4B\u0E27\u0E04\u0E2D\u0E19\u0E40\u0E2A\u0E34\u0E23\u0E4C\u0E15 / \u0E40\u0E02\u0E49\u0E32\u0E07\u0E32\u0E19 (\u0E44\u0E21\u0E48\u0E27\u0E34\u0E48\u0E07)" : ticketById(routeId).name,
+      ticketType: isConcert ? "CONCERT" : "RUN",
+      concertQty: concertQty > 0 ? concertQty : void 0,
+      shirtSize,
+      runningWithDog: isDog,
+      dogName: isDog ? dogName : void 0,
+      extraPeople: 0,
+      extraDogs: 0,
+      peopleCount: isConcert ? concertQty : 1,
+      dogCount: isDog ? 1 : 0,
+      totalPrice: 0,
+      bibNumber: "",
+      paymentMethod: "ADMIN_GIFT",
+      paymentStatus: "PENDING",
+      paymentRef: "",
+      senderBank: "",
+      verificationStatus: "AWAITING_PAYMENT",
+      kitStatus: "PENDING_PICKUP",
+      registrationStatus: "REGISTERED",
+      createdAt: now.toISOString(),
+      expiresAt: new Date(now.getTime() + 15 * 60 * 1e3).toISOString()
+    };
+    const ins = await insertOrderChecked(order, WIND_TUNNEL_LIMIT);
+    if (!ins.ok) {
+      res.status(409).json({ error: "\u0E2A\u0E23\u0E49\u0E32\u0E07\u0E15\u0E31\u0E4B\u0E27\u0E44\u0E21\u0E48\u0E2A\u0E33\u0E40\u0E23\u0E47\u0E08 (\u0E17\u0E35\u0E48\u0E19\u0E31\u0E48\u0E07\u0E40\u0E15\u0E47\u0E21)" });
+      return;
+    }
+    let paid;
+    try {
+      paid = await markOrderPaid(order.orderId, {
+        status: "ADMIN_APPROVED",
+        verifiedBy: `\u0E41\u0E2D\u0E14\u0E21\u0E34\u0E19 ${admin}`,
+        paymentRef: "",
+        senderBank: "ADMIN",
+        note: `\u0E15\u0E31\u0E4B\u0E27\u0E21\u0E2D\u0E1A/\u0E1F\u0E23\u0E35 \u0E2A\u0E23\u0E49\u0E32\u0E07\u0E42\u0E14\u0E22\u0E41\u0E2D\u0E14\u0E21\u0E34\u0E19 ${admin} \u2014 ${reason}`
+      });
+    } catch (err) {
+      await rollbackNewOrder(order.orderId).catch(() => {
+      });
+      throw err;
+    }
+    if (sendEmail) await mailNewlyPaid(false, paid);
+    console.log(`[admin] ${admin} created gift ticket ${order.orderId}`);
+    const done = await getOrder(order.orderId) || paid || order;
+    res.json({ order: toAdminView(done), emailed: sendEmail && !!done.emailStatus?.ok, emailError: sendEmail && done.emailStatus && !done.emailStatus.ok ? done.emailStatus.error : void 0 });
   }));
   app2.post("/api/admin/orders/:orderId/restore", requireAdmin, h(async (req, res) => {
     const id = String(req.params.orderId);

@@ -164,7 +164,7 @@ export async function buildDocumentsHtml(
 
     <div class="sum">
       ${lines ? `<ul>${lines.map((l) => `<li><span>${esc(l.name)}</span><b>${l.amount < 0 ? '− ' : ''}${formatBaht(Math.abs(l.amount))} บาท</b></li>`).join('')}</ul>` : '<div></div>'}
-      <div class="total"><span>${o.paymentMethod === 'SPONSOR_CODE' ? `ยอดชำระ (สิทธิ์สปอนเซอร์${o.sponsorName ? ` ${esc(o.sponsorName)}` : ''})` : 'ยอดชำระสุทธิ'}</span><b>${formatBaht(o.totalPrice)} บาท</b></div>
+      <div class="total"><span>${o.paymentMethod === 'ADMIN_GIFT' ? 'ตั๋วมอบจากผู้จัดงาน (ไม่มีค่าใช้จ่าย)' : o.paymentMethod === 'SPONSOR_CODE' ? `ยอดชำระ (สิทธิ์สปอนเซอร์${o.sponsorName ? ` ${esc(o.sponsorName)}` : ''})` : 'ยอดชำระสุทธิ'}</span><b>${formatBaht(o.totalPrice)} บาท</b></div>
     </div>
 
     <h2 class="sec" style="margin-top:14px">📍 รายละเอียดงาน</h2>
