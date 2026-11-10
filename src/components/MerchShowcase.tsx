@@ -84,7 +84,7 @@ const KIT: KitItem[] = [
     nameEn: 'Race bib (BIB)',
     desc: 'พิมพ์ชื่อและเบอร์ของคุณ มี QR ดูผลการวิ่ง และเบอร์ติดต่อฉุกเฉิน',
     descEn: 'Printed with your name and number, a QR code for results and an emergency contact number.',
-    image: '/images/merch/bib-v3.webp',
+    image: '/images/merch/bib-v4.webp',
     group: 'all',
     wide: true,
   },

@@ -35745,7 +35745,7 @@ var esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<"
 var qr = (text, dark = "#1E0B3D") => import_qrcode.default.toDataURL(text, { margin: 1, width: 360, errorCorrectionLevel: "M", color: { dark, light: "#FFFFFF" } });
 var runnerBib = (bib, i) => i === 0 ? bib : `${bib}-${i + 1}`;
 var thaiDateTime = (iso) => iso ? new Date(iso).toLocaleString("th-TH", { timeZone: "Asia/Bangkok", dateStyle: "medium", timeStyle: "short" }) : "";
-var DOC_IMAGES = ["/images/brand/changsuek-run-logo-v3.webp", "/images/bib/bib-base-v3.webp", ...BIB_SPONSOR_LOGOS];
+var DOC_IMAGES = ["/images/brand/changsuek-run-logo-v3.webp", "/images/bib/bib-base-v4.webp"];
 async function buildDocumentsHtml(o, opts = {}) {
   const A = opts.assetBase || "";
   const inl = opts.inline;
@@ -35778,24 +35778,18 @@ async function buildDocumentsHtml(o, opts = {}) {
         const code = await qr(JSON.stringify({ orderId: o.orderId, bib }));
         return `
         <div class="bib">
-          ${pic("/images/bib/bib-base-v3.webp", "bib-bg")}
+          ${pic("/images/bib/bib-base-v4.webp", "bib-bg")}
           <div class="bib-dist"><b>${d.label}</b><span>${d.sub}</span></div>
           <div class="bib-age">
             <div class="bib-age-box"><b>${letter}</b><i></i><b>${decade ?? "\u2022"}</b></div>
-            <small>AGE GROUP</small><strong>${decade !== null ? `${decade * 10}-${decade * 10 + 9}` : "\u2014"}</strong>
+            <strong>${decade !== null ? `${decade * 10}-${decade * 10 + 9}` : "\u2014"}</strong>
           </div>
           <div class="bib-num" style="font-size:${size}cqw">${esc(bib)}</div>
           <div class="bib-line"></div>
           <div class="bib-name">${esc(r.name)}${dog ? `<span style="color:#0F766E;font-size:.8em"> \xB7 \u{1F436} ${esc(dog)}</span>` : ""}</div>
-          <div class="bib-qr"><img src="${code}" alt="QR" /><small>CHECK-IN \xB7 RACE RESULT</small></div>
-          <div class="bib-strip">
-            <div class="bib-logos">${BIB_SPONSOR_LOGOS.map((s) => pic(s, "bib-logo")).join("")}</div>
-            <div class="bib-perks">
-              ${BIB_PERKS.map((p) => `<div class="bib-perk"><span class="bib-perk-ic">${p.icon}</span><small>${p.label}</small></div>`).join("")}
-              <div class="bib-perk"><span class="bib-perk-size">${esc(r.shirt || "")}</span><small>${BIB_SIZE_LABEL}</small></div>
-            </div>
-          </div>
-          <div class="bib-sos"><small>EMERGENCY CONTACT</small>${phones.map((p) => `<b>${p}</b>`).join("")}</div>
+          <div class="bib-qr"><img src="${code}" alt="QR" /></div>
+          <div class="bib-size"><span class="bib-perk-size">${esc(r.shirt || "")}</span><small>${BIB_SIZE_LABEL}</small></div>
+          <div class="bib-sos">${phones.map((p) => `<b>${p}</b>`).join("")}</div>
         </div>`;
       })
     );
@@ -35967,17 +35961,19 @@ var CSS = `
   .bib-dist { position:absolute; left:64%; top:8.6%; width:17.6%; height:17.8%; border-radius:2cqw; background:linear-gradient(160deg,#2A1260,#3B1883); display:flex; flex-direction:column; align-items:center; justify-content:center; color:#fff; }
   .bib-dist b { font:900 9.6cqw/0.95 'Montserrat',sans-serif; letter-spacing:-.04em; }
   .bib-dist span { margin-top:.5cqw; padding-top:.4cqw; border-top:.35cqw solid var(--gold); font:800 1.55cqw 'Montserrat',sans-serif; letter-spacing:.12em; }
-  .bib-age { position:absolute; left:2.7%; top:38.9%; width:9.9%; text-align:center; }
-  .bib-age-box { background:#3B1883; border-radius:.9cqw; color:#fff; padding:.6cqw 0; }
+  .bib-age { position:absolute; left:2.3%; top:38.7%; width:10.4%; text-align:center; }
+  .bib-age-box { background:#3B1883; border-radius:1.4cqw; color:#fff; height:12.3cqw; display:flex; flex-direction:column; align-items:center; justify-content:center; }
   .bib-age-box b { display:block; font:900 4.9cqw/1.05 'Montserrat',sans-serif; } .bib-age-box i { display:block; height:.35cqw; margin:.2cqw .6cqw; background:var(--gold); }
-  .bib-age small { display:block; margin-top:.9cqw; font:800 1.2cqw 'Montserrat',sans-serif; color:#3B1883; } .bib-age strong { font:800 2.2cqw 'Montserrat',sans-serif; color:#3B1883; }
+  .bib-age strong { display:block; margin-top:2.3cqw; font:800 2.2cqw 'Montserrat',sans-serif; color:#3B1883; }
   .bib-num { position:absolute; left:15.4%; width:68%; top:38.5%; height:31%; display:flex; align-items:center; justify-content:center; font-family:'Montserrat',sans-serif; font-weight:900; line-height:1; letter-spacing:-.05em; color:#160A2E; white-space:nowrap; }
   .bib-line { position:absolute; left:16.2%; width:66.2%; top:70.4%; height:.35cqw; background:var(--gold); }
   .bib-name { position:absolute; left:15.4%; width:68%; top:71.6%; text-align:center; font:700 3.6cqw/1.25 'Mitr',sans-serif; color:#2A1450; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .bib-qr { position:absolute; left:85.2%; top:39%; width:12.6%; text-align:center; }
   .bib-qr img { width:100%; border:.35cqw solid #160A2E; border-radius:.8cqw; display:block; }
   .bib-qr small { display:block; margin-top:.5cqw; font:800 .95cqw 'Montserrat',sans-serif; color:#2A1450; }
-  .bib-sos { position:absolute; left:84.8%; top:64.2%; width:13.4%; text-align:center; border-top:.3cqw solid var(--gold); padding-top:.5cqw; }
+  .bib-sos { position:absolute; left:84.8%; top:68.2%; width:13.4%; text-align:center; }
+  .bib-size { position:absolute; left:88%; top:82.4%; width:8.8%; height:10.6%; background:#fff; border-radius:1cqw; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:.35cqw; }
+  .bib-size small { font:700 1.2cqw 'Mitr',sans-serif; color:#2A1450; white-space:nowrap; }
   .bib-strip { position:absolute; left:2.73%; top:81.84%; width:94.4%; height:12.6%; background:#fff; border-radius:1cqw; display:flex; align-items:stretch; }
   .bib-logos { flex:0 0 57%; min-height:0; overflow:hidden; display:grid; grid-template-columns:repeat(18,minmax(0,1fr)); grid-template-rows:repeat(2,minmax(0,1fr)); gap:.2cqw .45cqw; padding:.7cqw 1cqw; box-sizing:border-box; }
   .pic { display:block; background-repeat:no-repeat; background-position:center; background-size:contain; -webkit-print-color-adjust:exact; print-color-adjust:exact }

@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import QRCode from 'qrcode';
 import { eventInfo } from '../data/eventData';
-import { BIB_PERKS, BIB_SIZE_LABEL, BIB_SPONSOR_LOGOS } from '../data/bibStrip';
+import { BIB_SIZE_LABEL } from '../data/bibStrip';
 
 /**
- * The race BIB in the organiser's design (public/images/bib/bib-base-v3.webp, 1536 x 1024, sponsor strip
+ * The race BIB in the organiser's design (public/images/bib/bib-base-v4.webp, 1536 x 1024, sponsor strip
  * included, number / name / QR areas left blank): number, name, distance, age group and QR are drawn on top.
  * Sizes are in container units, so the card scales to any width. Styles: .rbib-* in index.css.
  */
@@ -47,7 +47,7 @@ export const RaceBib: React.FC<{
 
   return (
     <div className={`rbib ${className}`} role="img" aria-label={`ป้าย BIB หมายเลข ${bib} ${name} ระยะ ${d.label}`}>
-      <img className="rbib-bg" src="/images/bib/bib-base-v3.webp" alt="" draggable={false} />
+      <img className="rbib-bg" src="/images/bib/bib-base-v4.webp" alt="" draggable={false} />
       <div className="rbib-dist">
         <b>{d.label}</b>
         <span>{d.sub}</span>
@@ -58,7 +58,6 @@ export const RaceBib: React.FC<{
           <i />
           <b>{decade ?? '•'}</b>
         </div>
-        <small>AGE GROUP</small>
         <strong>{hasAge ? `${decade! * 10}-${decade! * 10 + 9}` : '—'}</strong>
       </div>
       <div className="rbib-num" style={{ fontSize: `${numSize.toFixed(2)}cqw` }}>
@@ -71,30 +70,13 @@ export const RaceBib: React.FC<{
       </div>
       <div className="rbib-qr">
         {qr ? <img src={qr} alt="" /> : <span className="rbib-qr-wait" />}
-        <small>CHECK-IN · RACE RESULT</small>
       </div>
-      {/* bottom strip: sponsors on the left half, medal / food / drink / jersey size on the right half */}
-      <div className="rbib-strip">
-        <div className="rbib-logos">
-          {BIB_SPONSOR_LOGOS.map((src) => (
-            <img key={src} src={src} alt="" loading="lazy" decoding="async" draggable={false} />
-          ))}
-        </div>
-        <div className="rbib-perks">
-          {BIB_PERKS.map((p) => (
-            <div key={p.id} className="rbib-perk">
-              <span className="rbib-perk-ic" dangerouslySetInnerHTML={{ __html: p.icon }} />
-              <small>{p.label}</small>
-            </div>
-          ))}
-          <div className="rbib-perk">
-            <span className="rbib-perk-size">{shirtSize || ''}</span>
-            <small>{BIB_SIZE_LABEL}</small>
-          </div>
-        </div>
+      {/* the sponsor strip and the medal / food / drink icons are part of the picture; only the jersey size is drawn here */}
+      <div className="rbib-size">
+        <span className="rbib-perk-size">{shirtSize || ''}</span>
+        <small>{BIB_SIZE_LABEL}</small>
       </div>
       <div className="rbib-sos">
-        <small>EMERGENCY CONTACT</small>
         {eventInfo.contactPhones.map((p) => (
           <b key={p}>{p}</b>
         ))}
