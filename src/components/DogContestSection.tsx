@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence, useReducedMotion, type TargetAndTransition } from 'motion/react';
 import { CalendarDays, Check, ChevronDown, Gift, PawPrint, Route } from 'lucide-react';
+import { SelectBurst } from './SelectBurst';
 
 type ContestId = 'costume' | 'healthy' | 'obedience';
 
@@ -137,6 +138,13 @@ export const DogContestSection: React.FC = () => {
   const [active, setActive] = useState<ContestId>('costume');
   const c = CONTESTS.find((x) => x.id === active) || CONTESTS[0];
   const reduce = useReducedMotion();
+  const [burst, setBurst] = useState(false);
+  const pick = (id: ContestId) => {
+    if (id === active) return;
+    setActive(id);
+    setBurst(false);
+    window.setTimeout(() => setBurst(true), 60);
+  };
   const fx = (hover: TargetAndTransition) => (reduce ? {} : { whileHover: hover, whileTap: { scale: 0.97 }, transition: SPRING });
   /** gentle idle motion for loose objects */
   const idle = (anim: TargetAndTransition, dur: number, delay = 0) => (reduce ? {} : { animate: anim, transition: { duration: dur, repeat: Infinity, ease: 'easeInOut' as const, delay } });
@@ -147,9 +155,23 @@ export const DogContestSection: React.FC = () => {
       <span id="costume-contest" className="block -translate-y-24" aria-hidden="true" />
       <div className="relative overflow-hidden rounded-[28px] sm:rounded-[40px] border-[3px] border-[#FFC928]/80 bg-gradient-to-b from-[#4B1FA8] via-[#3B1780] to-[#2A1450] shadow-[0_0_0_2px_rgba(42,20,80,0.6),0_20px_44px_-18px_rgba(42,20,80,0.8)]">
         {/* ---------- sunset beach stage header ---------- */}
-        <div className="relative overflow-hidden px-4 pt-5 pb-16 sm:pt-9 sm:pb-24 min-h-[330px] sm:min-h-[400px] lg:min-h-[440px] text-center">
+        <div className="relative overflow-hidden px-4 pt-5 pb-40 sm:pt-9 sm:pb-24 min-h-[330px] sm:min-h-[400px] lg:min-h-[440px] text-center">
           <img src="/images/contest/ct-bg-v1.webp" alt="" aria-hidden="true" decoding="async" draggable={false} className="pointer-events-none select-none absolute inset-0 h-full w-full object-cover object-[55%_center]" />
           <span aria-hidden="true" className="absolute inset-0 bg-gradient-to-b from-[#2A1450]/45 via-transparent to-[#3B1780]" />
+
+          {/* sun rays, sea glints, rising orbs and drifting paws */}
+          <span aria-hidden="true" className="fx-rays" style={{ left: '82%', top: '52%' }} />
+          <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
+            {[['40%', '58%'], ['52%', '64%'], ['64%', '60%'], ['74%', '68%'], ['30%', '70%'], ['58%', '72%'], ['86%', '64%'], ['46%', '76%']].map(([l, t], i) => (
+              <i key={l + t} className="fx-seaglint" style={{ left: l, top: t, animationDelay: `${i * 0.42}s` }} />
+            ))}
+            {[['12%', 8, 0], ['26%', 12, 2.2], ['38%', 7, 4.5], ['50%', 10, 1.2], ['62%', 8, 6], ['72%', 12, 3.3], ['84%', 7, 5.4], ['93%', 10, 7.4]].map(([l, sz, d]) => (
+              <i key={String(l)} className="fx-orb" style={{ left: l as string, width: sz as number, height: sz as number, animationDelay: `${d}s`, ['--dx' as string]: `${Number(sz) % 2 ? 20 : -20}px` }} />
+            ))}
+            {[['20%', 0], ['47%', 4], ['76%', 7.5]].map(([l, d]) => (
+              <PawPrint key={String(l)} className="fx-paw-drift h-5 w-5" style={{ left: l as string, animationDelay: `${d}s`, ['--dx' as string]: '24px' }} />
+            ))}
+          </div>
 
           {/* fairy lights along the top */}
           <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-1 flex justify-around px-2">
@@ -161,11 +183,23 @@ export const DogContestSection: React.FC = () => {
           {/* scenery objects */}
           <motion.img src={CT('ct-palm')} alt="" aria-hidden="true" className="fx-off pointer-events-none absolute -left-3 top-0 h-[150px] w-auto origin-bottom sm:-left-2 sm:h-[260px] lg:h-[300px]" {...idle({ rotate: [-1.5, 1.5, -1.5] }, 6)} />
           <motion.img src={CT('ct-flag')} alt="" aria-hidden="true" className="fx-off pointer-events-none absolute bottom-3 left-[22%] hidden h-[130px] w-auto origin-bottom-left sm:block lg:left-[24%] lg:h-[150px]" {...idle({ rotate: [-3, 3, -3] }, 3.2)} />
-          <motion.img src={CT('ct-flag')} alt="" aria-hidden="true" className="fx-off pointer-events-none absolute bottom-3 right-[22%] hidden h-[130px] w-auto origin-bottom-right -scale-x-100 sm:block lg:right-[24%] lg:h-[150px]" {...idle({ rotate: [3, -3, 3] }, 3.6, 0.5)} />
-          <motion.img src={CT('ct-trophy')} alt="" aria-hidden="true" className="fx-off pointer-events-none absolute bottom-3 left-[1%] h-[120px] w-auto drop-shadow-[0_10px_14px_rgba(20,8,40,0.55)] sm:bottom-7 sm:left-[4%] sm:h-[210px] lg:h-[250px]" {...idle({ y: [0, -6, 0] }, 4)} />
-          <motion.img src={CT('ct-rosette')} alt="" aria-hidden="true" className="fx-off pointer-events-none absolute bottom-3 right-[1%] h-[120px] w-auto drop-shadow-[0_10px_14px_rgba(20,8,40,0.55)] sm:bottom-7 sm:right-[4%] sm:h-[210px] lg:h-[250px]" {...idle({ y: [0, -6, 0] }, 4.6, 0.6)} />
-          <motion.img src={CT('ct-lantern')} alt="" aria-hidden="true" className="fx-off fx-glow pointer-events-none absolute bottom-6 left-[35%] hidden h-[90px] w-auto origin-top sm:block" {...idle({ rotate: [-3, 3, -3] }, 3.4)} />
-          <motion.img src={CT('ct-lantern')} alt="" aria-hidden="true" className="fx-off fx-glow pointer-events-none absolute bottom-6 right-[35%] hidden h-[90px] w-auto origin-top sm:block" {...idle({ rotate: [3, -3, 3] }, 3.8, 0.4)} />
+          <motion.img src={CT('ct-flag')} alt="" aria-hidden="true" className="fx-off pointer-events-none absolute bottom-3 right-[22%] hidden h-[130px] w-auto origin-bottom -scale-x-100 sm:block lg:right-[24%] lg:h-[150px]" {...idle({ rotate: [3, -3, 3] }, 3.6, 0.5)} />
+          <motion.div className="pointer-events-none absolute bottom-12 left-[1%] sm:bottom-7 sm:left-[4%]" {...idle({ y: [0, -6, 0] }, 4)}>
+            <span aria-hidden="true" className="fx-halo" />
+            <img src={CT('ct-trophy')} alt="" aria-hidden="true" className="fx-off relative block h-[98px] w-auto drop-shadow-[0_10px_14px_rgba(20,8,40,0.55)] sm:h-[210px] lg:h-[250px]" />
+            {[['42%', '8%', '0s'], ['78%', '30%', '1.1s'], ['18%', '36%', '2.0s'], ['55%', '58%', '.6s']].map(([l, t, d]) => (
+              <i key={l + t} aria-hidden="true" className="fx-glint not-italic" style={{ left: l, top: t, animationDelay: d }}>✦</i>
+            ))}
+          </motion.div>
+          <motion.div className="pointer-events-none absolute bottom-12 right-[1%] sm:bottom-7 sm:right-[4%]" {...idle({ y: [0, -6, 0] }, 4.6, 0.6)}>
+            <span aria-hidden="true" className="fx-halo" />
+            <img src={CT('ct-rosette')} alt="" aria-hidden="true" className="fx-off relative block h-[98px] w-auto drop-shadow-[0_10px_14px_rgba(20,8,40,0.55)] sm:h-[210px] lg:h-[250px]" />
+            {[['50%', '10%', '.4s'], ['20%', '30%', '1.4s'], ['82%', '42%', '2.4s'], ['48%', '52%', '.9s']].map(([l, t, d]) => (
+              <i key={l + t} aria-hidden="true" className="fx-glint not-italic" style={{ left: l, top: t, animationDelay: d }}>✦</i>
+            ))}
+          </motion.div>
+          <motion.img src={'/images/contest/ct-lantern-v2.webp'} alt="" aria-hidden="true" className="fx-off fx-glow pointer-events-none absolute bottom-6 left-[35%] hidden h-[90px] w-auto origin-top sm:block" {...idle({ rotate: [-3, 3, -3] }, 3.4)} />
+          <motion.img src={'/images/contest/ct-lantern-v2.webp'} alt="" aria-hidden="true" className="fx-off fx-glow pointer-events-none absolute bottom-6 right-[35%] hidden h-[90px] w-auto origin-top sm:block" {...idle({ rotate: [3, -3, 3] }, 3.8, 0.4)} />
 
           <div className="relative">
             <span className="fx-sheen inline-flex items-center gap-1.5 rounded-full border-2 border-white/70 bg-gradient-to-b from-white to-[#EFE5FF] px-3.5 py-1.5 text-xs sm:text-lg font-black text-[#4B1FA8] shadow-md">
@@ -173,7 +207,7 @@ export const DogContestSection: React.FC = () => {
               ประกวดน้องหมา 3 รายการ · วันเสาร์ที่ 9 ม.ค. 2570
             </span>
             <h2 id="dog-contest-heading" className="squiggle squiggle-center mt-3 font-hero text-[2rem] sm:text-5xl lg:text-[3.6rem] font-extrabold leading-[1.3] text-white [-webkit-text-stroke:6px_#3B1780] [paint-order:stroke_fill] [text-shadow:0_4px_0_rgba(42,20,80,0.9),0_10px_22px_rgba(20,8,40,0.55)]">
-              เวทีประกวด <span className="whitespace-nowrap text-[#FFD34D]">น้องหมา</span> สุดน่ารัก
+              เวทีประกวด <span className="fx-text-glow whitespace-nowrap text-[#FFD34D]">น้องหมา</span> สุดน่ารัก
             </h2>
             <p className="mx-auto mt-3 w-fit rounded-full border-2 border-white/60 bg-white/85 px-4 py-1.5 text-sm sm:text-xl font-black text-[#3B1780] shadow-md backdrop-blur-sm">ฟรีสำหรับคู่วิ่ง Dog Run · ลงได้ทุกรายการ</p>
           </div>
@@ -191,13 +225,13 @@ export const DogContestSection: React.FC = () => {
                 id={`contest-tab-${t.id}`}
                 aria-selected={on}
                 aria-controls="contest-panel"
-                onClick={() => setActive(t.id)}
+                onClick={() => pick(t.id)}
                 className={`relative shrink-0 min-h-[48px] sm:min-h-[60px] px-2.5 min-[400px]:px-4 sm:px-9 rounded-[20px] text-[13.5px] min-[400px]:text-[15px] sm:text-lg font-extrabold cursor-pointer transition-colors ${on ? 'text-white' : 'text-[#2A1450] hover:bg-[#F3EEFB]'}`}
               >
                 {on && (
                   <motion.span
                     layoutId="contest-tab-bg"
-                    className="absolute inset-0 rounded-[20px] border-2 border-[#F5B800] shadow-[0_5px_0_#2A1450,inset_0_1px_0_rgba(255,255,255,0.3)]"
+                    className="fx-glow absolute inset-0 rounded-[20px] border-2 border-[#F5B800] shadow-[0_5px_0_#2A1450,inset_0_1px_0_rgba(255,255,255,0.3)]"
                     style={{ background: 'linear-gradient(180deg,#6D3FD0,#3B1780)' }}
                     transition={{ type: 'spring', stiffness: 420, damping: 32 }}
                   />
@@ -223,6 +257,7 @@ export const DogContestSection: React.FC = () => {
             transition={{ duration: 0.28 }}
             className="relative mx-3 mt-4 grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-7 rounded-[28px] border-2 border-white/40 bg-gradient-to-br from-[#7C4FD8]/70 via-[#6D3FD0]/55 to-[#4B1FA8]/70 px-4 pb-5 pt-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.5),0_14px_30px_-16px_rgba(20,8,40,0.8)] backdrop-blur-sm sm:mx-6 sm:px-8 sm:pb-6 items-start"
           >
+            <SelectBurst active={burst} count={30} spread={1.6} className="left-1/2 top-24" />
             {/* picture side: gold ribbon frame, the artwork steps out in front of it */}
             <div className="md:col-span-5 relative mx-auto w-full max-w-[460px]">
               <div className="relative aspect-[490/464]">
@@ -241,8 +276,9 @@ export const DogContestSection: React.FC = () => {
                     <div className="text-[96px]">🐕</div>
                   )}
                 </div>
+                <span aria-hidden="true" className="fx-sweep" style={{ WebkitMaskImage: `url(${CT('ct-frame')})`, maskImage: `url(${CT('ct-frame')})` }} />
                 <motion.img src={CT('ct-frame')} alt="" aria-hidden="true" loading="lazy" className="fx-off pointer-events-none select-none absolute inset-0 z-20 h-full w-full" {...fx({ scale: 1.02 })} />
-                {[['8%', '30%', '0s'], ['90%', '38%', '.8s'], ['14%', '76%', '1.5s'], ['86%', '80%', '.4s']].map(([l, t, d]) => (
+                {[['8%', '30%', '0s'], ['90%', '38%', '.8s'], ['14%', '76%', '1.5s'], ['86%', '80%', '.4s'], ['50%', '4%', '1.1s'], ['30%', '16%', '2.0s'], ['72%', '14%', '.2s'], ['50%', '96%', '1.7s']].map(([l, t, d]) => (
                   <i key={l + t} aria-hidden="true" className="fx-spark z-30" style={{ left: l, top: t, animationDelay: d }} />
                 ))}
               </div>
@@ -274,12 +310,14 @@ export const DogContestSection: React.FC = () => {
                       <span className="w-[44%] sm:w-[40%] shrink-0 leading-snug">{k.label}</span>
                       <span className="flex-1 h-3 rounded-full bg-[#E7DBFA] overflow-hidden shadow-inner">
                         <motion.span
-                          className="block h-full rounded-full"
+                          className="relative block h-full overflow-hidden rounded-full"
                           style={{ background: 'linear-gradient(90deg,#4B1FA8,#8B5CF6,#FFC928)' }}
                           initial={{ width: 0 }}
                           animate={{ width: `${Math.min(100, k.pts * 2.5)}%` }}
                           transition={{ delay: 0.1 + i * 0.07, type: 'spring', stiffness: 120, damping: 18 }}
-                        />
+                        >
+                          <span className="fx-barshine" style={{ animationDelay: `${i * 0.35}s` }} />
+                        </motion.span>
                       </span>
                       <span className="w-9 shrink-0 rounded-full bg-[#F3ECFF] py-0.5 text-center tabular-nums text-[#4B1FA8]">{k.pts}</span>
                     </li>

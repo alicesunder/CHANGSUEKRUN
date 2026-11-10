@@ -157,3 +157,35 @@
 .fx-live-soft { animation: fxLiveSoft 2.4s ease-in-out infinite; }
 @keyframes fxLiveSoft { 0%, 100% { box-shadow: 0 5px 0 #2A1450, 0 0 0 0 rgba(255, 201, 40, .0); } 50% { box-shadow: 0 5px 0 #2A1450, 0 0 26px 4px rgba(255, 201, 40, .75); } }
 @media (prefers-reduced-motion: reduce) { .fx-live-soft { animation: none; } }
+
+/* ---------- 6) contest stage: sun rays, rising orbs, glints, drifting paws, light sweep ---------- */
+.fx-rays {
+  position: absolute; width: 760px; height: 760px; translate: -50% -50%; pointer-events: none; mix-blend-mode: screen; opacity: .5;
+  background: repeating-conic-gradient(from 0deg, rgba(255, 226, 120, .55) 0deg 6deg, transparent 6deg 18deg);
+  -webkit-mask-image: radial-gradient(circle, #000 0%, transparent 68%); mask-image: radial-gradient(circle, #000 0%, transparent 68%);
+  animation: fxSpin 60s linear infinite;
+}
+.fx-orb {
+  position: absolute; bottom: -6%; border-radius: 50%; pointer-events: none; opacity: 0;
+  background: radial-gradient(circle at 35% 30%, #fff 0 15%, rgba(255, 226, 104, .85) 35%, rgba(255, 201, 40, .0) 72%);
+  animation: fxRise 9s ease-in infinite;
+}
+@keyframes fxRise { 0% { translate: 0 0; opacity: 0; scale: .6; } 15% { opacity: .95; } 100% { translate: var(--dx, 18px) -380px; opacity: 0; scale: 1.2; } }
+.fx-paw-drift { position: absolute; bottom: -8%; pointer-events: none; opacity: 0; color: rgba(255, 226, 104, .75); animation: fxPawDrift 11s linear infinite; }
+@keyframes fxPawDrift { 0% { translate: 0 0; opacity: 0; rotate: -20deg; } 12% { opacity: .8; } 100% { translate: var(--dx, 30px) -420px; opacity: 0; rotate: 25deg; } }
+.fx-glint { position: absolute; pointer-events: none; color: #fff; font-size: 22px; line-height: 1; text-shadow: 0 0 8px #fff, 0 0 18px rgba(255, 226, 104, .95); animation: fxGlint 3.2s ease-in-out infinite; }
+@keyframes fxGlint { 0%, 70%, 100% { opacity: 0; scale: .2; rotate: 0deg; } 80% { opacity: 1; scale: 1.25; rotate: 45deg; } 90% { opacity: .6; scale: .8; rotate: 90deg; } }
+.fx-halo { position: absolute; inset: -18%; z-index: -1; border-radius: 50%; pointer-events: none; background: radial-gradient(circle, rgba(255, 226, 120, .6) 0%, rgba(255, 201, 40, .25) 40%, transparent 70%); animation: fxHalo 3.6s ease-in-out infinite; }
+@keyframes fxHalo { 0%, 100% { opacity: .55; scale: .94; } 50% { opacity: 1; scale: 1.08; } }
+.fx-text-glow { animation: fxTextGlow 2.8s ease-in-out infinite; }
+@keyframes fxTextGlow { 0%, 100% { text-shadow: 0 4px 0 rgba(42, 20, 80, .9), 0 0 10px rgba(255, 211, 77, .35); } 50% { text-shadow: 0 4px 0 rgba(42, 20, 80, .9), 0 0 26px rgba(255, 211, 77, 1), 0 0 48px rgba(255, 180, 40, .7); } }
+.fx-barshine { position: absolute; inset: 0; background: linear-gradient(100deg, transparent 30%, rgba(255, 255, 255, .75) 50%, transparent 70%); translate: -120% 0; animation: fxSheen 2.8s ease-in-out infinite; }
+.fx-sweep { position: absolute; inset: 0; z-index: 30; overflow: hidden; pointer-events: none; -webkit-mask-size: 100% 100%; mask-size: 100% 100%; }
+.fx-sweep::after { content: ''; position: absolute; top: -10%; bottom: -10%; width: 22%; left: 0; transform: skewX(-18deg); background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .95), transparent); translate: -150% 0; animation: fxSweep 4.2s ease-in-out infinite; }
+@keyframes fxSweep { 0%, 35% { translate: -150% 0; } 100% { translate: 650% 0; } }
+.fx-seaglint { position: absolute; width: 56px; height: 3px; border-radius: 3px; pointer-events: none; background: linear-gradient(90deg, transparent, rgba(255, 240, 190, .95), transparent); animation: fxSea 3.4s ease-in-out infinite; }
+@keyframes fxSea { 0%, 100% { opacity: 0; scale: .4 1; } 50% { opacity: 1; scale: 1 1; } }
+@media (prefers-reduced-motion: reduce) {
+  .fx-rays, .fx-orb, .fx-paw-drift, .fx-glint, .fx-halo, .fx-text-glow, .fx-barshine, .fx-seaglint, .fx-sweep::after { animation: none; }
+  .fx-orb, .fx-paw-drift, .fx-glint, .fx-barshine, .fx-sweep { display: none; }
+}
