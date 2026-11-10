@@ -824,12 +824,6 @@ export const TicketShop: React.FC<TicketShopProps> = ({
                         ? `🎉 ซื้อ ${items} อย่าง ลด ${percentOf(rate)}% แล้ว! ${nudge}`
                         : `เลือกเพิ่มอีกอย่าง ลดทันที ${percentOf(BASKET_TIERS[0].rate)}% ทั้งตะกร้า (3 อย่าง ${percentOf(BASKET_TIERS[1].rate)}% · 4–5 อย่าง ${percentOf(BASKET_TIERS[2].rate)}%) 🎁`}
                   </p>}
-                  {extra > 0 && (
-                    <div className="mb-3 flex items-center gap-3 rounded-2xl border-2 border-[#2A1450] bg-gradient-to-r from-[#FFE268] to-[#FFC928] px-3.5 py-2.5 shadow-[0_4px_0_#2A1450]">
-                      <span aria-hidden="true" className="text-2xl">👥</span>
-                      <p className="text-sm font-black leading-snug text-[#2A1450]">คนที่ 2 เลือกกิจกรรมแยกจากคนแรกได้! <span className="font-bold">แตะชื่อคนที่ 2 ด้านล่าง แล้วเลือกหอสูง · ยิงปืน · อุโมงค์ลม</span></p>
-                    </div>
-                  )}
                   <AddOnPicker
                     value={addOns}
                     onChange={onAddOnsChange}

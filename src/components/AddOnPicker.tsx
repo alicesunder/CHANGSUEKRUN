@@ -227,12 +227,25 @@ export const AddOnPicker: React.FC<AddOnPickerProps> = ({ value, onChange, windT
   return (
     <div className="space-y-3 @container">
       {multi && (
-        <div className="rounded-2xl border-2 border-[#C9B4EE] bg-[#FAF6FF] p-2.5">
-          <p className="mb-2 text-xs font-black text-[#2A1450]">{tr('เลือกกิจกรรมแยกรายคน · แตะชื่อเพื่อเลือกให้คนนั้น', 'Pick activities for each runner · tap a name')}</p>
-          <div role="tablist" aria-label={tr('ผู้วิ่งแต่ละคน', 'Each runner')} className="flex flex-wrap gap-2">
+        <div className="fx-live-soft relative overflow-hidden rounded-3xl border-[3px] border-[#2A1450] bg-gradient-to-br from-[#FFF3C4] via-[#FFE9A6] to-[#FFD34D] p-3 shadow-[0_5px_0_#2A1450] sm:p-4">
+          {/* notice sign */}
+          <div className="flex items-start gap-3">
+            <span aria-hidden="true" className="fx-ring relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full border-2 border-[#2A1450] bg-[#7C3AED] text-2xl shadow-[0_3px_0_#2A1450]">
+              👥
+              <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full border-2 border-[#2A1450] bg-[#EF4444] text-[11px] font-black text-white">!</span>
+            </span>
+            <div className="min-w-0">
+              <p className="text-base font-black leading-tight text-[#2A1450] sm:text-xl">{tr('📢 เลือกกิจกรรมให้ "แต่ละคน" ได้แยกกัน!', '📢 Each runner can pick their own activities!')}</p>
+              <p className="mt-0.5 text-xs font-bold leading-snug text-[#4B2D78] sm:text-sm">{tr('แตะชื่อด้านล่างเพื่อสลับคน แล้วเลือกหอสูง · ยิงปืน · อุโมงค์ลม ให้คนนั้น (ไม่ต้องเหมือนกัน)', 'Tap a name below to switch runner, then pick tower · shooting · wind tunnel for them (they can differ)')}</p>
+            </div>
+          </div>
+          <div role="tablist" aria-label={tr('ผู้วิ่งแต่ละคน', 'Each runner')} className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
             {ps.map((p, i) => {
               const on = i === active;
               const chosen = (p.tower ? 1 : 0) + (p.gun !== 'none' ? 1 : 0) + (p.windTunnel ? 1 : 0);
+              const label = runnerNames![i] || `${tr('คนที่', 'Runner')} ${i + 1}`;
+              // nudge: somebody has nothing yet and is not the one being edited
+              const nudge = !on && !chosen;
               return (
                 <button
                   key={i}
@@ -240,10 +253,14 @@ export const AddOnPicker: React.FC<AddOnPickerProps> = ({ value, onChange, windT
                   role="tab"
                   aria-selected={on}
                   onClick={() => setActive(i)}
-                  className={`min-h-[44px] max-w-full rounded-full border-2 px-3.5 text-sm font-black cursor-pointer ${on ? 'border-[#2A1450] bg-[#FFC928] text-[#2A1450] shadow-[0_3px_0_#2A1450]' : 'border-[#C9B4EE] bg-white text-[#4B2D78]'}`}
+                  className={`relative flex min-h-[56px] cursor-pointer items-center justify-between gap-2 rounded-2xl border-[3px] px-3.5 py-2 text-left font-black transition-transform active:scale-[0.98] ${on ? 'border-[#2A1450] bg-[#7C3AED] text-white shadow-[0_4px_0_#2A1450]' : 'border-[#2A1450]/70 bg-white text-[#4B2D78] hover:-translate-y-0.5'}`}
                 >
-                  <span className="truncate">👤 {runnerNames![i] || `${tr('คนที่', 'Runner')} ${i + 1}`}</span>
-                  <span className={`ml-2 rounded-full px-2 py-0.5 text-[11px] ${chosen ? 'bg-emerald-600 text-white' : 'bg-[#EFE5FF] text-[#6B5A85]'}`}>{chosen ? `${chosen} ${tr('อย่าง', 'item(s)')}` : tr('ไม่เล่น', 'none')}</span>
+                  <span className="min-w-0">
+                    <span className="block text-[11px] font-extrabold opacity-80">{on ? tr('✏️ กำลังเลือกให้', '✏️ Choosing for') : tr('แตะเพื่อเลือกให้', 'Tap to choose for')}</span>
+                    <span className="block truncate text-base sm:text-lg">👤 {label}</span>
+                  </span>
+                  <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs ${chosen ? 'bg-emerald-600 text-white' : nudge ? 'bg-[#EF4444] text-white' : 'bg-[#EFE5FF] text-[#6B5A85]'}`}>{chosen ? `✓ ${chosen} ${tr('อย่าง', 'item(s)')}` : nudge ? tr('ยังไม่ได้เลือก', 'not chosen') : tr('ไม่เล่น', 'none')}</span>
+                  {nudge && <span aria-hidden="true" className="absolute -right-1 -top-1 flex h-4 w-4"><span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#EF4444] opacity-75" /><span className="relative inline-flex h-4 w-4 rounded-full bg-[#EF4444]" /></span>}
                 </button>
               );
             })}
