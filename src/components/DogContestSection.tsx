@@ -157,10 +157,13 @@ export const DogContestSection: React.FC = () => {
     <section id="dog-contest" aria-labelledby="dog-contest-heading" className="mt-10 sm:mt-14 scroll-mt-24">
       {/* old link target for the costume contest */}
       <span id="costume-contest" className="block -translate-y-24" aria-hidden="true" />
-      <div className="relative overflow-hidden rounded-[28px] sm:rounded-[40px] border-[3px] border-white/90 bg-gradient-to-b from-[#C6A9F3] via-[#CDB8F6] to-[#E3D7FB] shadow-[0_0_0_2px_rgba(255,201,40,0.55),0_20px_44px_-18px_rgba(75,31,168,0.55)]">
+      <div className="relative overflow-hidden rounded-[28px] sm:rounded-[40px] border-[3px] border-[#FFD86B]/90 bg-gradient-to-b from-[#7A4BD8] via-[#6A3BC9] to-[#5427B0] shadow-[0_0_0_2px_rgba(91,39,176,0.35),0_0_36px_-6px_rgba(255,201,40,0.55),0_20px_44px_-18px_rgba(42,20,80,0.7)]">
         {/* ---------- the stage: one picture (palms, trophy, rosette, flags, lanterns, lights all standing on the beach) ---------- */}
-        <div className="relative h-[330px] overflow-hidden sm:h-auto sm:aspect-[2021/778]">
-          <img src="/images/contest/ct-stage-v1.webp" alt="" aria-hidden="true" decoding="async" draggable={false} className="pointer-events-none select-none absolute inset-0 h-full w-full object-cover object-[50%_top] sm:object-fill" />
+        <div className="relative h-[390px] overflow-hidden sm:h-auto sm:aspect-[2021/690]">
+          <span aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 z-[1] h-[38%] bg-gradient-to-b from-transparent via-[#7A4BD8]/40 to-[#7A4BD8]" />
+          <img src="/images/contest/ct-stage-v1.webp" alt="" aria-hidden="true" decoding="async" draggable={false} className="pointer-events-none select-none absolute inset-0 h-full w-full object-cover object-[50%_top] max-sm:scale-110 max-sm:blur-[1.5px]" />
+          {/* phones: the whole stage (trophy, rosette, flags) as a strip along the bottom, so nothing is cut off */}
+          <img src="/images/contest/ct-stage-v1.webp" alt="" aria-hidden="true" decoding="async" draggable={false} className="pointer-events-none select-none absolute inset-x-0 bottom-10 z-[2] w-full h-auto sm:hidden [mask-image:linear-gradient(to_bottom,transparent,black_30%)]" />
 
           {/* light effects laid exactly on the picture's lamps, trophy, rosette, sun and sea (wide screens) */}
           <div aria-hidden="true" className="pointer-events-none absolute inset-0 hidden sm:block">
@@ -204,7 +207,7 @@ export const DogContestSection: React.FC = () => {
         </div>
 
         {/* tabs sit on the sand line of the stage */}
-        <div role="tablist" aria-label="เลือกรายการประกวด" className="relative z-10 -mt-16 sm:-mt-[17%] mx-auto flex w-fit max-w-[94%] gap-1.5 sm:gap-2 rounded-full border-2 border-white/90 bg-white/80 p-1.5 shadow-[0_10px_24px_-10px_rgba(75,31,168,0.6)] backdrop-blur overflow-x-auto [scrollbar-width:none]">
+        <div role="tablist" aria-label="เลือกรายการประกวด" className="relative z-10 -mt-16 sm:-mt-[10.5%] mx-auto flex w-fit max-w-[94%] gap-1.5 sm:gap-2 rounded-full border-2 border-white/90 bg-white/80 p-1.5 shadow-[0_10px_24px_-10px_rgba(75,31,168,0.6)] backdrop-blur overflow-x-auto [scrollbar-width:none]">
           {CONTESTS.map((t) => {
             const on = t.id === active;
             return (
@@ -236,7 +239,7 @@ export const DogContestSection: React.FC = () => {
         </div>
 
         {/* one light glass panel holds the contest and the shared rules, like the design */}
-        <div className="relative mx-3 mt-4 rounded-[30px] border-2 border-white/80 bg-gradient-to-b from-white/45 to-white/25 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_16px_36px_-20px_rgba(75,31,168,0.6)] backdrop-blur-sm sm:mx-6 sm:p-5">
+        <div className="relative z-10 mx-3 mt-3 rounded-[30px] border-2 border-white/85 bg-gradient-to-b from-[#EEE4FF]/95 via-[#E3D5FD]/92 to-[#D9C8FA]/92 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.95),0_0_26px_-6px_rgba(255,255,255,0.55),0_18px_36px_-18px_rgba(42,20,80,0.7)] backdrop-blur-sm sm:mx-7 sm:p-6">
           <AnimatePresence mode="wait">
             <motion.div
               key={c.id}
@@ -253,15 +256,15 @@ export const DogContestSection: React.FC = () => {
               {/* picture side: gold ribbon frame; the artwork fills the window */}
               <div className="relative mx-auto w-full max-w-[470px] md:col-span-5">
                 <div className="relative aspect-[490/464]">
-                  <span aria-hidden="true" className="absolute left-[12%] right-[12%] top-[26%] bottom-[16%] rounded-[40%] bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.75),rgba(233,221,255,0.35)_60%,transparent_75%)]" />
-                  <div className="absolute left-[6%] right-[6%] top-[19%] bottom-[11%] z-10 flex items-end justify-center">
+                  
+                  <div className="absolute left-[7%] right-[7%] top-[10%] bottom-[12%] z-30 flex items-end justify-center">
                     {c.image ? (
                       <motion.img
                         src={c.image.src}
                         alt={c.image.alt}
                         loading="lazy"
                         decoding="async"
-                        className="fx-off max-h-full max-w-full w-auto h-auto object-contain drop-shadow-[0_10px_14px_rgba(42,20,80,0.35)]"
+                        className="fx-off h-full w-full object-contain object-bottom drop-shadow-[0_8px_10px_rgba(42,20,80,0.35)]"
                         {...idle({ y: [0, -4, 0] }, 3.6)}
                       />
                     ) : (
@@ -285,7 +288,7 @@ export const DogContestSection: React.FC = () => {
                       <span className="relative -rotate-6 text-base sm:text-xl font-black text-[#7A1FA2]">ฟรี!</span>
                     </motion.span>
                     <motion.img src={CT('ct-wizard')} alt="" aria-hidden="true" className="fx-off h-9 w-auto sm:h-12" {...idle({ rotate: [-6, 6, -6] }, 3)} />
-                    <h3 className="text-[20px] sm:text-[26px] font-black leading-tight text-[#2A1450]">{c.title}</h3>
+                    <h3 className="text-[21px] sm:text-[24px] lg:text-[28px] font-black leading-tight text-[#3B1780]">{c.title}</h3>
                   </div>
                   <p className="mt-2.5 inline-flex items-center gap-1.5 rounded-full border border-[#F2C94C] bg-gradient-to-r from-[#FFF6D6] to-[#FFE79A] px-3.5 py-1 text-[13px] sm:text-[15px] font-extrabold text-[#4A1D7A] shadow-sm">
                     <img src={CT('ct-star')} alt="" aria-hidden="true" className="fx-off h-4 w-4 object-contain" /> {c.tagline}
@@ -298,9 +301,9 @@ export const DogContestSection: React.FC = () => {
                   </p>
                   <ul className="divide-y divide-[#E4D8F7]" aria-label={`เกณฑ์ให้คะแนน ${c.title}`}>
                     {c.criteria.map((k, i) => (
-                      <li key={k.label} className="flex items-center gap-2.5 py-1.5 text-[13px] sm:text-[15px] font-extrabold text-[#2A1450]">
+                      <li key={k.label} className="flex items-center gap-3 py-2 text-[14px] sm:text-[17px] font-extrabold text-[#2A1450]">
                         <span className="w-[44%] sm:w-[40%] shrink-0 leading-snug">{k.label}</span>
-                        <span className="flex-1 h-3 rounded-full bg-[#E7DBFA] overflow-hidden shadow-inner">
+                        <span className="flex-1 h-3.5 rounded-full bg-[#E5D8FB] overflow-hidden shadow-inner">
                           <motion.span
                             className="relative block h-full overflow-hidden rounded-full"
                             style={{ background: 'linear-gradient(90deg,#4B1FA8,#7C3AED)' }}
@@ -343,7 +346,7 @@ export const DogContestSection: React.FC = () => {
                 {SHARED_SHORT.map((r, i) => {
                   const Icon = SHARED_ICONS[i];
                   return (
-                    <li key={r} className="flex items-start gap-2 text-[12.5px] sm:text-sm font-bold leading-snug text-[#3B1780]">
+                    <li key={r} className="flex items-start gap-2 text-[13px] sm:text-[15px] font-bold leading-snug text-[#3B1780]">
                       <Icon className="mt-0.5 h-4 w-4 shrink-0 text-[#6D28D9]" aria-hidden="true" />
                       <span>{r}</span>
                     </li>
@@ -360,7 +363,7 @@ export const DogContestSection: React.FC = () => {
 
         {/* gold wave along the bottom edge, as in the design */}
         <svg aria-hidden="true" className="mt-3 block h-10 w-full sm:h-14" viewBox="0 0 1440 80" preserveAspectRatio="none">
-          <path d="M0 40 C 260 0, 520 70, 760 36 S 1200 6, 1440 40 L1440 80 L0 80 Z" fill="#8B5CF6" opacity=".55" />
+          <path d="M0 40 C 260 0, 520 70, 760 36 S 1200 6, 1440 40 L1440 80 L0 80 Z" fill="#4A1FA0" opacity=".9" />
           <path d="M0 40 C 260 0, 520 70, 760 36 S 1200 6, 1440 40" fill="none" stroke="#FFC928" strokeWidth="3" />
           <path d="M0 54 C 280 16, 540 84, 780 50 S 1210 22, 1440 54" fill="none" stroke="#FFE7A0" strokeWidth="1.5" opacity=".8" />
         </svg>
