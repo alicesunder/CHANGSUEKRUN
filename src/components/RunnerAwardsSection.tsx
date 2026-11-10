@@ -13,7 +13,7 @@ const FOOT =
   'mx-auto mt-3 flex w-full items-center justify-between gap-2 rounded-full border-[3px] border-[#FFC928] bg-gradient-to-b from-[#4B1FA8] to-[#2A1450] px-3 py-2 text-center text-base font-black text-white shadow-[0_0_18px_-4px_rgba(255,201,40,0.6)] sm:mt-5 sm:px-6 sm:py-3 sm:text-2xl';
 
 const Laurel: React.FC<{ side: 'l' | 'r'; className: string }> = ({ side, className }) => (
-  <img src={`/images/awards/part-laurel-${side}-v5.webp`} alt="" aria-hidden="true" loading="lazy" className={`${className} w-auto shrink-0`} />
+  <img src={`/images/awards/part-laurel-${side}-v6.webp`} alt="" aria-hidden="true" loading="lazy" className={`${className} w-auto shrink-0`} />
 );
 
 export const RunnerAwardsSection: React.FC = () => (
@@ -38,7 +38,7 @@ export const RunnerAwardsSection: React.FC = () => (
           <div className={PANEL}>
             <span className={TAB}>10K &amp; 5K</span>
             <div className="flex justify-center">
-              <img src="/images/awards/part-podium-v5.webp" alt="โพเดียมถ้วยรางวัลอันดับ 1 2 3" loading="lazy" className="h-44 w-auto drop-shadow-[0_10px_12px_rgba(0,0,0,0.4)] sm:h-72" />
+              <img src="/images/awards/part-podium-v6.webp" alt="โพเดียมถ้วยรางวัลอันดับ 1 2 3" loading="lazy" className="h-44 w-auto drop-shadow-[0_10px_12px_rgba(0,0,0,0.4)] sm:h-72" />
             </div>
             <p className={FOOT}>
               <Laurel side="l" className="h-8 sm:h-12" />
@@ -50,13 +50,16 @@ export const RunnerAwardsSection: React.FC = () => (
           {/* Dog Run: gift set of product */}
           <div className={PANEL}>
             <span className={TAB}>Dog Run 4K &amp; 1K</span>
-            <div className="relative flex items-center justify-center">
-              <img src="/images/awards/part-dog-gift-v5.webp" alt="น้องหมานอนข้างกล่องของขวัญ" loading="lazy" className="-ml-3 h-36 w-auto shrink-0 drop-shadow-[0_10px_12px_rgba(0,0,0,0.4)] sm:-ml-10 sm:h-56" />
-              <span className="absolute -right-1 top-1/2 w-[46%] -translate-y-1/2 -rotate-3 sm:right-0 sm:w-[44%]">
-                <span className="block rounded-xl border-[3px] border-[#FFC928] bg-gradient-to-b from-[#FFE9A0] via-[#FFD34D] to-[#F5B800] px-2 py-1.5 text-center text-sm font-black leading-tight tracking-tight text-[#2A1450] shadow-[0_5px_0_rgba(20,8,40,0.6)] sm:rounded-2xl sm:px-4 sm:py-2.5 sm:text-3xl">
+            <div className="flex flex-col items-center">
+              <div className="flex items-end justify-center">
+                <img src="/images/awards/part-dog-v6.webp" alt="น้องหมาโกลเด้นใส่ผ้าพันคอ" loading="lazy" className="relative z-10 h-28 w-auto drop-shadow-[0_8px_10px_rgba(0,0,0,0.4)] sm:h-44" />
+                <img src="/images/awards/part-gift-v6.webp" alt="กล่องของขวัญ" loading="lazy" className="-ml-5 h-24 w-auto drop-shadow-[0_8px_10px_rgba(0,0,0,0.4)] sm:-ml-9 sm:h-36" />
+              </div>
+              <span className="mt-2 block w-full max-w-[22rem] -rotate-2 sm:mt-3">
+                <span className="block rounded-xl border-[3px] border-[#FFC928] bg-gradient-to-b from-[#FFE9A0] via-[#FFD34D] to-[#F5B800] px-3 py-1.5 text-center text-lg font-black leading-tight tracking-tight text-[#2A1450] shadow-[0_5px_0_rgba(20,8,40,0.6)] sm:rounded-2xl sm:py-2 sm:text-3xl">
                   GIFT SET OF PRODUCT
                 </span>
-                <span className="mt-1.5 block rounded-lg border-2 border-[#FFC928] bg-gradient-to-b from-[#4B1FA8] to-[#2A1450] whitespace-nowrap px-1.5 py-1 text-center text-[11px] font-black text-white shadow-[0_4px_0_rgba(20,8,40,0.55)] sm:mt-2 sm:rounded-xl sm:px-2 sm:py-1.5 sm:text-lg">ชุดผลิตภัณฑ์ของขวัญ</span>
+                <span className="mt-1.5 block rounded-lg border-2 border-[#FFC928] bg-gradient-to-b from-[#4B1FA8] to-[#2A1450] px-2 py-1 text-center text-sm font-black text-white shadow-[0_4px_0_rgba(20,8,40,0.55)] sm:mt-2 sm:rounded-xl sm:py-1.5 sm:text-xl">ชุดผลิตภัณฑ์ของขวัญ</span>
               </span>
             </div>
             <p className={FOOT}>
