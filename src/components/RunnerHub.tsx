@@ -133,7 +133,7 @@ const QrFullscreen: React.FC<{ order: HubOrder; name: string; onClose: () => voi
   };
   return createPortal(
     <div role="dialog" aria-modal="true" aria-label={t('QR ตั๋วเข้างาน', 'Entry QR ticket')} className="fixed inset-0 z-[10200] flex flex-col items-center overflow-y-auto bg-white px-5 py-6 text-[#2A1450]">
-      <img src="/images/brand/changsuek-run-logo.webp" alt="CHANG SUEK RUN 2027" className="h-16 w-auto object-contain" />
+      <img src="/images/brand/changsuek-run-logo-v2.webp" alt="CHANG SUEK RUN 2027" className="h-16 w-auto object-contain" />
       <p className="mt-2 text-sm font-extrabold text-[#6D28D9]">{t('ตั๋วเข้างาน (QR Code)', 'Entry ticket (QR code)')}</p>
       <div className="mt-3 w-full max-w-[420px] rounded-3xl border-2 border-[#D9C9EF] bg-white p-3 shadow-lg">
         {qr ? <img src={qr} alt={`QR ${order.orderId}`} className="block h-auto w-full" /> : <div className="aspect-square w-full animate-pulse rounded-2xl bg-[#F1EAFD]" />}
@@ -212,7 +212,7 @@ body{margin:0;font-family:'Noto Sans Thai','Sarabun',sans-serif;background:#fff;
 h1{margin:0;font-size:15mm;color:#4B1FA8}p{margin:2mm 0}.n{font-size:17mm;font-weight:800;color:#2A1450;margin:6mm 0}
 .s{font-size:6mm;color:#4B2D78}.g{margin-top:8mm;padding:2mm 8mm;border-radius:99px;background:#FFC928;font-weight:800;font-size:6mm}
 </style></head><body><div class="c"><div class="f">
-<img src="${location.origin}/images/brand/changsuek-run-logo.webp" style="height:28mm" alt="">
+<img src="${location.origin}/images/brand/changsuek-run-logo-v2.webp" style="height:28mm" alt="">
 <h1>ใบรับรองการเข้าร่วม</h1><p class="s">Certificate of Participation</p>
 <p class="s">ขอมอบใบรับรองนี้ให้แก่</p><div class="n">${esc(name)}</div>
 <p class="s">ผู้เข้าร่วมงาน CHANGSUEK RUN 2027 ระยะ ${esc(ROUTE_LABEL[o.routeId] || o.routeName)}${o.bibNumber ? ` · BIB ${esc(o.bibNumber)}` : ''}</p>
@@ -752,7 +752,7 @@ export const RunnerHub: React.FC<{
       >
         {/* sidebar (tablet / desktop) */}
         <aside className="relative hidden w-[220px] shrink-0 flex-col bg-gradient-to-b from-[#2A1450] via-[#3B1A78] to-[#4B1FA8] p-4 text-white md:flex">
-          <img src="/images/brand/changsuek-run-logo.webp" alt="CHANG SUEK RUN 2027" className="mx-auto h-16 w-auto object-contain" />
+          <img src="/images/brand/changsuek-run-logo-v2.webp" alt="CHANG SUEK RUN 2027" className="mx-auto h-16 w-auto object-contain" />
           <p className="mt-2 text-center text-[10px] font-extrabold uppercase tracking-[0.18em] text-[#FFE268]">Runner Center</p>
           <nav className="mt-4 flex flex-1 flex-col gap-1.5" aria-label={t('เมนูศูนย์นักวิ่ง', 'Runner Center menu')}>
             {tabs.map((x) => (
@@ -773,7 +773,7 @@ export const RunnerHub: React.FC<{
         <div className="flex min-h-0 min-w-0 flex-1 flex-col">
           <header className="flex items-center justify-between gap-3 border-b border-[#EDE7F6] bg-white px-4 py-3 sm:px-6">
             <div className="flex min-w-0 items-center gap-2.5">
-              <img src="/images/brand/changsuek-run-logo.webp" alt="" aria-hidden="true" className="h-9 w-auto shrink-0 object-contain md:hidden" />
+              <img src="/images/brand/changsuek-run-logo-v2.webp" alt="" aria-hidden="true" className="h-9 w-auto shrink-0 object-contain md:hidden" />
               <div className="min-w-0">
                 <h2 className="truncate text-lg font-black leading-tight sm:text-xl">{t('ศูนย์นักวิ่ง', 'Runner Center')}<span className="hidden text-[#7C3AED] sm:inline"> · {titleOf}</span></h2>
                 <p className="truncate text-xs font-bold text-[#766A85]"><span className="font-black text-[#7C3AED] sm:hidden">{titleOf} · </span>{displayName}</p>

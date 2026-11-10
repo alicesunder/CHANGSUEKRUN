@@ -120,12 +120,12 @@ export const SponsorsSection: React.FC = () => {
           {/* Event logo on top of the board */}
           <div className="flex justify-center px-4 pt-6 sm:pt-9 pb-2 sm:pb-4">
             <img
-              src="/images/sponsors/event-logo.webp"
+              src="/images/brand/changsuek-run-logo-v2.webp"
               alt="CHANG SUEK RUN เห็นช้างวิ่ง วิ่งตามช้าง"
               loading="lazy"
               decoding="async"
               width={300}
-              height={137}
+              height={150}
               className="w-[190px] sm:w-[260px] lg:w-[300px] h-auto"
             />
           </div>

@@ -195,7 +195,7 @@ export const Hero: React.FC<HeroProps> = ({
               </span>
               {earlyBird && <EarlyBirdBadge onClick={onOpenRegisterModal} className="mt-2" />}
               <img
-                src="/images/brand/changsuek-run-logo.webp"
+                src="/images/brand/changsuek-run-logo-v2.webp"
                 alt="CHANGSUEK RUN - เห็นช้างวิ่ง วิ่งตามช้าง"
                 className="mt-2 h-[58px] sm:h-[84px] w-auto object-contain"
                 style={{ filter: 'drop-shadow(0 0 2px #fff) drop-shadow(0 0 8px rgba(255,255,255,.85)) drop-shadow(0 4px 10px rgba(30,10,70,.35))' }}
@@ -282,7 +282,7 @@ export const Hero: React.FC<HeroProps> = ({
             {/* Brand Logo Lockup */}
             <div className="flex flex-col items-center lg:items-start">
               <img
-                src="/images/brand/changsuek-run-logo.webp"
+                src="/images/brand/changsuek-run-logo-v2.webp"
                 alt="CHANGSUEK RUN - เห็นช้างวิ่ง วิ่งตามช้าง"
                 className="h-22 sm:h-28 lg:h-32 w-auto object-contain"
                 style={{ filter: 'drop-shadow(0 0 2px #fff) drop-shadow(0 0 10px rgba(255,255,255,.7)) drop-shadow(0 6px 14px rgba(20,5,50,.45))' }}

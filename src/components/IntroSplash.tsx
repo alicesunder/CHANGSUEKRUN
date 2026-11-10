@@ -70,7 +70,7 @@ export const IntroSplash: React.FC = () => {
       ))}
 
       <div className="intro-center">
-        <img src="/images/brand/changsuek-run-logo.webp" alt="CHANGSUEK RUN เห็นช้างวิ่ง วิ่งตามช้าง" className="intro-logo" width={800} height={400} draggable={false} onLoad={() => setReady(true)} />
+        <img src="/images/brand/changsuek-run-logo-v2.webp" alt="CHANGSUEK RUN เห็นช้างวิ่ง วิ่งตามช้าง" className="intro-logo" width={800} height={400} draggable={false} onLoad={() => setReady(true)} />
         <div className="intro-paws" aria-hidden="true">
           {[0, 1, 2, 3, 4, 5].map((i) => (
             <span key={i} style={{ animationDelay: `${0.75 + i * 0.12}s` }}>

@@ -42,7 +42,7 @@ export const Footer: React.FC<FooterProps> = ({
           {/* Column 1: Brand & Cursive Signature (4 cols) */}
           <div className="lg:col-span-4 flex flex-col items-start">
             <img loading="lazy" decoding="async"
-              src="/images/brand/changsuek-run-logo.webp"
+              src="/images/brand/changsuek-run-logo-v2.webp"
               alt="CHANGSUEK RUN"
               className="h-16 w-auto object-contain mb-4 select-none logo-glow"
               referrerPolicy="no-referrer"

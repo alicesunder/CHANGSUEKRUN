@@ -29,7 +29,7 @@ export const RunnerAwardsSection: React.FC = () => (
       <span aria-hidden="true" className="absolute inset-0 -z-10 bg-gradient-to-b from-[#2A1450]/30 via-[#2A1450]/10 to-[#2A1450]/55" />
 
       <div className="px-3 pb-6 pt-5 sm:px-8 sm:pb-9 sm:pt-7">
-        <img src="/images/brand/changsuek-run-logo.webp" alt="CHANGSUEK RUN 2027" className="mx-auto h-16 w-auto object-contain drop-shadow-[0_4px_10px_rgba(20,8,38,0.7)] sm:h-24" loading="lazy" />
+        <img src="/images/brand/changsuek-run-logo-v2.webp" alt="CHANGSUEK RUN 2027" className="mx-auto h-16 w-auto object-contain drop-shadow-[0_4px_10px_rgba(20,8,38,0.7)] sm:h-24" loading="lazy" />
 
         <div className="relative mx-auto mt-3 flex w-fit max-w-full items-center gap-2 rounded-full border-[3px] border-[#FFC928] bg-gradient-to-b from-[#3B1780] to-[#2A1450] py-2 pl-3 pr-5 shadow-[0_0_28px_-4px_rgba(255,201,40,0.75)] sm:gap-3 sm:py-3 sm:pl-5 sm:pr-8">
           <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white sm:h-14 sm:w-14"><img src="/images/awards/award-gold-v1.webp" alt="" aria-hidden="true" className="h-8 w-auto mix-blend-multiply sm:h-11" /></span>

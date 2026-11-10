@@ -34,7 +34,7 @@ const thaiDateTime = (iso?: string) =>
   iso ? new Date(iso).toLocaleString('th-TH', { timeZone: 'Asia/Bangkok', dateStyle: 'medium', timeStyle: 'short' }) : '';
 
 /** The images the BIB / header use, so the attached copy can carry them inside the file. */
-export const DOC_IMAGES: string[] = ['/images/brand/changsuek-run-logo.webp', '/images/bib/bib-base.webp', ...BIB_SPONSOR_LOGOS];
+export const DOC_IMAGES: string[] = ['/images/brand/changsuek-run-logo-v2.webp', '/images/bib/bib-base.webp', ...BIB_SPONSOR_LOGOS];
 
 export async function buildDocumentsHtml(
   o: StoredOrder,
@@ -60,7 +60,7 @@ export async function buildDocumentsHtml(
 
   const head = (kicker: string, title: string, color: string) => `
     <header class="band" style="--c:${color}">
-      ${pic('/images/brand/changsuek-run-logo.webp', 'logo')}
+      ${pic('/images/brand/changsuek-run-logo-v2.webp', 'logo')}
       <div><p class="kicker">${kicker}</p><h1>${title}</h1></div>
       <div class="band-id"><small>เลขคำสั่งซื้อ</small><b>${esc(o.orderId)}</b></div>
     </header>`;
