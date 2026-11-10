@@ -152,8 +152,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthed,
             <X className="h-5 w-5" />
           </button>
           <div className="relative flex items-center gap-3">
-            <span className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl border-2 border-[#FFE268] bg-white/95 text-3xl shadow-lg" aria-hidden="true">
-              🐘
+            <span className="grid h-16 w-24 shrink-0 place-items-center rounded-2xl border-2 border-[#FFE268] bg-white/95 p-1 shadow-lg">
+              <img src="/images/brand/changsuek-run-logo-v3.webp" alt="DogRun CHANGSUEK RUN" className="h-full w-full object-contain" />
             </span>
             <div>
               <p className="text-[11px] font-extrabold uppercase tracking-[0.18em] text-[#FFE268]">CHANGSUEK RUN 2027</p>
