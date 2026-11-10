@@ -116,7 +116,7 @@ export const DogHealthCheckSection: React.FC = () => {
 
           {/* who + where */}
           <div className="mt-3 grid grid-cols-1 gap-3 sm:mt-4 sm:gap-4 md:grid-cols-2">
-            <motion.div className={`${GLASS} from-white/90 to-[#E9DDFB] p-3.5 sm:p-6`} {...fx(reduce, { y: -5 })}>
+            <motion.div className={`${GLASS} from-white/90 to-[#E9DDFB] p-3.5 sm:p-6 md:flex md:flex-col md:justify-center`} {...fx(reduce, { y: -5 })}>
               <p className="relative flex items-center gap-2 text-lg font-extrabold text-[#2A1450] sm:text-2xl">
                 <PawPrint className="h-6 w-6 text-[#6D28D9]" aria-hidden="true" /> ใครใช้บริการได้
               </p>
@@ -142,7 +142,7 @@ export const DogHealthCheckSection: React.FC = () => {
             </motion.div>
 
             <motion.div className={`${GLASS} from-white/90 to-[#E9DDFB] p-3.5 sm:p-6`} {...fx(reduce, { y: -5 })}>
-              <div className="relative flex items-center gap-3 pr-24 sm:gap-4 sm:pr-40">
+              <div className="relative flex items-center gap-3 pr-20 sm:gap-4 sm:pr-32">
                 <motion.img src={H('ic-pin')} alt="" aria-hidden="true" className="fx-off h-14 w-14 shrink-0 drop-shadow-[0_6px_8px_rgba(75,31,168,0.35)] sm:h-[72px] sm:w-[72px]" {...(reduce ? {} : { animate: { y: [0, -7, 0] }, transition: { duration: 1.8, repeat: Infinity, ease: 'easeInOut' } })} />
                 <p className="text-sm font-bold leading-snug text-[#2A1450] sm:text-lg">
                   <span className="block text-lg font-black sm:text-2xl">จุดตรวจสุขภาพสุนัข</span>
@@ -153,10 +153,28 @@ export const DogHealthCheckSection: React.FC = () => {
                 src={H('ob-tent-island')}
                 alt="จุดตรวจสุขภาพสุนัข เต็นท์ม่วงพร้อมกล่องปฐมพยาบาล"
                 loading="lazy"
-                className="fx-off absolute -bottom-3 -right-2 h-28 w-auto drop-shadow-[0_8px_8px_rgba(75,31,168,0.35)] sm:h-40"
+                className="fx-off pointer-events-none absolute -top-1 -right-1 h-[84px] w-auto drop-shadow-[0_8px_8px_rgba(75,31,168,0.35)] sm:-top-2 sm:h-[112px]"
                 style={{ transformOrigin: '50% 90%' }}
-                {...(reduce ? {} : { animate: { rotate: [-1.5, 1.5, -1.5] }, transition: { duration: 5, repeat: Infinity, ease: 'easeInOut' }, whileHover: { scale: 1.08, rotate: 0 } })}
+                {...(reduce ? {} : { animate: { rotate: [-1.5, 1.5, -1.5] }, transition: { duration: 5, repeat: Infinity, ease: 'easeInOut' } })}
               />
+              {/* real photos of the vet check */}
+              <div className="relative mt-3 grid grid-cols-2 gap-2.5 sm:mt-4 sm:gap-4">
+                {[
+                  { src: H('photo-vet-1'), alt: 'สัตวแพทย์ตรวจน้องหมาฝรั่งเศสบนโต๊ะตรวจ', rot: -2 },
+                  { src: H('photo-vet-2'), alt: 'สัตวแพทย์ใช้หูฟังตรวจน้องคอร์กี้ที่ผูกผ้าพันคอ ตชด.', rot: 2 },
+                ].map((ph) => (
+                  <motion.figure
+                    key={ph.src}
+                    className="relative m-0 overflow-hidden rounded-2xl border-[3px] border-white bg-white shadow-[0_10px_20px_-10px_rgba(75,31,168,0.6)]"
+                    style={{ rotate: ph.rot }}
+                    {...fx(reduce, { rotate: 0, scale: 1.04, y: -4 })}
+                  >
+                    <img src={ph.src} alt={ph.alt} loading="lazy" decoding="async" className="fx-off block aspect-[4/3] w-full object-cover" />
+                    <span aria-hidden="true" className="absolute inset-0 bg-gradient-to-t from-[#2A1450]/35 via-transparent to-transparent" />
+                    <span className="absolute bottom-1.5 left-2 rounded-full bg-white/90 px-2 py-0.5 text-[10px] font-extrabold text-[#4B1FA8] sm:text-xs">ภาพจริงจากจุดตรวจ</span>
+                  </motion.figure>
+                ))}
+              </div>
             </motion.div>
           </div>
 
