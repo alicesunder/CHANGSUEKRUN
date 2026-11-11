@@ -159,7 +159,7 @@ export const DogContestSection: React.FC = () => {
       <span id="costume-contest" className="block -translate-y-24" aria-hidden="true" />
       <div className="relative overflow-hidden rounded-[28px] sm:rounded-[40px] border-[3px] border-[#FFD86B]/90 bg-gradient-to-b from-[#7A4BD8] via-[#6A3BC9] to-[#5427B0] shadow-[0_0_0_2px_rgba(91,39,176,0.35),0_0_36px_-6px_rgba(255,201,40,0.55),0_20px_44px_-18px_rgba(42,20,80,0.7)]">
         {/* ---------- the stage: one picture (palms, trophy, rosette, flags, lanterns, lights all standing on the beach) ---------- */}
-        <div className="relative overflow-hidden max-sm:bg-gradient-to-b max-sm:from-[#4B1FA8] max-sm:via-[#6A3BC9] max-sm:to-[#7A4BD8] sm:aspect-[2021/690]">
+        <div className="relative overflow-hidden max-sm:bg-[linear-gradient(to_bottom,#4B1FA8_0%,#6A33B8_38%,#A8509F_62%,#E58A6E_80%,#7A4BD8_100%)] sm:aspect-[2021/690]">
           <span aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 z-[1] hidden h-[38%] sm:block bg-gradient-to-b from-transparent via-[#7A4BD8]/40 to-[#7A4BD8]" />
           <img src="/images/contest/ct-stage-v1.webp" alt="" aria-hidden="true" decoding="async" draggable={false} className="pointer-events-none select-none absolute inset-0 hidden h-full w-full object-fill sm:block" />
 
@@ -193,8 +193,8 @@ export const DogContestSection: React.FC = () => {
               <PawPrint className="h-4 w-4 sm:h-5 sm:w-5 text-[#F5B800]" aria-hidden="true" />
               ประกวดน้องหมา 3 รายการ · วันเสาร์ที่ 9 ม.ค. 2570
             </span>
-            <h2 id="dog-contest-heading" className="mt-2 font-hero text-[2rem] sm:text-5xl lg:text-[3.6rem] font-extrabold leading-[1.3] text-white [-webkit-text-stroke:6px_#4B1FA8] [paint-order:stroke_fill] [text-shadow:0_4px_0_rgba(42,20,80,0.85),0_10px_22px_rgba(20,8,40,0.45)]">
-              เวทีประกวด<span className="fx-text-glow whitespace-nowrap text-[#FFD34D]">น้องหมา</span>สุดน่ารัก
+            <h2 id="dog-contest-heading" className="mt-2 font-hero text-[2rem] sm:text-5xl lg:text-[3.6rem] font-extrabold leading-[1.3] text-white [-webkit-text-stroke:4px_#4B1FA8] sm:[-webkit-text-stroke:6px_#4B1FA8] [paint-order:stroke_fill] [text-shadow:0_3px_0_rgba(42,20,80,0.85)] sm:[text-shadow:0_4px_0_rgba(42,20,80,0.85),0_10px_22px_rgba(20,8,40,0.45)]">
+              เวทีประกวด<span className="whitespace-nowrap text-[#FFD34D]">น้องหมา</span>สุดน่ารัก
             </h2>
             <svg aria-hidden="true" className="mx-auto -mt-1 h-5 w-56 sm:w-80" viewBox="0 0 320 20" fill="none">
               <path d="M4 12 C 70 4, 120 4, 150 10 M170 10 C 200 4, 250 4, 316 12" stroke="#FFC928" strokeWidth="3" strokeLinecap="round" />
@@ -203,11 +203,11 @@ export const DogContestSection: React.FC = () => {
             <p className="mx-auto mt-1 w-fit rounded-full border-2 border-[#F5C84C] bg-gradient-to-b from-white to-[#F6EEFF] px-4 py-1.5 text-sm sm:text-xl font-black text-[#3B1780] shadow-[0_4px_12px_-4px_rgba(42,20,80,0.5)]">ฟรีสำหรับคู่วิ่ง Dog Run · ลงได้ทุกรายการ</p>
           </div>
           {/* phones: the whole beach stage as its own picture under the heading (nothing behind the text) */}
-          <img src="/images/contest/ct-stage-v1.webp" alt="" aria-hidden="true" decoding="async" loading="lazy" draggable={false} className="pointer-events-none block h-auto w-full select-none sm:hidden [mask-image:linear-gradient(to_bottom,transparent,black_18%)]" />
+          <img src="/images/contest/ct-stage-v1.webp" alt="" aria-hidden="true" decoding="async" loading="lazy" draggable={false} className="pointer-events-none -mt-1 block h-auto w-full select-none sm:hidden [mask-image:linear-gradient(to_bottom,transparent,black_24%,black_80%,transparent)]" />
         </div>
 
         {/* tabs sit on the sand line of the stage */}
-        <div role="tablist" aria-label="เลือกรายการประกวด" className="relative z-10 mt-2 sm:mt-0 sm:-mt-[10.5%] mx-auto flex w-fit max-w-[94%] gap-1.5 sm:gap-2 rounded-full border-2 border-white/90 bg-white/80 p-1.5 shadow-[0_10px_24px_-10px_rgba(75,31,168,0.6)] backdrop-blur overflow-x-auto [scrollbar-width:none]">
+        <div role="tablist" aria-label="เลือกรายการประกวด" className="relative z-10 max-sm:-mt-3 sm:-mt-[5.5%] lg:-mt-[12%] mx-auto flex w-fit max-w-[94%] max-sm:w-[calc(100%-1.5rem)] max-sm:gap-1 gap-1.5 sm:gap-2 rounded-full border-2 border-white/90 bg-white/80 p-1.5 shadow-[0_10px_24px_-10px_rgba(75,31,168,0.6)] backdrop-blur overflow-x-auto [scrollbar-width:none]">
           {CONTESTS.map((t) => {
             const on = t.id === active;
             return (
@@ -219,7 +219,7 @@ export const DogContestSection: React.FC = () => {
                 aria-selected={on}
                 aria-controls="contest-panel"
                 onClick={() => pick(t.id)}
-                className={`relative shrink-0 min-h-[48px] sm:min-h-[60px] px-2.5 min-[400px]:px-4 sm:px-9 rounded-full text-[13.5px] min-[400px]:text-[15px] sm:text-lg font-extrabold cursor-pointer transition-colors ${on ? 'text-white' : 'text-[#2A1450] hover:bg-white/70'}`}
+                className={`relative shrink-0 max-sm:flex-1 max-sm:px-1 min-h-[58px] sm:min-h-[60px] px-2.5 min-[400px]:px-4 sm:px-9 rounded-full text-[13px] min-[400px]:text-[14px] sm:text-lg font-extrabold cursor-pointer transition-colors ${on ? 'text-white' : 'text-[#2A1450] hover:bg-white/70'}`}
               >
                 {on && (
                   <motion.span
@@ -229,7 +229,7 @@ export const DogContestSection: React.FC = () => {
                     transition={{ type: 'spring', stiffness: 420, damping: 32 }}
                   />
                 )}
-                <span className="relative inline-flex items-center gap-1.5">
+                <span className="relative inline-flex items-center gap-1.5 max-sm:flex-col max-sm:gap-0.5 max-sm:leading-tight">
                   <motion.img src={CT(TAB_ICON[t.id])} alt="" aria-hidden="true" className="fx-off h-6 w-6 object-contain sm:h-8 sm:w-8" {...(on && !reduce ? { animate: { rotate: [-8, 8, -8], scale: [1, 1.12, 1] }, transition: { duration: 2.4, repeat: Infinity, ease: 'easeInOut' } } : {})} />
                   {t.tab}
                 </span>
@@ -250,11 +250,11 @@ export const DogContestSection: React.FC = () => {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -10, scale: 0.98 }}
               transition={{ duration: 0.28 }}
-              className="relative grid grid-cols-1 items-center gap-4 md:grid-cols-12 md:gap-7"
+              className="relative grid grid-cols-1 items-center gap-2 sm:gap-4 md:grid-cols-12 md:gap-7"
             >
               <SelectBurst active={burst} count={30} spread={1.6} className="left-1/2 top-24" />
               {/* picture side: gold ribbon frame; the artwork fills the window */}
-              <div className="relative mx-auto w-full max-w-[520px] md:col-span-5">
+              <div className="relative mx-auto w-full max-w-[520px] max-sm:max-w-[290px] md:col-span-5">
                 <div className="relative aspect-[606/464]">
                   
                   <div className="pointer-events-none absolute left-[7%] right-[7%] top-[15%] bottom-[14%] z-30 flex items-end justify-center">
@@ -288,7 +288,7 @@ export const DogContestSection: React.FC = () => {
                       <img src={CT('ct-burst')} alt="" className="fx-off absolute inset-0 h-full w-full object-contain" />
                       <span className="relative -rotate-6 text-base sm:text-xl font-black text-[#7A1FA2]">ฟรี!</span>
                     </motion.span>
-                    <motion.img src={CT('ct-wizard')} alt="" aria-hidden="true" className="fx-off h-9 w-auto sm:h-12" {...idle({ rotate: [-6, 6, -6] }, 3)} />
+                    <motion.img src={CT('ct-wizard')} alt="" aria-hidden="true" className="fx-off h-9 w-auto max-sm:hidden sm:h-12" {...idle({ rotate: [-6, 6, -6] }, 3)} />
                     <h3 className="text-[21px] sm:text-[24px] lg:text-[28px] font-black leading-tight text-[#3B1780]">{c.title}</h3>
                   </div>
                   <p className="mt-2.5 inline-flex items-center gap-1.5 rounded-full border border-[#F2C94C] bg-gradient-to-r from-[#FFF6D6] to-[#FFE79A] px-3.5 py-1 text-[13px] sm:text-[15px] font-extrabold text-[#4A1D7A] shadow-sm">
