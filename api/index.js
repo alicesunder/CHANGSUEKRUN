@@ -33725,7 +33725,7 @@ var CONCERT_PASS_PRICE = 490;
 var VIP_TABLE_PRICE = 8990;
 var VIP_TABLE_SEATS = 6;
 var MAX_VIP_TABLES = 3;
-var EARLY_BIRD_OFF = { run: 100, concert: 200, vip: 2e3 };
+var EARLY_BIRD_OFF = { run: 100, concert: 100, vip: 1e3 };
 var runBasePrice = (id, earlyBird = false) => Math.max(0, ticketById(id).basePrice - (earlyBird ? EARLY_BIRD_OFF.run : 0));
 var concertPassPrice = (earlyBird = false) => CONCERT_PASS_PRICE - (earlyBird ? EARLY_BIRD_OFF.concert : 0);
 var vipTablePrice = (earlyBird = false) => VIP_TABLE_PRICE - (earlyBird ? EARLY_BIRD_OFF.vip : 0);

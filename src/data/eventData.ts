@@ -1282,7 +1282,7 @@ export const VIP_TABLE_PERKS = [
  * It comes off the list price first; the percentage discounts (concert bundle, add-on bundle) are then
  * worked out on the early-bird price.
  */
-export const EARLY_BIRD_OFF = { run: 100, concert: 200, vip: 2000 } as const;
+export const EARLY_BIRD_OFF = { run: 100, concert: 100, vip: 1000 } as const;
 export const runBasePrice = (id: RouteId, earlyBird = false) => Math.max(0, ticketById(id).basePrice - (earlyBird ? EARLY_BIRD_OFF.run : 0));
 export const concertPassPrice = (earlyBird = false) => CONCERT_PASS_PRICE - (earlyBird ? EARLY_BIRD_OFF.concert : 0);
 export const vipTablePrice = (earlyBird = false) => VIP_TABLE_PRICE - (earlyBird ? EARLY_BIRD_OFF.vip : 0);
