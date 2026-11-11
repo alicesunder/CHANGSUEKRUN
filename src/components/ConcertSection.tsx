@@ -5,9 +5,15 @@ import { EarlyBirdPrice } from './EarlyBirdPrice';
 import { useEarlyBird } from '../utils/earlyBird';
 
 const PHOTOS = [
+  { src: '/images/concert/atm-start-v1.webp', alt: 'นักวิ่งและน้องหมา K-9 ถ่ายภาพหมู่หน้าซุ้มปล่อยตัวบนชายหาด', cap: 'ซุ้มปล่อยตัวริมหาด', wide: true },
+  { src: '/images/concert/atm-stage-group-v1.webp', alt: 'ศิลปินถ่ายภาพหมู่บนเวทีกับผู้ชมที่ชูไฟมือถือเต็มลานชายหาด', cap: 'ศิลปินกับผู้ชมที่ชูไฟเต็มลานชายหาด' },
+  { src: '/images/concert/atm-crowd-tents-v1.webp', alt: 'ผู้ชมเต็มลานหน้าซุ้มอาหารและร้านค้าตอนกลางคืน', cap: 'ซุ้มอาหารและร้านค้ายามค่ำ' },
+  { src: '/images/concert/atm-crowd-hands-v1.webp', alt: 'ผู้ชมยกมือสนุกสนานหน้าเวทีคอนเสิร์ต', cap: 'สนุกกันเต็มที่หน้าเวที' },
+  { src: '/images/concert/atm-k9-v1.webp', alt: 'น้องหมาลาบราดอร์และเจ้าหน้าที่ K-9 ให้เด็กๆ เข้าไปทักทาย', cap: 'น้องหมา K-9 ให้ทักทายใกล้ชิด' },
+  { src: '/images/concert/atm-wall-v1.webp', alt: 'นักวิ่งปีนกำแพงไม้ด้วยเชือกในเส้นทางวิ่ง', cap: 'ด่านปีนกำแพงบนเส้นทาง' },
+  { src: '/images/concert/atm-water-v1.webp', alt: 'นักวิ่งโหนเชือกข้ามบ่อน้ำน้ำกระเซ็น', cap: 'ด่านโหนเชือกข้ามบ่อน้ำ' },
+  { src: '/images/concert/atm-bridge-v1.webp', alt: 'นักวิ่งถ่ายภาพบนสะพานแขวนกลางป่าชายเลน', cap: 'สะพานแขวนกลางป่าชายเลน' },
   { src: '/images/concert/run-atmosphere.jpg', alt: 'นักวิ่งในเสื้อสีม่วงเดินผ่านซุ้มปล่อยตัวบนชายหาด ยิ้มและชูนิ้วโป้ง', cap: 'บรรยากาศงานวิ่งริมหาด ตชด. ครั้งที่ผ่านมา' },
-  { src: '/images/concert/stage.webp', alt: 'เวทีคอนเสิร์ตยามเย็นพร้อมจอ LED และแสงสีม่วง มีผู้ชมถือโทรศัพท์ถ่ายภาพ', cap: 'เวทีกลางแจ้ง จอ LED และแสงสีตอนค่ำ' },
-  { src: '/images/concert/crowd.webp', alt: 'ผู้ชมนั่งบนสนามหญ้าชมคอนเสิร์ตริมหาดตอนพลบค่ำ', cap: 'นั่งชิลล์ริมหาด ฟังดนตรีสดหลังจบการวิ่ง' },
 ];
 
 const BEAMS = [
@@ -85,7 +91,6 @@ export const ConcertSection: React.FC = () => {
                 ))}
                 <span aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_55%,rgba(27,11,58,0.7)_100%)]" />
                 </div>
-                <span className="absolute right-3 top-3 z-10 rounded-full bg-[#1B0B3A]/80 px-3 py-1 text-[11px] font-bold text-[#FFE28A] ring-1 ring-[#FFC928]/60 backdrop-blur sm:text-sm">📸 ภาพจริงจากเวทีคอนเสิร์ต</span>
               </div>
 
               {/* time table */}
@@ -118,19 +123,33 @@ export const ConcertSection: React.FC = () => {
               </a>
             </div>
 
-            <details className="group mt-6">
-              <summary className="mx-auto flex w-fit min-h-[48px] cursor-pointer list-none items-center gap-2 rounded-2xl border-2 border-[#FFC928]/60 bg-white/10 px-5 text-sm font-extrabold text-[#FFE28A] [&::-webkit-details-marker]:hidden">
-                🎞️ ดูภาพบรรยากาศงานวิ่งและคอนเสิร์ต <span className="group-open:hidden">▾</span><span className="hidden group-open:inline">▴</span>
-              </summary>
-              <ul data-reveal-stagger="" className="mt-6 grid grid-cols-3 gap-2 sm:gap-3 max-w-[820px] mx-auto">
-                {PHOTOS.map((p) => (
-                  <li key={p.src} className="rounded-2xl overflow-hidden bg-white/[0.07] border-2 border-[#FFC928]/35">
-                    <img src={p.src} alt={p.alt} loading="lazy" decoding="async" className="block w-full aspect-[4/3] object-cover" />
-                    <p className="px-2 sm:px-3 py-1.5 sm:py-2 text-[11px] sm:text-xs font-semibold text-white/85 leading-snug">{p.cap}</p>
+            <div className="mt-8">
+              <h3 className="text-center font-hero text-2xl font-bold text-white sm:text-4xl">
+                ภาพบรรยากาศ<span className="text-[#FFC928]">งาน</span>
+              </h3>
+              <svg aria-hidden="true" className="mx-auto mt-1 h-3 w-40 sm:w-56" viewBox="0 0 220 12" fill="none"><path d="M2 8 C 40 -2, 70 14, 110 6 S 180 -2, 218 8" stroke="#FFC928" strokeWidth="3" strokeLinecap="round" /></svg>
+              <ul data-reveal-stagger="" className="mx-auto mt-5 grid max-w-[1100px] grid-cols-2 gap-2.5 sm:gap-4 lg:grid-cols-3 [&>li:first-child]:col-span-2 lg:[&>li:first-child]:col-span-1">
+                {PHOTOS.map((p, i) => (
+                  <li
+                    key={p.src}
+                    className={`group overflow-hidden rounded-2xl border-2 border-[#FFC928]/40 bg-[#1B0B3A] shadow-[0_10px_24px_-12px_rgba(0,0,0,0.8)] `}
+                  >
+                    <div className="relative overflow-hidden">
+                      <img
+                        src={p.src}
+                        alt={p.alt}
+                        loading="lazy"
+                        decoding="async"
+                        className={`fx-off block w-full object-cover transition-transform duration-500 group-hover:scale-105 aspect-[4/3] ${i === 4 ? 'object-[center_70%]' : ''}`}
+                      />
+                      <span aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-[#1B0B3A]/85 to-transparent" />
+                      <p className="absolute inset-x-0 bottom-0 px-3 pb-2 text-[12px] font-bold leading-snug text-white sm:text-sm">{p.cap}</p>
+                    </div>
                   </li>
                 ))}
               </ul>
-            </details>
+              <p className="mt-3 text-center text-[11px] font-medium text-white/70 sm:text-xs">ภาพบรรยากาศจากงาน HUAHIN BEACH CROSS COUNTRY &amp; MUSIC FESTIVAL ครั้งที่ผ่านมา</p>
+            </div>
           </div>
 
           {/* ---------- footer scene with the ticket buttons ---------- */}
