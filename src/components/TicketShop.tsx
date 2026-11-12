@@ -917,7 +917,6 @@ export const TicketShop: React.FC<TicketShopProps> = ({
                 </span>
                 <motion.span key={total} initial={{ scale: 1.15 }} animate={{ scale: 1 }} className="block origin-left whitespace-nowrap text-xl font-black text-[var(--ink)] tabular-nums leading-tight">
                   {formatBaht(total)} <span className="text-xs font-bold">บาท</span>
-                  <span className="block text-[10px] font-bold leading-tight text-[#6B5A85] min-[460px]:ml-1 min-[460px]:inline"><span className="min-[460px]:hidden">ไม่รวม VAT 7%</span><span className="hidden min-[460px]:inline">(ยังไม่รวม VAT 7%)</span></span>
                   {totalSaved > 0 && <span className="mt-0.5 block w-fit whitespace-nowrap rounded-full bg-[#FFE268] border-2 border-[var(--ink)] px-2 py-0.5 text-[11px] font-black min-[460px]:ml-2 min-[460px]:mt-0 min-[460px]:inline-block min-[460px]:align-middle">ประหยัด {formatBaht(totalSaved)} 🎉</span>}
                 </motion.span>
               </span>

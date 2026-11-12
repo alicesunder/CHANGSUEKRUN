@@ -103,7 +103,7 @@ import { TEST_PRICE_BAHT, useTestMode } from '../utils/testMode';
 import { ActivityWaiverForm, mergeParticipant } from './ActivityWaiverForm';
 import { ParkingPasses } from './ParkingPass';
 import { ProvinceSelect } from './ProvinceSelect';
-import { VAT_PERCENT, vatOf, withVat } from '../data/vat';
+import { vatOf, withVat } from '../data/vat';
 import { EMPTY_ADD_ONS, addOnCounts, addOnLabel, fromPersons, hasAddOns, percentOf, personsOf, priceBasket, type AddOnSelection } from '../data/addOns';
 
 interface RegistrationModalProps {
@@ -1272,26 +1272,11 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                       )}
                     </div>
 
-                    {/* VAT 7%: shown clearly before the total */}
-                    {!testMode && vatShown > 0 && (
-                      <div className="rounded-2xl border-2 border-[#C9B4EE] bg-[#FAF6FF] p-3 text-xs font-bold text-[#4B2D78] space-y-1">
-                        <div className="flex justify-between gap-3">
-                          <span>ยอดรวมก่อนภาษี (หลังหักส่วนลด)</span>
-                          <span className="font-extrabold tabular-nums text-[#261247]">{formatBaht(subtotal)} บาท</span>
-                        </div>
-                        <div className="flex justify-between gap-3">
-                          <span>ภาษีมูลค่าเพิ่ม (VAT {VAT_PERCENT}%)</span>
-                          <span className="font-extrabold tabular-nums text-[#261247]">+{formatBaht(vatShown)} บาท</span>
-                        </div>
-                        <p className="text-[11px] font-semibold text-[#6B5A85]">ราคาที่แสดงในหน้าเลือกบัตรยังไม่รวม VAT · VAT ปัดเป็นเลขบาท</p>
-                      </div>
-                    )}
-
                     {/* Total Box */}
                     <div className="rounded-2xl bg-gradient-to-r from-[#240D47] to-[#3B1870] text-white p-3.5 flex items-center justify-between shadow-md">
                       <div>
                         <span className="text-[11px] font-extrabold uppercase tracking-wider text-[#FFE268] block">
-                          ยอดชำระสุทธิ รวม VAT (PromptPay QR)
+                          ยอดชำระสุทธิ (PromptPay QR)
                         </span>
                         <span className="text-xs text-white/80 font-bold">
                           {isAddonOnly ? 'กิจกรรมเสริมตามที่เลือก' : isConcert ? 'ตั๋วเข้างาน + คอนเสิร์ต' : 'รวมเสื้อวิ่ง + เหรียญ + E-BIB'}

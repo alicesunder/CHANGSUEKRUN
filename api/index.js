@@ -34614,7 +34614,7 @@ function billerIdFromQr(payload) {
 }
 
 // src/data/vat.ts
-var VAT_RATE = 0.07;
+var VAT_RATE = 0;
 var vatOf = (subtotal) => subtotal > 0 ? Math.round(subtotal * VAT_RATE) : 0;
 
 // src/data/addOns.ts
